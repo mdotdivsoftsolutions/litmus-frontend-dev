@@ -25,6 +25,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          deep: "hsl(var(--primary-deep))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -59,6 +60,23 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+          active: "hsl(var(--sidebar-active))",
+        },
+        flame: {
+          deep: "hsl(var(--flame-deep))",
+          red: "hsl(var(--flame-red))",
+          orange: "hsl(var(--flame-orange))",
+          amber: "hsl(var(--flame-amber))",
+          gold: "hsl(var(--flame-gold))",
+          "red-tint": "hsl(var(--flame-red-tint))",
+          "orange-tint": "hsl(var(--flame-orange-tint))",
+          "amber-tint": "hsl(var(--flame-amber-tint))",
+        },
+        litmus: {
+          dark: "hsl(var(--litmus-dark))",
+          teal: "hsl(var(--litmus-teal))",
+          emerald: "hsl(var(--litmus-emerald))",
+          mint: "hsl(var(--litmus-mint))",
         },
         status: {
           pending: "hsl(var(--status-pending))",
