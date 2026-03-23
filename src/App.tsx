@@ -48,7 +48,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           {/* Public */}
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<LoginPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
