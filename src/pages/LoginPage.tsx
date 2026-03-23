@@ -18,43 +18,28 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left Panel — image with minimal branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-secondary">
-        <img src={loginLabImg} alt="Food testing laboratory" className="absolute inset-0 w-full h-full object-cover opacity-80" />
-        <div className="absolute inset-0 bg-gradient-to-b from-secondary/70 via-transparent to-secondary/80" />
-
-        {/* Top logo */}
-        <div className="absolute top-8 left-8 z-10 flex items-center gap-2.5">
-          <Flame className="h-7 w-7 text-flame-amber" />
+      {/* Left Panel — clean light image panel matching Litmus brand */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col relative overflow-hidden bg-white">
+        {/* Top branding */}
+        <div className="relative z-10 px-10 pt-8 flex items-center gap-2.5">
+          <Flame className="h-7 w-7 text-primary" />
           <div>
-            <span className="text-lg font-bold text-white tracking-tight">LITMUS</span>
-            <span className="block text-[9px] tracking-[0.25em] text-flame-amber/70 font-medium -mt-0.5">FOOD ANALYTICS</span>
+            <span className="text-lg font-bold text-secondary tracking-tight">litmus</span>
+            <span className="block text-[9px] tracking-[0.2em] text-primary font-medium -mt-0.5">Food Analytics</span>
           </div>
         </div>
 
-        {/* Bottom stats bar */}
-        <div className="absolute bottom-0 inset-x-0 z-10 px-8 py-6 bg-secondary/80 backdrop-blur-sm border-t border-white/5">
-          <div className="flex items-center justify-between">
-            <div className="text-center">
-              <span className="block text-xl font-bold text-flame-amber">500+</span>
-              <span className="text-[10px] text-white/40 uppercase tracking-wider">Tests</span>
-            </div>
-            <div className="w-px h-8 bg-white/10" />
-            <div className="text-center">
-              <span className="block text-xl font-bold text-flame-amber">50+</span>
-              <span className="text-[10px] text-white/40 uppercase tracking-wider">Labs</span>
-            </div>
-            <div className="w-px h-8 bg-white/10" />
-            <div className="text-center">
-              <span className="block text-xl font-bold text-flame-amber">10K+</span>
-              <span className="text-[10px] text-white/40 uppercase tracking-wider">Reports</span>
-            </div>
-            <div className="w-px h-8 bg-white/10" />
-            <div className="text-center">
-              <span className="block text-xl font-bold text-flame-amber">NABL</span>
-              <span className="text-[10px] text-white/40 uppercase tracking-wider">Certified</span>
-            </div>
-          </div>
+        {/* Headline */}
+        <div className="relative z-10 px-10 pt-12 pb-6">
+          <h2 className="text-3xl font-light text-secondary/80 leading-snug">
+            Safer, Smarter, and<br />
+            Compliant <span className="text-primary font-semibold">Food Solutions</span>
+          </h2>
+        </div>
+
+        {/* Image fills remaining space */}
+        <div className="relative flex-1 mx-6 mb-6 rounded-2xl overflow-hidden">
+          <img src={loginLabImg} alt="Food testing laboratory" className="absolute inset-0 w-full h-full object-cover" />
         </div>
       </div>
 
