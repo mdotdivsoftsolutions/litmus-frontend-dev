@@ -5,16 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Beaker } from "lucide-react";
+import { Flame, ArrowLeft } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState(0);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
-      <Card className="w-full max-w-md shadow-lg border-0">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <Card className="w-full max-w-md shadow-lg border border-border">
         <CardHeader className="items-center pb-2">
-          <Beaker className="h-8 w-8 text-secondary mb-2" />
+          <Flame className="h-8 w-8 text-flame-orange mb-2" />
           <h2 className="text-xl font-bold text-foreground">
             {step === 0 ? "Forgot Password" : step === 1 ? "Enter OTP" : "Reset Password"}
           </h2>
@@ -25,8 +25,8 @@ export default function ForgotPasswordPage() {
         <CardContent className="space-y-4 pt-4">
           {step === 0 && (
             <>
-              <div className="space-y-2"><Label>Email</Label><Input type="email" placeholder="you@company.com" /></div>
-              <Button className="w-full" onClick={() => setStep(1)}>Send OTP</Button>
+              <div className="space-y-2"><Label className="text-sm font-medium">Email</Label><Input type="email" placeholder="you@company.com" className="focus:border-primary focus:ring-2 focus:ring-primary/15" /></div>
+              <Button className="w-full bg-primary hover:bg-primary-deep" onClick={() => setStep(1)}>Send OTP</Button>
             </>
           )}
           {step === 1 && (
@@ -38,20 +38,22 @@ export default function ForgotPasswordPage() {
                   </InputOTPGroup>
                 </InputOTP>
               </div>
-              <Button className="w-full" onClick={() => setStep(2)}>Verify OTP</Button>
-              <p className="text-center text-xs text-muted-foreground">Didn't receive code? <button className="text-secondary hover:underline">Resend</button></p>
+              <Button className="w-full bg-primary hover:bg-primary-deep" onClick={() => setStep(2)}>Verify OTP</Button>
+              <p className="text-center text-xs text-muted-foreground">Didn't receive code? <button className="text-primary hover:underline font-medium">Resend</button></p>
             </>
           )}
           {step === 2 && (
             <>
-              <div className="space-y-2"><Label>New Password</Label><Input type="password" placeholder="••••••••" /></div>
-              <div className="space-y-2"><Label>Confirm Password</Label><Input type="password" placeholder="••••••••" /></div>
-              <Button className="w-full" asChild><Link to="/login">Reset Password</Link></Button>
+              <div className="space-y-2"><Label className="text-sm font-medium">New Password</Label><Input type="password" placeholder="••••••••" /></div>
+              <div className="space-y-2"><Label className="text-sm font-medium">Confirm Password</Label><Input type="password" placeholder="••••••••" /></div>
+              <Button className="w-full bg-primary hover:bg-primary-deep" asChild><Link to="/login">Reset Password</Link></Button>
             </>
           )}
-          <p className="text-center text-sm text-muted-foreground">
-            <Link to="/login" className="text-secondary hover:underline">Back to Login</Link>
-          </p>
+          <div className="text-center">
+            <Link to="/login" className="inline-flex items-center gap-1 text-sm text-primary hover:underline font-medium">
+              <ArrowLeft className="h-3.5 w-3.5" />Back to Login
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
