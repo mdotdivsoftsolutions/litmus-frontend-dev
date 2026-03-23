@@ -9,14 +9,14 @@ export const currentUser = {
 };
 
 export const categories = [
-  { id: "1", name: "Dairy", emoji: "🥛", count: 24 },
-  { id: "2", name: "Beverages", emoji: "🥤", count: 18 },
-  { id: "3", name: "Grains & Cereals", emoji: "🌾", count: 32 },
-  { id: "4", name: "Spices", emoji: "🌶️", count: 15 },
-  { id: "5", name: "Meat & Poultry", emoji: "🍗", count: 12 },
-  { id: "6", name: "Oils & Fats", emoji: "🫒", count: 10 },
-  { id: "7", name: "Processed Foods", emoji: "🥫", count: 28 },
-  { id: "8", name: "Snacks", emoji: "🍿", count: 20 },
+  { id: "1", name: "Dairy", icon: "milk" as const, count: 24 },
+  { id: "2", name: "Beverages", icon: "coffee" as const, count: 18 },
+  { id: "3", name: "Grains & Cereals", icon: "wheat" as const, count: 32 },
+  { id: "4", name: "Spices", icon: "flame" as const, count: 15 },
+  { id: "5", name: "Meat & Poultry", icon: "drumstick" as const, count: 12 },
+  { id: "6", name: "Oils & Fats", icon: "droplets" as const, count: 10 },
+  { id: "7", name: "Processed Foods", icon: "package" as const, count: 28 },
+  { id: "8", name: "Snacks", icon: "cookie" as const, count: 20 },
 ];
 
 export const products = [
