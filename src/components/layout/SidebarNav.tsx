@@ -61,12 +61,22 @@ export function SidebarNav({ portal, open, onClose }: SidebarNavProps) {
       {open && <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={onClose} />}
       
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-200 lg:relative lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
         open ? "translate-x-0" : "-translate-x-full",
         collapsed ? "w-16" : "w-60"
       )}>
+        {/* Floating collapse toggle — desktop only */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hidden lg:flex absolute -right-3 top-16 z-50 h-6 w-6 rounded-full border border-sidebar-border bg-sidebar text-sidebar-foreground/60 hover:text-flame-amber hover:bg-sidebar-accent shadow-md"
+          onClick={() => setCollapsed(!collapsed)}
+        >
+          {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+        </Button>
+
         {/* Logo */}
-        <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-3">
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar-border px-3">
           {!collapsed && (
             <Link to="/" className="flex items-center gap-2">
               <Flame className="h-6 w-6 text-flame-amber" />
@@ -86,8 +96,8 @@ export function SidebarNav({ portal, open, onClose }: SidebarNavProps) {
           </Button>
         </div>
 
-        {/* Nav links */}
-        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto scrollbar-thin">
+        {/* Nav links — contained scroll within sidebar only */}
+        <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-3 space-y-0.5">
           {navItems.map((item) => {
             const isActive = location.pathname === item.href || 
               (item.href !== "/dashboard" && item.href !== "/admin/dashboard" && item.href !== "/lab/dashboard" && location.pathname.startsWith(item.href));
@@ -112,21 +122,9 @@ export function SidebarNav({ portal, open, onClose }: SidebarNavProps) {
           })}
         </nav>
 
-        {/* Collapse toggle — desktop only */}
-        <div className="hidden lg:flex border-t border-sidebar-border p-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="w-full text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent justify-center"
-            onClick={() => setCollapsed(!collapsed)}
-          >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <><ChevronLeft className="h-4 w-4 mr-1" /><span className="text-xs">Collapse</span></>}
-          </Button>
-        </div>
-
         {/* Footer */}
         {!collapsed && (
-          <div className="border-t border-sidebar-border px-3 py-2.5">
+          <div className="shrink-0 border-t border-sidebar-border px-3 py-2.5">
             <div className="flex items-center gap-2 rounded-lg border-l-2 border-l-flame-orange pl-2">
               <div className="h-7 w-7 rounded-full bg-sidebar-accent flex items-center justify-center text-flame-amber text-xs font-bold">
                 {portal === "user" ? "RK" : portal === "admin" ? "A" : "CL"}
