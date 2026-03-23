@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { notifications } from "@/lib/placeholder-data";
-import { cn } from "@/lib/utils";
 
 interface TopNavbarProps {
   onMenuClick: () => void;
@@ -17,7 +16,7 @@ export function TopNavbar({ onMenuClick, userName = "Rajesh Kumar" }: TopNavbarP
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-border bg-card px-4 lg:px-6">
       <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
         <Menu className="h-5 w-5" />
       </Button>
@@ -27,7 +26,7 @@ export function TopNavbar({ onMenuClick, userName = "Rajesh Kumar" }: TopNavbarP
         {pathParts.map((part, i) => (
           <span key={i} className="flex items-center gap-1">
             {i > 0 && <ChevronRight className="h-3.5 w-3.5" />}
-            <span className={cn("capitalize", i === pathParts.length - 1 && "font-medium text-foreground")}>
+            <span className={i === pathParts.length - 1 ? "font-medium text-foreground capitalize" : "capitalize"}>
               {part.replace(/-/g, " ")}
             </span>
           </span>
@@ -39,9 +38,9 @@ export function TopNavbar({ onMenuClick, userName = "Rajesh Kumar" }: TopNavbarP
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
+              <Bell className="h-5 w-5 text-foreground" />
               {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                   {unreadCount}
                 </span>
               )}
@@ -53,7 +52,7 @@ export function TopNavbar({ onMenuClick, userName = "Rajesh Kumar" }: TopNavbarP
             {notifications.map((n) => (
               <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-0.5 px-3 py-2">
                 <div className="flex items-center gap-2">
-                  {!n.read && <span className="h-2 w-2 rounded-full bg-secondary" />}
+                  {!n.read && <span className="h-2 w-2 rounded-full bg-primary" />}
                   <span className="font-medium text-sm">{n.title}</span>
                 </div>
                 <span className="text-xs text-muted-foreground">{n.message}</span>
@@ -67,7 +66,7 @@ export function TopNavbar({ onMenuClick, userName = "Rajesh Kumar" }: TopNavbarP
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="gap-2 px-2">
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-8 w-8 ring-2 ring-flame-orange ring-offset-1 ring-offset-card">
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                   {userName.split(" ").map((n) => n[0]).join("")}
                 </AvatarFallback>

@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, Package, FlaskConical, BookOpen, CreditCard, FileText, FolderOpen, UserCircle,
   Users, Building2, ClipboardList, Grid3X3, ShoppingBag, TestTubes, BarChart3, FileCheck,
-  Upload, DollarSign, CalendarDays, X, Beaker
+  Upload, DollarSign, CalendarDays, X, Flame, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -47,34 +48,46 @@ const labNav = [
 ];
 
 const navMap = { user: userNav, admin: adminNav, lab: labNav };
-const titleMap = { user: "FoodLab", admin: "FoodLab Admin", lab: "FoodLab Lab" };
+const subtitleMap = { user: "FOOD TESTING", admin: "ADMIN PANEL", lab: "LAB PORTAL" };
 
 export function SidebarNav({ portal, open, onClose }: SidebarNavProps) {
   const location = useLocation();
   const navItems = navMap[portal];
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <>
       {/* Overlay for mobile */}
-      {open && <div className="fixed inset-0 z-40 bg-foreground/20 lg:hidden" onClick={onClose} />}
+      {open && <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={onClose} />}
       
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sidebar text-sidebar-foreground transition-transform duration-200 lg:relative lg:translate-x-0",
-        open ? "translate-x-0" : "-translate-x-full"
+        "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-200 lg:relative lg:translate-x-0",
+        open ? "translate-x-0" : "-translate-x-full",
+        collapsed ? "w-16" : "w-60"
       )}>
         {/* Logo */}
-        <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
-          <Link to="/" className="flex items-center gap-2">
-            <Beaker className="h-6 w-6 text-sidebar-primary" />
-            <span className="text-lg font-bold">{titleMap[portal]}</span>
-          </Link>
-          <Button variant="ghost" size="icon" className="text-sidebar-foreground lg:hidden" onClick={onClose}>
-            <X className="h-5 w-5" />
+        <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-3">
+          {!collapsed && (
+            <Link to="/" className="flex items-center gap-2">
+              <Flame className="h-6 w-6 text-flame-amber" />
+              <div className="leading-none">
+                <span className="text-sm font-bold text-flame-amber">LITMUS</span>
+                <span className="block text-[9px] tracking-wider text-sidebar-foreground/50">{subtitleMap[portal]}</span>
+              </div>
+            </Link>
+          )}
+          {collapsed && (
+            <Link to="/" className="mx-auto">
+              <Flame className="h-6 w-6 text-flame-amber" />
+            </Link>
+          )}
+          <Button variant="ghost" size="icon" className="text-sidebar-foreground lg:hidden h-7 w-7" onClick={onClose}>
+            <X className="h-4 w-4" />
           </Button>
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto scrollbar-thin">
           {navItems.map((item) => {
             const isActive = location.pathname === item.href || 
               (item.href !== "/dashboard" && item.href !== "/admin/dashboard" && item.href !== "/lab/dashboard" && location.pathname.startsWith(item.href));
@@ -83,24 +96,50 @@ export function SidebarNav({ portal, open, onClose }: SidebarNavProps) {
                 key={item.href}
                 to={item.href}
                 onClick={onClose}
+                title={collapsed ? item.label : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
+                  collapsed && "justify-center px-2",
                   isActive 
-                    ? "bg-sidebar-accent text-sidebar-primary" 
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                    ? "bg-sidebar-active text-white" 
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
-                <item.icon className="h-4.5 w-4.5 shrink-0" />
-                {item.label}
+                <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-white" : "text-flame-amber/70")} />
+                {!collapsed && <span>{item.label}</span>}
               </Link>
             );
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="border-t border-sidebar-border p-4">
-          <p className="text-xs text-sidebar-foreground/50">© 2024 FoodLab Platform</p>
+        {/* Collapse toggle — desktop only */}
+        <div className="hidden lg:flex border-t border-sidebar-border p-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="w-full text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent justify-center"
+            onClick={() => setCollapsed(!collapsed)}
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <><ChevronLeft className="h-4 w-4 mr-1" /><span className="text-xs">Collapse</span></>}
+          </Button>
         </div>
+
+        {/* Footer */}
+        {!collapsed && (
+          <div className="border-t border-sidebar-border px-3 py-2.5">
+            <div className="flex items-center gap-2 rounded-lg border-l-2 border-l-flame-orange pl-2">
+              <div className="h-7 w-7 rounded-full bg-sidebar-accent flex items-center justify-center text-flame-amber text-xs font-bold">
+                {portal === "user" ? "RK" : portal === "admin" ? "A" : "CL"}
+              </div>
+              <div className="leading-none">
+                <p className="text-xs font-medium text-sidebar-accent-foreground">{portal === "user" ? "Rajesh Kumar" : portal === "admin" ? "Admin" : "Chennai Lab"}</p>
+                <p className="text-[10px] text-sidebar-foreground/40">
+                  {portal === "user" ? "Business User" : portal === "admin" ? "Administrator" : "Laboratory"}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </aside>
     </>
   );
