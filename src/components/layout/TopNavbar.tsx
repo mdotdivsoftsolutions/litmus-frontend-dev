@@ -37,7 +37,7 @@ export function TopNavbar({ onMenuClick, userName = "Rajesh Kumar" }: TopNavbarP
         {/* Notification bell */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative hover:bg-transparent">
               <Bell className="h-5 w-5 text-foreground" />
               {unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
@@ -65,7 +65,7 @@ export function TopNavbar({ onMenuClick, userName = "Rajesh Kumar" }: TopNavbarP
         {/* User avatar dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="p-0">
+            <Button variant="ghost" size="icon" className="p-0 hover:bg-transparent">
               <Avatar className="h-8 w-8 ring-2 ring-flame-orange ring-offset-1 ring-offset-card">
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                   {userName.split(" ").map((n) => n[0]).join("")}
