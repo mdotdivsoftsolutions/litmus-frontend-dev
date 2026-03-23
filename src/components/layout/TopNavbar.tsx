@@ -65,7 +65,7 @@ export function TopNavbar({ onMenuClick, userName = "Rajesh Kumar" }: TopNavbarP
         {/* User avatar dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="p-0">
+            <Button variant="ghost" size="icon" className="p-0 hover:bg-transparent">
               <Avatar className="h-8 w-8 ring-2 ring-flame-orange ring-offset-1 ring-offset-card">
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                   {userName.split(" ").map((n) => n[0]).join("")}
