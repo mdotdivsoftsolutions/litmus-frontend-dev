@@ -4,11 +4,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Download } from "lucide-react";
 import { laboratories } from "@/lib/placeholder-data";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Legend, PieChart, Pie, Cell } from "recharts";
 
 const bookingVolume = Array.from({ length: 14 }, (_, i) => ({
   day: `Mar ${i + 10}`,
   bookings: Math.floor(Math.random() * 20) + 5,
+}));
+
+const revenueByLab = laboratories.slice(0, 4).map(l => ({
+  name: l.city,
+  revenue: Math.floor(l.revenue / 1000),
+  bookings: l.activeBookings,
 }));
 
 const userGrowth = Array.from({ length: 12 }, (_, i) => ({
@@ -22,7 +28,20 @@ const topProducts = [
   { name: "Refined Sunflower Oil", bookings: 118, revenue: "₹3.5L" },
   { name: "Turmeric Powder", bookings: 98, revenue: "₹2.9L" },
   { name: "Mango Juice", bookings: 87, revenue: "₹2.6L" },
+  { name: "Chicken Sausages", bookings: 76, revenue: "₹2.3L" },
+  { name: "Paneer", bookings: 65, revenue: "₹1.9L" },
+  { name: "Green Tea", bookings: 54, revenue: "₹1.6L" },
+  { name: "Potato Chips", bookings: 48, revenue: "₹1.4L" },
+  { name: "Instant Noodles", bookings: 42, revenue: "₹1.2L" },
 ];
+
+const testTypeData = [
+  { name: "Chemical", value: 45, color: "#E03A18" },
+  { name: "Microbiological", value: 30, color: "#F26419" },
+  { name: "Physical", value: 25, color: "#F59E2B" },
+];
+
+const tooltipStyle = { background: "#1C1C1E", border: "none", borderRadius: 8, color: "#fff" };
 
 export default function AdminAnalytics() {
   return (
@@ -42,64 +61,118 @@ export default function AdminAnalytics() {
         </div>
       </div>
 
+      {/* Row 1: Booking Volume + Revenue by Lab */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-0 shadow-sm">
-          <CardHeader><CardTitle className="text-base">Booking Volume</CardTitle></CardHeader>
+        <Card className="border border-border shadow-sm">
+          <CardHeader><CardTitle className="text-base">Booking Volume (Daily)</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={260}>
               <BarChart data={bookingVolume}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 90%)" />
-                <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="bookings" fill="hsl(213, 52%, 24%)" radius={[4, 4, 0, 0]} />
+                <defs>
+                  <linearGradient id="bookingGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#E03A18" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#F59E2B" stopOpacity={0.8}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0EBE4" />
+                <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#9A9A9A" }} />
+                <YAxis tick={{ fontSize: 10, fill: "#9A9A9A" }} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="bookings" fill="url(#bookingGrad)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
-          <CardHeader><CardTitle className="text-base">User Growth</CardTitle></CardHeader>
+        <Card className="border border-border shadow-sm">
+          <CardHeader><CardTitle className="text-base">Revenue by Lab (₹K)</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={userGrowth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 90%)" />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Line type="monotone" dataKey="users" stroke="hsl(176, 78%, 25%)" strokeWidth={2} />
-              </LineChart>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={revenueByLab} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0EBE4" />
+                <XAxis type="number" tick={{ fontSize: 10, fill: "#9A9A9A" }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#3D3D3D" }} width={80} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="revenue" fill="#F26419" radius={[0, 4, 4, 0]} name="Revenue (₹K)" />
+              </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
+      {/* Row 2: Top Products + User Growth */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-0 shadow-sm">
+        <Card className="border border-border shadow-sm">
           <CardHeader><CardTitle className="text-base">Top 10 Products</CardTitle></CardHeader>
           <CardContent>
             <Table>
-              <TableHeader><TableRow><TableHead>#</TableHead><TableHead>Product</TableHead><TableHead>Bookings</TableHead><TableHead>Revenue</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow className="bg-muted/50"><TableHead>#</TableHead><TableHead>Product</TableHead><TableHead>Bookings</TableHead><TableHead>Revenue</TableHead></TableRow></TableHeader>
               <TableBody>
                 {topProducts.map((p, i) => (
-                  <TableRow key={i}><TableCell>{i + 1}</TableCell><TableCell className="font-medium">{p.name}</TableCell><TableCell>{p.bookings}</TableCell><TableCell>{p.revenue}</TableCell></TableRow>
+                  <TableRow key={i} className="hover:bg-muted/30">
+                    <TableCell className="text-muted-foreground">{i + 1}</TableCell>
+                    <TableCell className="font-medium">{p.name}</TableCell>
+                    <TableCell>{p.bookings}</TableCell>
+                    <TableCell className="text-primary font-medium">{p.revenue}</TableCell>
+                  </TableRow>
                 ))}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
-          <CardHeader><CardTitle className="text-base">Lab Performance</CardTitle></CardHeader>
+        <Card className="border border-border shadow-sm">
+          <CardHeader><CardTitle className="text-base">User Growth</CardTitle></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={laboratories.slice(0, 4).map((l) => ({ name: l.city, tat: 3 + Math.random() * 2, completion: 90 + Math.random() * 10 }))} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 90%)" />
-                <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={80} />
-                <Tooltip />
-                <Bar dataKey="completion" fill="hsl(142, 71%, 45%)" name="Completion %" radius={[0, 4, 4, 0]} />
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={userGrowth}>
+                <defs>
+                  <linearGradient id="userGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#F26419" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#F26419" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0EBE4" />
+                <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#9A9A9A" }} />
+                <YAxis tick={{ fontSize: 10, fill: "#9A9A9A" }} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Area type="monotone" dataKey="users" stroke="#F26419" strokeWidth={2} fill="url(#userGrad)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 3: Lab Performance + Test Type Distribution */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="border border-border shadow-sm">
+          <CardHeader><CardTitle className="text-base">Lab Performance — TAT & Completion</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={laboratories.slice(0, 5).map((l) => ({ name: l.city, tat: +(3 + Math.random() * 2).toFixed(1), completion: +(90 + Math.random() * 10).toFixed(0) }))}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F0EBE4" />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#9A9A9A" }} />
+                <YAxis tick={{ fontSize: 10, fill: "#9A9A9A" }} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Legend iconType="circle" iconSize={8} />
+                <Bar dataKey="completion" fill="#2D8F6F" name="Completion %" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="tat" fill="#F59E2B" name="Avg TAT (days)" radius={[4, 4, 0, 0]} />
               </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border shadow-sm">
+          <CardHeader><CardTitle className="text-base">Test Type Distribution</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie data={testTypeData} cx="50%" cy="50%" innerRadius={55} outerRadius={95} dataKey="value" paddingAngle={3} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                  {testTypeData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                </Pie>
+                <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} />
+                <Tooltip contentStyle={tooltipStyle} />
+              </PieChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
