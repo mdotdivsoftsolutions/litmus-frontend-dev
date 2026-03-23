@@ -5,8 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, Milk, Coffee, Wheat, Flame, Drumstick, Droplets, Package, Cookie } from "lucide-react";
 import { categories, products } from "@/lib/placeholder-data";
+
+const iconMap: Record<string, React.ElementType> = {
+  milk: Milk,
+  coffee: Coffee,
+  wheat: Wheat,
+  flame: Flame,
+  drumstick: Drumstick,
+  droplets: Droplets,
+  package: Package,
+  cookie: Cookie,
+};
 
 export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -24,17 +35,22 @@ export default function ProductsPage() {
 
       {/* Category grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {categories.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setSelectedCategory(selectedCategory === cat.name ? null : cat.name)}
-            className={`rounded-lg border p-4 text-center transition-all hover:shadow-sm ${selectedCategory === cat.name ? "border-secondary bg-secondary/5 shadow-sm" : "border-border bg-card"}`}
-          >
-            <span className="text-2xl">{cat.emoji}</span>
-            <p className="mt-1 text-sm font-medium text-foreground">{cat.name}</p>
-            <p className="text-xs text-muted-foreground">{cat.count} products</p>
-          </button>
-        ))}
+        {categories.map((cat) => {
+          const IconComp = iconMap[cat.icon] || Package;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(selectedCategory === cat.name ? null : cat.name)}
+              className={`rounded-lg border p-4 text-center transition-all hover:shadow-sm ${selectedCategory === cat.name ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-card"}`}
+            >
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-flame-red-tint">
+                <IconComp className="h-5 w-5 text-primary" />
+              </div>
+              <p className="mt-2 text-sm font-medium text-foreground">{cat.name}</p>
+              <p className="text-xs text-muted-foreground">{cat.count} products</p>
+            </button>
+          );
+        })}
       </div>
 
       {/* Filters */}
