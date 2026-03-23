@@ -37,7 +37,7 @@ export function TopNavbar({ onMenuClick, userName = "Rajesh Kumar" }: TopNavbarP
         {/* Notification bell */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative hover:bg-transparent">
               <Bell className="h-5 w-5 text-foreground" />
               {unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
