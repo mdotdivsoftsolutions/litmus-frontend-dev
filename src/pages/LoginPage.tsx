@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Flame, Eye, EyeOff } from "lucide-react";
+import loginLabImg from "@/assets/login-lab.jpg";
 
 export default function LoginPage() {
   const [role, setRole] = useState("user");
