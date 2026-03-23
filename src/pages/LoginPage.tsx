@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Flame, Eye, EyeOff } from "lucide-react";
+import loginLabImg from "@/assets/login-lab.jpg";
 
 export default function LoginPage() {
   const [role, setRole] = useState("user");
@@ -18,26 +19,24 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen">
       {/* Left Panel — branding */}
-      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gradient-to-br from-[#1C1C1E] via-[#2D1A0A] to-[#3D1F0A] relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-flame-orange rounded-full blur-[120px]" />
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-flame-amber rounded-full blur-[120px]" />
-        </div>
-        <div className="relative z-10 px-12 text-center max-w-md">
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <Flame className="h-12 w-12 text-flame-amber" />
-            <div className="text-left">
-              <h1 className="text-3xl font-bold text-flame-amber">LITMUS</h1>
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <img src={loginLabImg} alt="Food testing laboratory" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+        <div className="relative z-10 flex flex-col justify-end p-12 text-white">
+          <div className="flex items-center gap-3 mb-6">
+            <Flame className="h-10 w-10 text-flame-amber" />
+            <div>
+              <h1 className="text-2xl font-bold text-flame-amber">LITMUS</h1>
               <p className="text-xs tracking-[0.2em] text-white/50">FOOD ANALYTICS</p>
             </div>
           </div>
-          <h2 className="text-2xl font-semibold text-white mb-4">
+          <h2 className="text-2xl font-semibold mb-3">
             India's Trusted Food Testing Platform
           </h2>
-          <p className="text-white/60 text-sm leading-relaxed">
+          <p className="text-white/70 text-sm leading-relaxed max-w-md">
             Get your food products lab tested with NABL-accredited laboratories. Fast results, transparent pricing, certified reports.
           </p>
-          <div className="mt-10 flex justify-center gap-8 text-white/40 text-xs">
+          <div className="mt-8 flex gap-8 text-white/50 text-xs">
             <div><span className="block text-2xl font-bold text-flame-amber">500+</span>Tests</div>
             <div><span className="block text-2xl font-bold text-flame-amber">50+</span>Labs</div>
             <div><span className="block text-2xl font-bold text-flame-amber">10K+</span>Reports</div>
