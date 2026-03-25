@@ -4,23 +4,26 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { PortalLayout } from "@/components/layout/PortalLayout";
-import Index from "./pages/Index.tsx";
+import { UserLayout } from "@/components/layout/UserLayout";
 import NotFound from "./pages/NotFound.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
 import RegisterPage from "./pages/RegisterPage.tsx";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage.tsx";
-import UserDashboard from "./pages/user/UserDashboard.tsx";
-import ProductsPage from "./pages/user/ProductsPage.tsx";
-import ProductDetailPage from "./pages/user/ProductDetailPage.tsx";
-import LaboratoriesPage from "./pages/user/LaboratoriesPage.tsx";
-import LaboratoryDetailPage from "./pages/user/LaboratoryDetailPage.tsx";
+
+// User Consumer Pages
+import HomePage from "./pages/user/HomePage.tsx";
+import TestsListingPage from "./pages/user/TestsListingPage.tsx";
+import TestDetailPage from "./pages/user/TestDetailPage.tsx";
+import LabsListingPage from "./pages/user/LabsListingPage.tsx";
+import LabDetailConsumerPage from "./pages/user/LabDetailConsumerPage.tsx";
+import CartPage from "./pages/user/CartPage.tsx";
 import NewBookingPage from "./pages/user/NewBookingPage.tsx";
-import BookingHistoryPage from "./pages/user/BookingHistoryPage.tsx";
-import BookingDetailPage from "./pages/user/BookingDetailPage.tsx";
-import PaymentsPage from "./pages/user/PaymentsPage.tsx";
-import ReportsPage from "./pages/user/ReportsPage.tsx";
-import DocumentsPage from "./pages/user/DocumentsPage.tsx";
-import UserProfilePage from "./pages/user/UserProfilePage.tsx";
+import OrdersPage from "./pages/user/OrdersPage.tsx";
+import OrderDetailPage from "./pages/user/OrderDetailPage.tsx";
+import ConsumerReportsPage from "./pages/user/ConsumerReportsPage.tsx";
+import ConsumerProfilePage from "./pages/user/ConsumerProfilePage.tsx";
+
+// Admin
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
 import UserManagement from "./pages/admin/UserManagement.tsx";
 import LabManagement from "./pages/admin/LabManagement.tsx";
@@ -31,6 +34,8 @@ import TestManagement from "./pages/admin/TestManagement.tsx";
 import AdminPayments from "./pages/admin/AdminPayments.tsx";
 import AdminAnalytics from "./pages/admin/AdminAnalytics.tsx";
 import AdminReports from "./pages/admin/AdminReports.tsx";
+
+// Lab
 import LabDashboard from "./pages/lab/LabDashboard.tsx";
 import LabBookings from "./pages/lab/LabBookings.tsx";
 import UploadResultsPage from "./pages/lab/UploadResultsPage.tsx";
@@ -53,23 +58,22 @@ const App = () => (
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-          {/* User Portal */}
-          <Route path="/dashboard" element={<PortalLayout portal="user" userName="Rajesh Kumar" />}>
-            <Route index element={<UserDashboard />} />
-            <Route path="products" element={<ProductsPage />} />
-            <Route path="products/:id" element={<ProductDetailPage />} />
-            <Route path="laboratories" element={<LaboratoriesPage />} />
-            <Route path="laboratories/:id" element={<LaboratoryDetailPage />} />
-            <Route path="bookings/new" element={<NewBookingPage />} />
-            <Route path="bookings" element={<BookingHistoryPage />} />
-            <Route path="bookings/:id" element={<BookingDetailPage />} />
-            <Route path="payments" element={<PaymentsPage />} />
-            <Route path="reports" element={<ReportsPage />} />
-            <Route path="documents" element={<DocumentsPage />} />
-            <Route path="profile" element={<UserProfilePage />} />
+          {/* User Consumer Portal — NO sidebar */}
+          <Route element={<UserLayout />}>
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/tests" element={<TestsListingPage />} />
+            <Route path="/tests/:id" element={<TestDetailPage />} />
+            <Route path="/labs" element={<LabsListingPage />} />
+            <Route path="/labs/:id" element={<LabDetailConsumerPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/bookings/new" element={<NewBookingPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/:id" element={<OrderDetailPage />} />
+            <Route path="/reports" element={<ConsumerReportsPage />} />
+            <Route path="/profile" element={<ConsumerProfilePage />} />
           </Route>
 
-          {/* Admin Portal */}
+          {/* Admin Portal — sidebar stays */}
           <Route path="/admin" element={<PortalLayout portal="admin" userName="Admin User" />}>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<UserManagement />} />
@@ -83,7 +87,7 @@ const App = () => (
             <Route path="reports" element={<AdminReports />} />
           </Route>
 
-          {/* Lab Portal */}
+          {/* Lab Portal — sidebar stays */}
           <Route path="/lab" element={<PortalLayout portal="lab" userName="Chennai Lab" />}>
             <Route path="dashboard" element={<LabDashboard />} />
             <Route path="bookings" element={<LabBookings />} />
