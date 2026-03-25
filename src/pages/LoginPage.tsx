@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const roleRedirects: Record<string, string> = { user: "/dashboard", admin: "/admin/dashboard", lab: "/lab/dashboard" };
+  const roleRedirects: Record<string, string> = { user: "/home", admin: "/admin/dashboard", lab: "/lab/dashboard" };
 
   return (
     <div className="flex min-h-screen">
