@@ -3,16 +3,18 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, ShoppingCart, Lock, Shield } from "lucide-react";
+import { X, ShoppingCart, Lock, Shield, Tag } from "lucide-react";
 
 const cartItems = [
-  { id: "1", product: "Full Cream Milk", tests: 3, lab: "Chennai Food Testing Laboratory", price: 3600 },
-  { id: "2", product: "Basmati Rice", tests: 2, lab: null, price: 2400 },
+  { id: "1", product: "Full Cream Milk", tests: 3, lab: "Chennai Food Testing Laboratory", price: 3600, mrp: 6300 },
+  { id: "2", product: "Basmati Rice", tests: 2, lab: null, price: 2400, mrp: 4200 },
 ];
 
 export default function CartPage() {
   const [items, setItems] = useState(cartItems);
   const subtotal = items.reduce((a, b) => a + b.price, 0);
+  const totalMrp = items.reduce((a, b) => a + b.mrp, 0);
+  const discount = totalMrp - subtotal;
   const gst = Math.round(subtotal * 0.18);
   const total = subtotal + gst;
 
@@ -35,7 +37,7 @@ export default function CartPage() {
           {/* Cart Items */}
           <div className="lg:col-span-3 space-y-3">
             {items.map((item) => (
-              <Card key={item.id} className="border border-border rounded-2xl">
+              <Card key={item.id} className="border border-border rounded-xl shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
@@ -44,11 +46,12 @@ export default function CartPage() {
                       {item.lab ? (
                         <Badge variant="outline" className="text-xs">{item.lab}</Badge>
                       ) : (
-                        <Link to="/labs" className="text-sm font-medium text-accent hover:underline">Select Lab →</Link>
+                        <Link to="/labs" className="text-sm font-medium text-primary hover:underline">Select Lab →</Link>
                       )}
                     </div>
                     <div className="text-right space-y-1">
-                      <p className="font-bold text-primary">₹{item.price.toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground line-through">₹{item.mrp.toLocaleString()}</p>
+                      <p className="font-bold text-primary text-lg">₹{item.price.toLocaleString()}</p>
                       <button onClick={() => removeItem(item.id)} className="text-muted-foreground hover:text-destructive">
                         <X className="h-4 w-4" />
                       </button>
@@ -62,23 +65,51 @@ export default function CartPage() {
           {/* Order Summary */}
           <div className="lg:col-span-2">
             <div className="lg:sticky lg:top-20">
-              <Card className="border border-border rounded-2xl">
+              <Card className="rounded-2xl shadow-md border-0">
                 <CardContent className="p-5 space-y-4">
-                  <h3 className="font-bold text-foreground">Order Summary</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">₹{subtotal.toLocaleString()}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">GST (18%)</span><span className="text-foreground">₹{gst.toLocaleString()}</span></div>
-                    <div className="flex justify-between pt-2 border-t border-border font-bold text-base"><span>Total</span><span className="text-primary">₹{total.toLocaleString()}</span></div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-foreground">{items.length} products added</span>
+                    <div className="text-right">
+                      <span className="text-sm text-muted-foreground line-through mr-2">₹{totalMrp.toLocaleString()}</span>
+                      <span className="text-lg font-bold text-primary">₹{subtotal.toLocaleString()}</span>
+                    </div>
                   </div>
 
                   {items.some((i) => !i.lab) && (
                     <p className="text-xs text-accent">⚠ Select a lab for all items before proceeding</p>
                   )}
 
-                  <Button className="w-full bg-primary hover:bg-primary-deep rounded-xl h-11 font-semibold" 
+                  <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg h-12 font-semibold text-base"
                     disabled={items.some((i) => !i.lab)} asChild={!items.some((i) => !i.lab) ? true : undefined}>
                     {!items.some((i) => !i.lab) ? <Link to="/bookings/new">Proceed to Book</Link> : <span>Proceed to Book</span>}
                   </Button>
+
+                  {/* Coupon */}
+                  <div className="border-t border-border pt-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Tag className="h-4 w-4 text-litmus-teal" />
+                        <span className="font-bold text-foreground text-sm">LITMUS10</span>
+                      </div>
+                      <Button variant="outline" size="sm" className="rounded-full border-primary text-primary text-xs h-7 px-3">APPLY</Button>
+                    </div>
+                    <p className="text-xs text-litmus-teal mt-1">Save ₹{Math.round(subtotal * 0.1).toLocaleString()} with this coupon</p>
+                  </div>
+
+                  {/* Payment Summary */}
+                  <div className="border-t border-border pt-3 space-y-2 text-sm">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Total MRP</span><span>₹{totalMrp.toLocaleString()}</span></div>
+                    <div className="flex justify-between"><span className="text-litmus-teal">Discount on MRP</span><span className="text-litmus-teal">- ₹{discount.toLocaleString()}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Platform Fee</span><span><span className="line-through text-muted-foreground mr-1">₹150</span><span className="text-litmus-teal font-medium">FREE</span></span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">GST (18%)</span><span>₹{gst.toLocaleString()}</span></div>
+                    <div className="border-t border-border pt-2 flex justify-between font-bold text-base">
+                      <span>To Pay</span><span>₹{total.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-litmus-mint rounded-lg px-3 py-2 text-center">
+                    <span className="text-xs text-litmus-dark font-medium">🏷 You will save ₹{(discount + 150).toLocaleString()} on this order.</span>
+                  </div>
 
                   <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground pt-2">
                     <span className="flex items-center gap-1"><Lock className="h-3 w-3" /> Secure Payment</span>

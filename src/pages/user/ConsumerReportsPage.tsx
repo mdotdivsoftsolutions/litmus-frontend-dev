@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Eye, Download, FileText } from "lucide-react";
+import { Search, Eye, Download } from "lucide-react";
 
 const reports = [
   { id: "1", testName: "Fat Content Analysis", lab: "Chennai Food Testing Laboratory", date: "2024-03-19", status: "Verified", product: "Full Cream Milk", tests: 3 },
@@ -23,15 +23,15 @@ export default function ConsumerReportsPage() {
       <h1 className="text-2xl font-bold text-foreground">Reports</h1>
 
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Search reports..." className="pl-12 h-12 rounded-xl text-base border-border" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input placeholder="Search reports..." className="pl-10 h-11 rounded-full border-border text-sm" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         {filtered.map((r) => (
-          <Card key={r.id} className="border border-border rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+          <div key={r.id} className="bg-card rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div className="h-1.5 bg-accent" />
-            <CardContent className="p-5 space-y-3">
+            <div className="p-5 space-y-3">
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-foreground">{r.testName}</h3>
@@ -47,11 +47,11 @@ export default function ConsumerReportsPage() {
                 <Badge variant="outline" className="text-xs">{r.tests} tests</Badge>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1 rounded-lg gap-1"><Eye className="h-3.5 w-3.5" />Preview</Button>
-                <Button size="sm" className="flex-1 rounded-lg gap-1 bg-primary hover:bg-primary-deep"><Download className="h-3.5 w-3.5" />Download</Button>
+                <Button variant="outline" size="sm" className="flex-1 rounded-lg gap-1 text-xs"><Eye className="h-3.5 w-3.5" />Preview</Button>
+                <Button size="sm" className="flex-1 rounded-lg gap-1 bg-primary hover:bg-primary-deep text-xs"><Download className="h-3.5 w-3.5" />Download</Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 
