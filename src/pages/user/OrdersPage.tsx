@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { MapPin, Download, Eye } from "lucide-react";
 import { bookings } from "@/lib/placeholder-data";
+import { cn } from "@/lib/utils";
 
 const tabs = ["All", "Active", "Completed", "Reports Ready"];
 
@@ -28,11 +29,12 @@ export default function OrdersPage() {
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {tabs.map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+            className={cn(
+              "shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors",
               activeTab === tab
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card text-muted-foreground border-border hover:border-accent"
-            }`}>
+                ? "bg-primary text-primary-foreground"
+                : "bg-card text-muted-foreground border border-border hover:border-accent"
+            )}>
             {tab}
           </button>
         ))}
@@ -41,7 +43,7 @@ export default function OrdersPage() {
       {/* Order Cards */}
       <div className="space-y-3">
         {filtered.map((b) => (
-          <Card key={b.id} className="border border-border rounded-2xl hover:shadow-md transition-shadow">
+          <Card key={b.id} className="rounded-xl shadow-sm hover:shadow-md transition-shadow border-0">
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground font-mono">{b.id}</span>
@@ -55,13 +57,13 @@ export default function OrdersPage() {
                 <Badge variant="outline" className="mt-1 text-xs">{b.testsCount} tests</Badge>
               </div>
               <div className="flex items-center justify-between pt-2 border-t border-border">
-                <span className="font-bold text-primary">₹{b.amount.toLocaleString()}</span>
+                <span className="font-bold text-primary text-lg">₹{b.amount.toLocaleString()}</span>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="rounded-full gap-1" asChild>
+                  <Button variant="outline" size="sm" className="rounded-full gap-1 text-xs" asChild>
                     <Link to={`/orders/${b.id}`}><Eye className="h-3.5 w-3.5" /> Track Order</Link>
                   </Button>
                   {b.status === "Completed" && (
-                    <Button size="sm" className="rounded-full gap-1 bg-litmus-teal hover:bg-litmus-dark">
+                    <Button size="sm" className="rounded-full gap-1 bg-litmus-teal hover:bg-litmus-dark text-primary-foreground text-xs">
                       <Download className="h-3.5 w-3.5" /> Report
                     </Button>
                   )}
