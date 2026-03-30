@@ -71,11 +71,11 @@ const featuredTests = [
 ];
 
 const experienceItems = [
-  { title: "Choose precision — On time, every time", bullets: ["98% on time report delivery", "Reports within 3–5 days guaranteed", "Digital reports via WhatsApp & email"], image: heroScientist1 },
-  { title: "Expert certified analysts", bullets: ["NABL accredited lab partners", "Experienced food safety professionals", "ISO 17025 certified processes"], image: heroScientist2 },
-  { title: "Painless sample submission", bullets: ["Easy online booking", "Doorstep pickup available", "Clear instructions for every test"], image: heroPerson1 },
-  { title: "Fully accredited laboratories", bullets: ["NABL & FSSAI certifications", "State-of-the-art equipment", "50+ labs across India"], image: heroScientist1 },
-  { title: "Businesses love us", bullets: ["4.8/5 Google rating", "500+ verified reviews", "Trusted by 10,000+ businesses"], image: heroPerson1 },
+  { title: "Choose precision — On time, every time", bullets: ["98% on time report delivery", "Reports within 3–5 days guaranteed", "Digital reports via WhatsApp & email"], image: bannerHero1 },
+  { title: "Expert certified analysts", bullets: ["NABL accredited lab partners", "Experienced food safety professionals", "ISO 17025 certified processes"], image: bannerHero2 },
+  { title: "Painless sample submission", bullets: ["Easy online booking", "Doorstep pickup available", "Clear instructions for every test"], image: bannerPromo },
+  { title: "Fully accredited laboratories", bullets: ["NABL & FSSAI certifications", "State-of-the-art equipment", "50+ labs across India"], image: bannerHero3 },
+  { title: "Businesses love us", bullets: ["4.8/5 Google rating", "500+ verified reviews", "Trusted by 10,000+ businesses"], image: bannerHero1 },
 ];
 
 const categoryGrid = [
