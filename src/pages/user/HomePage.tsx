@@ -134,17 +134,28 @@ export default function HomePage() {
     <div className="animate-fade-in">
 
       {/* ═══════════ HERO CAROUSEL ═══════════ */}
-      <section className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #1C1C1E 0%, #2D1A0A 60%, #3D1F0A 100%)" }}>
-        {/* Glassmorphism background blobs */}
+      <section className="relative overflow-hidden">
+        {/* Full-width banner image */}
+        <div className="absolute inset-0">
+          <img
+            src={heroSlides[activeSlide].image}
+            alt="Banner"
+            className="w-full h-full object-cover transition-opacity duration-700"
+            width={1920}
+            height={640}
+          />
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1C1C1E]/90 via-[#1C1C1E]/70 to-[#1C1C1E]/30" />
+        </div>
+
+        {/* Glassmorphism blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-20 -right-20 w-[500px] h-[500px] rounded-full bg-[hsl(var(--flame-orange))] opacity-[0.08] blur-[120px]" />
           <div className="absolute -bottom-32 -left-20 w-[400px] h-[400px] rounded-full bg-[hsl(var(--flame-amber))] opacity-[0.06] blur-[100px]" />
-          <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] rounded-full bg-[hsl(var(--primary))] opacity-[0.05] blur-[80px]" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 lg:px-8 relative">
-          <div className="relative min-h-[280px] sm:min-h-[340px] lg:min-h-[400px] flex items-center py-8 lg:py-12">
-            {/* Text content */}
+          <div className="relative min-h-[280px] sm:min-h-[340px] lg:min-h-[400px] flex items-center py-10 lg:py-14">
             <div className="space-y-4 max-w-xl z-10 relative">
               <span className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md text-flame-amber px-4 py-1.5 rounded-full text-xs font-medium border border-white/10">
                 <Flame className="h-3 w-3" />
@@ -162,21 +173,6 @@ export default function HomePage() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-            </div>
-
-            {/* Hero image */}
-            <div className="absolute right-0 bottom-0 h-full w-[40%] hidden md:flex items-end justify-center">
-              <div className="relative h-[95%] w-full flex items-end justify-center">
-                {/* Glow behind person */}
-                <div className="absolute bottom-10 w-[200px] h-[200px] rounded-full bg-[hsl(var(--flame-orange))] opacity-20 blur-[60px]" />
-                <img
-                  src={heroSlides[activeSlide].image}
-                  alt="Professional"
-                  className="h-[90%] w-auto object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.4)] relative z-10 transition-opacity duration-500"
-                  width={400}
-                  height={500}
-                />
-              </div>
             </div>
           </div>
         </div>
