@@ -135,4 +135,11 @@
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--flame-amber))] to-[hsl(var(--flame-gold))];
   }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
