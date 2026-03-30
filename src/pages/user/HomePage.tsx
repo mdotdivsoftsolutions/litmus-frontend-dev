@@ -419,9 +419,9 @@ export default function HomePage() {
               <img
                 src={experienceItems[expandedExp].image}
                 alt="Experience"
-                className="h-[85%] w-auto object-contain relative z-10 drop-shadow-[0_10px_30px_rgba(0,0,0,0.3)] transition-all duration-500"
+                className="w-full h-full object-cover relative z-10 transition-all duration-500"
                 loading="lazy"
-                width={400}
+                width={600}
                 height={400}
               />
               <div className="absolute top-4 left-4 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2 border border-white/10 z-20">
