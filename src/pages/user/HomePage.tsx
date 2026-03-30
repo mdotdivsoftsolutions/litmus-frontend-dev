@@ -376,8 +376,8 @@ export default function HomePage() {
                 <Link to="/tests">Book Now <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
               </Button>
             </div>
-            <div className="hidden sm:flex w-[200px] items-end justify-center shrink-0">
-              <img src={heroPerson1} alt="Professional" className="h-[180px] w-auto object-contain drop-shadow-xl" loading="lazy" width={200} height={200} />
+            <div className="hidden sm:block w-[200px] h-[180px] shrink-0 rounded-2xl overflow-hidden">
+              <img src={bannerHero1} alt="Lab testing" className="w-full h-full object-cover" loading="lazy" width={200} height={180} />
             </div>
           </div>
         </div>
