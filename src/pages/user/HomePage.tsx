@@ -22,7 +22,7 @@ const heroSlides = [
     sub: "Reports in 3–5 days",
     cta: "Register in 60 seconds",
     link: "/tests",
-    image: heroScientist1,
+    image: bannerHero1,
   },
   {
     tag: "50+ NABL Accredited Labs",
@@ -31,7 +31,7 @@ const heroSlides = [
     sub: "NABL & FSSAI certified processes",
     cta: "Find a Lab",
     link: "/labs",
-    image: heroScientist2,
+    image: bannerHero2,
   },
   {
     tag: "Most Comprehensive Panel",
@@ -40,7 +40,7 @@ const heroSlides = [
     sub: "28 parameters • All categories",
     cta: "Book Now",
     link: "/tests",
-    image: heroPerson1,
+    image: bannerHero3,
   },
 ];
 
