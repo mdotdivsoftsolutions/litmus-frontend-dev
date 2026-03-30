@@ -8,9 +8,10 @@ import {
 } from "lucide-react";
 import { categories, products, laboratories } from "@/lib/placeholder-data";
 import { cn } from "@/lib/utils";
-import heroScientist1 from "@/assets/hero-scientist-1.png";
-import heroScientist2 from "@/assets/hero-scientist-2.png";
-import heroPerson1 from "@/assets/hero-person-1.png";
+import bannerHero1 from "@/assets/banner-hero-1.jpg";
+import bannerHero2 from "@/assets/banner-hero-2.jpg";
+import bannerHero3 from "@/assets/banner-hero-3.jpg";
+import bannerPromo from "@/assets/banner-promo.jpg";
 
 /* ─── Data ─── */
 const heroSlides = [
@@ -21,7 +22,7 @@ const heroSlides = [
     sub: "Reports in 3–5 days",
     cta: "Register in 60 seconds",
     link: "/tests",
-    image: heroScientist1,
+    image: bannerHero1,
   },
   {
     tag: "50+ NABL Accredited Labs",
@@ -30,7 +31,7 @@ const heroSlides = [
     sub: "NABL & FSSAI certified processes",
     cta: "Find a Lab",
     link: "/labs",
-    image: heroScientist2,
+    image: bannerHero2,
   },
   {
     tag: "Most Comprehensive Panel",
@@ -39,7 +40,7 @@ const heroSlides = [
     sub: "28 parameters • All categories",
     cta: "Book Now",
     link: "/tests",
-    image: heroPerson1,
+    image: bannerHero3,
   },
 ];
 
@@ -70,11 +71,11 @@ const featuredTests = [
 ];
 
 const experienceItems = [
-  { title: "Choose precision — On time, every time", bullets: ["98% on time report delivery", "Reports within 3–5 days guaranteed", "Digital reports via WhatsApp & email"], image: heroScientist1 },
-  { title: "Expert certified analysts", bullets: ["NABL accredited lab partners", "Experienced food safety professionals", "ISO 17025 certified processes"], image: heroScientist2 },
-  { title: "Painless sample submission", bullets: ["Easy online booking", "Doorstep pickup available", "Clear instructions for every test"], image: heroPerson1 },
-  { title: "Fully accredited laboratories", bullets: ["NABL & FSSAI certifications", "State-of-the-art equipment", "50+ labs across India"], image: heroScientist1 },
-  { title: "Businesses love us", bullets: ["4.8/5 Google rating", "500+ verified reviews", "Trusted by 10,000+ businesses"], image: heroPerson1 },
+  { title: "Choose precision — On time, every time", bullets: ["98% on time report delivery", "Reports within 3–5 days guaranteed", "Digital reports via WhatsApp & email"], image: bannerHero1 },
+  { title: "Expert certified analysts", bullets: ["NABL accredited lab partners", "Experienced food safety professionals", "ISO 17025 certified processes"], image: bannerHero2 },
+  { title: "Painless sample submission", bullets: ["Easy online booking", "Doorstep pickup available", "Clear instructions for every test"], image: bannerPromo },
+  { title: "Fully accredited laboratories", bullets: ["NABL & FSSAI certifications", "State-of-the-art equipment", "50+ labs across India"], image: bannerHero3 },
+  { title: "Businesses love us", bullets: ["4.8/5 Google rating", "500+ verified reviews", "Trusted by 10,000+ businesses"], image: bannerHero1 },
 ];
 
 const categoryGrid = [
@@ -133,17 +134,28 @@ export default function HomePage() {
     <div className="animate-fade-in">
 
       {/* ═══════════ HERO CAROUSEL ═══════════ */}
-      <section className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #1C1C1E 0%, #2D1A0A 60%, #3D1F0A 100%)" }}>
-        {/* Glassmorphism background blobs */}
+      <section className="relative overflow-hidden">
+        {/* Full-width banner image */}
+        <div className="absolute inset-0">
+          <img
+            src={heroSlides[activeSlide].image}
+            alt="Banner"
+            className="w-full h-full object-cover transition-opacity duration-700"
+            width={1920}
+            height={640}
+          />
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1C1C1E]/90 via-[#1C1C1E]/70 to-[#1C1C1E]/30" />
+        </div>
+
+        {/* Glassmorphism blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-20 -right-20 w-[500px] h-[500px] rounded-full bg-[hsl(var(--flame-orange))] opacity-[0.08] blur-[120px]" />
           <div className="absolute -bottom-32 -left-20 w-[400px] h-[400px] rounded-full bg-[hsl(var(--flame-amber))] opacity-[0.06] blur-[100px]" />
-          <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] rounded-full bg-[hsl(var(--primary))] opacity-[0.05] blur-[80px]" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 lg:px-8 relative">
-          <div className="relative min-h-[280px] sm:min-h-[340px] lg:min-h-[400px] flex items-center py-8 lg:py-12">
-            {/* Text content */}
+          <div className="relative min-h-[280px] sm:min-h-[340px] lg:min-h-[400px] flex items-center py-10 lg:py-14">
             <div className="space-y-4 max-w-xl z-10 relative">
               <span className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md text-flame-amber px-4 py-1.5 rounded-full text-xs font-medium border border-white/10">
                 <Flame className="h-3 w-3" />
@@ -161,21 +173,6 @@ export default function HomePage() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-            </div>
-
-            {/* Hero image */}
-            <div className="absolute right-0 bottom-0 h-full w-[40%] hidden md:flex items-end justify-center">
-              <div className="relative h-[95%] w-full flex items-end justify-center">
-                {/* Glow behind person */}
-                <div className="absolute bottom-10 w-[200px] h-[200px] rounded-full bg-[hsl(var(--flame-orange))] opacity-20 blur-[60px]" />
-                <img
-                  src={heroSlides[activeSlide].image}
-                  alt="Professional"
-                  className="h-[90%] w-auto object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.4)] relative z-10 transition-opacity duration-500"
-                  width={400}
-                  height={500}
-                />
-              </div>
             </div>
           </div>
         </div>
@@ -353,8 +350,8 @@ export default function HomePage() {
                 <Link to="/tests">Book Now <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
               </Button>
             </div>
-            <div className="hidden sm:flex w-[220px] h-[220px] items-end justify-center shrink-0 mr-8">
-              <img src={heroScientist2} alt="Scientist" className="h-[200px] w-auto object-contain drop-shadow-lg" loading="lazy" width={220} height={220} />
+            <div className="hidden sm:block w-[220px] h-[180px] shrink-0 mr-8 rounded-2xl overflow-hidden">
+              <img src={bannerPromo} alt="Food products" className="w-full h-full object-cover" loading="lazy" width={220} height={180} />
             </div>
           </div>
         </div>
@@ -379,8 +376,8 @@ export default function HomePage() {
                 <Link to="/tests">Book Now <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
               </Button>
             </div>
-            <div className="hidden sm:flex w-[200px] items-end justify-center shrink-0">
-              <img src={heroPerson1} alt="Professional" className="h-[180px] w-auto object-contain drop-shadow-xl" loading="lazy" width={200} height={200} />
+            <div className="hidden sm:block w-[200px] h-[180px] shrink-0 rounded-2xl overflow-hidden">
+              <img src={bannerHero1} alt="Lab testing" className="w-full h-full object-cover" loading="lazy" width={200} height={180} />
             </div>
           </div>
         </div>
@@ -422,9 +419,9 @@ export default function HomePage() {
               <img
                 src={experienceItems[expandedExp].image}
                 alt="Experience"
-                className="h-[85%] w-auto object-contain relative z-10 drop-shadow-[0_10px_30px_rgba(0,0,0,0.3)] transition-all duration-500"
+                className="w-full h-full object-cover relative z-10 transition-all duration-500"
                 loading="lazy"
-                width={400}
+                width={600}
                 height={400}
               />
               <div className="absolute top-4 left-4 bg-white/10 backdrop-blur-md rounded-xl px-4 py-2 border border-white/10 z-20">
