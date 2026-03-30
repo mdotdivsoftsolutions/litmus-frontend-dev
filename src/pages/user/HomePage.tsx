@@ -8,9 +8,10 @@ import {
 } from "lucide-react";
 import { categories, products, laboratories } from "@/lib/placeholder-data";
 import { cn } from "@/lib/utils";
-import heroScientist1 from "@/assets/hero-scientist-1.png";
-import heroScientist2 from "@/assets/hero-scientist-2.png";
-import heroPerson1 from "@/assets/hero-person-1.png";
+import bannerHero1 from "@/assets/banner-hero-1.jpg";
+import bannerHero2 from "@/assets/banner-hero-2.jpg";
+import bannerHero3 from "@/assets/banner-hero-3.jpg";
+import bannerPromo from "@/assets/banner-promo.jpg";
 
 /* ─── Data ─── */
 const heroSlides = [
