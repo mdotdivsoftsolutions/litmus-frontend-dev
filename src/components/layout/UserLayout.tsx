@@ -45,14 +45,8 @@ export function UserLayout() {
     <div className="min-h-screen bg-background">
       {/* Announcement Bar */}
       {showAnnouncement && (
-        <div className="bg-secondary text-secondary-foreground text-center py-2 px-4 text-xs sm:text-sm relative">
-          <span>🔥 Book 3+ tests and get FREE report delivery | Use: </span>
-          <span className="font-bold text-flame-amber">LITMUS10</span>
-          <span className="mx-2">—</span>
-          <Link to="/tests" className="font-semibold text-flame-amber hover:underline">Book Now</Link>
-          <button onClick={() => setShowAnnouncement(false)} className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary-foreground/60 hover:text-secondary-foreground">
-            <X className="h-3.5 w-3.5" />
-          </button>
+        <div className="bg-[#D32F2F] text-white text-xs py-2 px-4 text-center tracking-wide font-medium">
+          Book a Food Safety Test Now and Get Up to 20% Off your first order!
         </div>
       )}
 
