@@ -51,6 +51,7 @@ export default function ConsultationPage() {
         {/* Animated Background Textures */}
         <div className="absolute inset-x-0 top-0 h-96 bg-gradient-to-b from-slate-50/50 to-transparent pointer-events-none" />
         <div className="absolute top-0 right-0 w-[45%] h-full bg-slate-900 overflow-hidden hidden lg:block">
+           <div className="absolute inset-x-0 top-0 h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none z-10" />
            <img 
               src="https://images.unsplash.com/photo-1579154235602-382b996311bd?auto=format&fit=crop&q=80&w=1200" 
               alt="Scientific Advisory" 
@@ -71,11 +72,11 @@ export default function ConsultationPage() {
         <div className="relative z-10 max-w-7xl mx-auto px-6 grid lg:grid-cols-2 items-center min-h-[600px] gap-20">
           <div className="space-y-12 animate-slide-up">
             <div className="space-y-8">
-              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-slate-50 border border-slate-100 text-[#D32F2F] text-[10px] font-black uppercase tracking-[0.4em] shadow-sm">
+              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-slate-50 border border-slate-100 text-[#D32F2F] text-[10px] font-semibold uppercase tracking-[0.4em] shadow-sm">
                 <Star className="h-4 w-4 fill-current" /> Expert Advisory
               </div>
-              <h1 className="text-5xl lg:text-4xl font-semibold text-slate-800 tracking-tight leading-[1.1]">
-                 Institutional <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Clinical Strategy</span> <br />
+              <h1 className="text-2xl sm:text-4xl font-semibold text-slate-800 tracking-tight leading-[1.1]">
+                 Institutional <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Clinical Strategy</span> <br />
                  for Enterprise Brands.
               </h1>
               <p className="text-slate-500 text-lg  font-medium max-w-xl leading-relaxed opacity-80">
@@ -94,8 +95,8 @@ export default function ConsultationPage() {
                   ))}
                 </div>
                 <div>
-                   <p className="text-sm font-black text-slate-800 mb-0.5">24 Scientists</p>
-                   <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1.5 leading-none">
+                   <p className="text-sm font-semibold text-slate-800 mb-0.5">24 Scientists</p>
+                   <p className="text-[10px] font-semibold text-emerald-500 uppercase tracking-widest flex items-center gap-1.5 leading-none">
                       <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Live Advisory
                    </p>
                 </div>
@@ -105,15 +106,15 @@ export default function ConsultationPage() {
             <div className="grid grid-cols-3 gap-10 pt-4 border-t border-slate-100">
                <div>
                   <p className="text-2xl font-semibold text-slate-800 tracking-tighter">180+</p>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">Specialists</p>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mt-3">Specialists</p>
                </div>
                <div>
                   <p className="text-2xl font-semibold text-[#D32F2F] tracking-tighter">12k+</p>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">Advisory Hours</p>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mt-3">Advisory Hours</p>
                </div>
                <div>
                   <p className="text-2xl font-semibold text-slate-800 tracking-tighter">98%</p>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">Compliance</p>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mt-3">Compliance</p>
                </div>
             </div>
           </div>
@@ -126,7 +127,7 @@ export default function ConsultationPage() {
             <div className="space-y-6">
                <div className="inline-flex items-center gap-2 text-[#D32F2F] text-[10px] font-black uppercase tracking-[0.4em]">Expert Domains</div>
                <h2 className="text-4xl lg:text-4xl font-semibold text-slate-800 tracking-tight leading-tight max-w-2xl">
-                 Clinical <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Advisory</span> for Every Dimension.
+                 Clinical <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Advisory</span> for Every Dimension.
                </h2>
                <p className="text-slate-500 text-lg font-medium max-w-xl opacity-80 leading-relaxed">
                   Deep-dive into specialized food analytics domains with our curated advisory frameworks.

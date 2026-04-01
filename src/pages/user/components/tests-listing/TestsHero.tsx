@@ -12,6 +12,9 @@ export const TestsHero = ({ search, setSearch }: TestsHeroProps) => {
     <div className="relative bg-white min-h-[85vh] flex flex-col justify-center overflow-hidden border-b border-white">
       {/* Cinematic Background Elements */}
       <div className="absolute top-0 right-0 w-[60%] h-full bg-slate-50/50 skew-x-[-12deg] translate-x-1/4 pointer-events-none border-l border-slate-100" />
+      <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
+         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+      </div>
       <div className="absolute -top-[10%] -left-[5%] w-[600px] h-[600px] bg-red-50/40 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-orange-50/40 rounded-full blur-[120px] pointer-events-none" />
       
@@ -28,9 +31,9 @@ export const TestsHero = ({ search, setSearch }: TestsHeroProps) => {
             </div>
 
             <div className="space-y-4">
-              <h1 className="text-3xl lg:text-4xl font-bold text-slate-600 tracking-[-0.04em] leading-[0.9] animate-slide-up">
+              <h1 className="text-2xl sm:text-4xl font-semibold text-slate-800 tracking-tight leading-tight animate-slide-up">
                 Advanced Food Safety {" "}
-                 <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Food Solutions.</span>
+                 <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Food Solutions.</span>
               </h1>
               <p className="text-slate-500 text-lg lg:text-lg font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
                 Safe, Smart and Compliant Food Solutions. India's leading platform for certified food analysis and label validation.
@@ -56,20 +59,20 @@ export const TestsHero = ({ search, setSearch }: TestsHeroProps) => {
             {/* Quick Trust Stats */}
             <div className="flex items-center justify-center lg:justify-start gap-8 pt-4">
               <div className="flex flex-col">
-                <span className="text-2xl font-black text-slate-800 tracking-tighter">60+</span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Parameters</span>
+                <span className="text-2xl font-semibold text-slate-800 tracking-tighter">60+</span>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest leading-none mt-1">Parameters</span>
               </div>
               <div className="w-px h-8 bg-slate-100 hidden sm:block" />
               <div className="flex flex-col">
-                <span className="text-2xl font-black text-slate-800 tracking-tighter">₹800</span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Starts from</span>
+                <span className="text-2xl font-semibold text-slate-800 tracking-tighter">₹800</span>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest leading-none mt-1">Starts from</span>
               </div>
               <div className="w-px h-8 bg-slate-100 hidden sm:block" />
               <div className="flex flex-col">
-                <span className="text-2xl font-black text-emerald-500 tracking-tighter flex items-center gap-1.5 ">
+                <span className="text-2xl font-semibold text-emerald-500 tracking-tighter flex items-center gap-1.5 ">
                   Live <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse border border-emerald-100" />
                 </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1 font-black">Diagnostics</span>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest leading-none mt-1 font-semibold">Diagnostics</span>
               </div>
             </div>
           </div>
@@ -84,7 +87,7 @@ export const TestsHero = ({ search, setSearch }: TestsHeroProps) => {
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-slate-900/60 to-transparent opacity-40 mix-blend-multiply" />
               <div className="absolute bottom-10 right-10 flex flex-col items-end">
-                <p className="text-white text-[10px] font-black uppercase tracking-[0.4em] opacity-80 mb-2">Clinical Infrastructure</p>
+                <p className="text-white text-[10px] font-semibold uppercase tracking-[0.4em] opacity-80 mb-2">Clinical Infrastructure</p>
                 <div className="h-1 w-16 bg-[#D32F2F] rounded-full" />
               </div>
             </div>

@@ -41,15 +41,18 @@ export default function SupportPage() {
       <section className="relative pt-32 pb-20 overflow-hidden bg-white">
         {/* Cinematic Accents */}
         <div className="absolute top-0 right-0 w-[55%] h-full bg-slate-50 skew-x-[-15deg] translate-x-1/4 pointer-events-none transition-transform duration-[3000ms]" />
+        <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
+           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+        </div>
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-[#D32F2F]/5 blur-[140px] rounded-full pointer-events-none" />
         
         <div className="relative z-10 max-w-7xl mx-auto px-6 text-center space-y-12">
             <div className="space-y-6">
-              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-slate-50 border border-slate-100 text-[#D32F2F] text-[10px] font-black uppercase tracking-[0.4em] shadow-sm">
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-slate-50 border border-slate-100 text-[#D32F2F] text-[10px] font-semibold uppercase tracking-[0.4em] shadow-sm">
                 <Headset className="h-4 w-4" /> 24/7 Clinical Helpdesk
               </div>
-              <h1 className="text-4xl lg:text-4xl font-semibold text-slate-800 tracking-tight leading-tight">
-                 Premium Diagnostic <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Support.</span>
+              <h1 className="text-2xl sm:text-4xl font-semibold text-slate-800 tracking-tight leading-tight">
+                 Premium Diagnostic <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Support.</span>
               </h1>
               <p className="text-slate-500 text-lg md:text-xl font-medium max-w-xl mx-auto leading-relaxed opacity-80">
                  How can we assist your clinical journey today? Search our comprehensive knowledge base or connect with a support specialist.
@@ -60,9 +63,9 @@ export default function SupportPage() {
                <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-[#D32F2F] transition-colors" />
                <Input 
                  placeholder="Search diagnostics, sample collection, reports..." 
-                 className="h-16 pl-16 pr-44 bg-white border border-slate-100 rounded-2xl shadow-[0_16px_32px_rgba(0,0,0,0.03)] text-base placeholder:text-slate-300 text-slate-800 transition-all focus:border-[#D32F2F]/20 focus:ring-0" 
+                 className="h-14 pl-16 pr-44 bg-white border border-slate-100 rounded-2xl shadow-[0_16px_32px_rgba(0,0,0,0.03)] text-base placeholder:text-slate-300 text-slate-800 transition-all focus:border-[#D32F2F]/20 focus:ring-0" 
                />
-               <Button className="absolute right-2 top-1/2 -translate-y-1/2 h-12 px-6 bg-gradient-to-r from-[#D32F2F] to-[#feba50] text-white font-semibold text-xs rounded-xl shadow-lg hover:-translate-y-0.5 transition-all">
+               <Button className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 bg-gradient-to-r from-[#D32F2F] to-[#feba50] text-white font-semibold text-xs rounded-xl shadow-lg hover:-translate-y-0.5 transition-all">
                  Search Help
                </Button>
             </div>
@@ -70,17 +73,17 @@ export default function SupportPage() {
             <div className="flex items-center justify-center gap-12 pt-4">
                <div>
                   <p className="text-3xl font-semibold text-slate-800 tracking-tighter leading-none">Instant</p>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">Response Time</p>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mt-3">Response Time</p>
                </div>
                <div className="w-px h-10 bg-slate-100" />
                <div>
                   <p className="text-3xl font-semibold text-slate-800 tracking-tighter leading-none">15k+</p>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">Resolved</p>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mt-3">Resolved</p>
                </div>
                <div className="w-px h-10 bg-slate-100" />
                <div>
                   <p className="text-3xl font-semibold text-emerald-500 tracking-tighter leading-none">98.4%</p>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">CSAT Score</p>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mt-3">CSAT Score</p>
                </div>
             </div>
         </div>

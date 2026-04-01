@@ -173,7 +173,7 @@ export const HomeTests = ({ activeTab, setActiveTab, cartItems, addToCart, remov
         </div>
       </section>
 
-      <PromoBanner />
+      <PromoBanner className="pb-24" />
     </>
   );
 }
