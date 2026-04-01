@@ -134,9 +134,9 @@ export default function HomePage() {
     <div className="animate-fade-in">
 
       {/* ═══════════ HERO CAROUSEL ═══════════ */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden bg-white">
         {/* Full-width banner image */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0  max-w-7xl mx-auto px-4">
           <img
             src={heroSlides[activeSlide].image}
             alt="Banner"
@@ -148,12 +148,6 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-r from-[#1C1C1E]/90 via-[#1C1C1E]/70 to-[#1C1C1E]/30" />
         </div>
 
-        {/* Glassmorphism blobs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-20 -right-20 w-[500px] h-[500px] rounded-full bg-[hsl(var(--flame-orange))] opacity-[0.08] blur-[120px]" />
-          <div className="absolute -bottom-32 -left-20 w-[400px] h-[400px] rounded-full bg-[hsl(var(--flame-amber))] opacity-[0.06] blur-[100px]" />
-        </div>
-
         <div className="max-w-7xl mx-auto px-4 lg:px-8 relative">
           <div className="relative min-h-[280px] sm:min-h-[340px] lg:min-h-[400px] flex items-center py-10 lg:py-14">
             <div className="space-y-4 max-w-xl z-10 relative">
@@ -161,7 +155,7 @@ export default function HomePage() {
                 <Flame className="h-3 w-3" />
                 {heroSlides[activeSlide].tag}
               </span>
-              <h1 className="text-3xl sm:text-4xl lg:text-[52px] font-extrabold text-white leading-[1.1] tracking-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-[52px] font-extrabold text-white leading-[20px] tracking-wider flex flex-col gap-3 text-nowrap">
                 {heroSlides[activeSlide].headline}
                 <br />
                 <span className="text-flame-amber">{heroSlides[activeSlide].headlineAccent}</span>
