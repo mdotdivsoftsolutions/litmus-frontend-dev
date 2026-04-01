@@ -22,6 +22,9 @@ import OrdersPage from "./pages/user/OrdersPage.tsx";
 import OrderDetailPage from "./pages/user/OrderDetailPage.tsx";
 import ConsumerReportsPage from "./pages/user/ConsumerReportsPage.tsx";
 import ConsumerProfilePage from "./pages/user/ConsumerProfilePage.tsx";
+import PackagesPage from "./pages/user/PackagesPage.tsx";
+import ConsultationPage from "./pages/user/ConsultationPage.tsx";
+import SupportPage from "./pages/user/SupportPage.tsx";
 
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
@@ -65,7 +68,9 @@ const App = () => (
             <Route path="/tests/:id" element={<TestDetailPage />} />
             <Route path="/labs" element={<LabsListingPage />} />
             <Route path="/labs/:id" element={<LabDetailConsumerPage />} />
-            <Route path="/cart" element={<CartPage />} />
+            <Route path="/packages" element={<PackagesPage />} />
+            <Route path="/consultation" element={<ConsultationPage />} />
+            <Route path="/support" element={<SupportPage />} />
             <Route path="/bookings/new" element={<NewBookingPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/orders/:id" element={<OrderDetailPage />} />

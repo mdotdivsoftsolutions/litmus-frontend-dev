@@ -4,6 +4,7 @@ import { Header } from "./header/Header";
 import { FooterSEO } from "./footer/FooterSEO";
 import { MainFooter } from "./footer/MainFooter";
 import { MobileTabNavigation } from "./MobileTabNavigation";
+import { FloatingSupportChat } from "./FloatingSupportChat";
 
 export function UserLayout() {
   const location = useLocation();
@@ -46,6 +47,7 @@ export function UserLayout() {
       <FooterSEO />
       <MainFooter />
 
+      <FloatingSupportChat />
       <MobileTabNavigation cartCount={cartCount} />
     </div>
   );

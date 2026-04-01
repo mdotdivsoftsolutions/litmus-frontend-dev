@@ -107,7 +107,7 @@ export function HomeCategories() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-100 text-[#D32F2F] text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
                   Clinical Specialities
                 </div>
-                <h2 className="text-4xl lg:text-5xl font-bold text-slate-800 tracking-tight leading-tight">
+                <h2 className="text-4xl lg:text-4xl font-bold text-slate-800 tracking-tight leading-tight">
                   Tests By Food <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Category</span>
                 </h2>
                 <p className="text-slate-500 mt-4 text-lg max-w-xl">Architected for precision. Explore our expansive catalogue of specialized diagnostic tests across every food industry vertical.</p>
