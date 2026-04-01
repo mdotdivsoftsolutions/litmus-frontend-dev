@@ -22,8 +22,7 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                   <span className="text-xs font-medium text-slate-700">NABL & FSSAI Accredited Labs</span>
                 </div>
                 <h1 className="text-4xl sm:text-5xl font-medium text-slate-800 leading-[1.15] mb-6 tracking-tight">
-                  Advanced Food Safety<br />
-                  Testing For Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Business</span>
+                  Advanced Food Safety  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Business</span>
                 </h1>
                 <p className="text-slate-500 text-lg mb-8 max-w-md leading-relaxed">
                   Safe, Smart and Compliant Food Solutions. India's leading platform for certified food analysis and label validation.

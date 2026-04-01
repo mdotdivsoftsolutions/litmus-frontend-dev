@@ -196,53 +196,62 @@ export function UserLayout() {
       </main>
 
       {/* Footer - Desktop only */}
-      <footer className="hidden lg:block bg-secondary text-secondary-foreground">
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="grid grid-cols-4 gap-8">
+      <footer className="hidden lg:block bg-white border-t border-slate-200 pt-16 pb-8">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-4 gap-12 mb-12">
             {/* Brand */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-center gap-2">
-                <Flame className="h-6 w-6 text-primary" />
+                <Flame className="h-7 w-7 text-[#D32F2F]" />
                 <div className="leading-none">
-                  <span className="text-sm font-bold text-white">litmus</span>
-                  <span className="block text-[8px] tracking-[0.15em] text-primary">FOOD ANALYTICS</span>
+                  <span className="text-xl font-bold text-slate-800 tracking-tight">litmus</span>
+                  <span className="block text-[9px] tracking-[0.2em] text-[#D32F2F] font-semibold mt-0.5">FOOD ANALYTICS</span>
                 </div>
               </div>
-              <p className="text-sm text-secondary-foreground/60">India's trusted food testing platform. NABL accredited, FSSAI certified.</p>
+              <p className="text-sm text-slate-500 leading-relaxed pr-4">
+                India's most trusted platform for food testing and certification. NABL accredited & FSSAI certified lab network.
+              </p>
             </div>
             {/* Company */}
             <div>
-              <h4 className="font-semibold text-flame-amber text-sm mb-3">Company</h4>
-              <div className="space-y-2 text-sm text-secondary-foreground/60">
-                <p className="hover:text-accent cursor-pointer">About Us</p>
-                <p className="hover:text-accent cursor-pointer">Careers</p>
-                <p className="hover:text-accent cursor-pointer">Blog</p>
-                <p className="hover:text-accent cursor-pointer">Contact</p>
+              <h4 className="font-semibold text-slate-800 text-sm mb-5 uppercase tracking-wider">Company</h4>
+              <div className="space-y-3 text-sm text-slate-500">
+                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">About Us</p>
+                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Careers</p>
+                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Blog</p>
+                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Contact</p>
               </div>
             </div>
             {/* Services */}
             <div>
-              <h4 className="font-semibold text-flame-amber text-sm mb-3">Services</h4>
-              <div className="space-y-2 text-sm text-secondary-foreground/60">
-                <p className="hover:text-accent cursor-pointer">Food Testing</p>
-                <p className="hover:text-accent cursor-pointer">FSSAI Certification</p>
-                <p className="hover:text-accent cursor-pointer">Lab Partners</p>
-                <p className="hover:text-accent cursor-pointer">Bulk Testing</p>
+              <h4 className="font-semibold text-slate-800 text-sm mb-5 uppercase tracking-wider">Services</h4>
+              <div className="space-y-3 text-sm text-slate-500">
+                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer flex items-center gap-2">Food Testing <span className="bg-red-50 text-[#D32F2F] text-[9px] font-bold px-1.5 py-0.5 rounded">NEW</span></p>
+                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">FSSAI Certification</p>
+                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Lab Partners</p>
+                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Bulk Testing</p>
               </div>
             </div>
             {/* Policy */}
             <div>
-              <h4 className="font-semibold text-flame-amber text-sm mb-3">Policy</h4>
-              <div className="space-y-2 text-sm text-secondary-foreground/60">
-                <p className="hover:text-accent cursor-pointer">Terms of Service</p>
-                <p className="hover:text-accent cursor-pointer">Privacy Policy</p>
-                <p className="hover:text-accent cursor-pointer">Refund Policy</p>
-                <p className="hover:text-accent cursor-pointer">FAQ</p>
+              <h4 className="font-semibold text-slate-800 text-sm mb-5 uppercase tracking-wider">Legal</h4>
+              <div className="space-y-3 text-sm text-slate-500">
+                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Terms of Service</p>
+                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Privacy Policy</p>
+                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Refund Policy</p>
+                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">FAQ</p>
               </div>
             </div>
           </div>
-          <div className="border-t border-white/10 mt-8 pt-6 text-center text-xs text-secondary-foreground/40">
-            © 2026 Litmus Food Analytics. All rights reserved.
+          <div className="border-t border-slate-100 pt-8 flex items-center justify-between">
+            <div className="text-[13px] text-slate-400 font-medium">
+              © {new Date().getFullYear()} Litmus Food Analytics. All rights reserved.
+            </div>
+            <div className="flex items-center gap-6 text-slate-400">
+               <span className="hover:text-[#D32F2F] cursor-pointer text-[13px] transition-colors font-medium">Twitter</span>
+               <span className="hover:text-[#D32F2F] cursor-pointer text-[13px] transition-colors font-medium">LinkedIn</span>
+               <span className="hover:text-[#D32F2F] cursor-pointer text-[13px] transition-colors font-medium">Instagram</span>
+            </div>
           </div>
         </div>
       </footer>

@@ -12,8 +12,8 @@ export const TestCard = ({ p, cartItems, addToCart, removeFromCart }: any) => {
 
   return (
     <Link to={`/tests/${p.id}`} className="w-[340px] shrink-0 rounded-[1.25rem] bg-white shadow-sm hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all flex flex-col overflow-hidden m-2 border border-slate-100 group">
-      <div className="bg-gradient-to-r from-[#245D51] to-[#2A6559] p-5 text-white relative h-[120px] flex flex-col justify-end pb-5 transition-colors">
-        <div className="absolute top-0 right-4 bg-[#1e4e43] text-white/90 text-[10px] font-medium px-4 py-1.5 rounded-b-lg tracking-wide">
+      <div className="bg-gradient-to-r from-[#254E45] to-[#489988] p-5 text-white rounded-b-[1.25rem] shadow-[0_8px_30px_rgba(0,0,0,0.08)] relative h-[120px] flex flex-col justify-end pb-5 transition-colors">
+        <div className="absolute top-0 right-4 bg-gradient-to-b from-[#254E45] to-[#489988] text-white/90 text-[10px] font-medium px-4 py-1.5 rounded-b-lg tracking-wide">
           Checkup
         </div>
         <div className="flex justify-between items-start">
