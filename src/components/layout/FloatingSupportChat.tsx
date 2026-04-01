@@ -53,7 +53,7 @@ export function FloatingSupportChat() {
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            "h-16 w-16 rounded-full shadow-[0_20px_50px_rgba(211,47,47,0.4)] flex items-center justify-center transition-all duration-700 hover:scale-105 active:scale-95 group relative border-0 overflow-hidden",
+            "h-12 w-12 rounded-full shadow-[0_20px_50px_rgba(211,47,47,0.4)] flex items-center justify-center transition-all duration-700 hover:scale-105 active:scale-95 group relative border-0 overflow-hidden",
             isOpen ? "bg-slate-950 rotate-180" : "bg-gradient-to-br from-[#D32F2F] to-[#feba50]"
           )}
         >
@@ -62,7 +62,7 @@ export function FloatingSupportChat() {
             <X className="h-7 w-7 text-white" />
           ) : (
             <div className="relative">
-               <MessageSquare className="h-7 w-7 text-white fill-white/20" />
+               <MessageSquare className="h-5 w-5 text-white fill-white/20" />
                <div className="absolute -top-1 -right-1 h-3 w-3 bg-emerald-400 border-2 border-white rounded-full" />
             </div>
           )}
