@@ -131,7 +131,7 @@ export default function SupportPage() {
                         </div>
                         <div>
                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Phone Support</p>
-                           <p className="text-lg font-semibold text-white tracking-tight group-hover/item:text-[#F06C00] transition-colors">+91 1800 248 8342</p>
+                           <p className="text-sm font-semibold text-white tracking-tight group-hover/item:text-[#F06C00] transition-colors">+91 1800 248 8342</p>
                         </div>
                      </div>
                      <div className="space-y-4 group/item cursor-pointer">
@@ -140,7 +140,7 @@ export default function SupportPage() {
                         </div>
                         <div>
                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Email Inquiry</p>
-                           <p className="text-lg font-semibold text-white tracking-tight group-hover/item:text-[#F06C00] transition-colors">support@litmus.ai</p>
+                           <p className="text-sm font-semibold text-white tracking-tight group-hover/item:text-[#F06C00] transition-colors">support@litmus.ai</p>
                         </div>
                      </div>
                      <div className="space-y-4 group/item cursor-pointer sm:col-span-2">
@@ -151,7 +151,7 @@ export default function SupportPage() {
                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1 flex items-center gap-2">
                              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> WhatsApp Support
                            </p>
-                           <p className="text-lg font-semibold text-white tracking-tight">Message Our Scientists Live</p>
+                           <p className="text-sm font-semibold text-white tracking-tight">Message Our Scientists Live</p>
                         </div>
                      </div>
                   </div>
