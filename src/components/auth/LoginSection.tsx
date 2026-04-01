@@ -1,0 +1,92 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Eye, EyeOff, Flame } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface LoginSectionProps {
+  className?: string;
+  showLogo?: boolean;
+}
+
+export function LoginSection({ className, showLogo = false }: LoginSectionProps) {
+  const [role, setRole] = useState("user");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const roleRedirects: Record<string, string> = { 
+    user: "/home", 
+    admin: "/admin/dashboard", 
+    lab: "/lab/dashboard" 
+  };
+
+  return (
+    <Card className={cn("w-full max-w-md shadow-lg border border-border bg-card/50 backdrop-blur-sm", className)}>
+      <CardHeader className="items-center pb-2">
+        {showLogo && (
+          <Link to="/" className="flex items-center gap-2 mb-6">
+            <Flame className="h-8 w-8 text-primary" />
+            <span className="text-xl font-bold text-foreground tracking-tight">LITMUS</span>
+          </Link>
+        )}
+        <h2 className="text-xl font-bold text-foreground">Welcome back</h2>
+        <p className="text-sm text-muted-foreground">Sign in to your account</p>
+        <Tabs value={role} onValueChange={setRole} className="w-full mt-4">
+          <TabsList className="w-full bg-muted/50 p-1">
+            <TabsTrigger value="user" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">User</TabsTrigger>
+            <TabsTrigger value="admin" className="flex-1 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground transition-all">Admin</TabsTrigger>
+            <TabsTrigger value="lab" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">Lab</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </CardHeader>
+      <CardContent className="space-y-4 pt-4">
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-sm font-medium text-foreground">Email</Label>
+          <Input 
+            id="email" 
+            type="email" 
+            placeholder="you@company.com" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            className="focus:ring-2 focus:ring-primary/15 focus:border-primary bg-background/50" 
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password" className="text-sm font-medium text-foreground">Password</Label>
+            <Link to="/forgot-password" className="text-xs text-primary hover:underline font-medium">Forgot Password?</Link>
+          </div>
+          <div className="relative">
+            <Input 
+              id="password" 
+              type={showPassword ? "text" : "password"} 
+              placeholder="••••••••" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              className="pr-10 focus:ring-2 focus:ring-primary/15 focus:border-primary bg-background/50" 
+            />
+            <button 
+              type="button" 
+              onClick={() => setShowPassword(!showPassword)} 
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+        <Button className="w-full bg-primary hover:bg-primary-deep text-primary-foreground shadow-md shadow-primary/20" asChild>
+          <Link to={roleRedirects[role]}>Sign In</Link>
+        </Button>
+        <p className="text-center text-sm text-muted-foreground">
+          Don't have an account?{" "}
+          <Link to="/register" className="font-medium text-primary hover:underline">Register</Link>
+        </p>
+      </CardContent>
+    </Card>
+  );
+}

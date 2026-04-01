@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Flame, Shield, Building2, CreditCard, MapPin, FileText, MessageSquare, ArrowRight, Star, CheckCircle2 } from "lucide-react";
+import { LoginSection } from "@/components/auth/LoginSection";
+
 
 const steps = [
   { icon: CheckCircle2, title: "Register", desc: "Create your business account in minutes" },
@@ -41,38 +43,69 @@ export default function LandingPage() {
             <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Testimonials</a>
           </nav>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" asChild><Link to="/login">Login</Link></Button>
-            <Button asChild className="bg-primary hover:bg-primary-deep"><Link to="/register">Register</Link></Button>
+            <Button variant="ghost" asChild><Link to="/register">Register</Link></Button>
+            <Button asChild className="bg-primary hover:bg-primary-deep shadow-sm"><Link to="/register">Get Started</Link></Button>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#1C1C1E] via-[#2D1A0A] to-[#3D1F0A]">
+      {/* Hero with Integrated Login */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#1C1C1E] via-[#2D1A0A] to-[#3D1F0A] py-16 lg:py-24">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 right-20 w-96 h-96 bg-flame-orange rounded-full blur-[150px]" />
           <div className="absolute bottom-10 left-10 w-72 h-72 bg-flame-amber rounded-full blur-[120px]" />
         </div>
-        <div className="container relative py-20 lg:py-32">
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-white lg:text-6xl">
-              Get Your Food Products Lab Tested — <span className="text-flame-amber">Fast, Transparent, Certified</span>
-            </h1>
-            <p className="mb-8 text-lg text-white/60 lg:text-xl">
-              India's leading platform connecting food businesses with NABL-accredited laboratories. 
-              Book tests, track progress, and download certified reports — all online.
-            </p>
-            <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Button size="lg" className="gap-2 px-8 bg-primary hover:bg-primary-deep" asChild>
-                <Link to="/register">Book a Test <ArrowRight className="h-4 w-4" /></Link>
-              </Button>
-              <Button size="lg" variant="outline" className="px-8 border-flame-amber text-flame-amber hover:bg-flame-amber/10" asChild>
-                <Link to="/register">Register Your Business</Link>
-              </Button>
+        
+        <div className="container relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Column: Value Prop */}
+            <div className="text-left space-y-8 animate-in fade-in slide-in-from-left duration-700">
+              <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-flame-amber text-xs font-semibold backdrop-blur-sm">
+                <Shield className="h-3.5 w-3.5" />
+                NABL Accredited & FSSAI Compliant
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1]">
+                Your Food Safety <br />
+                <span className="text-flame-amber">Partner in India</span>
+              </h1>
+              <p className="text-lg text-white/60 max-w-xl leading-relaxed">
+                India's leading platform connecting food businesses with NABL-accredited laboratories. 
+                Book tests, track progress, and download certified reports — all online.
+              </p>
+              <div className="flex flex-wrap gap-4 pt-2">
+                <div className="flex items-center gap-2 text-white/80">
+                  <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
+                    <CheckCircle2 className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold">500+</p>
+                    <p className="text-[10px] text-white/40 uppercase tracking-wider">Tests Available</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-white/80">
+                  <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
+                    <Building2 className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold">50+</p>
+                    <p className="text-[10px] text-white/40 uppercase tracking-wider">Lab Partners</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Login Card */}
+            <div className="flex justify-center lg:justify-end animate-in fade-in slide-in-from-bottom duration-1000">
+              <div className="w-full max-w-md relative group">
+                {/* Decorative background for the login card */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-flame-amber/20 rounded-[2rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
+                <LoginSection className="relative z-10 !bg-card/80 backdrop-blur-xl border-white/10 shadow-2xl" />
+              </div>
             </div>
           </div>
         </div>
       </section>
+
 
       {/* Stats */}
       <section className="border-y border-border bg-card">

@@ -53,13 +53,13 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           {/* Public */}
-          <Route path="/" element={<LoginPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
           {/* User Consumer Portal — NO sidebar */}
           <Route element={<UserLayout />}>
+            <Route path="/" element={<HomePage />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="/tests" element={<TestsListingPage />} />
             <Route path="/tests/:id" element={<TestDetailPage />} />
