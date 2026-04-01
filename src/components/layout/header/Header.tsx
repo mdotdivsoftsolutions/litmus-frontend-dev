@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { CartDrawer } from "../../cart/CartDrawer";
 
 const cities = ["Chennai", "Mumbai", "New Delhi", "Bangalore", "Hyderabad", "Kolkata"];
 
@@ -111,16 +112,16 @@ export function Header({
             <a href="#"><Phone className="h-4 w-4 text-foreground" /></a>
           </Button>
 
-          <Button variant="ghost" size="icon" className="h-9 w-9 relative" asChild>
-            <Link to="/cart">
-              <ShoppingCart className="h-4.5 w-4.5 text-foreground" />
+          <CartDrawer>
+            <Button variant="ghost" size="icon" className="h-9 w-9 relative hover:bg-transparent group/cart transition-all duration-300">
+              <ShoppingCart className="h-4.5 w-4.5 text-foreground group-hover/cart:text-[#D32F2F] transition-colors" />
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#D32F2F] text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
                   {cartCount}
                 </span>
               )}
-            </Link>
-          </Button>
+            </Button>
+          </CartDrawer>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
