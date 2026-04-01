@@ -10,8 +10,8 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
   return (
     <>
       <section className="relative pt-8 pb-16 overflow-hidden bg-slate-50">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#E53935]/10 rounded-full blur-[100px] -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#F06C00]/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[500px] h-full md:h-[600px] bg-[#E53935]/10 rounded-full blur-[100px] -translate-y-1/3 translate-x-1/4 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-full md:h-[400px] bg-[#F06C00]/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4 pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="bg-white/60 backdrop-blur-xl border border-white rounded-[2rem] shadow-sm overflow-hidden mt-4">
@@ -21,8 +21,8 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                   <span className="h-2 w-2 rounded-full bg-[#E53935] animate-pulse" />
                   <span className="text-xs font-medium text-slate-700">NABL & FSSAI Accredited Labs</span>
                 </div>
-                <h1 className="text-4xl sm:text-5xl font-medium text-slate-800 leading-[1.15] mb-6 tracking-tight">
-                  Advanced Food Safety  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Business</span>
+                <h1 className="text-4xl sm:text-5xl font-semibold text-slate-800 leading-[1.15] mb-6 tracking-tight">
+                  Advanced Food Safety  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00] "> Food Solutions</span>
                 </h1>
                 <p className="text-slate-500 text-lg mb-8 max-w-md leading-relaxed">
                   Safe, Smart and Compliant Food Solutions. India's leading platform for certified food analysis and label validation.

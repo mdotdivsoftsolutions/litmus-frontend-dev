@@ -10,10 +10,13 @@ import { cn } from "@/lib/utils";
 const cities = ["Chennai", "Mumbai", "New Delhi", "Bangalore", "Hyderabad", "Kolkata"];
 
 const desktopLinks = [
+  { label: "Homepage", href: "/home" },
   { label: "Tests", href: "/tests" },
+  { label: "Packages", href: "/packages" },
   { label: "Labs", href: "/labs" },
-  { label: "My Orders", href: "/orders" },
-  { label: "Reports", href: "/reports" },
+  { label: "Book consultation", href: "/consultation" },
+  { label: "Support", href: "/support" },
+  { label: "Login", href: "/login" },
 ];
 
 export function UserLayout() {
@@ -198,7 +201,7 @@ export function UserLayout() {
       {/* Footer - Desktop only */}
       <footer className="hidden lg:block bg-white border-t border-slate-200 pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-4 gap-12 mb-12">
+          <div className="grid grid-cols-5 gap-10 mb-12">
             {/* Brand */}
             <div className="space-y-6">
               <div className="flex items-center gap-2">
@@ -216,30 +219,40 @@ export function UserLayout() {
             <div>
               <h4 className="font-semibold text-slate-800 text-sm mb-5 uppercase tracking-wider">Company</h4>
               <div className="space-y-3 text-sm text-slate-500">
-                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">About Us</p>
-                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Careers</p>
-                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Blog</p>
-                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Contact</p>
+                <Link to="/about" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">About Us</Link>
+                <Link to="/careers" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">Careers</Link>
+                <Link to="/blogs" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">Blogs</Link>
+                <Link to="/contact" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">Contact Us</Link>
               </div>
             </div>
-            {/* Services */}
+            {/* Services (From Header) */}
             <div>
               <h4 className="font-semibold text-slate-800 text-sm mb-5 uppercase tracking-wider">Services</h4>
               <div className="space-y-3 text-sm text-slate-500">
-                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer flex items-center gap-2">Food Testing <span className="bg-red-50 text-[#D32F2F] text-[9px] font-bold px-1.5 py-0.5 rounded">NEW</span></p>
-                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">FSSAI Certification</p>
-                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Lab Partners</p>
-                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Bulk Testing</p>
+                <Link to="/tests" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">Tests</Link>
+                <Link to="/packages" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">Packages</Link>
+                <Link to="/labs" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">Labs</Link>
+                <Link to="/consultation" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">Book Consultation</Link>
+                <Link to="/support" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">Support</Link>
               </div>
             </div>
-            {/* Policy */}
+            {/* Quick Links */}
             <div>
-              <h4 className="font-semibold text-slate-800 text-sm mb-5 uppercase tracking-wider">Legal</h4>
+              <h4 className="font-semibold text-slate-800 text-sm mb-5 uppercase tracking-wider">Quick Links</h4>
               <div className="space-y-3 text-sm text-slate-500">
-                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Terms of Service</p>
-                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Privacy Policy</p>
-                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">Refund Policy</p>
-                <p className="hover:text-[#D32F2F] hover:translate-x-1 transition-all cursor-pointer">FAQ</p>
+                <Link to="/cart" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">Cart</Link>
+                <Link to="/help" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">Help Center</Link>
+                <Link to="/faqs" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">FAQs</Link>
+                <Link to="/track-order" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">Track Order</Link>
+              </div>
+            </div>
+            {/* Policies */}
+            <div>
+              <h4 className="font-semibold text-slate-800 text-sm mb-5 uppercase tracking-wider">Policies</h4>
+              <div className="space-y-3 text-sm text-slate-500">
+                <Link to="/terms" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">Terms &amp; Condition</Link>
+                <Link to="/privacy" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">Privacy Policy</Link>
+                <Link to="/nabl" className="block hover:text-[#D32F2F] hover:translate-x-1 transition-all">NABL Data</Link>
               </div>
             </div>
           </div>
