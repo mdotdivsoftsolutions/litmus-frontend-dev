@@ -153,7 +153,7 @@ export const HomeTests = ({ activeTab, setActiveTab, cartItems, addToCart, remov
     <>
       <section className="pt-20 pb-10  relative overflow-hidden bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 relative z-10 w-full">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
              <div>
                 <h2 className="text-3xl lg:text-4xl font-bold text-slate-800 tracking-tight leading-tight">
                   Popular Tests <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Near You</span>
