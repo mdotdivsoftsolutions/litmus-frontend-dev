@@ -72,7 +72,7 @@ export const TestCard = ({ p, cartItems, addToCart, removeFromCart }: any) => {
   );
 };
 
-export const PromoBanner = () => {
+export const PromoBanner = ({ className }: { className?: string }) => {
    const [current, setCurrent] = useState(0);
    const slides = [
       {
@@ -104,7 +104,7 @@ export const PromoBanner = () => {
    }, []);
 
    return (
-      <section className="pb-24 md:pb-28 bg-slate-50">
+      <section className={`${className} bg-slate-50`}>
          <div className="max-w-7xl mx-auto px-4">
             <div className="relative group rounded-[2rem] overflow-hidden bg-white shadow-[0_24px_80px_rgba(0,0,0,0.06)] border border-slate-100 h-[320px]">
                <div className="h-full w-full flex transition-transform duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)]" style={{ transform: `translateX(-${current * 100}%)` }}>

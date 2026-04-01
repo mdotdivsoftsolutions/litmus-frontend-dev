@@ -9,11 +9,11 @@ import { cn } from "@/lib/utils";
 const cities = ["Chennai", "Mumbai", "New Delhi", "Bangalore", "Hyderabad", "Kolkata"];
 
 const desktopLinks = [
-  { label: "Homepage", href: "/home" },
+  { label: "Home", href: "/home" },
   { label: "Tests", href: "/tests" },
   { label: "Packages", href: "/packages" },
   { label: "Labs", href: "/labs" },
-  { label: "Book consultation", href: "/consultation" },
+  { label: "Consultation", href: "/consultation" },
   { label: "Support", href: "/support" },
   { label: "Login", href: "/login" },
 ];
