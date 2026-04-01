@@ -60,12 +60,8 @@ export function UserLayout() {
       )}>
         <div className="max-w-7xl mx-auto flex items-center h-16 px-4 gap-3">
           {/* Logo */}
-          <Link to="/home" className="flex items-center gap-2 shrink-0">
-            <Flame className="h-6 w-6 text-primary" />
-            <div className="leading-none hidden sm:block">
-              <span className="text-sm font-bold text-secondary tracking-tight">litmus</span>
-              <span className="block text-[8px] tracking-[0.15em] text-primary font-medium -mt-0.5">FOOD ANALYTICS</span>
-            </div>
+          <Link to="/home" className="flex items-center shrink-0">
+             <img src="/litmus-logo.png" alt="Litmus Food Analytics" className="h-9 sm:h-10 object-contain" />
           </Link>
 
           {/* Location Selector */}
@@ -204,12 +200,8 @@ export function UserLayout() {
           <div className="grid grid-cols-5 gap-10 mb-12">
             {/* Brand */}
             <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <Flame className="h-7 w-7 text-[#D32F2F]" />
-                <div className="leading-none">
-                  <span className="text-xl font-bold text-slate-800 tracking-tight">litmus</span>
-                  <span className="block text-[9px] tracking-[0.2em] text-[#D32F2F] font-semibold mt-0.5">FOOD ANALYTICS</span>
-                </div>
+              <div className="flex items-start">
+                <img src="/litmus-logo.png" alt="Litmus Food Analytics" className="h-10 sm:h-12 object-contain" />
               </div>
               <p className="text-sm text-slate-500 leading-relaxed pr-4">
                 India's most trusted platform for food testing and certification. NABL accredited & FSSAI certified lab network.
