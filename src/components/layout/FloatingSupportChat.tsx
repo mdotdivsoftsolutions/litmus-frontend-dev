@@ -72,11 +72,11 @@ export function FloatingSupportChat() {
       {/* 2. PREMIUM CHAT WINDOW (Glassmorphism) */}
       <div 
         className={cn(
-          "absolute bottom-24 right-0 w-[420px] transition-all duration-700 cubic-bezier(0.175, 0.885, 0.32, 1.275) transform origin-bottom-right",
+          "absolute bottom-20 right-0 w-[360px] sm:w-[400px] transition-all duration-700 cubic-bezier(0.175, 0.885, 0.32, 1.275) transform origin-bottom-right z-50",
           isOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-90 translate-y-20 pointer-events-none"
         )}
       >
-        <Card className="rounded-[3rem] border-white/10 bg-white/80 backdrop-blur-3xl shadow-[0_64px_128px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col h-[620px]">
+        <Card className="rounded-3xl border border-slate-200/50 bg-white shadow-[0_32px_64px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col h-[500px] max-h-[75vh]">
           {/* Clinical Header */}
           <CardHeader className="bg-slate-950 p-8 relative overflow-hidden shrink-0">
              <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
@@ -144,7 +144,7 @@ export function FloatingSupportChat() {
           </CardContent>
 
           {/* Professional Input Section */}
-          <CardFooter className="p-6 bg-white/50 border-t border-slate-100 backdrop-blur-xl shrink-0">
+          <CardFooter className="p-5 bg-slate-50/80 border-t border-slate-100 backdrop-blur-xl shrink-0">
             <form onSubmit={handleSend} className="w-full space-y-4">
               <div className="flex items-center gap-3">
                  <div className="flex-1 relative">
