@@ -99,8 +99,12 @@ export default function TestDetailPage() {
                     <span><ShoppingCart className="h-4 w-4" /> Add to Cart</span>
                   )}
                 </Button>
-                <Button variant="outline" className="w-full rounded-lg border-primary text-primary hover:bg-flame-red-tint" asChild>
-                  <Link to="/labs">Select a Lab</Link>
+                <Button variant="outline" className="w-full rounded-lg border-primary text-primary hover:bg-flame-red-tint" disabled={selected.length === 0} asChild={selected.length > 0 ? true : undefined}>
+                  {selected.length > 0 ? (
+                    <Link to="/bookings/new">Book Now</Link>
+                  ) : (
+                    <span>Book Now</span>
+                  )}
                 </Button>
 
                 <a href="#" className="flex items-center justify-center gap-2 text-sm font-medium text-litmus-teal hover:underline">
