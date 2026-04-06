@@ -90,7 +90,7 @@ export default function NewBookingPage() {
       <div className="max-w-7xl mx-auto px-4 py-8 ">
         <div className="grid gap-8 lg:grid-cols-5">
           {/* Main Content Area */}
-          <div className={cn("lg:col-span-3 space-y-6", step === 3 ? "lg:col-span-5 max-w-3xl mx-auto w-full" : "")}>
+          <div className={cn("lg:col-span-3 space-y-6", step === 3 ? "lg:col-span-5 w-full" : "")}>
             
             {/* STEP 0: Review Tests */}
             {step === 0 && (
@@ -244,51 +244,107 @@ export default function NewBookingPage() {
 
             {/* STEP 3: Status / Confirmation */}
             {step === 3 && (
-              <div className="animate-fade-in py-10">
-                 <Card className="border-0 shadow-lg rounded-2xl overflow-hidden max-w-2xl mx-auto">
-                    <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-8 text-center text-white">
-                       <div className="h-20 w-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner backdrop-blur-sm">
-                          <CheckCircle className="h-10 w-10 text-white" />
-                       </div>
-                       <h2 className="text-3xl font-extrabold mb-2">Booking Confirmed!</h2>
-                       <p className="text-emerald-50 text-lg">Your transaction was successful.</p>
-                    </div>
-                    <CardContent className="p-8 space-y-8">
-                       <div className="grid grid-cols-2 gap-4 text-center divide-x divide-slate-100 border-y border-slate-100 py-6">
-                          <div>
-                             <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Order ID</p>
-                             <p className="text-lg font-bold text-slate-800">#LTMS-{Math.floor(100000 + Math.random() * 900000)}</p>
-                          </div>
-                          <div>
-                             <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Amount Paid</p>
-                             <p className="text-lg font-bold text-slate-800">₹{total.toLocaleString()}</p>
-                          </div>
-                       </div>
-                       
-                       <div className="bg-slate-50 rounded-xl p-6 text-center">
-                          {selectedLab === "admin" ? (
-                             <>
-                                <h3 className="font-bold text-slate-800 mb-2">Assigned to Litmus Admin</h3>
-                                <p className="text-slate-600">Our administrative team will review your requirements and assign the optimal labs. You will be notified shortly via email/SMS.</p>
-                             </>
-                          ) : (
-                             <>
-                                <h3 className="font-bold text-slate-800 mb-2">Lab Assigned</h3>
-                                <p className="text-slate-600">The selected laboratory has been informed. They will begin processing as per standard schedules.</p>
-                             </>
-                          )}
-                       </div>
+              <div className="animate-fade-in space-y-6 w-full">
+                 <div>
+                    <h2 className="text-2xl font-bold text-slate-800">Booking Confirmed</h2>
+                    <p className="text-slate-500 mt-1">We have successfully received your booking request.</p>
+                 </div>
 
-                       <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
-                          <Button onClick={() => navigate("/orders")} className="h-12 px-8 rounded-full bg-slate-800 hover:bg-slate-900 text-white font-semibold">
-                             View Orders
-                          </Button>
-                          <Button variant="outline" onClick={() => navigate("/home")} className="h-12 px-8 rounded-full border-slate-300 font-semibold text-slate-700">
-                             Back to Home
-                          </Button>
-                       </div>
-                    </CardContent>
-                 </Card>
+                 <div className="grid md:grid-cols-2 gap-6">
+                    {/* Left details */}
+                    <div className="space-y-6">
+                       <Card className="rounded-xl border border-emerald-200 bg-emerald-50 shadow-sm">
+                          <CardContent className="p-6">
+                             <div className="flex items-center gap-4 mb-4">
+                                <div className="h-10 w-10 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                                   <CheckCircle className="h-6 w-6" />
+                                </div>
+                                <div>
+                                   <p className="text-sm font-medium text-emerald-600 uppercase tracking-widest">Order Status</p>
+                                   <h3 className="text-xl font-bold text-emerald-900">Confirmed & Processed</h3>
+                                </div>
+                             </div>
+                             <div className="pt-4 border-t border-emerald-200/60 grid grid-cols-2 gap-4">
+                                <div>
+                                   <p className="text-xs text-emerald-600/80 uppercase font-medium">Order ID</p>
+                                   <p className="font-semibold text-emerald-900">#LTMS-{Math.floor(100000 + Math.random() * 900000)}</p>
+                                </div>
+                                <div>
+                                   <p className="text-xs text-emerald-600/80 uppercase font-medium">Date & Time</p>
+                                   <p className="font-semibold text-emerald-900">{new Date().toLocaleString()}</p>
+                                </div>
+                             </div>
+                          </CardContent>
+                       </Card>
+
+                       <Card className="rounded-xl border border-slate-200">
+                          <CardContent className="p-6 space-y-4">
+                             <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                                <Building2 className="h-5 w-5 text-primary" /> Fulfilment Partner
+                             </h4>
+                             <div className="bg-slate-50 rounded-lg p-4">
+                                {selectedLab === "admin" ? (
+                                   <>
+                                      <p className="font-semibold text-slate-800">Litmus System Admin Allocation</p>
+                                      <p className="text-sm text-slate-600 mt-1">Our team is reviewing your requirements and will manually assign the most suitable laboratories. You will receive an update shortly.</p>
+                                   </>
+                                ) : (
+                                   <>
+                                      <p className="font-semibold text-slate-800">{laboratories.find(l => l.id === selectedLab)?.name || 'Central Lab'}</p>
+                                      <p className="text-sm text-slate-600 mt-1">The chosen laboratory has been notified and expects your sample shortly.</p>
+                                   </>
+                                )}
+                             </div>
+                          </CardContent>
+                       </Card>
+                    </div>
+
+                    {/* Right summary block */}
+                    <div className="space-y-6">
+                       <Card className="rounded-xl border border-slate-200 h-full">
+                          <div className="bg-slate-50 border-b border-slate-200 p-4">
+                             <h4 className="font-bold text-slate-800">Order Summary</h4>
+                          </div>
+                          <CardContent className="p-0">
+                             <div className="divide-y divide-slate-100 p-4">
+                                {items.map((item) => (
+                                   <div key={item.id} className="py-2 flex justify-between items-start">
+                                      <div>
+                                         <p className="font-medium text-slate-800">{item.product}</p>
+                                         <p className="text-xs text-slate-500">{item.tests} tests included</p>
+                                      </div>
+                                      <p className="font-semibold text-slate-800">₹{item.price.toLocaleString()}</p>
+                                   </div>
+                                ))}
+                             </div>
+                             
+                             <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-3">
+                                <div className="flex justify-between text-sm">
+                                   <span className="text-slate-600">Subtotal</span>
+                                   <span className="font-medium text-slate-800">₹{subtotal.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                   <span className="text-slate-600">GST (18%)</span>
+                                   <span className="font-medium text-slate-800">₹{gst.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between border-t border-slate-200 pt-3">
+                                   <span className="font-bold text-slate-800">Total Paid</span>
+                                   <span className="font-extrabold text-primary text-lg">₹{total.toLocaleString()}</span>
+                                </div>
+                             </div>
+                          </CardContent>
+                       </Card>
+                    </div>
+                 </div>
+
+                 <div className="flex items-center gap-4 py-4">
+                    <Button onClick={() => navigate("/orders")} className="h-12 px-6 rounded-lg bg-primary hover:bg-primary-deep text-white font-medium">
+                       Tracking & Order History
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate("/home")} className="h-12 px-6 rounded-lg font-medium text-slate-600">
+                       Return to Home
+                    </Button>
+                 </div>
               </div>
             )}
 
