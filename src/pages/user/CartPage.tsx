@@ -46,7 +46,7 @@ export default function CartPage() {
                       {item.lab ? (
                         <Badge variant="outline" className="text-xs">{item.lab}</Badge>
                       ) : (
-                        <Link to="/labs" className="text-sm font-medium text-primary hover:underline">Select Lab →</Link>
+                        <span className="text-sm font-medium text-muted-foreground">Lab to be selected next</span>
                       )}
                     </div>
                     <div className="text-right space-y-1">
@@ -75,13 +75,8 @@ export default function CartPage() {
                     </div>
                   </div>
 
-                  {items.some((i) => !i.lab) && (
-                    <p className="text-xs text-accent">⚠ Select a lab for all items before proceeding</p>
-                  )}
-
-                  <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg h-12 font-semibold text-base"
-                    disabled={items.some((i) => !i.lab)} asChild={!items.some((i) => !i.lab) ? true : undefined}>
-                    {!items.some((i) => !i.lab) ? <Link to="/bookings/new">Proceed to Book</Link> : <span>Proceed to Book</span>}
+                  <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg h-12 font-semibold text-base" asChild>
+                    <Link to="/bookings/new">Proceed to Book</Link>
                   </Button>
 
                   {/* Coupon */}

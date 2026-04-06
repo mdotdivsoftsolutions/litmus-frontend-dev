@@ -88,9 +88,9 @@ export function CartDrawer({ children }: CartDrawerProps) {
                              <span className="text-[10px] font-semibold text-slate-500 truncate max-w-[150px]">{item.lab}</span>
                            </div>
                         ) : (
-                           <Link to="/labs" className="text-[11px] font-semibold text-[#D32F2F] uppercase tracking-widest hover:underline flex items-center gap-1">
-                             Select Lab <ChevronRight className="h-3 w-3" />
-                           </Link>
+                           <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                             Lab assigned next <ChevronRight className="h-3 w-3" />
+                           </span>
                         )}
                       </div>
 

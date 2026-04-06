@@ -1,184 +1,206 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, Trash2, User, MapPin, CalendarDays, Plus, Tag, Flame } from "lucide-react";
+import { ClipboardList, Building2, CreditCard, CheckCircle, Trash2, Tag, Shield, Clock, MapPin, Search } from "lucide-react";
 import { tests as allTests, laboratories } from "@/lib/placeholder-data";
 import { cn } from "@/lib/utils";
 
 const wizardSteps = [
-  { icon: User, label: "Member Details" },
-  { icon: MapPin, label: "Address" },
-  { icon: CalendarDays, label: "Slot" },
+  { icon: ClipboardList, label: "Review Tests" },
+  { icon: Building2, label: "Select Lab" },
+  { icon: CreditCard, label: "Payment Details" },
+  { icon: CheckCircle, label: "Status" },
 ];
 
-const selectedTests = allTests.slice(0, 3);
-const testPrice = 1200;
-const totalMRP = selectedTests.length * 2100;
-const totalPrice = selectedTests.length * testPrice;
-const discount = totalMRP - totalPrice;
+const initialCart = [
+  { id: "1", product: "Full Cream Milk", tests: 3, price: 3600, mrp: 6300 },
+  { id: "2", product: "Basmati Rice", tests: 2, price: 2400, mrp: 4200 },
+];
 
 export default function NewBookingPage() {
   const [step, setStep] = useState(0);
-  const [sampleMode, setSampleMode] = useState("dropoff");
+  const [items, setItems] = useState(initialCart);
+  const [selectedLab, setSelectedLab] = useState<string | null>(null);
+  const [orderStatus, setOrderStatus] = useState<"pending" | "confirmed" | "rejected">("pending");
+  const navigate = useNavigate();
+
+  const subtotal = items.reduce((a, b) => a + b.price, 0);
+  const totalMrp = items.reduce((a, b) => a + b.mrp, 0);
+  const discount = totalMrp - subtotal;
+  const gst = Math.round(subtotal * 0.18);
+  const total = subtotal + gst;
+
+  const removeItem = (id: string) => {
+    setItems(items.filter((i) => i.id !== id));
+  };
+
+  const handleNext = () => {
+    if (step === 2) {
+      // Simulate payment and result
+      setOrderStatus("confirmed");
+      setStep(3);
+    } else if (step < 3) {
+      setStep(step + 1);
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 0 && step < 3) {
+      setStep(step - 1);
+    }
+  };
 
   return (
-    <div className="animate-fade-in">
+    <div className="bg-slate-50 min-h-screen pb-20">
       {/* Step indicator */}
-      <div className="bg-card border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-center gap-6 sm:gap-10">
+      <div className="bg-white border-b border-border sticky top-0 z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 ">
+          <div className="flex items-center justify-between sm:justify-center gap-2 sm:gap-10">
             {wizardSteps.map((s, i) => (
-              <button key={i} onClick={() => setStep(i)}
-                className={cn("flex items-center gap-2 text-sm font-medium transition-colors",
-                  i === step ? "text-primary" : i < step ? "text-litmus-teal" : "text-muted-foreground"
-                )}>
-                <s.icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{s.label}</span>
-                {i < wizardSteps.length - 1 && <span className="text-border ml-4 sm:ml-6">———</span>}
-              </button>
+              <div key={i} className="flex items-center">
+                <button
+                  onClick={() => i < step && step < 3 ? setStep(i) : null}
+                  disabled={i > step || step === 3}
+                  className={cn(
+                    "flex flex-col sm:flex-row items-center gap-2 text-sm font-medium transition-colors",
+                    i === step ? "text-primary" : i < step ? "text-litmus-teal" : "text-slate-300",
+                    i <= step && step < 3 ? "cursor-pointer" : "cursor-not-allowed"
+                  )}
+                >
+                  <div className={cn(
+                    "flex items-center justify-center h-8 w-8 rounded-full border-2",
+                    i === step ? "border-primary bg-primary/10 text-primary" : i < step ? "border-litmus-teal bg-litmus-teal text-white" : "border-slate-200 bg-slate-50"
+                  )}>
+                    <s.icon className="h-4 w-4" />
+                  </div>
+                  <span className={cn("hidden sm:inline", i <= step ? "text-slate-800 font-semibold" : "text-slate-400 font-normal")}>{s.label}</span>
+                  <span className={cn("sm:hidden text-[10px] mt-1 break-words text-center leading-tight tracking-tight", i <= step ? "text-slate-800 font-semibold" : "text-slate-400")}>{s.label.split(' ').join('\n')}</span>
+                </button>
+                {i < wizardSteps.length - 1 && (
+                  <div className={cn("h-0.5 w-8 sm:w-16 mx-2 sm:mx-6", i < step ? "bg-litmus-teal" : "bg-slate-200")} />
+                )}
+              </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        <div className="grid gap-6 lg:grid-cols-5">
-          {/* Left Column */}
-          <div className="lg:col-span-3 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 py-8 ">
+        <div className="grid gap-8 lg:grid-cols-5">
+          {/* Main Content Area */}
+          <div className={cn("lg:col-span-3 space-y-6", step === 3 ? "lg:col-span-5 max-w-3xl mx-auto w-full" : "")}>
+            
+            {/* STEP 0: Review Tests */}
             {step === 0 && (
-              <>
-                <h2 className="text-xl font-bold text-foreground">Who is getting tested?</h2>
+              <div className="animate-fade-in space-y-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Review Selected Tests</h2>
+                  <p className="text-slate-500 mt-1">Review the test parameters before proceeding to select a laboratory.</p>
+                </div>
 
-                {/* Member card */}
-                <Card className="border border-border rounded-xl">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="h-6 w-6 rounded-full bg-accent text-accent-foreground flex items-center justify-center">
-                        <User className="h-3.5 w-3.5" />
-                      </div>
-                      <span className="font-semibold text-foreground">Member 1</span>
-                    </div>
-
-                    <div className="grid gap-6 sm:grid-cols-2">
-                      {/* Left - Form fields */}
-                      <div className="space-y-4">
-                        <label className="flex items-center gap-2 text-sm">
-                          <Checkbox defaultChecked className="data-[state=checked]:bg-litmus-teal data-[state=checked]:border-litmus-teal" />
-                          <span className="text-foreground">Testing for myself</span>
-                        </label>
-                        <div className="space-y-2">
-                          <Label className="text-foreground">Full name <span className="text-primary">*</span></Label>
-                          <Input defaultValue="Rajesh Kumar" className="rounded-lg border-border" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-foreground">Batch Number <span className="text-primary">*</span></Label>
-                          <Input placeholder="BATCH-2024-001" className="rounded-lg border-border" />
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="space-y-2 flex-1">
-                            <Label className="text-foreground">Mfg Date</Label>
-                            <Input type="date" className="rounded-lg border-border" />
+                {items.length === 0 ? (
+                  <div className="text-center py-12 bg-white rounded-xl border border-border">
+                    <ClipboardList className="mx-auto h-12 w-12 text-slate-300 mb-3" />
+                    <p className="text-slate-500">Your list is empty.</p>
+                    <Button asChild className="mt-4"><Link to="/tests">Browse Tests</Link></Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {items.map((item) => (
+                      <Card key={item.id} className="border border-slate-200 rounded-xl shadow-sm hover:border-primary/30 transition-colors">
+                        <CardContent className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div className="space-y-1">
+                            <h3 className="font-bold text-lg text-slate-800">{item.product} Panel</h3>
+                            <p className="text-sm text-slate-500">{item.tests} parameters included</p>
                           </div>
-                          <div className="space-y-2 flex-1">
-                            <Label className="text-foreground">Expiry Date</Label>
-                            <Input type="date" className="rounded-lg border-border" />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Right - Tests added */}
-                      <div className="sm:border-l sm:border-border sm:pl-6">
-                        <p className="text-sm text-muted-foreground font-medium mb-3">Tests / Products added</p>
-                        <div className="space-y-3">
-                          {selectedTests.map((t) => (
-                            <div key={t.id} className="flex items-center gap-2">
-                              <Flame className="h-4 w-4 text-accent shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm text-foreground truncate">{t.name}</p>
-                                <p className="text-xs text-muted-foreground">₹ {testPrice.toLocaleString()}</p>
-                              </div>
-                              <button className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+                          <div className="flex items-center justify-between w-full sm:w-auto gap-6 sm:gap-4 border-t border-slate-100 sm:border-0 pt-4 sm:pt-0">
+                            <div className="text-left sm:text-right">
+                              <p className="text-xs text-slate-400 line-through">₹{item.mrp.toLocaleString()}</p>
+                              <p className="font-bold text-slate-800 text-lg">₹{item.price.toLocaleString()}</p>
                             </div>
-                          ))}
-                        </div>
-                        <button className="mt-3 text-sm font-medium text-primary flex items-center gap-1 hover:underline">
-                          <Plus className="h-4 w-4" /> Add test / checkup
-                        </button>
-                      </div>
+                            <Button variant="ghost" size="icon" onClick={() => removeItem(item.id)} className="text-slate-400 hover:text-red-500 hover:bg-red-50">
+                              <Trash2 className="h-5 w-5" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* STEP 1: Select Lab */}
+            {step === 1 && (
+              <div className="animate-fade-in space-y-6">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-800">Select Laboratory</h2>
+                    <p className="text-slate-500 mt-1">Choose an accredited laboratory or let us decide.</p>
+                  </div>
+                </div>
+
+                {/* Litmus Admin Option (Preferred) */}
+                <Card 
+                  onClick={() => setSelectedLab("admin")}
+                  className={cn(
+                    "cursor-pointer transition-all border-2 rounded-xl relative overflow-hidden",
+                    selectedLab === "admin" ? "border-primary bg-primary/5 shadow-md" : "border-slate-200 hover:border-primary/50"
+                  )}
+                >
+                  <div className="absolute top-0 right-0 bg-primary text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
+                    Recommended
+                  </div>
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                       <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                         <Shield className="h-6 w-6 text-primary" />
+                       </div>
+                       <div>
+                         <h3 className="font-bold text-lg text-slate-800">Assign to Litmus System Admin</h3>
+                         <p className="text-sm text-slate-600 mt-1">
+                           Can't find a lab or some selected tests are missing? Choose this option and our team will manually review your order and allocate the most optimal verified laboratories for your requirements.
+                         </p>
+                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Button variant="outline" className="rounded-full border-primary text-primary hover:bg-flame-red-tint w-full sm:w-auto gap-2">
-                  <Plus className="h-4 w-4" /> Add another product / member
-                </Button>
-
-                {/* Sample Details */}
-                <div className="space-y-3">
-                  <h3 className="text-lg font-bold text-foreground">Sample & Shipment Details</h3>
-                  <Card className="border border-border rounded-xl">
-                    <CardContent className="p-5 space-y-4">
-                      <RadioGroup value={sampleMode} onValueChange={setSampleMode}>
-                        <div className="flex items-center gap-3">
-                          <RadioGroupItem value="dropoff" id="dropoff" />
-                          <Label htmlFor="dropoff" className="text-foreground cursor-pointer">Drop off at lab</Label>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <RadioGroupItem value="pickup" id="pickup" />
-                          <Label htmlFor="pickup" className="text-primary cursor-pointer font-medium">+ Add pickup address</Label>
-                        </div>
-                      </RadioGroup>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Sample Quantity</Label>
-                          <Input placeholder="500 grams" className="rounded-lg border-border" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Brand Name</Label>
-                          <Input placeholder="Kumar's Premium" className="rounded-lg border-border" />
-                        </div>
-                      </div>
-                      {/* Upload */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Product Photo</Label>
-                          <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-accent/50 p-6 hover:border-accent transition-colors cursor-pointer">
-                            <Upload className="h-6 w-6 text-muted-foreground" />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Sample Label</Label>
-                          <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-accent/50 p-6 hover:border-accent transition-colors cursor-pointer">
-                            <Upload className="h-6 w-6 text-muted-foreground" />
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                <div className="flex items-center gap-4 py-2">
+                   <div className="h-px bg-slate-200 flex-1"></div>
+                   <span className="text-sm text-slate-400 font-medium">OR CHOOSE MANUALLY</span>
+                   <div className="h-px bg-slate-200 flex-1"></div>
                 </div>
-              </>
-            )}
 
-            {step === 1 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold text-foreground">Select Lab / Address</h2>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {laboratories.slice(0, 4).map((lab) => (
-                    <Card key={lab.id} className="border border-border rounded-xl hover:border-accent cursor-pointer transition-colors">
-                      <CardContent className="p-5 space-y-2">
-                        <h3 className="font-semibold text-foreground">{lab.name}</h3>
-                        <p className="text-sm text-muted-foreground">{lab.city}</p>
-                        <div className="flex gap-1">
-                          {lab.nabl && <Badge className="bg-litmus-dark text-primary-foreground border-0 text-xs">NABL</Badge>}
-                          {lab.fssai && <Badge className="bg-litmus-teal text-primary-foreground border-0 text-xs">FSSAI</Badge>}
+                {/* List of Labs */}
+                <div className="space-y-4">
+                  {laboratories.slice(0, 3).map((lab) => (
+                    <Card 
+                      key={lab.id} 
+                      onClick={() => setSelectedLab(lab.id)}
+                      className={cn(
+                        "cursor-pointer transition-all rounded-xl",
+                        selectedLab === lab.id ? "border-2 border-primary bg-primary/5 shadow-md" : "border border-slate-200 hover:border-slate-300"
+                      )}
+                    >
+                      <CardContent className="p-5 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                        <div className="space-y-2 flex-1">
+                          <h3 className="font-bold text-slate-800 text-lg leading-tight">{lab.name}</h3>
+                          <div className="flex items-center gap-3">
+                             <span className="flex items-center gap-1 text-sm text-slate-500"><MapPin className="h-3.5 w-3.5"/> {lab.city}</span>
+                             <span className="flex items-center gap-1 text-sm text-slate-500"><Clock className="h-3.5 w-3.5"/> 24-48 hrs</span>
+                          </div>
+                          <div className="flex gap-2 pt-1">
+                            {lab.nabl && <Badge className="bg-slate-800 text-white font-medium text-[10px] px-2 uppercase hover:bg-slate-700">NABL</Badge>}
+                            {lab.fssai && <Badge className="bg-litmus-teal text-white font-medium text-[10px] px-2 uppercase hover:bg-litmus-teal-deep">FSSAI</Badge>}
+                          </div>
                         </div>
-                        <p className="text-sm font-semibold text-primary">Starting ₹{lab.priceFrom}</p>
+                        <div className="text-left sm:text-right border-t sm:border-t-0 border-slate-100 pt-3 sm:pt-0 w-full sm:w-auto">
+                           <p className="text-sm text-slate-500">Processing Fee</p>
+                           <p className="font-bold text-slate-800 text-lg">₹{lab.priceFrom}</p>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -186,107 +208,168 @@ export default function NewBookingPage() {
               </div>
             )}
 
+            {/* STEP 2: Payment Details */}
             {step === 2 && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold text-foreground">Pick a Slot</h2>
-                <Card className="border border-border rounded-xl">
-                  <CardContent className="p-5 space-y-4">
-                    <Label>Select Date</Label>
-                    <Input type="date" className="rounded-lg border-border max-w-xs" />
-                    <Label>Available Time Slots</Label>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                      {["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"].map((slot, i) => (
-                        <button key={slot}
-                          className={cn("py-2 rounded-lg text-sm font-medium border transition-colors",
-                            i === 1 ? "bg-primary text-primary-foreground border-primary" : "bg-card text-foreground border-border hover:border-accent"
-                          )}>{slot}</button>
-                      ))}
-                    </div>
-                  </CardContent>
+              <div className="animate-fade-in space-y-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Secure Payment</h2>
+                  <p className="text-slate-500 mt-1">Review your order details and complete the payment.</p>
+                </div>
+                
+                <Card className="rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                   <div className="bg-slate-50 p-4 border-b border-slate-200 flex justify-between items-center">
+                      <span className="font-bold text-slate-700">Order Booking summary</span>
+                      <Badge variant="outline" className="bg-white">{items.length} items</Badge>
+                   </div>
+                   <CardContent className="p-0">
+                      <div className="divide-y divide-slate-100">
+                         {items.map((item) => (
+                            <div key={item.id} className="p-4 flex justify-between items-center">
+                               <div>
+                                  <p className="font-medium text-slate-800">{item.product}</p>
+                                  <p className="text-sm text-slate-500">{item.tests} tests</p>
+                               </div>
+                               <p className="font-semibold text-slate-800">₹{item.price.toLocaleString()}</p>
+                            </div>
+                         ))}
+                      </div>
+                      <div className="bg-blue-50/50 p-4 flex gap-3 text-sm text-blue-800 border-t border-slate-100">
+                         <Shield className="h-5 w-5 text-blue-600 shrink-0" />
+                         <p>Your payment is processed securely. We use industry-standard encryption to protect your financial details.</p>
+                      </div>
+                   </CardContent>
                 </Card>
               </div>
             )}
 
-            {/* Navigation */}
-            <div className="flex gap-3 pt-4">
-              {step > 0 && <Button variant="outline" onClick={() => setStep(step - 1)} className="rounded-lg">Back</Button>}
-              {step < 2 ? (
-                <Button onClick={() => setStep(step + 1)} className="bg-primary hover:bg-primary-deep rounded-lg">Next</Button>
-              ) : (
-                <Button className="bg-primary hover:bg-primary-deep rounded-lg" asChild>
-                  <Link to="/orders">Pay ₹{(totalPrice + Math.round(totalPrice * 0.18)).toLocaleString()} with Razorpay</Link>
-                </Button>
-              )}
-            </div>
+            {/* STEP 3: Status / Confirmation */}
+            {step === 3 && (
+              <div className="animate-fade-in py-10">
+                 <Card className="border-0 shadow-lg rounded-2xl overflow-hidden max-w-2xl mx-auto">
+                    <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-8 text-center text-white">
+                       <div className="h-20 w-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner backdrop-blur-sm">
+                          <CheckCircle className="h-10 w-10 text-white" />
+                       </div>
+                       <h2 className="text-3xl font-extrabold mb-2">Booking Confirmed!</h2>
+                       <p className="text-emerald-50 text-lg">Your transaction was successful.</p>
+                    </div>
+                    <CardContent className="p-8 space-y-8">
+                       <div className="grid grid-cols-2 gap-4 text-center divide-x divide-slate-100 border-y border-slate-100 py-6">
+                          <div>
+                             <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Order ID</p>
+                             <p className="text-lg font-bold text-slate-800">#LTMS-{Math.floor(100000 + Math.random() * 900000)}</p>
+                          </div>
+                          <div>
+                             <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Amount Paid</p>
+                             <p className="text-lg font-bold text-slate-800">₹{total.toLocaleString()}</p>
+                          </div>
+                       </div>
+                       
+                       <div className="bg-slate-50 rounded-xl p-6 text-center">
+                          {selectedLab === "admin" ? (
+                             <>
+                                <h3 className="font-bold text-slate-800 mb-2">Assigned to Litmus Admin</h3>
+                                <p className="text-slate-600">Our administrative team will review your requirements and assign the optimal labs. You will be notified shortly via email/SMS.</p>
+                             </>
+                          ) : (
+                             <>
+                                <h3 className="font-bold text-slate-800 mb-2">Lab Assigned</h3>
+                                <p className="text-slate-600">The selected laboratory has been informed. They will begin processing as per standard schedules.</p>
+                             </>
+                          )}
+                       </div>
+
+                       <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
+                          <Button onClick={() => navigate("/orders")} className="h-12 px-8 rounded-full bg-slate-800 hover:bg-slate-900 text-white font-semibold">
+                             View Orders
+                          </Button>
+                          <Button variant="outline" onClick={() => navigate("/home")} className="h-12 px-8 rounded-full border-slate-300 font-semibold text-slate-700">
+                             Back to Home
+                          </Button>
+                       </div>
+                    </CardContent>
+                 </Card>
+              </div>
+            )}
+
           </div>
 
-          {/* Right Column — Sticky Order Summary */}
-          <div className="lg:col-span-2">
-            <div className="lg:sticky lg:top-20 space-y-4">
-              <Card className="rounded-2xl shadow-md border-0">
-                <CardContent className="p-5 space-y-4">
-                  {/* Top */}
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-foreground">{selectedTests.length} products added</span>
-                    <div className="text-right">
-                      <span className="text-sm text-muted-foreground line-through mr-2">₹{totalMRP.toLocaleString()}</span>
-                      <span className="text-lg font-bold text-primary">₹{totalPrice.toLocaleString()}</span>
+          {/* Right Column — Sticky Order Summary (Hidden on confirmation step) */}
+          {step < 3 && (
+            <div className="lg:col-span-2">
+              <div className="lg:sticky lg:top-24 space-y-4">
+                <Card className="rounded-2xl shadow-lg border border-slate-100">
+                  <CardContent className="p-6 space-y-5">
+                    {/* Top */}
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-800 text-lg">Summary</span>
+                      <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-0">{items.length} products</Badge>
                     </div>
-                  </div>
 
-                  {/* CTA */}
-                  <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg h-12 font-semibold text-base" onClick={() => step < 2 ? setStep(step + 1) : null}>
-                    {step < 2 ? "Add Lab / Proceed →" : "Confirm & Pay →"}
-                  </Button>
-
-                  <div className="border-t border-border pt-4 space-y-3">
-                    {/* Offers */}
-                    <div>
-                      <Badge className="bg-flame-amber-tint text-foreground border-0 text-[10px] mb-2">Best Coupon</Badge>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Tag className="h-4 w-4 text-litmus-teal" />
-                          <span className="font-bold text-foreground text-sm">LITMUS10</span>
-                        </div>
-                        <Button variant="outline" size="sm" className="rounded-full border-primary text-primary text-xs h-7 px-3">APPLY</Button>
+                    <div className="border-t border-slate-100 pt-4 space-y-3">
+                      {/* Payment Breakdown */}
+                      <div className="flex justify-between text-sm"><span className="text-slate-500">Total MRP</span><span className="text-slate-800 font-medium">₹{totalMrp.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-sm"><span className="text-litmus-teal font-medium">Discount on MRP</span><span className="text-litmus-teal font-medium">- ₹{discount.toLocaleString()}</span></div>
+                      <div className="flex justify-between text-sm"><span className="text-slate-500">Platform Fee</span><span className="text-slate-800"><span className="line-through text-slate-400 mr-2">₹150</span><span className="text-litmus-teal font-bold uppercase">Free</span></span></div>
+                      
+                      {step > 1 && (
+                         <div className="flex justify-between text-sm border-t border-dashed border-slate-200 pt-3 mt-1">
+                            <span className="text-slate-500">GST (18%)</span><span className="text-slate-800 font-medium">+ ₹{gst.toLocaleString()}</span>
+                         </div>
+                      )}
+                      
+                      <div className="border-t border-slate-200 pt-3 mt-1 pb-1 flex justify-between items-center">
+                        <span className="text-slate-800 font-bold">Total Amount</span>
+                        <span className="text-2xl font-extrabold text-primary">₹{step > 1 ? total.toLocaleString() : subtotal.toLocaleString()}</span>
                       </div>
-                      <p className="text-xs text-litmus-teal mt-1">Save ₹{Math.round(totalPrice * 0.1).toLocaleString()} with this coupon</p>
-                      <button className="text-xs text-muted-foreground mt-1">More Details ▾</button>
                     </div>
 
-                    <button className="flex items-center justify-between w-full text-sm text-muted-foreground hover:text-foreground py-2 border-t border-border">
-                      <span className="flex items-center gap-2"><Tag className="h-4 w-4" /> View all coupons</span>
-                      <ChevronIcon />
-                    </button>
-                  </div>
-
-                  {/* Payment Summary */}
-                  <div className="border-t border-border pt-4 space-y-2">
-                    <h4 className="font-semibold text-foreground text-sm">Payment Summary</h4>
-                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Total MRP</span><span className="text-foreground">₹{totalMRP.toLocaleString()}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-litmus-teal">Discount on MRP</span><span className="text-litmus-teal">- ₹{discount.toLocaleString()}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Platform Fee</span><span className="text-foreground"><span className="line-through text-muted-foreground mr-1">₹150</span><span className="text-litmus-teal font-medium">FREE</span></span></div>
-                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">GST (18%)</span><span className="text-foreground">₹{Math.round(totalPrice * 0.18).toLocaleString()}</span></div>
-                    <div className="border-t border-border pt-2 flex justify-between font-bold">
-                      <span className="text-foreground">To Pay</span>
-                      <span className="text-foreground">₹{(totalPrice + Math.round(totalPrice * 0.18)).toLocaleString()}</span>
+                    <div className="pt-2">
+                       {step === 0 && (
+                          <Button 
+                             disabled={items.length === 0}
+                             onClick={handleNext} 
+                             className="w-full bg-primary hover:bg-primary-deep text-white rounded-xl h-14 font-bold text-base shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+                          >
+                            Proceed to Select Lab
+                          </Button>
+                       )}
+                       {step === 1 && (
+                          <Button 
+                             disabled={!selectedLab}
+                             onClick={handleNext} 
+                             className="w-full bg-primary hover:bg-primary-deep text-white rounded-xl h-14 font-bold text-base shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+                          >
+                            Proceed to Payment
+                          </Button>
+                       )}
+                       {step === 2 && (
+                          <Button 
+                             onClick={handleNext} 
+                             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-14 font-bold text-base shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
+                          >
+                            Pay ₹{total.toLocaleString()} securely
+                          </Button>
+                       )}
+                      
+                       {step > 0 && (
+                          <Button variant="ghost" onClick={handleBack} className="w-full mt-3 h-12 rounded-xl text-slate-500 hover:text-slate-800 font-medium">
+                             Back to previous step
+                          </Button>
+                       )}
                     </div>
-                  </div>
-
-                  {/* Savings strip */}
-                  <div className="bg-litmus-mint rounded-lg px-3 py-2 text-center">
-                    <span className="text-xs text-litmus-dark font-medium">🏷 You will save ₹{(discount + 150).toLocaleString()} on this order.</span>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+                
+                <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-center flex items-center justify-center gap-2 text-blue-700 mx-1">
+                  <Shield className="h-4 w-4" />
+                  <span className="text-xs font-semibold uppercase tracking-wider">Litmus Buyer Protection</span>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
   );
-}
-
-function ChevronIcon() {
-  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
 }
