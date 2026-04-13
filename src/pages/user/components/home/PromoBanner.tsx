@@ -36,7 +36,7 @@ export const PromoBanner = ({ className }: { className?: string }) => {
    return (
       <section className={cn(className)}>
          <div className="max-w-7xl mx-auto px-4">
-            <div className="relative group rounded-[2rem] overflow-hidden bg-white shadow-[0_24px_80px_rgba(0,0,0,0.06)] border border-slate-100 h-[320px]">
+            <div className="relative group rounded-[2rem] overflow-hidden bg-white shadow-[0_24px_80px_rgba(0,0,0,0.06)] border border-slate-100 h-[620px] md:h-[320px]">
                <div className="h-full w-full flex transition-transform duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)]" style={{ transform: `translateX(-${current * 100}%)` }}>
                   {slides.map((s, i) => (
                      <div key={i} className="min-w-full h-full flex flex-col lg:flex-row">
