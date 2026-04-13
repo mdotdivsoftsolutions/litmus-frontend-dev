@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { products } from "@/lib/placeholder-data";
 import { Activity, FileText, Plus, Minus, ChevronRight, ArrowRight, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SectionHeader } from "./home/SectionHeader";
 
 type Product = (typeof products)[number];
 
@@ -201,17 +202,18 @@ export const HomeTests = ({ activeTab, setActiveTab, cartItems, addToCart, remov
     <>
       <section className="pt-20 pb-10  relative overflow-hidden bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 relative z-10 w-full">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-             <div>
-                <h2 className="text-3xl lg:text-4xl font-bold text-slate-800 tracking-tight leading-tight">
-                  Popular Tests <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Near You</span>
-                </h2>
-                <p className="text-slate-500 mt-3 text-lg">Discover the most frequently booked food safety and quality analysis tests in your region.</p>
-             </div>
-             <span className="text-[#D32F2F] font-medium text-sm cursor-pointer hover:underline flex items-center gap-1 group whitespace-nowrap bg-red-50 px-4 py-2 rounded-full border border-red-100">
-               View All Tests <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-             </span>
-          </div>
+          <SectionHeader
+            title={
+              <>
+                Popular Tests <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Near You</span>
+              </>
+            }
+            subtitle="Discover the most frequently booked food safety and quality analysis tests in your region."
+            action={{
+              label: "View All Tests",
+              href: "/tests",
+            }}
+          />
 
           <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-5 pt-2 -mx-2">
                {[...products].reverse().map((p, i) => (

@@ -1,5 +1,6 @@
-import { Star, Shield, Package, FileText, Zap, Stethoscope, Check } from "lucide-react";
+import { Star, Shield, Package, FileText, Zap, Stethoscope, Check, ArrowRight, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SectionHeader } from "./home/SectionHeader";
 
 const reviews = [
    { name: "Suresh Mehta", city: "Chennai", rating: 5, text: "Excellent service! Got my dairy product tested within 3 days. Reports were detailed and FSSAI compliant. Highly recommend!", date: "2 weeks ago" },
@@ -7,8 +8,6 @@ const reviews = [
    { name: "Pradeep Rao", city: "Bangalore", rating: 4, text: "Good platform for food testing. Wide range of tests available. Pricing is competitive compared to direct lab bookings.", date: "3 weeks ago" },
    { name: "Kavya Singh", city: "Delhi", rating: 5, text: "The booking process was seamless, and the sample collection was done right on time. Very impressive.", date: "1 week ago" },
 ];
-
-import { ArrowRight, Flame } from "lucide-react";
 
 const whyLitmusDetailed = [
    { title: "NABL Certified Labs", icon: Shield, desc: "We partner exclusively with rigorously audited, top-tier accredited laboratories to ensure every test meets the absolute highest national and global safety standards." },
@@ -29,23 +28,25 @@ export function HomeReviewsAndInfo() {
 
                {/* Storytelling Left Side */}
                <div className="lg:w-5/12 max-w-2xl">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-50 border border-red-100 text-[#D32F2F] text-xs font-bold uppercase tracking-widest mb-8 shadow-sm">
-                     <Flame className="h-4 w-4" /> The Litmus Standard
-                  </div>
-                  <h2 className="text-4xl lg:text-5xl font-bold text-slate-800 tracking-tight leading-tight mb-6">
-                     Why choose <br />
-                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Litmus Testing?</span>
-                  </h2>
-                  <div className="text-lg text-slate-600 space-y-6 leading-relaxed">
-                     <p>
-                        We believe food safety shouldn't be an opaque or complicated hurdle. Our platform was built on a foundation of absolute truth—connecting you instantly to world-class laboratory infrastructure.
-                     </p>
+                  <SectionHeader
+                    badge="The Litmus Standard"
+                    title={
+                      <>
+                        Why choose <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Litmus Testing?</span>
+                      </>
+                    }
+                    subtitle="We believe food safety shouldn't be an opaque or complicated hurdle. Our platform was built on a foundation of absolute truth—connecting you instantly to world-class laboratory infrastructure."
+                    className="mb-8"
+                  />
+                  
+                  <div className="text-lg text-slate-600 space-y-6 leading-relaxed mb-12">
                      <p>
                         By eliminating structural middlemen and digitizing the entire tracking lifecycle, we provide an unparalleled premium experience that guarantees <strong>accuracy, lightning speed, and total reliability</strong> from sample collection down to the final certified report.
                      </p>
                   </div>
 
-                  <div className="mt-12 flex items-center gap-4">
+                  <div className="flex items-center gap-4">
                      <button className="px-8 py-4 bg-gradient-to-r from-[#D32F2F] to-[#F06C00] text-white font-bold rounded-xl shadow-[0_4px_20px_rgba(211,47,47,0.3)] hover:shadow-[0_8px_30px_rgba(211,47,47,0.4)] hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 group">
                         Start Testing Today
                         <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -73,17 +74,18 @@ export function HomeReviewsAndInfo() {
             <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#F06C00]/5 rounded-full blur-[100px] pointer-events-none -translate-x-1/2 translate-y-1/2" />
 
             <div className="max-w-7xl mx-auto px-4 relative z-10 w-full">
-               <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-4">
-                  <div>
-                     <h2 className="text-3xl lg:text-4xl font-bold text-slate-800 tracking-tight leading-tight">
-                        Customer <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Reviews</span>
-                     </h2>
-                     <p className="text-slate-500 mt-3 text-lg">See why thousands of businesses trust Litmus for their uncompromising food safety testing.</p>
-                  </div>
-                  <span className="text-[#D32F2F] font-medium text-sm cursor-pointer hover:underline flex items-center gap-1 group whitespace-nowrap bg-red-50 px-6 py-2.5 rounded-full border border-red-100 shadow-sm transition-all hover:bg-[#D32F2F] hover:text-white">
-                     Read All Stories <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </span>
-               </div>
+               <SectionHeader
+                 title={
+                   <>
+                     Customer <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Reviews</span>
+                   </>
+                 }
+                 subtitle="See why thousands of businesses trust Litmus for their uncompromising food safety testing."
+                 action={{
+                   label: "Read All Stories",
+                   href: "#",
+                 }}
+               />
 
                <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-12 px-2 -mx-2">
                   {reviews.map((r, i) => (
@@ -114,7 +116,9 @@ export function HomeReviewsAndInfo() {
                   ))}
                </div>
             </div>
-         </section>         {/* ═══════════ PROMOTIONAL CHECKUP BANNER ═══════════ */}
+         </section>
+
+         {/* ═══════════ PROMOTIONAL CHECKUP BANNER ═══════════ */}
          <section className="py-24 bg-white">
             <div className="max-w-7xl mx-auto px-4">
                <div className="relative h-[380px] lg:h-[420px] w-full rounded-[2.5rem] overflow-hidden flex flex-col lg:flex-row bg-white shadow-[0_24px_80px_rgba(0,0,0,0.06)] border border-slate-100 group">
@@ -184,4 +188,3 @@ export function HomeReviewsAndInfo() {
       </>
    );
 }
-
