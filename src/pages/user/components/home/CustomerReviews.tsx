@@ -30,7 +30,7 @@ export function CustomerReviews() {
 
             <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-12 px-2 -mx-2">
                {reviews.map((r, i) => (
-                  <div key={i} className="w-[420px] shrink-0 bg-white p-10 rounded-[2rem] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-100 flex flex-col relative group hover:shadow-[0_24px_50px_rgba(211,47,47,0.08)] hover:border-red-100 transition-all duration-500 hover:-translate-y-2">
+                  <div key={i} className="w-[420px] shrink-0 bg-white p-10 rounded-[1.5rem]  border border-slate-100 flex flex-col relative group hover:border-red-100 transition-all duration-500 hover:-translate-y-2">
 
                      <div className="flex items-center gap-1.5 mb-8 relative z-10">
                         {[1, 2, 3, 4, 5].map(s => (
@@ -40,11 +40,11 @@ export function CustomerReviews() {
                            />
                         ))}
                      </div>
-                     <p className="text-lg text-slate-700 leading-relaxed flex-1 relative z-10 font-medium">"{r.text}"</p>
+                     <p className="text-md text-slate-500 leading-relaxed flex-1 relative z-10 ">"{r.text}"</p>
 
                      <div className="mt-10 pt-6 border-t border-slate-100 flex justify-between items-center relative z-10 group-hover:border-red-100 transition-colors">
                         <div className="flex items-center gap-4">
-                           <div className="h-12 w-12 bg-gradient-brand text-white rounded-2xl flex items-center justify-center font-bold text-lg shadow-[0_4px_14px_rgba(211,47,47,0.3)]">
+                           <div className="h-12 w-12 bg-gradient-brand text-white rounded-full flex items-center justify-center font-bold text-lg">
                               {r.name.charAt(0)}
                            </div>
                            <div>

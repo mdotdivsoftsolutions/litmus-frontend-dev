@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
+
 import { useSearchParams } from "react-router-dom";
 import { Package, Milk, Coffee, Wheat, Flame, Drumstick, Droplets, Cookie } from "lucide-react";
 import { products, categories } from "@/lib/placeholder-data";
@@ -30,7 +31,6 @@ export default function TestsListingPage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(initialCategory || "All");
   const [selectedType, setSelectedType] = useState("");
-  const [sortBy, setSortBy] = useState("relevance");
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [visibleItems, setVisibleItems] = useState(6);
 
@@ -58,13 +58,13 @@ export default function TestsListingPage() {
   const handleSeeMore = () => setVisibleItems(prev => prev + 6);
 
   const discountPct = (price: number, mrp: number) => Math.round(((mrp - price) / mrp) * 100);
-  const addToCart = (id: string) => setCartItems(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
-  const removeFromCart = (id: string) => setCartItems(prev => {
+  const addToCart = (id: string, e?: MouseEvent<HTMLButtonElement>) => { e?.preventDefault(); setCartItems(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 })); };
+  const removeFromCart = (id: string, e?: MouseEvent<HTMLButtonElement>) => { e?.preventDefault(); setCartItems(prev => {
     const next = { ...prev };
     if (next[id] > 1) next[id]--;
     else delete next[id];
     return next;
-  });
+  }); };
 
   const filters = [
     ...(selectedCategory && selectedCategory !== "All" ? [{ label: selectedCategory, clear: () => setSelectedCategory("All") }] : []),
@@ -72,15 +72,33 @@ export default function TestsListingPage() {
   ];
 
   return (
-    <div className="animate-fade-in font-manrope bg-white min-h-screen">
+    <div className="animate-fade-in font-manrope bg-slate-50 min-h-screen">
 
       {/* 1. PANORAMIC HERO */}
       <TestsHero search={search} setSearch={setSearch} />
 
       {/* 2. STATS STRIP */}
       <TestsStatsStrip />
-      
-      {/* 4. MOST BOOKED TESTS */}
+
+      {/* 3. CATEGORY STRIP — always at top for filtering */}
+      <CategoryStrip
+        selectedCategory={selectedCategory}
+        setSelectedCategory={handleCategoryChange}
+      />
+
+      {/* 4. TEST PACKAGES GRID */}
+      <div className="max-w-7xl mx-auto px-4 py-6 my-16">
+        <TestsGrid
+          products={paginatedProducts}
+          cartItems={cartItems}
+          addToCart={addToCart}
+          removeFromCart={removeFromCart}
+          handleSeeMore={handleSeeMore}
+          hasMore={hasMore}
+        />
+      </div>
+
+      {/* 5. MOST BOOKED DIAGNOSTICS */}
       <MostBookedTests
         tests={featuredTests}
         discountPct={discountPct}
@@ -91,45 +109,11 @@ export default function TestsListingPage() {
         cn={cn}
       />
 
-
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-12 py-24">
-
-        {/* 3. CATEGORY NAVIGATION & SEARCH FILTERS (Now Modular) */}
-        {/* <FilterNavigation 
-          categoryPills={categoryPills}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          search={search}
-          setSearch={setSearch}
-          selectedType={selectedType}
-          setSelectedType={setSelectedType}
-          testTypes={testTypes}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          filters={filters}
-          cn={cn}
-        /> */}
-
-
-        {/* 5. COMPREHENSIVE PRODUCT GRID */}
-        <TestsGrid 
-          products={paginatedProducts} 
-          cartItems={cartItems} 
-          addToCart={addToCart} 
-          removeFromCart={removeFromCart} 
-          handleSeeMore={handleSeeMore}
-          hasMore={hasMore}
-        />
-      </div>
-
-      {/* PROMO BANNER CAROUSEL (From Home Page) */}
-      <PromoBanner className="pt-24"  />
-
       {/* TRUST & ORDERING SECTION (Customized for Litmus) */}
       <TrustAndOrdering />
 
-      {/* 6. WHY LITMUS STORYTELLING (Panoramic Section) */}
-      <WhyLitmusTests />
+      {/* PROMO BANNER CAROUSEL (From Home Page) */}
+      <PromoBanner className="py-10 bg-white md:pt-24" />
 
       <div className="max-w-7xl mx-auto px-4">
         {filtered.length === 0 && (
