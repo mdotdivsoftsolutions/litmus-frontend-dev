@@ -42,13 +42,7 @@ export const MostBookedTests = ({
   cn
 }: MostBookedTestsProps) => {
   return (
-    <div className="space-y-10 bg-slate-50 py-24">
-      {/* Category Strip */}
-      <CategoryStrip
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-      />
-
+    <div className="space-y-10 bg-white py-12 md:py-20">
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-12">
         <SectionHeader
           title={

@@ -20,7 +20,7 @@ export const CategoryStrip = ({ selectedCategory, setSelectedCategory }: Categor
   ];
 
   return (
-    <div className="w-full  border-b border-slate-50">
+    <div className="w-full pt-16">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex flex-col gap-6">
            {/* Horizontal Scroll Container */}
@@ -32,7 +32,7 @@ export const CategoryStrip = ({ selectedCategory, setSelectedCategory }: Categor
                   className={cn(
                     "group relative min-w-[140px] h-[180px] rounded-[2.5rem] overflow-hidden flex flex-col justify-end p-5 transition-all duration-300 snap-start border-2",
                     selectedCategory === cat.name 
-                      ? "border-[#D32F2F] shadow-[0_12px_30px_rgba(211,47,47,0.15)] ring-4 ring-[#D32F2F]/5" 
+                      ? "border-[#D32F2F] ring-4 ring-[#D32F2F]/5" 
                       : "border-transparent hover:border-slate-200"
                   )}
                 >
