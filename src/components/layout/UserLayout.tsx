@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
 import { Header } from "./header/Header";
-import { FooterSEO } from "./footer/FooterSEO";
-import { MainFooter } from "./footer/MainFooter";
-import { MobileTabNavigation } from "./MobileTabNavigation";
-import { FloatingSupportChat } from "./FloatingSupportChat";
 import { AuthModal } from "../auth/AuthModal";
+import { MainFooter } from "./footer/MainFooter";
+import { Outlet, useLocation } from "react-router-dom";
+import { FloatingSupportChat } from "./FloatingSupportChat";
+import { MobileTabNavigation } from "./MobileTabNavigation";
+import { FooterSearchLinks } from "./footer/FooterSearchLinks";
 
 export function UserLayout() {
   const location = useLocation();
@@ -23,9 +23,9 @@ export function UserLayout() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  useEffect(() => { 
-    setMobileMenuOpen(false); 
-    setShowSearch(false); 
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setShowSearch(false);
   }, [location.pathname]);
 
   // Handle auto-opening of the modal on first load
@@ -42,7 +42,7 @@ export function UserLayout() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header 
+      <Header
         scrolled={scrolled}
         city={city}
         setCity={setCity}
@@ -59,16 +59,17 @@ export function UserLayout() {
         <Outlet />
       </main>
 
-      <FooterSEO />
+      <FooterSearchLinks />
+
       <MainFooter />
 
       <FloatingSupportChat />
       <MobileTabNavigation cartCount={cartCount} />
 
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
-        isSkippable={true} 
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        isSkippable={true}
       />
     </div>
   );

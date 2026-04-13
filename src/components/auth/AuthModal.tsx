@@ -59,25 +59,22 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden border-none rounded-2xl shadow-2xl bg-white">
+      <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden border-none rounded-2xl shadow-2xl bg-white [&>button:first-child]:hidden">
         <div className="p-8 relative">
-          {isSkippable && (
+          {/* {isSkippable && (
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 transition-colors"
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 transition-colors"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4.5 w-4.5" />
             </button>
-          )}
+          )} */}
 
           {/* Logo Section */}
           <div className="flex flex-col items-center mb-8">
             <div className="flex items-center gap-2 mb-6">
               <img src="/logo.png" alt="Litmus" className="h-10 object-contain" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight mb-2">
-              {step === "login" ? "Login Now" : "Verify OTP"}
-            </h2>
             <p className="text-slate-500 text-[15px]">
               {step === "login" ? "Introduce your information to sign in." : "Enter the 4-digit code sent to your mobile."}
             </p>
@@ -127,7 +124,7 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
                   disabled={loading || !identifier}
                   className={cn(
                     "w-full h-12 font-bold rounded-lg transition-all",
-                    loading || !identifier ? "bg-slate-200 text-slate-400" : " text-white hover:bg-brand-primary/90 shadow-md"
+                    loading || !identifier ? "bg-slate-200 text-slate-400" : "bg-gradient-brand text-white hover:bg-brand-primary/90 shadow-md"
                   )}
                 >
                   {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Continue"}
@@ -148,7 +145,7 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
                   <Input
                     key={i}
                     id={`otp-${i}`}
-                    className="h-14 text-center text-2xl font-bold bg-slate-50 border-slate-100 rounded-xl focus:bg-white transition-all focus:border-brand-primary"
+                    className="h-12 border-slate-200 focus:border-none focus:ring-none text-center text-2xl font-bold"
                     value={digit}
                     onChange={(e) => handleOtpChange(i, e.target.value)}
                     onKeyDown={(e) => {
@@ -164,7 +161,7 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
                 <Button
                   type="submit"
                   disabled={loading || otp.some(d => !d)}
-                  className="w-full h-12 bg-slate-900 text-white font-bold rounded-lg shadow-lg hover:bg-slate-800 transition-all"
+                  className="w-full h-12 bg-gradient-brand text-white font-bold rounded-lg shadow-lg  transition-all"
                 >
                   {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Verify & Proceed"}
                 </Button>

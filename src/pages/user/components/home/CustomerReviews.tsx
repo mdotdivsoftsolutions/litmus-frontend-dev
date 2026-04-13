@@ -31,10 +31,6 @@ export function CustomerReviews() {
             <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-12 px-2 -mx-2">
                {reviews.map((r, i) => (
                   <div key={i} className="w-[420px] shrink-0 bg-white p-10 rounded-[2rem] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-100 flex flex-col relative group hover:shadow-[0_24px_50px_rgba(211,47,47,0.08)] hover:border-red-100 transition-all duration-500 hover:-translate-y-2">
-                     {/* Watermark Quote */}
-                     <span className="absolute top-0 right-8 text-[140px] font-serif text-slate-50 leading-none group-hover:text-red-50 transition-colors duration-500 select-none pointer-events-none">
-                        "
-                     </span>
 
                      <div className="flex items-center gap-1.5 mb-8 relative z-10">
                         {[1, 2, 3, 4, 5].map(s => (

@@ -9,15 +9,19 @@ const POPULAR_LINKS = [
 
 export function FooterSearchLinks() {
   return (
-    <div className="grid grid-cols-6 gap-y-2 gap-x-4">
-       <div className="col-span-6 border-b border-slate-100 pb-3 mb-2">
-          <h3 className="text-lg font-bold text-slate-800">Popular Diagnostic Tests & Audits</h3>
-       </div>
-       {POPULAR_LINKS.map((link, i) => (
-         <div key={i} className="text-[12px] text-slate-500 hover:text-[#D32F2F] cursor-pointer transition-colors whitespace-nowrap overflow-hidden text-ellipsis px-1">
-           {link}
-         </div>
-       ))}
-    </div>
+    <section className="bg-white  border-slate-100 pb-16 pt-5 hidden lg:block">
+      <div className="max-w-7xl mx-auto px-4 ">
+        <div className="grid grid-cols-6 gap-y-2 gap-x-4">
+          <div className="col-span-6 border-b border-slate-100 pb-3 mb-2">
+            <h3 className="text-lg font-bold text-slate-800">Popular Diagnostic Tests & Audits</h3>
+          </div>
+          {POPULAR_LINKS.map((link, i) => (
+            <div key={i} className="text-[12px] text-slate-500 hover:text-[#D32F2F] cursor-pointer transition-colors whitespace-nowrap overflow-hidden text-ellipsis px-1">
+              {link}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

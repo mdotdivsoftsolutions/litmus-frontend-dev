@@ -8,6 +8,7 @@ import { CustomerReviews } from "./components/home/CustomerReviews";
 import { FeaturedPackages } from "./components/home/FeaturedPackages";
 import { SpecialityCarousel } from "./components/home/SpecialityCarousel";
 import { SafetyCheckupBanner } from "./components/home/SafetyCheckupBanner";
+import { FooterSEO } from "@/components/layout/footer/FooterSEO";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("tests");
@@ -61,6 +62,9 @@ export default function HomePage() {
       {/* ═══════════ CALL TO ACTIONS ═══════════ */}
       <SafetyCheckupBanner />
       <WhatsAppBanner className="py-10 md:py-24" />
+
+      {/* ═══════════ SEO CONTENT ═══════════ */}
+      <FooterSEO />
     </div>
   );
 }
