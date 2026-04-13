@@ -9,16 +9,6 @@ import { CartDrawer } from "../../cart/CartDrawer";
 
 const cities = ["Chennai", "Mumbai", "New Delhi", "Bangalore", "Hyderabad", "Kolkata"];
 
-const desktopLinks = [
-  { label: "Home", href: "/home" },
-  { label: "Tests", href: "/tests" },
-  { label: "Packages", href: "/packages" },
-  { label: "Labs", href: "/labs" },
-  { label: "Consultation", href: "/consultation" },
-  { label: "Support", href: "/support" },
-  { label: "Login", href: "/login" },
-];
-
 interface HeaderProps {
   scrolled: boolean;
   city: string;
@@ -29,13 +19,23 @@ interface HeaderProps {
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
   showAnnouncement: boolean;
+  onLoginClick: () => void;
 }
 
 export function Header({ 
   scrolled, city, setCity, cartCount, showSearch, setShowSearch, 
-  mobileMenuOpen, setMobileMenuOpen, showAnnouncement 
+  mobileMenuOpen, setMobileMenuOpen, showAnnouncement, onLoginClick
 }: HeaderProps) {
   const location = useLocation();
+
+  const desktopLinks = [
+    { label: "Home", href: "/home" },
+    { label: "Tests", href: "/tests" },
+    { label: "Packages", href: "/packages" },
+    { label: "Labs", href: "/labs" },
+    { label: "Consultation", href: "/consultation" },
+    { label: "Support", href: "/support" },
+  ];
 
   return (
     <header className={cn(
@@ -98,6 +98,13 @@ export function Header({
               </Link>
             );
           })}
+          {/* Login Button instead of Link */}
+          <button
+            onClick={onLoginClick}
+            className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Login
+          </button>
         </nav>
 
         <div className="flex-1 lg:hidden" />
@@ -108,13 +115,13 @@ export function Header({
             <Search className="h-4.5 w-4.5 text-foreground" />
           </Button>
 
-          <Button variant="ghost" size="icon" className="h-9 w-9 hidden sm:flex" asChild>
-            <a href="#"><Phone className="h-4 w-4 text-foreground" /></a>
+          <Button variant="ghost" size="icon" className="h-9 w-9 hidden sm:flex group/phone hover:bg-transparent" asChild>
+            <a href="#"><Phone className="h-4 w-4 text-foreground group-hover/phone:text-brand-primary" /></a>
           </Button>
 
           <CartDrawer>
-            <Button variant="ghost" size="icon" className="h-9 w-9 relative hover:bg-transparent group/cart transition-all duration-300">
-              <ShoppingCart className="h-4.5 w-4.5 text-foreground group-hover/cart:text-[#D32F2F] transition-colors" />
+            <Button variant="ghost" size="icon" className="pr-2 h-9 w-9 relative hover:bg-transparent group/cart transition-all duration-300">
+              <ShoppingCart className="h-4.5 w-4.5 text-foreground group-hover/cart:text-brand-primary transition-colors" />
               {cartCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-brand text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
                   {cartCount}
@@ -125,7 +132,7 @@ export function Header({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 hidden sm:flex">
+              <Button variant="ghost" size="icon" className="h-9 w-9 hidden sm:flex hover:bg-transparent">
                 <Avatar className="h-7 w-7">
                   <AvatarFallback className="bg-gradient-brand text-primary-foreground text-xs font-bold">RK</AvatarFallback>
                 </Avatar>
@@ -136,7 +143,8 @@ export function Header({
               <DropdownMenuItem asChild><Link to="/orders">My Orders</Link></DropdownMenuItem>
               <DropdownMenuItem asChild><Link to="/reports">Reports</Link></DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild><Link to="/login">Logout</Link></DropdownMenuItem>
+              {/* Change Logout to Login Trigger if not logged in, or just keep as is for demo */}
+              <DropdownMenuItem onClick={onLoginClick}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -159,18 +167,31 @@ export function Header({
       {/* Mobile menu overlay */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-border bg-card px-4 py-3 space-y-1 animate-fade-in">
-          {[{ label: "Home", href: "/home" }, ...desktopLinks].map((link) => {
+          {[
+            { label: "Home", href: "/home" },
+            { label: "Tests", href: "/tests" },
+            { label: "Packages", href: "/packages" },
+            { label: "Labs", href: "/labs" },
+            { label: "Consultation", href: "/consultation" },
+            { label: "Support", href: "/support" }
+          ].map((link) => {
             const isActive = location.pathname === link.href;
             return (
               <Link key={link.href} to={link.href}
                 className={cn(
                   "block px-3 py-2.5 rounded-lg text-sm font-medium",
-                  isActive ? "text-primary bg-flame-red-tint" : "text-foreground hover:bg-muted"
+                  isActive ? "text-primary bg-muted" : "text-foreground hover:bg-muted"
                 )}>
                 {link.label}
               </Link>
             );
           })}
+          <button
+            onClick={onLoginClick}
+            className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
+          >
+            Login
+          </button>
         </div>
       )}
     </header>

@@ -1,13 +1,13 @@
-import { useState, type MouseEvent } from "react";
 import { HomeHero } from "./components/HomeHero";
+import { useState, type MouseEvent } from "react";
 import { HomeTests } from "./components/HomeTests";
+import { PartnerLabs } from "./components/home/PartnerLabs";
+import { PromoBanner } from "./components/home/PromoBanner";
+import { WhatsAppBanner } from "./components/home/WhatsAppBanner";
+import { CustomerReviews } from "./components/home/CustomerReviews";
 import { FeaturedPackages } from "./components/home/FeaturedPackages";
 import { SpecialityCarousel } from "./components/home/SpecialityCarousel";
-import { PromoBanner } from "./components/home/PromoBanner";
-import { PartnerLabs } from "./components/home/PartnerLabs";
-import { CustomerReviews } from "./components/home/CustomerReviews";
 import { SafetyCheckupBanner } from "./components/home/SafetyCheckupBanner";
-import { WhatsAppBanner } from "./components/home/WhatsAppBanner";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("tests");
@@ -31,21 +31,22 @@ export default function HomePage() {
 
   return (
     <div className="bg-slate-50 min-h-screen overflow-x-hidden">
-      
+
       {/* ═══════════ HERO & METRICS ═══════════ */}
-      <HomeHero 
-        searchQuery={searchQuery} 
-        setSearchQuery={setSearchQuery} 
+      <HomeHero
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
       />
 
       {/* ═══════════ TESTS & PACKAGES CAROUSELS ═══════════ */}
-      <HomeTests 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        cartItems={cartItems} 
-        addToCart={addToCart} 
-        removeFromCart={removeFromCart} 
+      <HomeTests
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        cartItems={cartItems}
+        addToCart={addToCart}
+        removeFromCart={removeFromCart}
       />
+      <PromoBanner className="pb-20" />
 
       {/* ═══════════ CATEGORY GRIDS ═══════════ */}
       <FeaturedPackages />
@@ -58,8 +59,7 @@ export default function HomePage() {
       <CustomerReviews />
 
       {/* ═══════════ CALL TO ACTIONS ═══════════ */}
-      {/* <SafetyCheckupBanner /> */}
-      <PromoBanner className="py-10 md:py-24 bg-white " />
+      <SafetyCheckupBanner />
       <WhatsAppBanner className="py-10 md:py-24" />
     </div>
   );

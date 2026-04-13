@@ -5,6 +5,7 @@ import { FooterSEO } from "./footer/FooterSEO";
 import { MainFooter } from "./footer/MainFooter";
 import { MobileTabNavigation } from "./MobileTabNavigation";
 import { FloatingSupportChat } from "./FloatingSupportChat";
+import { AuthModal } from "../auth/AuthModal";
 
 export function UserLayout() {
   const location = useLocation();
@@ -14,6 +15,7 @@ export function UserLayout() {
   const [showAnnouncement] = useState(true);
   const [cartCount] = useState(2);
   const [showSearch, setShowSearch] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 10);
@@ -25,6 +27,18 @@ export function UserLayout() {
     setMobileMenuOpen(false); 
     setShowSearch(false); 
   }, [location.pathname]);
+
+  // Handle auto-opening of the modal on first load
+  useEffect(() => {
+    const hasSeenModal = sessionStorage.getItem("has-seen-auth-modal");
+    if (!hasSeenModal) {
+      const timer = setTimeout(() => {
+        setIsAuthModalOpen(true);
+        sessionStorage.setItem("has-seen-auth-modal", "true");
+      }, 2000); // 2 second delay for better UX
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -38,6 +52,7 @@ export function UserLayout() {
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
         showAnnouncement={showAnnouncement}
+        onLoginClick={() => setIsAuthModalOpen(true)}
       />
 
       <main className="flex-1 pb-20 lg:pb-0">
@@ -49,6 +64,12 @@ export function UserLayout() {
 
       <FloatingSupportChat />
       <MobileTabNavigation cartCount={cartCount} />
+
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+        isSkippable={true} 
+      />
     </div>
   );
 }
