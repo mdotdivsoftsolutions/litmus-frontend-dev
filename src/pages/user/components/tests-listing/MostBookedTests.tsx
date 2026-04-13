@@ -1,16 +1,35 @@
-import { Clock, Plus, Minus, ArrowRight } from "lucide-react";
+import { Clock, Plus, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CategoryStrip } from "./CategoryStrip";
+import { SectionHeader } from "../home/SectionHeader";
+
+interface FeaturedTest {
+  id: string;
+  name: string;
+  method?: string;
+  price: number;
+  mrp: number;
+  tat: string;
+  type?: string;
+  tests: number;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  icon?: string;
+  slug?: string;
+}
 
 interface MostBookedTestsProps {
-  tests: any[];
+  tests: FeaturedTest[];
   discountPct: (price: number, mrp: number) => number;
   selectedCategory: string;
   setSelectedCategory: (cat: string) => void;
-  categories: any[];
+  categories: Category[];
   iconMap: Record<string, React.ElementType>;
-  cn: (...args: any[]) => string;
+  cn: (...args: (string | undefined | false | null)[]) => string;
 }
 
 export const MostBookedTests = ({
@@ -24,31 +43,24 @@ export const MostBookedTests = ({
 }: MostBookedTestsProps) => {
   return (
     <div className="space-y-10 bg-slate-50 py-24">
-      {/* 3. QUICK CATEGORY STRIP (Horizontal) */}
+      {/* Category Strip */}
       <CategoryStrip
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
       />
 
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-2 gap-4">
-          <div>
-            <h2 className="text-3xl lg:text-4xl font-bold text-slate-800 tracking-[-0.03em] leading-tight">
-              Most Booked <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Diagnostics</span>
-            </h2>
-            <p className="text-slate-500 mt-2 text-base">Clinically verified specialized tests across major industry verticals.</p>
-          </div>
-          <div className="hidden sm:flex gap-2 bg-white p-1.5 rounded-2xl border border-slate-100 ">
-            {["All", "Dairy", "Beverages", "Grains"].map((t) => (
-              <button key={t}
-                className={cn("px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                  selectedCategory === t || (selectedCategory === "All" && t === "All")
-                    ? "bg-slate-100 text-black " : "text-slate-400 hover:text-slate-600"
-                )}
-                onClick={() => setSelectedCategory(t)}>{t}</button>
-            ))}
-          </div>
-        </div>
+        <SectionHeader
+          title={
+            <>
+              Most Booked{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">
+                Diagnostics
+              </span>
+            </>
+          }
+          subtitle="Clinically verified specialized tests across major industry verticals."
+        />
 
         <div className="grid gap-8 lg:grid-cols-12">
           {/* Left Column: Trending Tests List */}

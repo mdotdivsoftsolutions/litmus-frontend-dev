@@ -184,18 +184,15 @@ export default function PackagesPage() {
         )}
       </div>
 
-      {/* 3. LIGHT THEME WHY LITMUS STORYTELLING */}
-      <WhyLitmusTests theme="dark" />
-
       {/* 4. CALL TO ACTION */}
-      <section className="max-w-7xl mx-auto px-4 py-24 ">
-        <div className="relative rounded-[1rem] bg-gradient-to-br from-[#D32F2F] to-[#F06C00] p-12 lg:p-20 overflow-hidden shadow-[0_48px_96px_rgba(211,47,47,0.2)]">
+      <section className="max-w-7xl mx-auto px-4 pt-12 ">
+        <div className="relative rounded-[1rem] bg-gradient-to-br from-[#D32F2F] to-[#F06C00] p-12  overflow-hidden ">
           <div className="absolute top-0 right-0 w-[50%] h-full bg-white/10 skew-x-[-15deg] translate-x-1/4 pointer-events-none" />
           <div className="relative z-10 max-w-2xl space-y-8">
             <h2 className="text-4xl lg:text-4xl font-semibold text-white tracking-tight leading-tight">
               Not sure which package fits your needs?
             </h2>
-            <p className="text-white/80 text-xl font-medium leading-relaxed">
+            <p className="text-white/80 text-md font-medium leading-relaxed">
               Connect with our clinical experts for a personalized diagnostic roadmap tailored to your industry and requirements.
             </p>
             <Button size="lg" className="h-12 px-8 bg-white text-red-600 hover:bg-slate-50 font-black uppercase text-xs tracking-widest rounded-xl flex items-center gap-4 transition-all hover:scale-[1.02] shadow-xl">

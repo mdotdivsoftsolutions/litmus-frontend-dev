@@ -79,7 +79,7 @@ export default function TestsListingPage() {
 
       {/* 2. STATS STRIP */}
       <TestsStatsStrip />
-      
+
       {/* 4. MOST BOOKED TESTS */}
       <MostBookedTests
         tests={featuredTests}
@@ -90,7 +90,6 @@ export default function TestsListingPage() {
         iconMap={iconMap}
         cn={cn}
       />
-
 
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-12 py-24">
 
@@ -112,24 +111,21 @@ export default function TestsListingPage() {
 
 
         {/* 5. COMPREHENSIVE PRODUCT GRID */}
-        <TestsGrid 
-          products={paginatedProducts} 
-          cartItems={cartItems} 
-          addToCart={addToCart} 
-          removeFromCart={removeFromCart} 
+        <TestsGrid
+          products={paginatedProducts}
+          cartItems={cartItems}
+          addToCart={addToCart}
+          removeFromCart={removeFromCart}
           handleSeeMore={handleSeeMore}
           hasMore={hasMore}
         />
       </div>
 
-      {/* PROMO BANNER CAROUSEL (From Home Page) */}
-      <PromoBanner className="pt-24"  />
-
       {/* TRUST & ORDERING SECTION (Customized for Litmus) */}
       <TrustAndOrdering />
 
-      {/* 6. WHY LITMUS STORYTELLING (Panoramic Section) */}
-      <WhyLitmusTests />
+      {/* PROMO BANNER CAROUSEL (From Home Page) */}
+      <PromoBanner className="py-10 md:pt-24" />
 
       <div className="max-w-7xl mx-auto px-4">
         {filtered.length === 0 && (
