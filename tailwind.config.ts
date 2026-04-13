@@ -15,6 +15,9 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Manrope", "system-ui", "sans-serif"],
+        inter: ['Inter', 'sans-serif'],
+        lato: ['Lato', 'sans-serif'],
+        proxima: ['Proxima Nova', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Search, Shield, FileText, Package, Microscope, Ticket } from "lucide-react";
+import { Search, Shield, FileText, Package, Microscope, Ticket, Currency, CurrencyIcon } from "lucide-react";
 import { useState } from "react";
 import heroScientist from "@/assets/banner-hero-1.jpg";
 
@@ -68,7 +68,7 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
       </section>
 
       <section className="py-6 mb-4 -mt-10 relative z-20">
-        <div className="max-w-4xl mx-auto px-4 space-y-3">
+        <div className="max-w-5xl mx-auto px-4 space-y-3">
           <div
             className="rounded-[1.5rem] border border-white/50 bg-gradient-to-br from-white/[0.42] via-white/[0.14] to-white/[0.06] p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.65),0_16px_48px_-16px_rgba(15,23,42,0.18)] backdrop-blur-[28px] backdrop-saturate-[1.7] md:p-8"
             style={{
@@ -113,6 +113,13 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#008eb3] to-[#004e64] px-5 py-3.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_-4px_rgba(32,178,170,0.45)] transition hover:brightness-105"
                 >
                   Book free consultation
+                  <Ticket className="h-5 w-5 shrink-0 opacity-95" strokeWidth={2} />
+                </Link>
+                <Link
+                  to="/packages"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-5 py-3.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_-4px_rgb(var(--brand-primary-rgb)/0.55)] transition hover:brightness-105"
+                >
+                  book a package
                   <Package className="h-5 w-5 shrink-0 opacity-95" strokeWidth={2} />
                 </Link>
               </div>

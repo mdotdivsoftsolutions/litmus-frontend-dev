@@ -37,7 +37,7 @@ export const TestCard = ({ p, cartItems, addToCart, removeFromCart }: TestCardPr
               <span className="text-[11px] text-white/70 line-through">₹{mrp}</span>
               <span className="text-[1.50rem] font-extrabold tracking-tight drop-shadow-sm">₹{price}</span>
             </div>
-            <span className="mt-0.5 rounded bg-gradient-to-r from-brand-card-deep to-brand-card-to px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-white shadow-[0_2px_8px_rgb(var(--brand-card-rgb)/0.35)]">
+            <span className="mt-0.5 rounded bg-gradient-brand px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-white shadow-[0_2px_8px_rgb(var(--brand-card-rgb)/0.35)]">
               {discount}% Off
             </span>
           </div>
@@ -125,7 +125,7 @@ export type HomeTestsProps = {
 export const HomeTests = ({ activeTab, setActiveTab, cartItems, addToCart, removeFromCart }: HomeTestsProps) => {
   return (
     <>
-      <section className="pt-20 pb-10  relative overflow-hidden bg-slate-50">
+      <section className="pt-16 pb-10  relative overflow-hidden bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 relative z-10 w-full">
           <SectionHeader
             title={

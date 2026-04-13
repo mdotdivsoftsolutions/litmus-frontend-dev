@@ -5,8 +5,8 @@ import { PartnerLabs } from "./components/home/PartnerLabs";
 import { PromoBanner } from "./components/home/PromoBanner";
 import { WhatsAppBanner } from "./components/home/WhatsAppBanner";
 import { CustomerReviews } from "./components/home/CustomerReviews";
-import { FeaturedPackages } from "./components/home/FeaturedPackages";
 import { SpecialityCarousel } from "./components/home/SpecialityCarousel";
+import { HowToBookProcess } from "./components/home/HowToBookProcess";
 import { SafetyCheckupBanner } from "./components/home/SafetyCheckupBanner";
 import { FooterSEO } from "@/components/layout/footer/FooterSEO";
 
@@ -50,8 +50,10 @@ export default function HomePage() {
       <PromoBanner className="pb-20" />
 
       {/* ═══════════ CATEGORY GRIDS ═══════════ */}
-      <FeaturedPackages />
       <SpecialityCarousel />
+
+      {/* ═══════════ HOW TO BOOK PROCESS ═══════════ */}
+      <HowToBookProcess />
 
       {/* ═══════════ TRUSTED PARTNERS ═══════════ */}
       <PartnerLabs />

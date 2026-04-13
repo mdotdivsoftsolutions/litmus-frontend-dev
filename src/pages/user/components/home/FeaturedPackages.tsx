@@ -102,7 +102,7 @@ function FeaturedPackageCard({
 
 export function FeaturedPackages() {
   return (
-    <section className="relative flex min-h-[80vh] flex-col justify-center overflow-hidden border-slate-100 bg-white py-12 md:py-20">
+    <section className="relative flex min-h-[80vh] flex-col justify-center overflow-hidden border-slate-100 bg-slate-50 py-12 md:py-20">
       {/* Decorative background shadows */}
       <div className="pointer-events-none absolute right-[-5%] top-0 h-[600px] w-[600px] rounded-full bg-red-50/40 blur-[120px]" />
       <div className="pointer-events-none absolute left-[-5%] bottom-0 h-[600px] w-[600px] rounded-full bg-orange-50/30 blur-[120px]" />
