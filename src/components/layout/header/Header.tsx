@@ -92,7 +92,7 @@ export function Header({
               <Link key={link.href} to={link.href}
                 className={cn(
                   "px-3 py-1.5 text-sm font-medium transition-colors",
-                  isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  isActive ? "text-gradient-brand" : "text-muted-foreground hover:text-foreground"
                 )}>
                 {link.label}
               </Link>
@@ -116,7 +116,7 @@ export function Header({
             <Button variant="ghost" size="icon" className="h-9 w-9 relative hover:bg-transparent group/cart transition-all duration-300">
               <ShoppingCart className="h-4.5 w-4.5 text-foreground group-hover/cart:text-[#D32F2F] transition-colors" />
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#D32F2F] text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-brand text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
                   {cartCount}
                 </span>
               )}
@@ -127,7 +127,7 @@ export function Header({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-9 w-9 hidden sm:flex">
                 <Avatar className="h-7 w-7">
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">RK</AvatarFallback>
+                  <AvatarFallback className="bg-gradient-brand text-primary-foreground text-xs font-bold">RK</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>

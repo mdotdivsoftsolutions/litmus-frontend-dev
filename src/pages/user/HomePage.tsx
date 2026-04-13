@@ -1,7 +1,8 @@
 import { useState, type MouseEvent } from "react";
 import { HomeHero } from "./components/HomeHero";
 import { HomeTests } from "./components/HomeTests";
-import { HomeCategories } from "./components/HomeCategories";
+import { FeaturedPackages } from "./components/home/FeaturedPackages";
+import { SpecialityCarousel } from "./components/home/SpecialityCarousel";
 import { HomeReviewsAndInfo } from "./components/HomeReviews";
 
 export default function HomePage() {
@@ -43,7 +44,8 @@ export default function HomePage() {
       />
 
       {/* ═══════════ CATEGORY GRIDS ═══════════ */}
-      <HomeCategories />
+      <FeaturedPackages />
+      <SpecialityCarousel />
 
       {/* ═══════════ REVIEWS & WHY LITMUS ═══════════ */}
       <HomeReviewsAndInfo />
