@@ -12,7 +12,7 @@ const partnerLabs = [
 
 export function PartnerLabs() {
   return (
-    <section className="py-24 bg-white relative overflow-hidden">
+    <section className="py-12 md:py-20 bg-white relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <SectionHeader
           badge="Network of Trust"

@@ -2,7 +2,7 @@ import { Check, ArrowRight } from "lucide-react";
 
 export function SafetyCheckupBanner() {
    return (
-      <section className="py-24 bg-white">
+      <section className="py-12 md:py-20 bg-white">
          <div className="max-w-7xl mx-auto px-4">
             <div className="relative h-[380px] lg:h-[400px] w-full rounded-[1.5rem] overflow-hidden flex flex-col lg:flex-row bg-white shadow-[0_24px_80px_rgba(0,0,0,0.06)] border border-slate-100 group">
                {/* Left Content Area */}

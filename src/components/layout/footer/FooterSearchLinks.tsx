@@ -9,7 +9,7 @@ const POPULAR_LINKS = [
 
 export function FooterSearchLinks() {
   return (
-    <section className="bg-white  border-slate-100  py-16 hidden lg:block">
+    <section className="bg-white  border-slate-100  py-12 md:py-16 hidden lg:block">
       <div className="max-w-7xl mx-auto px-4 ">
         <div className="grid grid-cols-6 gap-y-2 gap-x-4">
           <div className="col-span-6 border-b border-slate-100 pb-3 mb-2">
