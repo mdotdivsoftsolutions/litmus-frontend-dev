@@ -1,37 +1,109 @@
-import { ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowRight, Phone, FileEdit, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export function WhatsAppBanner() {
+const bannerSlides = [
+   {
+      id: "whatsapp",
+      title: "Can't find what you're looking for?",
+      subtitle: "We are here to help. Say 'Hi' on WhatsApp",
+      icon: MessageSquare,
+      color: "from-[#1D7A5D] to-[#128C7E]",
+      image: "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+   },
+   {
+      id: "phone",
+      title: "Need help with Booking?",
+      subtitle: "Our healthcare experts are just a call away to assist you.",
+      icon: Phone,
+      color: "from-[#D32F2F] to-[#F06C00]", // Brand Primary
+   },
+   {
+      id: "order",
+      title: "Ready for a Quick Order?",
+      subtitle: "Skip the forms. Place your testing order in under 60 seconds.",
+      icon: FileEdit,
+      color: "from-[#ec4343] to-[#d42c2c]", // Brand red variants
+   }
+];
+
+export function WhatsAppBanner({ className }: { className?: string }) {
+   const [current, setCurrent] = useState(0);
+
+   useEffect(() => {
+      const timer = setInterval(() => {
+         setCurrent((prev) => (prev + 1) % bannerSlides.length);
+      }, 5000);
+      return () => clearInterval(timer);
+   }, []);
+
    return (
-      <section className="pt-24 bg-slate-50">
-         <div className="max-w-7xl mx-auto px-4">
-            <div className="relative group overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-[#1D7A5D] via-[#24A680] to-[#1D7A5D] p-12 lg:p-16 flex flex-col lg:flex-row items-center justify-between gap-10 shadow-[0_32px_80px_rgba(18,140,126,0.15)]">
-               {/* Glassmorphism Background Decoration */}
-               <div className="absolute top-0 right-0 w-[400px] h-full bg-white/5 skew-x-12 translate-x-1/2 pointer-events-none" />
+      <section className={cn("py-10", className)}>
+         <div className="max-w-4xl mx-auto px-4">
+            
+            <div className="relative overflow-hidden rounded-2xl shadow-md group">
+               <div 
+                  className="flex transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                  style={{ transform: `translateX(-${current * 100}%)` }}
+               >
+                  {bannerSlides.map((slide) => (
+                     <div 
+                        key={slide.id} 
+                        className={cn(
+                           "min-w-full h-[140px] relative flex items-center justify-between px-8 lg:px-14 bg-gradient-to-br",
+                           slide.color
+                        )}
+                     >
+                        <div className="relative z-10 flex flex-col justify-center max-w-xl">
+                           <h2 className="text-xl lg:text-2xl font-bold text-white tracking-tight mb-1">
+                              {slide.title}
+                           </h2>
+                           
+                           <div className="w-full h-[0.5px] border-b border-dashed border-white/20 mb-2" />
+                           
+                           <div className="flex items-center gap-2 group/action cursor-pointer">
+                              <p className="text-white/80 text-xs lg:text-sm font-medium">
+                                 {slide.subtitle}
+                              </p>
+                              <ArrowRight className="h-4 w-4 text-white/80 group-hover/action:translate-x-1 transition-transform" />
+                           </div>
+                        </div>
 
-               <div className="relative z-10 text-center lg:text-left max-w-2xl">
-                  <h2 className="text-3xl lg:text-5xl font-bold text-white tracking-tight leading-[1.1] mb-6">
-                     Can't find what you <br className="hidden lg:block" />
-                     are looking for?
-                  </h2>
-                  <p className="text-emerald-50 text-xl font-medium flex items-center justify-center lg:justify-start gap-4">
-                     We are here to help. <span className="underline underline-offset-8 decoration-white/30">Say 'Hi' on WhatsApp</span>
-                     <ArrowRight className="h-6 w-6 group-hover:translate-x-3 transition-transform duration-500" />
-                  </p>
-               </div>
-
-               {/* High-Fidelity WhatsApp Circular Button */}
-               <div className="relative z-10">
-                  <div className="h-32 w-32 lg:h-40 lg:w-40 bg-white/10 backdrop-blur-2xl rounded-full flex items-center justify-center border border-white/20 shadow-[0_0_50px_rgba(255,255,255,0.15)] group-hover:scale-110 transition-transform duration-700 cursor-pointer">
-                     <div className="h-[80%] w-[80%] bg-white rounded-full flex items-center justify-center shadow-2xl relative overflow-hidden transform active:scale-95 transition-transform">
-                        <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-emerald-50" />
-                        <img
-                           src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
-                           className="h-16 w-16 lg:h-18 lg:w-18 relative z-10"
-                           alt="WhatsApp"
-                        />
+                        <div className="relative z-10">
+                           <div className="h-20 w-20 lg:h-24 lg:w-24 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10 shadow-inner group-hover:scale-110 transition-transform duration-500">
+                              <div className="h-[75%] w-[75%] bg-white rounded-full flex items-center justify-center shadow-lg relative overflow-hidden">
+                                 {slide.id === 'whatsapp' ? (
+                                    <img src={slide.image} className="h-8 w-8 lg:h-9 lg:w-9 object-contain" alt="WhatsApp" />
+                                 ) : (
+                                    <slide.icon className={cn("h-8 w-8 lg:h-9 lg:w-9", slide.id === 'phone' ? 'text-[#D32F2F]' : 'text-[#ec4343]')} />
+                                 )}
+                              </div>
+                           </div>
+                        </div>
                      </div>
-                  </div>
+                  ))}
                </div>
+
+               {/* Indicators */}
+               <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1 z-20">
+                  {bannerSlides.map((_, i) => (
+                     <div 
+                        key={i}
+                        onClick={() => setCurrent(i)}
+                        className={cn(
+                           "h-1 transition-all duration-500 rounded-full cursor-pointer",
+                           i === current ? "w-4 bg-white" : "w-1 bg-white/30 hover:bg-white/50"
+                        )}
+                     />
+                  ))}
+               </div>
+               
+               <button onClick={() => setCurrent((prev) => (prev === 0 ? bannerSlides.length -1 : prev - 1))} className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity text-white hover:bg-white/20">
+                  <ChevronLeft className="h-3.5 w-3.5" />
+               </button>
+               <button onClick={() => setCurrent((prev) => (prev + 1) % bannerSlides.length)} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity text-white hover:bg-white/20">
+                  <ChevronRight className="h-3.5 w-3.5" />
+               </button>
             </div>
          </div>
       </section>

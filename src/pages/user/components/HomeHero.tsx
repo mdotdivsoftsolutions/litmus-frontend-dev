@@ -68,9 +68,9 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
       </section>
 
       <section className="py-6 mb-4 -mt-10 relative z-20">
-        <div className="max-w-5xl mx-auto px-4 space-y-3">
+        <div className="max-w-4xl mx-auto px-4 space-y-3">
           <div
-            className="rounded-[1.5rem] border border-white/50 bg-gradient-to-br from-white/[0.42] via-white/[0.14] to-white/[0.06] p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.65),0_16px_48px_-16px_rgba(15,23,42,0.18)] backdrop-blur-[28px] backdrop-saturate-[1.7] md:p-7"
+            className="rounded-[1.5rem] border border-white/50 bg-gradient-to-br from-white/[0.42] via-white/[0.14] to-white/[0.06] p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.65),0_16px_48px_-16px_rgba(15,23,42,0.18)] backdrop-blur-[28px] backdrop-saturate-[1.7] md:p-8"
             style={{
               WebkitBackdropFilter: "blur(28px) saturate(170%)",
             }}

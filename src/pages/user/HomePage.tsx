@@ -30,7 +30,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen pb-20 overflow-x-hidden">
+    <div className="bg-slate-50 min-h-screen overflow-x-hidden">
       
       {/* ═══════════ HERO & METRICS ═══════════ */}
       <HomeHero 
@@ -47,22 +47,20 @@ export default function HomePage() {
         removeFromCart={removeFromCart} 
       />
 
-
       {/* ═══════════ CATEGORY GRIDS ═══════════ */}
       <FeaturedPackages />
       <SpecialityCarousel />
 
       {/* ═══════════ TRUSTED PARTNERS ═══════════ */}
-      {/* <PromoBanner className="py-10 md:py-24 bg-white " /> */}
       <PartnerLabs />
 
       {/* ═══════════ REVIEWS ═══════════ */}
       <CustomerReviews />
 
       {/* ═══════════ CALL TO ACTIONS ═══════════ */}
-      <SafetyCheckupBanner />
-      <WhatsAppBanner />
-
+      {/* <SafetyCheckupBanner /> */}
+      <PromoBanner className="py-10 md:py-24 bg-white " />
+      <WhatsAppBanner className="py-10 md:py-24" />
     </div>
   );
 }
