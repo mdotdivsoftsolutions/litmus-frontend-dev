@@ -44,7 +44,7 @@ export function Header({
     )}>
       {/* Announcement Bar */}
       {showAnnouncement && (
-        <div className="bg-[#D32F2F] text-white text-xs py-2 px-4 text-center tracking-wide font-medium">
+        <div className="bg-gradient-brand text-white text-xs py-2 px-4 text-center tracking-wide font-medium">
           Book a Food Safety Test Now and Get Up to 20% Off your first order!
         </div>
       )}

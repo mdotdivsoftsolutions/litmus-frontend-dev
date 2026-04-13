@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import { HomeHero } from "./components/HomeHero";
 import { HomeTests } from "./components/HomeTests";
 import { HomeCategories } from "./components/HomeCategories";
@@ -9,12 +9,12 @@ export default function HomePage() {
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [searchQuery, setSearchQuery] = useState("");
 
-  const addToCart = (id: string, e: any) => {
+  const addToCart = (id: string, e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setCartItems(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
   };
-  
-  const removeFromCart = (id: string, e: any) => {
+
+  const removeFromCart = (id: string, e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setCartItems(prev => {
       const next = { ...prev };

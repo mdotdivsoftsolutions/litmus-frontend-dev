@@ -1,4 +1,6 @@
-import { Search, Shield, FileText, Package, Clock, Star } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Search, Shield, FileText, Package, Microscope, Ticket } from "lucide-react";
+import { useState } from "react";
 import heroScientist from "@/assets/banner-hero-1.jpg";
 
 interface HomeHeroProps {
@@ -7,14 +9,16 @@ interface HomeHeroProps {
 }
 
 export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
+  const [searchFocused, setSearchFocused] = useState(false);
+
   return (
     <>
-      <section className="relative pt-8 pb-16 overflow-hidden bg-slate-50">
+      <section className="relative pt-8 pb-16 md:py-20 overflow-hidden bg-slate-50">
         <div className="absolute top-0 right-0 w-[500px] h-full md:h-[600px] bg-[#E53935]/10 rounded-full blur-[100px] -translate-y-1/3 translate-x-1/4 pointer-events-none" />
         <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
         </div>
-        <div className="absolute bottom-0 left-0 w-[400px] h-full md:h-[400px] bg-[#F06C00]/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-full md:h-[400px] rounded-full bg-brand-primary/10 blur-[100px] translate-y-1/2 -translate-x-1/4 pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="bg-white/60 backdrop-blur-xl border border-white rounded-[2rem] shadow-sm overflow-hidden mt-4">
@@ -25,24 +29,11 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                   <span className="text-xs font-medium text-slate-700">NABL & FSSAI Accredited Labs</span>
                 </div>
                 <h1 className="text-2xl sm:text-5xl font-bold text-slate-800 mb-6 tracking-tight">
-                  Advanced Food Safety  <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00] "> Food Solutions</span>
+                  Advanced Food Safety  <br /> <span className="text-gradient-brand"> Food Solutions</span>
                 </h1>
                 <p className="text-slate-500 text-lg mb-8 max-w-md leading-relaxed">
                   Safe, Smart and Compliant Food Solutions. India's leading platform for certified food analysis and label validation.
                 </p>
-                <div className="bg-white/90 backdrop-blur-md p-2.5 rounded-2xl shadow-sm border border-slate-100 flex items-center max-w-md w-full focus-within:ring-2 focus-within:ring-[#E53935]/20 transition-all focus-within:shadow-md">
-                  <Search className="h-5 w-5 text-slate-400 ml-3 shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="Search tests (e.g. Dairy, Spices)..."
-                    className="flex-1 bg-transparent px-4 py-2.5 outline-none text-sm w-full min-w-0"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <button className="bg-gradient-to-r from-[#D32F2F] to-[#F4511E] text-white px-7 py-3 rounded-xl text-sm font-medium shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all shrink-0">
-                    Search
-                  </button>
-                </div>
               </div>
 
               <div className="lg:w-1/2 relative bg-gradient-to-br from-red-50/50 to-orange-50/50 p-8 flex items-center justify-center border-l border-white/40">
@@ -77,35 +68,53 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
       </section>
 
       <section className="py-6 mb-4 -mt-10 relative z-20">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="flex justify-between items-center px-4 md:px-12 bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-slate-100">
-            <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-              <div className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border border-white flex items-center justify-center shrink-0">
-                <Package className="h-6 w-6 text-[#F06C00]" />
+        <div className="max-w-5xl mx-auto px-4 space-y-3">
+          <div
+            className="rounded-[1.5rem] border border-white/50 bg-gradient-to-br from-white/[0.42] via-white/[0.14] to-white/[0.06] p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.65),0_16px_48px_-16px_rgba(15,23,42,0.18)] backdrop-blur-[28px] backdrop-saturate-[1.7] md:p-7"
+            style={{
+              WebkitBackdropFilter: "blur(28px) saturate(170%)",
+            }}
+          >
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-4">
+              <div className="relative min-w-0 flex-1">
+                {!searchQuery && !searchFocused && (
+                  <span
+                    className="pointer-events-none absolute left-4 top-1/2 z-0 -translate-y-1/2 text-sm select-none"
+                    aria-hidden
+                  >
+                    <span className="text-slate-600">Search for </span>
+                    <span className="font-medium text-brand-primary">checkups</span>
+                  </span>
+                )}
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
+                  className="relative z-10 w-full rounded-2xl border border-slate-200/80 bg-white py-3.5 pl-4 pr-12 text-sm text-slate-800 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] outline-none ring-brand-primary/20 placeholder:text-transparent focus:ring-2"
+                  aria-label="Search for checkups"
+                />
+                <Search
+                  className="pointer-events-none absolute right-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-slate-400"
+                  aria-hidden
+                />
               </div>
-              <div>
-                <p className="text-sm font-medium text-slate-800">Easy Sampling</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">Doorstep Collection</p>
-              </div>
-            </div>
-            <div className="w-px h-12 bg-slate-100 hidden sm:block"></div>
-            <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-              <div className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border border-white flex items-center justify-center shrink-0">
-                <Clock className="h-6 w-6 text-[#F06C00]" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-800">3-5 Days</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">Fast Digital Reports</p>
-              </div>
-            </div>
-            <div className="w-px h-12 bg-slate-100 hidden sm:block"></div>
-            <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-              <div className="w-14 h-14 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border border-white flex items-center justify-center shrink-0">
-                <Star className="h-6 w-6 text-[#F06C00]" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-800">4.9/5 Rating</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">Verified by businesses</p>
+              <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
+                <Link
+                  to="/tests"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-5 py-3.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_-4px_rgb(var(--brand-primary-rgb)/0.55)] transition hover:brightness-105"
+                >
+                  Book test
+                  <Microscope className="h-5 w-5 shrink-0 opacity-95" strokeWidth={2} />
+                </Link>
+                <Link
+                  to="/packages"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#008eb3] to-[#004e64] px-5 py-3.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_-4px_rgba(32,178,170,0.45)] transition hover:brightness-105"
+                >
+                  Book free consultation
+                  <Package className="h-5 w-5 shrink-0 opacity-95" strokeWidth={2} />
+                </Link>
               </div>
             </div>
           </div>
