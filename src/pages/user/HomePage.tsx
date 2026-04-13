@@ -4,7 +4,7 @@ import { HomeTests } from "./components/HomeTests";
 import { FeaturedPackages } from "./components/home/FeaturedPackages";
 import { SpecialityCarousel } from "./components/home/SpecialityCarousel";
 import { PromoBanner } from "./components/home/PromoBanner";
-import { WhyLitmus } from "./components/home/WhyLitmus";
+import { PartnerLabs } from "./components/home/PartnerLabs";
 import { CustomerReviews } from "./components/home/CustomerReviews";
 import { SafetyCheckupBanner } from "./components/home/SafetyCheckupBanner";
 import { WhatsAppBanner } from "./components/home/WhatsAppBanner";
@@ -52,10 +52,11 @@ export default function HomePage() {
       <FeaturedPackages />
       <SpecialityCarousel />
 
-      <PromoBanner className="py-10 md:py-24 bg-white " />
+      {/* ═══════════ TRUSTED PARTNERS ═══════════ */}
+      {/* <PromoBanner className="py-10 md:py-24 bg-white " /> */}
+      <PartnerLabs />
 
-      {/* ═══════════ BRAND VALUE & REVIEWS ═══════════ */}
-      <WhyLitmus />
+      {/* ═══════════ REVIEWS ═══════════ */}
       <CustomerReviews />
 
       {/* ═══════════ CALL TO ACTIONS ═══════════ */}

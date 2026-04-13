@@ -46,11 +46,35 @@ export function PartnerLabs() {
           ))}
         </div>
 
-        {/* Certification Badges Marquee (Optional/Decorative) */}
-        <div className="mt-20 flex flex-wrap justify-center gap-10 opacity-40 grayscale group-hover:grayscale-0 transition-all duration-700">
-           <img src="https://upload.wikimedia.org/wikipedia/en/thumb/5/52/NABL_Logo.png/250px-NABL_Logo.png" className="h-12 object-contain" alt="NABL" />
-           <img src="https://upload.wikimedia.org/wikipedia/en/thumb/d/d4/FSSAI_logo.svg/1200px-FSSAI_logo.svg.png" className="h-12 object-contain" alt="FSSAI" />
-           <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/ISO_logo.svg/1200px-ISO_logo.svg.png" className="h-12 object-contain" alt="ISO" />
+        {/* Certification Badges */}
+        <div className="mt-20 flex flex-wrap justify-center items-center gap-12 lg:gap-20">
+          <div className="flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100 duration-500">
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/en/5/52/NABL_Logo.png" 
+              className="h-10 lg:h-12 w-auto object-contain" 
+              alt="NABL"
+              onError={(e) => (e.currentTarget.style.display = 'none')}
+            />
+            <span className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">NABL Accredited</span>
+          </div>
+          <div className="flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100 duration-500">
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/en/thumb/d/d4/FSSAI_logo.svg/1200px-FSSAI_logo.svg.png" 
+              className="h-10 lg:h-12 w-auto object-contain" 
+              alt="FSSAI"
+              onError={(e) => (e.currentTarget.style.display = 'none')}
+            />
+            <span className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">FSSAI Notified</span>
+          </div>
+          <div className="flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100 duration-500">
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/ISO_logo.svg/1200px-ISO_logo.svg.png" 
+              className="h-10 lg:h-12 w-auto object-contain" 
+              alt="ISO" 
+              onError={(e) => (e.currentTarget.style.display = 'none')}
+            />
+            <span className="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">ISO 17025 Certified</span>
+          </div>
         </div>
       </div>
     </section>
