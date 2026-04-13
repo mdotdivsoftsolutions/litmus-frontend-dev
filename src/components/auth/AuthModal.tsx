@@ -59,8 +59,8 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden border-none rounded-2xl shadow-2xl bg-white [&>button:first-child]:hidden">
-        <div className="p-8 relative">
+      <DialogContent className="sm:max-w-[440px]  p-0 overflow-hidden border-none rounded-2xl shadow-2xl bg-white [&>button:first-child]:hidden">
+        <div className="p-8 relative ">
           {/* {isSkippable && (
             <button
               onClick={onClose}

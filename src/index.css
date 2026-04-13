@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Lato:wght@300;400;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -144,12 +145,39 @@
   }
 }
 
+/* Proxima Nova - Regular */
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("/fonts/proxima-nova/ProximaNova-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bold */
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("/fonts/proxima-nova/ProximaNova-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Light */
+@font-face {
+  font-family: "Proxima Nova";
+  src: url("/fonts/proxima-nova/ProximaNova-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-lato antialiased;
   }
 }
 
@@ -157,19 +185,35 @@
   /** Orange vertical gradient for display text (bg-clip-text pattern) */
   .text-gradient-brand {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(to bottom, var(--brand-text-from), var(--brand-text-to));
+    background-image: linear-gradient(
+      to bottom,
+      var(--brand-text-from),
+      var(--brand-text-to)
+    );
   }
   /** Same orange gradient as a fill (top bars, pill backgrounds) */
   .bg-gradient-brand {
-    background-image: linear-gradient(to bottom, var(--brand-text-from), var(--brand-primary));
+    background-image: linear-gradient(
+      to bottom,
+      var(--brand-text-from),
+      var(--brand-primary)
+    );
   }
   /** Teal horizontal band — test cards, headers */
   .bg-gradient-card {
-    background-image: linear-gradient(to right, var(--brand-card-from), var(--brand-card-to));
+    background-image: linear-gradient(
+      to right,
+      var(--brand-card-from),
+      var(--brand-card-to)
+    );
   }
   /** Teal vertical — small badges */
   .bg-gradient-card-badge {
-    background-image: linear-gradient(to bottom, var(--brand-card-deep), var(--brand-card-to));
+    background-image: linear-gradient(
+      to bottom,
+      var(--brand-card-deep),
+      var(--brand-card-to)
+    );
   }
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--flame-amber))] to-[hsl(var(--flame-gold))];
@@ -182,6 +226,5 @@
     display: none;
   }
 }
-
 
 /* nice button color bg-gradient-to-b from-[#3dd9cf] to-[#20b2aa]  */
