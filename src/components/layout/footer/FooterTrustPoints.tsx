@@ -8,7 +8,7 @@ const TRUST_POINTS = [
 
 export function FooterTrustPoints() {
   return (
-    <div className="mb-10">
+    <div className="">
       <h2 className="text-2xl font-bold text-slate-800 mb-6">Why Choose Litmus Testing Over Direct Labs?</h2>
       <ul className="space-y-4">
         {TRUST_POINTS.map((item, i) => (

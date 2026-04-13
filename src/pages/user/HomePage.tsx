@@ -5,6 +5,7 @@ import { PartnerLabs } from "./components/home/PartnerLabs";
 import { PromoBanner } from "./components/home/PromoBanner";
 import { WhatsAppBanner } from "./components/home/WhatsAppBanner";
 import { CustomerReviews } from "./components/home/CustomerReviews";
+import { FAQ } from "./components/home/FAQ";
 import { SpecialityCarousel } from "./components/home/SpecialityCarousel";
 import { HowToBookProcess } from "./components/home/HowToBookProcess";
 import { SafetyCheckupBanner } from "./components/home/SafetyCheckupBanner";
@@ -61,9 +62,14 @@ export default function HomePage() {
       {/* ═══════════ REVIEWS ═══════════ */}
       <CustomerReviews />
 
-      {/* ═══════════ CALL TO ACTIONS ═══════════ */}
+      {/* ═══════════ SAFETY CHECKUP BANNER ═══════════ */}
       <SafetyCheckupBanner />
-      <WhatsAppBanner className="py-12 md:py-20" />
+
+      {/* ═══════════ FAQ ═══════════ */}
+      <FAQ />
+
+      {/* ═══════════ CALL TO ACTIONS ═══════════ */}
+      <WhatsAppBanner className="pt-12 md:py-20 bg-gradient-to-b from-white to-slate-50" />
 
       {/* ═══════════ SEO CONTENT ═══════════ */}
       <FooterSEO />

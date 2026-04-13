@@ -58,7 +58,7 @@ const App = () => (
           {/* Public Auth - Admin & Laboratory specific */}
           <Route path="/admin/login" element={<LoginPage role="admin" />} />
           <Route path="/laboratory/login" element={<LoginPage role="lab" />} />
-          
+
           {/* Redirect generic /login to home where modal will trigger if needed, or keep for direct hits */}
           <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="/register" element={<RegisterPage />} />
