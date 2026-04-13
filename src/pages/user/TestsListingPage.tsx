@@ -13,7 +13,7 @@ import { CategoryStrip } from "./components/tests-listing/CategoryStrip";
 import { TestsGrid } from "./components/tests-listing/TestsGrid";
 import { WhyLitmusTests } from "./components/tests-listing/WhyLitmusTests";
 import { TestsReviewsGrid } from "./components/tests-listing/TestsReviewsGrid";
-import { PromoBanner } from "./components/HomeTests";
+import { PromoBanner } from "./components/home/PromoBanner";
 import { TrustAndOrdering } from "./components/tests-listing/TrustAndOrdering";
 
 const testTypes = ["Physical", "Chemical", "Microbiological"];

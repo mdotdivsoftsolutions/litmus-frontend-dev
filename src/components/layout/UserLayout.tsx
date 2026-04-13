@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
 import { Header } from "./header/Header";
-import { FooterSEO } from "./footer/FooterSEO";
+import { AuthModal } from "../auth/AuthModal";
 import { MainFooter } from "./footer/MainFooter";
-import { MobileTabNavigation } from "./MobileTabNavigation";
+import { Outlet, useLocation } from "react-router-dom";
 import { FloatingSupportChat } from "./FloatingSupportChat";
+import { MobileTabNavigation } from "./MobileTabNavigation";
+import { FooterSearchLinks } from "./footer/FooterSearchLinks";
 
 export function UserLayout() {
   const location = useLocation();
@@ -14,6 +15,7 @@ export function UserLayout() {
   const [showAnnouncement] = useState(true);
   const [cartCount] = useState(2);
   const [showSearch, setShowSearch] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 10);
@@ -21,14 +23,26 @@ export function UserLayout() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  useEffect(() => { 
-    setMobileMenuOpen(false); 
-    setShowSearch(false); 
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setShowSearch(false);
   }, [location.pathname]);
+
+  // Handle auto-opening of the modal on first load
+  useEffect(() => {
+    const hasSeenModal = sessionStorage.getItem("has-seen-auth-modal");
+    if (!hasSeenModal) {
+      const timer = setTimeout(() => {
+        setIsAuthModalOpen(true);
+        sessionStorage.setItem("has-seen-auth-modal", "true");
+      }, 2000); // 2 second delay for better UX
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header 
+      <Header
         scrolled={scrolled}
         city={city}
         setCity={setCity}
@@ -38,17 +52,25 @@ export function UserLayout() {
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
         showAnnouncement={showAnnouncement}
+        onLoginClick={() => setIsAuthModalOpen(true)}
       />
 
       <main className="flex-1 pb-20 lg:pb-0">
         <Outlet />
       </main>
 
-      <FooterSEO />
+      <FooterSearchLinks />
+
       <MainFooter />
 
       <FloatingSupportChat />
       <MobileTabNavigation cartCount={cartCount} />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        isSkippable={true}
+      />
     </div>
   );
 }

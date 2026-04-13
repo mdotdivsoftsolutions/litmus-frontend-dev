@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -55,8 +55,12 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Public */}
-          <Route path="/login" element={<LoginPage />} />
+          {/* Public Auth - Admin & Laboratory specific */}
+          <Route path="/admin/login" element={<LoginPage role="admin" />} />
+          <Route path="/laboratory/login" element={<LoginPage role="lab" />} />
+          
+          {/* Redirect generic /login to home where modal will trigger if needed, or keep for direct hits */}
+          <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
@@ -80,6 +84,7 @@ const App = () => (
 
           {/* Admin Portal — sidebar stays */}
           <Route path="/admin" element={<PortalLayout portal="admin" userName="Admin User" />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="laboratories" element={<LabManagement />} />
@@ -94,6 +99,7 @@ const App = () => (
 
           {/* Lab Portal — sidebar stays */}
           <Route path="/lab" element={<PortalLayout portal="lab" userName="Chennai Lab" />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<LabDashboard />} />
             <Route path="bookings" element={<LabBookings />} />
             <Route path="bookings/:id/upload" element={<UploadResultsPage />} />

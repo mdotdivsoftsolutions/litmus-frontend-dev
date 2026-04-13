@@ -78,6 +78,15 @@ export default {
           emerald: "hsl(var(--litmus-emerald))",
           mint: "hsl(var(--litmus-mint))",
         },
+        /** Consumer marketing — see :root in index.css */
+        brand: {
+          primary: "var(--brand-primary)",
+          "text-from": "var(--brand-text-from)",
+          "text-to": "var(--brand-text-to)",
+          "card-from": "var(--brand-card-from)",
+          "card-to": "var(--brand-card-to)",
+          "card-deep": "var(--brand-card-deep)",
+        },
         status: {
           pending: "hsl(var(--status-pending))",
           "pending-bg": "hsl(var(--status-pending-bg))",

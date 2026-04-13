@@ -87,6 +87,19 @@
     --chart-3: 36 91% 57%;
     --chart-4: 43 95% 66%;
     --chart-5: 155 52% 37%;
+
+    /* Litmus consumer brand — headline text gradient (vertical) */
+    --brand-text-from: #ff9a3c;
+    --brand-text-to: #f06c00;
+    /* Solid primary — buttons, accents, rings */
+    --brand-primary: #f06c00;
+    /* Teal card band — horizontal gradient + deep accent */
+    --brand-card-from: #004e64;
+    --brand-card-to: #008eb3;
+    --brand-card-deep: #003d52;
+    /* RGB tuples for shadows (space-separated) */
+    --brand-primary-rgb: 240 108 0;
+    --brand-card-rgb: 0 78 100;
   }
 
   .dark {
@@ -119,6 +132,15 @@
     --sidebar-border: 0 0% 20%;
     --sidebar-ring: 22 90% 51%;
     --sidebar-active: 22 90% 51%;
+
+    --brand-text-from: #ff9a3c;
+    --brand-text-to: #f06c00;
+    --brand-primary: #f06c00;
+    --brand-card-from: #004e64;
+    --brand-card-to: #008eb3;
+    --brand-card-deep: #003d52;
+    --brand-primary-rgb: 240 108 0;
+    --brand-card-rgb: 0 78 100;
   }
 }
 
@@ -132,6 +154,23 @@
 }
 
 @layer utilities {
+  /** Orange vertical gradient for display text (bg-clip-text pattern) */
+  .text-gradient-brand {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(to bottom, var(--brand-text-from), var(--brand-text-to));
+  }
+  /** Same orange gradient as a fill (top bars, pill backgrounds) */
+  .bg-gradient-brand {
+    background-image: linear-gradient(to bottom, var(--brand-text-from), var(--brand-primary));
+  }
+  /** Teal horizontal band — test cards, headers */
+  .bg-gradient-card {
+    background-image: linear-gradient(to right, var(--brand-card-from), var(--brand-card-to));
+  }
+  /** Teal vertical — small badges */
+  .bg-gradient-card-badge {
+    background-image: linear-gradient(to bottom, var(--brand-card-deep), var(--brand-card-to));
+  }
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--flame-amber))] to-[hsl(var(--flame-gold))];
   }
@@ -143,3 +182,6 @@
     display: none;
   }
 }
+
+
+/* nice button color bg-gradient-to-b from-[#3dd9cf] to-[#20b2aa]  */
