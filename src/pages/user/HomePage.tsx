@@ -61,7 +61,7 @@ export default function HomePage() {
 
       {/* ═══════════ CALL TO ACTIONS ═══════════ */}
       <SafetyCheckupBanner />
-      <WhatsAppBanner className="py-10 md:py-24" />
+      <WhatsAppBanner className="py-12 md:py-20" />
 
       {/* ═══════════ SEO CONTENT ═══════════ */}
       <FooterSEO />
