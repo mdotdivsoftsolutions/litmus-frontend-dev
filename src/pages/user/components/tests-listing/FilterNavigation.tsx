@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { type ClassValue } from "clsx";
 
 interface FilterNavigationProps {
   categoryPills: string[];
@@ -23,8 +24,8 @@ interface FilterNavigationProps {
   testTypes: string[];
   sortBy: string;
   setSortBy: (sort: string) => void;
-  filters: any[];
-  cn: (...args: any[]) => string;
+  filters: { label: string; clear: () => void }[];  
+  cn: (...args: ClassValue[]) => string;
 }
 
 export const FilterNavigation = ({
@@ -64,7 +65,7 @@ export const FilterNavigation = ({
                   {filters.length > 0 && <span className="h-5 w-5 rounded-full bg-[#D32F2F] text-white text-[10px] flex items-center justify-center border-2 border-white">{filters.length}</span>}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:max-w-md bg-white border-l border-slate-100 rounded-l-[3.5rem] p-10 font-manrope">
+              <SheetContent side="right" className="w-full sm:max-w-md bg-white border-l border-slate-100 rounded-l-[3.5rem] p-10">
                 <SheetHeader className="pb-10 pt-4">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-100 text-[#D32F2F] text-[10px] font-black uppercase tracking-[0.2em] mb-4 w-max">
                     Diagnostic Hub

@@ -9,7 +9,7 @@ interface TestsHeroProps {
 
 export const TestsHero = ({ search, setSearch }: TestsHeroProps) => {
   return (
-    <div className="relative bg-white min-h-[85vh] flex flex-col justify-center overflow-hidden border-b border-white">
+    <div className="relative bg-white py-12 md:py-20 flex flex-col justify-center overflow-hidden border-b border-white">
       {/* Cinematic Background Elements */}
       <div className="absolute top-0 right-0 w-[60%] h-full bg-slate-50/50 skew-x-[-12deg] translate-x-1/4 pointer-events-none border-l border-slate-100" />
       <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
@@ -77,19 +77,17 @@ export const TestsHero = ({ search, setSearch }: TestsHeroProps) => {
             </div>
           </div>
 
-          {/* Right Column: Panoramic Lab Visual */}
+          {/* Right Column: Panoramic Lab Visual / Video */}
           <div className="flex-1 relative w-full lg:w-auto">
-            <div className="relative group/pano h-[450px]  w-full rounded-[4rem] overflow-hidden shadow-[0_48px_96px_rgba(0,0,0,0.1)] border-[12px] border-white bg-slate-100">
-              <img
-                src="https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&q=80&w=1200"
-                alt="Clinical Excellence"
-                className="h-full w-full object-cover transition-transform duration-[3000ms] group-hover/pano:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-tr from-slate-900/60 to-transparent opacity-40 mix-blend-multiply" />
-              <div className="absolute bottom-10 right-10 flex flex-col items-end">
-                <p className="text-white text-[10px] font-semibold uppercase tracking-[0.4em] opacity-80 mb-2">Clinical Infrastructure</p>
-                <div className="h-1 w-16 bg-[#D32F2F] rounded-full" />
-              </div>
+            <div className="relative group/pano h-[350px] md:h-[450px] w-full rounded-[4rem] overflow-hidden shadow-[0_48px_96px_rgba(0,0,0,0.1)] border-[12px] border-white bg-slate-900">
+               <iframe 
+                 className="w-full h-full absolute inset-0 z-0"
+                 src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0&controls=1" 
+                 title="Litmus Diagnostics Tour"
+                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                 allowFullScreen
+                 style={{ border: 'none' }}
+               />
             </div>
           </div>
         </div>

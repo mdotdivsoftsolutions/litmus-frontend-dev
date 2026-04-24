@@ -39,6 +39,14 @@ export default function TestsListingPage() {
     { id: "2", name: "Protein Analysis", method: "FSSAI IS:7219", price: 1500, mrp: 2500, tat: "4 days", type: "Chemical", tests: 12 },
     { id: "3", name: "Microbial Count Test", method: "FSSAI IS:5402", price: 850, mrp: 1400, tat: "5 days", type: "Microbiological", tests: 6 },
     { id: "4", name: "Moisture Content", method: "FSSAI IS:1165", price: 650, mrp: 1000, tat: "2 days", type: "Physical", tests: 4 },
+    { id: "5", name: "Adulteration Check", method: "FSSAI IS:1479", price: 950, mrp: 1500, tat: "3 days", type: "Chemical", tests: 5 },
+    { id: "6", name: "Shelf Life Study", method: "FSSAI IS:7219", price: 3500, mrp: 5000, tat: "14 days", type: "Chemical", tests: 20 },
+    { id: "7", name: "Heavy Metals Test", method: "FSSAI IS:5402", price: 2200, mrp: 3500, tat: "5 days", type: "Microbiological", tests: 7 },
+    { id: "8", name: "Pesticide Residue", method: "FSSAI IS:1165", price: 2800, mrp: 4000, tat: "4 days", type: "Physical", tests: 10 },
+    { id: "9", name: "Aflatoxin Screen", method: "FSSAI IS:1479", price: 1800, mrp: 2800, tat: "3 days", type: "Chemical", tests: 4 },
+    { id: "10", name: "Allergen Testing", method: "FSSAI IS:7219", price: 2500, mrp: 4000, tat: "4 days", type: "Chemical", tests: 8 },
+    { id: "11", name: "pH Analysis", method: "FSSAI IS:5402", price: 450, mrp: 800, tat: "2 days", type: "Microbiological", tests: 2 },
+    { id: "12", name: "Sensory Eval", method: "FSSAI IS:1165", price: 1100, mrp: 1800, tat: "3 days", type: "Physical", tests: 6 },
   ];
 
   const filtered = products.filter((p) => {
@@ -72,7 +80,7 @@ export default function TestsListingPage() {
   ];
 
   return (
-    <div className="animate-fade-in font-manrope bg-slate-50 min-h-screen">
+    <div className="animate-fade-in bg-slate-50 min-h-screen">
 
       {/* 1. PANORAMIC HERO */}
       <TestsHero search={search} setSearch={setSearch} />

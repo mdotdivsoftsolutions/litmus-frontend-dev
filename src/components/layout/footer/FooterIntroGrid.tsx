@@ -1,5 +1,3 @@
-import { cn } from "@/lib/utils";
-
 const EXPERTISE_DATA = [
   { label: "Diagnostic Center for Dairy in Bangalore", areas: "Dairy farmers, Milk processing plants, Cheese manufacturers, Paneer & Ghee units, Retailers." },
   { label: "Food Safety Audit Center in Mumbai", areas: "Restaurants, cloud kitchens, hotels, catering services, and large-scale industrial canteens." },
@@ -16,15 +14,22 @@ export function FooterIntroGrid() {
         Litmus brings the accuracy of world-class food diagnostic labs straight to your business. Whether you are a small cafe or a large food manufacturer, every test is delivered with absolute precision. From routine moisture tests to specialized pathogen panels, our mission is to make food safety premium, accessible, and simple. With over <strong>50,000+ tests completed</strong> across India, we are your speed, accuracy, and trust partner.
       </p>
       
-      <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <div className="grid grid-cols-12 bg-slate-800 text-white text-xs font-bold uppercase tracking-wider p-4">
-          <div className="col-span-4 pl-4">Safety Audit Expertise</div>
-          <div className="col-span-8 pl-4 border-l border-white/10">Industry Sectors We Serve</div>
-        </div>
+      {/* Certificate-style card grid: label + 2-line content below */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {EXPERTISE_DATA.map((row, i) => (
-          <div key={i} className={cn("grid grid-cols-12 text-sm p-4 items-center border-t border-slate-100", i % 2 === 0 ? "bg-white" : "bg-slate-50")}>
-            <div className="col-span-4 pl-4 font-bold text-[#D32F2F]">{row.label}</div>
-            <div className="col-span-8 pl-4 border-l border-slate-200 text-slate-600 leading-relaxed italic">{row.areas}</div>
+          <div
+            key={i}
+            className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-[#D32F2F]/20 transition-all duration-300"
+          >
+            {/* Certificate-style header with accent bar */}
+            <div className="flex items-start gap-3 mb-3">
+              <div className="mt-1 h-8 w-1 rounded-full bg-gradient-brand shrink-0" />
+              <h3 className="text-sm font-bold text-[#D32F2F] leading-snug">{row.label}</h3>
+            </div>
+            {/* 2-line content below */}
+            <p className="text-sm text-slate-600 leading-relaxed pl-[19px] line-clamp-2">
+              {row.areas}
+            </p>
           </div>
         ))}
       </div>

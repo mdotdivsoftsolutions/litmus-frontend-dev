@@ -67,7 +67,7 @@ function FAQItem({
       >
         <span
           className={cn(
-            "font-semibold font-manrope text-sm leading-snug transition-colors duration-200 md:text-base",
+            "font-semibold text-sm leading-snug transition-colors duration-200 md:text-base",
             isOpen ? "text-[#f06c00]" : "text-slate-800 group-hover:text-slate-900"
           )}
         >
@@ -167,7 +167,7 @@ export function FAQ() {
                   key={stat.label}
                   className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-3 text-center"
                 >
-                  <p className="text-base font-black font-manrope text-gradient-brand">
+                  <p className="text-base font-black text-gradient-brand">
                     {stat.value}
                   </p>
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 mt-0.5">

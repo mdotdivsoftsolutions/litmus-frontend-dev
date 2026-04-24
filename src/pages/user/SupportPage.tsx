@@ -36,7 +36,7 @@ const helpCategories = [
 
 export default function SupportPage() {
   return (
-    <div className="animate-fade-in font-manrope bg-slate-50 min-h-screen">
+    <div className="animate-fade-in bg-slate-50 min-h-screen">
       {/* 1. SUPPORT HERO SEARCH (Reduced height for efficiency) */}
       <section className="relative pt-32 pb-20 overflow-hidden bg-white">
         {/* Cinematic Accents */}

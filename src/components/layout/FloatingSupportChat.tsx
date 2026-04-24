@@ -39,7 +39,7 @@ export function FloatingSupportChat() {
   };
 
   return (
-    <div className="fixed bottom-20 right-5 md:bottom-8 md:right-8 z-[100] font-manrope">
+    <div className="fixed bottom-20 right-5 md:bottom-8 md:right-8 z-[100]">
       {/* 1. CINEMATIC GLOWING TRIGGER */}
       <div className="relative">
         {/* Animated Rings */}

@@ -12,7 +12,7 @@ export default function LabDetailConsumerPage() {
    const lab = laboratories.find((l) => l.id === id) || laboratories[0];
 
    return (
-      <div className="animate-fade-in font-manrope min-h-screen bg-white pb-20">
+      <div className="animate-fade-in min-h-screen bg-white pb-20">
          {/* 1. PROFESSIONAL LAB HERO */}
          <section className="relative pt-12 pb-12 bg-slate-50 border-b border-slate-100 overflow-hidden">
             {/* Cinematic Backdrop */}

@@ -11,7 +11,7 @@ const WhatsAppIcon = () => (
   </svg>
 );
 
-// Phone icon — circular sync-style matching reference
+// Phone icon
 const PhoneIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -28,7 +28,7 @@ const PhoneIcon = () => (
   </svg>
 );
 
-// Quick Order icon — clipboard/document
+// Quick Order icon
 const QuickOrderIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="5" y="3" width="14" height="18" rx="2" fill="#F06292" />
@@ -43,9 +43,9 @@ const actions = [
     label: "Book via",
     highlight: "Phone Call",
     icon: PhoneIcon,
-    cardBg: "bg-[#EEF6FF]",
-    border: "border-[#C5DFFF]",
-    hoverShadow: "hover:shadow-md hover:border-[#90C0FF]",
+    cardBg: "bg-white/90",
+    border: "border-white/60",
+    hoverShadow: "hover:shadow-md hover:bg-white",
     href: "tel:+918000000000",
   },
   {
@@ -53,9 +53,9 @@ const actions = [
     label: "Quick",
     highlight: "Order",
     icon: QuickOrderIcon,
-    cardBg: "bg-[#FFF0F4]",
-    border: "border-[#FFD0DD]",
-    hoverShadow: "hover:shadow-md hover:border-[#F9A8C0]",
+    cardBg: "bg-white/90",
+    border: "border-white/60",
+    hoverShadow: "hover:shadow-md hover:bg-white",
     href: "/quick-order",
   },
   {
@@ -63,9 +63,9 @@ const actions = [
     label: "Book via",
     highlight: "Whatsapp",
     icon: WhatsAppIcon,
-    cardBg: "bg-[#EEFAF1]",
-    border: "border-[#BBE8C8]",
-    hoverShadow: "hover:shadow-md hover:border-[#6FCF97]",
+    cardBg: "bg-white/90",
+    border: "border-white/60",
+    hoverShadow: "hover:shadow-md hover:bg-white",
     href: "https://wa.me/918000000000",
     target: "_blank",
   },
@@ -74,37 +74,62 @@ const actions = [
 export function WhatsAppBanner({ className }: { className?: string }) {
   return (
     <section className={cn("w-full", className)}>
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Three action pill cards */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
-          {actions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <a
-                key={action.id}
-                href={action.href}
-                target={action.target}
-                rel={action.target === "_blank" ? "noopener noreferrer" : undefined}
-                className={cn(
-                  "flex items-center gap-3 px-10 py-5 rounded-xl border transition-all duration-200 cursor-pointer group w-full sm:w-auto justify-center",
-                  action.cardBg,
-                  action.border,
-                  action.hoverShadow
-                )}
-              >
-                {/* Icon */}
-                <span className="flex-shrink-0 transition-transform duration-200 group-hover:scale-110">
-                  <Icon />
-                </span>
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Full-width banner with actions inside */}
+        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#004e64] via-[#006d87] to-[#008eb3] px-8 py-10 md:py-12 shadow-[0_16px_48px_-12px_rgba(0,78,100,0.35)]">
+          {/* Background pattern */}
+          <div className="absolute inset-0 opacity-[0.06] pointer-events-none">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+          </div>
+          
+          {/* Decorative circles */}
+          <div className="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-white/5 pointer-events-none" />
+          <div className="absolute -left-8 -bottom-12 w-32 h-32 rounded-full bg-white/5 pointer-events-none" />
 
-                {/* Text */}
-                <span className="text-sm text-gray-500 font-medium whitespace-nowrap">
-                  {action.label}{" "}
-                  <strong className="text-gray-800 font-bold">{action.highlight}</strong>
-                </span>
-              </a>
-            );
-          })}
+          {/* Content */}
+          <div className="relative z-10 flex flex-col items-center text-center gap-6">
+            {/* Caption */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/60 mb-2">
+                Adulteration | Fat Content | SNF | Analysis
+              </p>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight leading-tight">
+                Can't find what you are looking for?
+              </h2>
+            </div>
+
+            {/* Action pills row */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-2">
+              {actions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <a
+                    key={action.id}
+                    href={action.href}
+                    target={action.target}
+                    rel={action.target === "_blank" ? "noopener noreferrer" : undefined}
+                    className={cn(
+                      "flex items-center gap-3 px-8 py-3.5 rounded-xl border backdrop-blur-sm transition-all duration-200 cursor-pointer group w-full sm:w-auto justify-center",
+                      action.cardBg,
+                      action.border,
+                      action.hoverShadow
+                    )}
+                  >
+                    {/* Icon */}
+                    <span className="flex-shrink-0 transition-transform duration-200 group-hover:scale-110">
+                      <Icon />
+                    </span>
+
+                    {/* Text */}
+                    <span className="text-sm text-gray-500 font-medium whitespace-nowrap">
+                      {action.label}{" "}
+                      <strong className="text-gray-800 font-bold">{action.highlight}</strong>
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </section>

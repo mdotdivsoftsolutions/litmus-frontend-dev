@@ -92,8 +92,8 @@ export function Header({
               return (
                 <Link key={link.href} to={link.href}
                   className={cn(
-                    "px-3 py-1.5 text-sm font-medium transition-colors",
-                    isActive ? "text-gradient-brand" : "text-muted-foreground hover:text-gradient-brand"
+                    "px-3 py-1.5 text-sm font-semibold transition-colors",
+                    isActive ? "text-gradient-brand" : "text-slate-900 hover:text-gradient-brand"
                   )}>
                   {link.label}
                 </Link>
@@ -101,7 +101,7 @@ export function Header({
             })}
             <button
               onClick={onLoginClick}
-              className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-gradient-brand transition-colors"
+              className="px-3 py-1.5 text-sm font-semibold text-slate-900 hover:text-gradient-brand transition-colors"
             >
               Login
             </button>

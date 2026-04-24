@@ -40,7 +40,7 @@ export default function HomePage() {
         setSearchQuery={setSearchQuery}
       />
 
-      {/* ═══════════ TESTS & PACKAGES CAROUSELS ═══════════ */}
+      {/* ═══════════ POPULAR TESTS CAROUSEL ═══════════ */}
       <HomeTests
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -48,28 +48,30 @@ export default function HomePage() {
         addToCart={addToCart}
         removeFromCart={removeFromCart}
       />
+
+      {/* ═══════════ POPULAR PACKAGES — "Popular Packages Near You" ═══════════ */}
       <PromoBanner className="pb-20" />
 
-      {/* ═══════════ CATEGORY GRIDS ═══════════ */}
+      {/* ═══════════ CAN'T FIND — Book/Quick Order/WhatsApp ═══════════ */}
+      <WhatsAppBanner className="pb-12 md:pb-16" />
+
+      {/* ═══════════ TESTS BY FOOD CATEGORY (2 rows, 8 cards) ═══════════ */}
       <SpecialityCarousel />
 
-      {/* ═══════════ HOW TO BOOK PROCESS ═══════════ */}
+      {/* ═══════════ HOW WE WORK (flow chart with icons) ═══════════ */}
       <HowToBookProcess />
 
-      {/* ═══════════ TRUSTED PARTNERS ═══════════ */}
+      {/* ═══════════ TRUSTED PARTNER LABORATORIES ═══════════ */}
       <PartnerLabs />
 
-      {/* ═══════════ REVIEWS ═══════════ */}
+      {/* ═══════════ CUSTOMER REVIEWS (marquee ticker) ═══════════ */}
       <CustomerReviews />
 
-      {/* ═══════════ SAFETY CHECKUP BANNER ═══════════ */}
+      {/* ═══════════ SAFETY CHECKUP BANNER (4-slide carousel) ═══════════ */}
       <SafetyCheckupBanner />
 
       {/* ═══════════ FAQ ═══════════ */}
       <FAQ />
-
-      {/* ═══════════ CALL TO ACTIONS ═══════════ */}
-      <WhatsAppBanner className="pt-12 md:py-20 bg-gradient-to-b from-white to-slate-50" />
 
       {/* ═══════════ SEO CONTENT ═══════════ */}
       <FooterSEO />

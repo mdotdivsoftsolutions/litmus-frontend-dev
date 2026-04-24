@@ -45,7 +45,7 @@ const services = [
 
 export default function ConsultationPage() {
   return (
-    <div className="animate-fade-in font-manrope min-h-screen bg-slate-50">
+    <div className="animate-fade-in min-h-screen bg-slate-50">
       {/* 1. CINEMATIC CONSULTATION HERO */}
       <section className="relative pt-20 pb-20 overflow-hidden bg-white group/hero">
         {/* Animated Background Textures */}
