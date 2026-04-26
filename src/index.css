@@ -161,14 +161,9 @@
 }
 
 @layer utilities {
-  /** Orange vertical gradient for display text (bg-clip-text pattern) */
+  /** Orange horizontal gradient for display text */
   .text-gradient-brand {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(
-      to bottom,
-      var(--brand-text-from),
-      var(--brand-text-to)
-    );
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#D32F2F] to-[#F06C00];
   }
   /** Same orange gradient as a fill (top bars, pill backgrounds) */
   .bg-gradient-brand {
