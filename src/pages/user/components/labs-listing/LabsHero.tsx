@@ -25,7 +25,7 @@ export function LabsHero({ search, setSearch, selectedCity, setSelectedCity }: L
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-white shadow-sm border border-slate-100 text-[#D32F2F] text-[10px] font-black uppercase tracking-[0.4em]">
             <Microscope className="h-4 w-4" /> Accredited Facilities
           </div>
-          <h1 className="text-2xl sm:text-3xl font-semibold text-slate-800 tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-4xl font-semibold text-slate-800 tracking-tight leading-tight">
              Discover Your Trusted <br />
              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Diagnostic Partner.</span>
           </h1>

@@ -118,7 +118,7 @@ export default function TestsListingPage() {
       <TrustAndOrdering />
 
       {/* PROMO BANNER CAROUSEL (From Home Page) */}
-      <PromoBanner className="py-10 bg-white md:pt-24" />
+      <PromoBanner className="py-12 bg-slate-50 md:py-20" />
 
       <div className="max-w-7xl mx-auto px-4">
         {filtered.length === 0 && (

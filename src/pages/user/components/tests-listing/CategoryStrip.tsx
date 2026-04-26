@@ -27,7 +27,7 @@ export const CategoryStrip = ({ selectedCategory, setSelectedCategory }: Categor
   ];
 
   return (
-    <div className="w-full py-16 ">
+    <div className="w-full py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex flex-col gap-6">
           {/* Grid Container for 16 categories */}

@@ -56,7 +56,7 @@ export default function HomePage() {
       <SpecialityCarousel />
 
       {/* ═══════════ HOW WE WORK (flow chart with icons) ═══════════ */}
-      <HowToBookProcess />
+      <HowToBookProcess className="bg-slate-50" />
 
       {/* ═══════════ TRUSTED PARTNER LABORATORIES ═══════════ */}
       <PartnerLabs />

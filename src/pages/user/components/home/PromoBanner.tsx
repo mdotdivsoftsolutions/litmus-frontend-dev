@@ -89,10 +89,10 @@ export const PromoBanner = ({ className }: { className?: string }) => {
                      <div className="inline-flex items-center gap-2 mb-3" style={{ color: banner.color }}>
                         <span className="text-[10px] font-black uppercase tracking-[0.2em]">{banner.subtitle}</span>
                      </div>
-                     <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-800 tracking-tighter leading-[1.05] mb-4">
+                     <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tighter leading-[1.05] mb-4">
                         {banner.title}
                      </h2>
-                     <p className="text-slate-500 text-base font-medium mb-8 max-w-lg">
+                     <p className="text-slate-500 text-sm font-semibold mb-8 max-w-lg">
                         {banner.desc}
                      </p>
                      <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3">
