@@ -7,7 +7,6 @@ export default function ConsultationPage() {
   return (
     <div className="animate-fade-in min-h-screen bg-slate-50">
       <ConsultationHero />
-      <TrustedPartner />
       <ConsultationServices />
       <PromoBanner className="pb-20" />
     </div>
