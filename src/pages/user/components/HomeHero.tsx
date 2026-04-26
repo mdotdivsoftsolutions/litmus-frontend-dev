@@ -28,7 +28,7 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                   <span className="h-2 w-2 rounded-full bg-[#E53935] animate-pulse" />
                   <span className="text-xs font-medium text-slate-700">NABL & FSSAI Accredited Labs</span>
                 </div>
-                <h1 className="text-2xl sm:text-5xl font-bold text-slate-800 mb-6 tracking-tight">
+                <h1 className="text-2xl sm:text-[44px] font-bold text-slate-800 mb-6 tracking-tight leading-[50px]">
                   Advanced Food Safety  <br /> <span className="text-gradient-brand"> Food Solutions</span>
                 </h1>
                 <p className="text-slate-500 text-lg mb-8 max-w-md leading-relaxed">

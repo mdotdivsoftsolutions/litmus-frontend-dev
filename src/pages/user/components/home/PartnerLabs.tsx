@@ -18,9 +18,9 @@ export function PartnerLabs() {
           badge="Network of Trust"
           title={
             <>
-              Our Trusted{" "}
-              <span className="bg-clip-text text-transparent bg-gradient-brand">
-                Partner Laboratories
+              Trusted Partner{" "}
+              <span className="text-gradient-brand">
+                Laboratories
               </span>
             </>
           }

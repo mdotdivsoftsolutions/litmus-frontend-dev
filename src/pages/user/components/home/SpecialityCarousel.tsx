@@ -120,7 +120,7 @@ export function SpecialityCarousel() {
           title={
             <>
               Tests By Food{" "}
-              <span className="bg-gradient-to-r from-[#D32F2F] to-[#F06C00] bg-clip-text text-transparent">
+              <span className="text-gradient-brand">
                 Category
               </span>
             </>

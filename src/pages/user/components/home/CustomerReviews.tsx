@@ -52,7 +52,7 @@ export function CustomerReviews() {
             <SectionHeader
                title={
                   <>
-                     Customer <span className="text-transparent bg-clip-text bg-gradient-brand">Reviews</span>
+                     Customer <span className="text-gradient-brand">Reviews</span>
                   </>
                }
                subtitle="See why thousands of businesses trust Litmus for their uncompromising food safety testing."
