@@ -1,47 +1,54 @@
 import { SectionHeader } from "./SectionHeader";
+import { UserPlus, Search, CalendarCheck, Truck, FlaskConical, FileCheck, Stethoscope } from "lucide-react";
 
 const processSteps = [
     {
         number: "01",
         title: "Create Account",
         subtitle: "Sign up or login to your Litmus account",
+        icon: UserPlus,
     },
     {
         number: "02",
         title: "Browse & Select Tests",
         subtitle: "Choose from our extensive food safety test catalog",
+        icon: Search,
     },
     {
         number: "03",
         title: "Schedule Pickup",
         subtitle: "Book your preferred collection time and location",
+        icon: CalendarCheck,
     },
     {
         number: "04",
         title: "Sample Collection",
-        subtitle: "Safe and secure sample collection at your home",
+        subtitle: "Safe and secure sample collection at your doorstep",
+        icon: Truck,
     },
     {
         number: "05",
         title: "Lab Analysis",
         subtitle: "Advanced testing in NABL accredited laboratories",
+        icon: FlaskConical,
     },
     {
         number: "06",
         title: "Get Reports",
         subtitle: "Download FSSAI-verified reports to your profile",
+        icon: FileCheck,
     },
     {
         number: "07",
         title: "Doctor Consultation",
         subtitle: "Get insights and recommendations from experts",
+        icon: Stethoscope,
     },
 ] as const;
 
 export function HowToBookProcess() {
     return (
         <section className="relative overflow-hidden bg-slate-50 py-16 md:py-24">
-
             <div className="pointer-events-none absolute right-0 top-0 h-[600px] w-[600px] translate-x-1/2 -translate-y-1/2 rounded-full bg-red-50/30 blur-[120px]" />
 
             <div className="relative z-10 mx-auto w-full max-w-7xl px-4">
@@ -56,106 +63,84 @@ export function HowToBookProcess() {
                     className="mb-16 md:mb-20 justify-start"
                 />
 
-                {/* Main Flow Container */}
-                <div className="relative">
-                    {/* Desktop: Horizontal Flow */}
-                    <div className="hidden md:flex items-start justify-between gap-8 lg:gap-12">
-                        {/* Steps */}
-                        <div className="flex flex-1 items-start gap-4 lg:gap-8">
-                            {processSteps.slice(0, 4).map((step, idx) => (
-                                <div key={step.number} className="flex flex-col flex-1">
-                                    {/* Number and Arrow Container */}
-                                    <div className="flex items-start gap-4 lg:gap-6">
-                                        {/* Number */}
-                                        <div className="flex-shrink-0">
-                                            <p className="text-6xl lg:text-7xl font-black bg-gradient-to-l from-[#008eb3] to-[#004e64] bg-clip-text text-transparent">{step.number}</p>
+                {/* Desktop: Horizontal Flow Chart with Icons */}
+                <div className="hidden md:block">
+                    {/* Connected flow with icons */}
+                    <div className="relative">
+                        {/* Curved Dashed Connection Line */}
+                        <div className="absolute top-0 left-0 w-full h-20 pointer-events-none">
+                            <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1400 100">
+                                {/* Path for 7 items. Centers at 100, 300, 500, 700, 900, 1100, 1300 */}
+                                <path 
+                                    d="M 100 50 Q 200 0 300 50 T 500 50 T 700 50 T 900 50 T 1100 50 T 1300 50" 
+                                    stroke="#67CBA0" 
+                                    strokeWidth="3" 
+                                    strokeDasharray="8 8" 
+                                    fill="none" 
+                                    opacity="0.6" 
+                                />
+                                {/* Dots along the curve */}
+                                <circle cx="200" cy="25" r="5" fill="#008eb3" opacity="0.8" />
+                                <circle cx="400" cy="75" r="5" fill="#008eb3" opacity="0.8" />
+                                <circle cx="600" cy="25" r="5" fill="#008eb3" opacity="0.8" />
+                                <circle cx="800" cy="75" r="5" fill="#008eb3" opacity="0.8" />
+                                <circle cx="1000" cy="25" r="5" fill="#008eb3" opacity="0.8" />
+                                <circle cx="1200" cy="75" r="5" fill="#008eb3" opacity="0.8" />
+                            </svg>
+                        </div>
+
+                        {/* Steps grid */}
+                        <div className="grid grid-cols-7 gap-3 lg:gap-5">
+                            {processSteps.map((step, idx) => {
+                                const Icon = step.icon;
+                                return (
+                                    <div key={step.number} className="flex flex-col items-center text-center group">
+                                        {/* Icon circle */}
+                                        <div className="relative z-10 mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white border-2 border-[#008eb3]/30 shadow-[0_4px_20px_-4px_rgba(0,78,100,0.15)] transition-all duration-300 group-hover:border-[#008eb3] group-hover:shadow-[0_8px_30px_-4px_rgba(0,78,100,0.25)] group-hover:scale-105">
+                                            <Icon className="h-8 w-8 text-[#004e64] group-hover:text-[#008eb3] transition-colors" />
                                         </div>
 
-                                        {/* Arrow */}
-                                        {idx < 3 && (
-                                            <div className="mt-4 flex-shrink-0">
-                                                <svg width="40" height="28" viewBox="0 0 40 28" fill="none">
+                                        {/* Step number badge */}
+                                        <span className="text-[10px] font-black text-[#008eb3] tracking-wider mb-2">
+                                            STEP {step.number}
+                                        </span>
 
-                                                    <defs>
-                                                        <linearGradient
-                                                            id={`arrowGradient-${idx}`}   // ✅ unique ID
-                                                            x1="0"
-                                                            y1="0"
-                                                            x2="0"
-                                                            y2="28"
-                                                            gradientUnits="userSpaceOnUse"
-                                                        >
-                                                            <stop offset="0%" stopColor="#008eb3" />
-                                                            <stop offset="100%" stopColor="#004e64" />
-                                                        </linearGradient>
-                                                    </defs>
+                                        {/* Title */}
+                                        <h4 className="text-sm font-bold text-slate-900 leading-tight mb-1.5">
+                                            {step.title}
+                                        </h4>
 
-                                                    <line
-                                                        x1="0"
-                                                        y1="14"
-                                                        x2="32"
-                                                        y2="14"
-                                                        stroke={`url(#arrowGradient-${idx})`}
-                                                        strokeWidth="2"
-                                                        strokeLinecap="round"
-                                                    />
-
-                                                    <polyline
-                                                        points="32,10 38,14 32,18"
-                                                        stroke={`url(#arrowGradient-${idx})`}
-                                                        strokeWidth="2"
-                                                        fill="none"
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                    />
-
-                                                </svg>
-                                            </div>
-                                        )}
+                                        {/* Subtitle */}
+                                        <p className="text-xs text-slate-500 leading-relaxed">
+                                            {step.subtitle}
+                                        </p>
                                     </div>
-
-                                    {/* Text Details */}
-                                    <div className="mt-4 lg:mt-6">
-                                        <h4 className="text-sm lg:text-base font-bold text-slate-900 leading-tight">{step.title}</h4>
-                                        <p className="mt-2 text-xs lg:text-sm text-slate-600 leading-relaxed">{step.subtitle}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* STAGES Badge - Right Side */}
-                        <div className="flex-shrink-0 flex flex-col items-center gap-2 pt-8">
-                            {Array.from({ length: 4 }).map((_, i) => (
-                                <div key={i} className="h-1.5 w-1.5 rounded-full bg-gradient-to-l from-[#008eb3] to-[#004e64]" />
-                            ))}
-                            <span className="text-xs bg-gradient-to-l from-[#008eb3] to-[#004e64] bg-clip-text text-transparent font-semibold text-slate-400 uppercase tracking-widest transform -rotate-90 whitespace-nowrap mt-4">
-                                Stages
-                            </span>
+                                );
+                            })}
                         </div>
                     </div>
+                </div>
 
-                    {/* Mobile: Vertical Flow */}
-                    <div className="md:hidden space-y-6">
-                        {processSteps.map((step, idx) => (
+                {/* Mobile: Vertical Flow */}
+                <div className="md:hidden space-y-6">
+                    {processSteps.map((step, idx) => {
+                        const Icon = step.icon;
+                        return (
                             <div key={step.number} className="flex gap-4">
-                                {/* Number */}
-                                <div className="flex-shrink-0">
-                                    <p className="text-5xl font-black text-[#D32F2F]">{step.number}</p>
+                                {/* Icon */}
+                                <div className="flex-shrink-0 flex h-14 w-14 items-center justify-center rounded-full bg-white border-2 border-[#008eb3]/30 shadow-sm">
+                                    <Icon className="h-6 w-6 text-[#004e64]" />
                                 </div>
 
                                 {/* Content */}
-                                <div className="flex-1 pt-2">
-                                    <h4 className="text-base font-bold text-slate-900">{step.title}</h4>
+                                <div className="flex-1 pt-1">
+                                    <span className="text-[9px] font-black text-[#008eb3] tracking-wider">STEP {step.number}</span>
+                                    <h4 className="text-base font-bold text-slate-900 mt-0.5">{step.title}</h4>
                                     <p className="mt-1 text-sm text-slate-600">{step.subtitle}</p>
                                 </div>
-
-                                {/* Connector line */}
-                                {idx < processSteps.length - 1 && (
-                                    <div className="absolute left-8 h-8 w-0.5 bg-[#D32F2F]/30" />
-                                )}
                             </div>
-                        ))}
-                    </div>
+                        );
+                    })}
                 </div>
 
                 {/* Footer Message */}

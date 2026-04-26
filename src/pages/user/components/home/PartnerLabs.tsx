@@ -31,7 +31,7 @@ export function PartnerLabs() {
           {partnerLabs.map((lab, i) => (
             <div 
               key={i} 
-              className="group flex flex-col items-center justify-center p-8 rounded-[2rem] border border-slate-100 bg-slate-50/50 transition-all duration-300 hover:bg-white hover:border-brand-primary/20 hover:shadow-[0_20px_40px_-15px_rgba(211,47,47,0.1)]"
+              className="group flex flex-col items-center justify-center p-8 rounded-[2rem] border-2 border-blue-300 bg-slate-50/50 transition-all duration-300 hover:bg-white hover:border-blue-500 hover:shadow-[0_20px_40px_-15px_rgba(26,35,126,0.15)]"
             >
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm border border-slate-50 transition-transform duration-500 group-hover:scale-110 group-hover:bg-gradient-brand group-hover:text-white text-slate-400">
                 <lab.icon className="h-7 w-7" />

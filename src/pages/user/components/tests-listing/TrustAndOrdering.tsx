@@ -116,25 +116,7 @@ export const TrustAndOrdering = () => {
               <div className="absolute inset-[2px] rounded-[2.5rem] border-[1.5px] border-transparent bg-gradient-to-br from-orange-100 to-emerald-100 opacity-30 pointer-events-none z-0" />
             </div>
 
-            {/* BOTTOM CARD: VIDEO TESTIMONIAL (With actual video embed) */}
-            <div className="h-[280px] md:h-[320px] rounded-[2.5rem] relative overflow-hidden group shadow-xl border border-slate-100 bg-slate-900 shrink-0">
-               <iframe 
-                 className="w-full h-full absolute inset-0 z-0"
-                 src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0&controls=1" 
-                 title="Litmus Diagnostics Tour"
-                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                 allowFullScreen
-                 style={{ border: 'none' }}
-               />
-              
-              {/* Overlay elements */}
-              <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-
-              <div className="absolute top-6 right-6 md:right-8 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-full text-xs md:text-sm font-black uppercase text-slate-900 shadow-xl tracking-widest flex items-center gap-2 z-10 pointer-events-none">
-                 <div className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
-                 Live Lab Tour
-              </div>
-            </div>
+            {/* Video section removed as requested */}
 
           </div>
 

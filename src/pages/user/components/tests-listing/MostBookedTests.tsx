@@ -56,10 +56,9 @@ export const MostBookedTests = ({
           subtitle="Clinically verified specialized tests across major industry verticals."
         />
 
-        <div className="grid gap-8 lg:grid-cols-12">
-          {/* Left Column: Trending Tests List */}
-          <div className="lg:col-span-7 space-y-4">
-            {tests.map((t) => (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Tests List (6 Rows x 2 Columns) */}
+          {tests.map((t) => (
               <div key={t.id} className="group bg-white rounded-[2rem] p-6 shadow-sm border-2 border-slate-50 flex items-center gap-6 hover:border-[#D32F2F]/20 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] transition-all duration-500">
                 <div className="flex-1 min-w-0 space-y-2">
                   <h3 className="font-bold text-slate-800 text-lg tracking-tight group-hover:text-[#D32F2F] transition-colors">{t.name}</h3>
@@ -77,30 +76,7 @@ export const MostBookedTests = ({
                   <Link to={`/tests/${t.id}`}><Plus className="h-6 w-6" /></Link>
                 </Button>
               </div>
-            ))}
-          </div>
-
-          {/* Right Column: Panoramic Categories Grid */}
-          <div className="lg:col-span-5 grid grid-cols-2 gap-4">
-            {[
-              { name: "Dairy Products", img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&q=80&w=400" },
-              { name: "Beverages", img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=400" },
-              { name: "Grains & Cereals", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400" },
-              { name: "Spices & Herbs", img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=400" },
-            ].map((cat, idx) => (
-              <Link key={idx} to={`/tests?category=${cat.name}`}
-                className="group relative rounded-[2rem] overflow-hidden flex flex-col justify-end p-6 border-2 border-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
-                <img src={cat.img} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
-                <div className="relative z-10">
-                  <h4 className="font-black text-white text-sm tracking-tight uppercase leading-tight group-hover:text-red-50 transition-colors">{cat.name}</h4>
-                  <div className="flex items-center gap-1.5 text-[10px] text-white/70 font-bold uppercase tracking-[0.2em] mt-2 group-hover:text-white transition-colors">
-                    Explore <div className="h-4 w-4 rounded-full bg-[#D32F2F] flex items-center justify-center -rotate-45 group-hover:rotate-0 transition-transform"><ArrowRight className="h-3 w-3 text-white" /></div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
     </div>

@@ -1,36 +1,118 @@
-import { Check, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const slides = [
+   {
+      badge: "90+Parameters",
+      badgeColor: "text-[#004e64]",
+      descInline: "Vitamin D, B12, HbA1c & more",
+      title: <>Full Body Checkup <span className="text-[#F06C00]">Essential at ₹1599</span></>,
+      img: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=1000&auto=format&fit=crop",
+   },
+   {
+      badge: "60+Parameters",
+      badgeColor: "text-[#004e64]",
+      descInline: "Microbial Scan, Adulteration Check",
+      title: <>Advanced Food <span className="text-[#F06C00]">Safety Checkup</span></>,
+      img: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=1000&auto=format&fit=crop",
+   },
+   {
+      badge: "NABL Certified",
+      badgeColor: "text-[#004e64]",
+      descInline: "Adulteration, Fat Content, SNF analysis",
+      title: <>Premium Dairy <span className="text-[#F06C00]">Purity Panel</span></>,
+      img: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1000&auto=format&fit=crop",
+   },
+   {
+      badge: "FSSAI Standard",
+      badgeColor: "text-[#004e64]",
+      descInline: "Heavy metals, Pesticide residues",
+      title: <>Complete Spice <span className="text-[#F06C00]">Purity Audit</span></>,
+      img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=1000&auto=format&fit=crop",
+   },
+];
 
 export function SafetyCheckupBanner() {
+   const [current, setCurrent] = useState(0);
+
+   useEffect(() => {
+      const timer = setInterval(() => setCurrent(prev => (prev + 1) % slides.length), 4500);
+      return () => clearInterval(timer);
+   }, []);
+
+   const prev = () => setCurrent(p => (p - 1 + slides.length) % slides.length);
+   const next = () => setCurrent(p => (p + 1) % slides.length);
+
    return (
-      <section className="py-12 md:py-20 bg-white">
-         <div className="max-w-7xl mx-auto px-4">
-            <div className="relative h-[380px] lg:h-[400px] w-full rounded-[1.5rem] overflow-hidden flex flex-col lg:flex-row bg-white shadow-[0_24px_80px_rgba(0,0,0,0.06)] border border-slate-100 group">
-               {/* Left Content Area */}
-               <div className="flex-[1] p-10 lg:p-14 flex flex-col justify-center relative z-10">
-                  <div className="inline-flex items-center gap-2 text-[#059669] text-xs font-black uppercase tracking-[0.2em] mb-4">
-                     <Check className="h-4 w-4" /> Comprehensive Safety
+      <section className="py-8 md:py-12 bg-white">
+         <div className="max-w-6xl mx-auto px-4 relative flex flex-col items-center">
+            
+            {/* Arrows Outside */}
+            <button
+               onClick={prev}
+               className="absolute left-0 md:left-4 top-[100px] -translate-y-1/2 z-20 h-10 w-10 md:h-12 md:w-12 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shadow-sm"
+            >
+               <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" strokeWidth={1.5} />
+            </button>
+            <button
+               onClick={next}
+               className="absolute right-0 md:right-4 top-[100px] -translate-y-1/2 z-20 h-10 w-10 md:h-12 md:w-12 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shadow-sm"
+            >
+               <ChevronRight className="h-5 w-5 md:h-6 md:w-6" strokeWidth={1.5} />
+            </button>
+
+            {/* Banner Track */}
+            <div className="w-full max-w-5xl px-8 md:px-14">
+               <div className="relative overflow-hidden rounded-[2rem] bg-[#F1F3F5] h-[200px] shadow-sm">
+                  <div
+                     className="h-full w-full flex transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]"
+                     style={{ transform: `translateX(-${current * 100}%)` }}
+                  >
+                     {slides.map((s, i) => (
+                        <div key={i} className="min-w-full h-full flex flex-row">
+                           {/* Left Content */}
+                           <div className="flex-[1.3] px-8 md:px-12 py-5 flex flex-col justify-center bg-[#F1F3F5]">
+                              <h3 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight leading-snug mb-3">
+                                 {s.title}
+                              </h3>
+                              <p className="text-slate-800 text-sm font-semibold mb-5 flex items-center gap-1.5 flex-wrap">
+                                 <span className={s.badgeColor}>{s.badge}</span> {s.descInline}
+                              </p>
+                              <button className="self-start h-10 px-8 bg-gradient-brand text-white text-sm font-bold rounded-xl shadow-sm transition-colors">
+                                 Book Now
+                              </button>
+                           </div>
+                           {/* Right Image */}
+                           <div className="flex-[0.7] relative h-full hidden sm:block">
+                              <img src={s.img} className="w-full h-full object-cover" alt="Checkup" />
+                           </div>
+                        </div>
+                     ))}
                   </div>
-                  <h2 className="text-2xl lg:text-4xl font-bold text-slate-800 tracking-tight leading-[1.8] mb-6">
-                     Advanced <span className="text-[#F06C00]">Food Industry</span> <br />
-                     Safety Checkup
-                  </h2>
-                  <p className="text-slate-500 text-md font-medium mb-8 leading-relaxed max-w-lg">
-                     60+ Parameters including Standardization, Microbial Scan, and Adulteration Check.
-                  </p>
-                  <button className="self-start h-14 px-10 bg-gradient-brand text-white font-semibold rounded-xl shadow-[0_12px_30px_rgba(5,150,105,0.25)] hover:-translate-y-1 transition-all duration-300 flex items-center gap-2">
-                     Book Now <ArrowRight className="h-5 w-5" />
-                  </button>
-               </div>
-               {/* Right Image Composition */}
-               <div className="flex-1 relative h-64 lg:h-auto bg-[#FEBA50]">
-                  <img
-                     src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=1000&auto=format&fit=crop"
-                     className="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:scale-105 transition-transform duration-1000"
-                     alt="Food Safety"
-                  />
-                  <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white to-transparent hidden lg:block" />
                </div>
             </div>
+
+            {/* Dots Below with Pill style */}
+            <div className="flex items-center justify-center gap-2 mt-8">
+               {slides.map((_, i) => {
+                  if (i === current) {
+                     return (
+                        <div key={i} className="bg-gray-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                           {current + 1}/{slides.length}
+                        </div>
+                     );
+                  }
+                  return (
+                     <div
+                        key={i}
+                        onClick={() => setCurrent(i)}
+                        className="h-1.5 w-1.5 rounded-full bg-gray-200 hover:bg-gray-300 cursor-pointer transition-colors"
+                     />
+                  );
+               })}
+            </div>
+            
          </div>
       </section>
    );

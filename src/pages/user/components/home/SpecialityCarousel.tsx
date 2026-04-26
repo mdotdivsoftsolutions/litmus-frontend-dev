@@ -1,6 +1,4 @@
-import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, ChevronLeft } from "lucide-react";
 import { SectionHeader } from "./SectionHeader";
 
 const quickCategories = [
@@ -52,6 +50,22 @@ const quickCategories = [
       "https://images.unsplash.com/photo-1582293041079-7814c2f12063?q=80&w=600&auto=format&fit=crop",
     tint: "bg-[#d5f5f2]",
   },
+  {
+    label: "Beverages & Drinks",
+    subtitle: "Juice, dairy drinks & bottled water",
+    tests: 14,
+    image:
+      "https://images.unsplash.com/photo-1544145945-f90425340c7e?q=80&w=600&auto=format&fit=crop",
+    tint: "bg-[#fff3e0]",
+  },
+  {
+    label: "Bakery & Confectionery",
+    subtitle: "Bread, cakes & chocolate testing",
+    tests: 11,
+    image:
+      "https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=600&auto=format&fit=crop",
+    tint: "bg-[#fce4ec]",
+  },
 ] as const;
 
 function PastelCategoryCard({
@@ -74,8 +88,9 @@ function PastelCategoryCard({
       to={to}
       className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100/90 bg-white shadow-[0_10px_40px_-12px_rgba(15,23,42,0.12)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_-16px_rgba(15,23,42,0.18)]"
     >
+      {/* 30% smaller image area: was h-[168px]/h-[188px], now h-[120px]/h-[132px] */}
       <div
-        className={`relative flex h-[168px] items-center justify-center overflow-hidden sm:h-[188px] ${tint}`}
+        className={`relative flex h-[120px] items-center justify-center overflow-hidden sm:h-[132px] ${tint}`}
       >
         <img
           src={image}
@@ -83,10 +98,10 @@ function PastelCategoryCard({
           className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
         />
       </div>
-      <div className="flex flex-1 flex-col px-5 pb-5 pt-4">
-        <h3 className="text-lg font-bold leading-snug tracking-tight text-slate-900">{title}</h3>
-        <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{subtitle}</p>
-        <p className="mt-auto pt-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+      <div className="flex flex-1 flex-col px-4 pb-4 pt-3">
+        <h3 className="text-base font-bold leading-snug tracking-tight text-slate-900">{title}</h3>
+        <p className="mt-1 text-xs leading-relaxed text-slate-500">{subtitle}</p>
+        <p className="mt-auto pt-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
           {footnote}
         </p>
       </div>
@@ -95,21 +110,6 @@ function PastelCategoryCard({
 }
 
 export function SpecialityCarousel() {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const scroll = (direction: "left" | "right") => {
-    if (scrollRef.current) {
-      const { scrollLeft, clientWidth } = scrollRef.current;
-      const scrollAmount = clientWidth * 0.8;
-      const scrollTo = direction === "left" ? scrollLeft - scrollAmount : scrollLeft + scrollAmount;
-
-      scrollRef.current.scrollTo({
-        left: scrollTo,
-        behavior: "smooth",
-      });
-    }
-  };
-
   return (
     <section className="relative flex min-h-full flex-col justify-center overflow-hidden bg-white py-12 md:py-20">
       <div className="pointer-events-none absolute right-0 top-0 h-[600px] w-[600px] translate-x-1/2 -translate-y-1/2 rounded-full bg-red-50/30 blur-[120px]" />
@@ -126,41 +126,16 @@ export function SpecialityCarousel() {
             </>
           }
           subtitle="Architected for precision. Explore our expansive catalogue of specialized diagnostic tests across every food industry vertical."
-          rightContent={
-            <div className="flex items-center gap-4">
-              <div className="mr-2 flex items-center gap-2">
-                <button
-                  onClick={() => scroll("left")}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-all hover:border-[#D32F2F]/30 hover:bg-white hover:text-[#D32F2F] hover:shadow-md active:scale-95"
-                  aria-label="Previous categories"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-                <button
-                  onClick={() => scroll("right")}
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition-all hover:border-[#D32F2F]/30 hover:bg-white hover:text-[#D32F2F] hover:shadow-md active:scale-95"
-                  aria-label="Next categories"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-              </div>
-              <Link
-                to="/tests"
-                className="group hidden cursor-pointer items-center gap-1 whitespace-nowrap rounded-full border border-red-100 bg-red-50 px-6 py-3 text-xs font-semibold text-[#D32F2F] shadow-sm transition-all hover:bg-white hover:underline sm:flex"
-              >
-                Explore Full Catalogue{" "}
-                <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </div>
-          }
+          action={{
+            label: "Explore Full Catalogue",
+            href: "/tests",
+          }}
         />
 
-        <div
-          ref={scrollRef}
-          className="scrollbar-hide flex snap-x snap-mandatory gap-6 overflow-x-auto pb-12 pt-4 transition-all"
-        >
+        {/* 2 rows x 4 columns grid — 8 categories */}
+        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 pb-4 pt-4">
           {quickCategories.map((cat) => (
-            <div key={cat.label} className="w-[280px] flex-shrink-0 snap-start sm:w-[280px]">
+            <div key={cat.label}>
               <PastelCategoryCard
                 to={`/tests?category=${encodeURIComponent(cat.label)}`}
                 title={cat.label}
