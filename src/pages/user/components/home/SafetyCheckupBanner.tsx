@@ -1,30 +1,34 @@
 import { useState, useEffect } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const slides = [
    {
-      badge: "Comprehensive Safety",
-      title: <>Advanced <span className="text-[#F06C00]">Food Industry</span><br />Safety Checkup</>,
-      desc: "60+ Parameters including Standardization, Microbial Scan, and Adulteration Check.",
+      badge: "90+Parameters",
+      badgeColor: "text-[#004e64]",
+      descInline: "Vitamin D, B12, HbA1c & more",
+      title: <>Full Body Checkup <span className="text-[#F06C00]">Essential at ₹1599</span></>,
+      img: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=1000&auto=format&fit=crop",
+   },
+   {
+      badge: "60+Parameters",
+      badgeColor: "text-[#004e64]",
+      descInline: "Microbial Scan, Adulteration Check",
+      title: <>Advanced Food <span className="text-[#F06C00]">Safety Checkup</span></>,
       img: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=1000&auto=format&fit=crop",
    },
    {
-      badge: "FSSAI Compliance",
-      title: <>Full Body Checkup <span className="text-[#D32F2F]">Essential</span> at ₹1599</>,
-      desc: "50 Parameters: CBC, LFT, KFT, HbA1c, Multi Organ + more.",
-      img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?q=80&w=1000&auto=format&fit=crop",
-   },
-   {
-      badge: "Quality Assurance",
-      title: <>Premium <span className="text-[#F06C00]">Dairy Purity</span><br />Verification Panel</>,
-      desc: "Adulteration detection, Fat Content, SNF analysis & shelf-life testing.",
+      badge: "NABL Certified",
+      badgeColor: "text-[#004e64]",
+      descInline: "Adulteration, Fat Content, SNF analysis",
+      title: <>Premium Dairy <span className="text-[#F06C00]">Purity Panel</span></>,
       img: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1000&auto=format&fit=crop",
    },
    {
-      badge: "Lab Certified",
-      title: <>Complete <span className="text-[#D32F2F]">Spice Testing</span><br />& Purity Audit</>,
-      desc: "Aflatoxin, Heavy metals, Pesticide residues & Microbial analysis.",
+      badge: "FSSAI Standard",
+      badgeColor: "text-[#004e64]",
+      descInline: "Heavy metals, Pesticide residues",
+      title: <>Complete Spice <span className="text-[#F06C00]">Purity Audit</span></>,
       img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=1000&auto=format&fit=crop",
    },
 ];
@@ -42,67 +46,73 @@ export function SafetyCheckupBanner() {
 
    return (
       <section className="py-8 md:py-12 bg-white">
-         <div className="max-w-7xl mx-auto px-4">
-            <div className="relative group rounded-2xl overflow-hidden bg-white shadow-[0_8px_40px_rgba(0,0,0,0.05)] border border-slate-100 h-[200px] md:h-[180px]">
-               {/* Slides */}
-               <div
-                  className="h-full w-full flex transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]"
-                  style={{ transform: `translateX(-${current * 100}%)` }}
-               >
-                  {slides.map((s, i) => (
-                     <div key={i} className="min-w-full h-full flex flex-row">
-                        {/* Left Content */}
-                        <div className="flex-[1.2] px-8 py-5 flex flex-col justify-center bg-white">
-                           <div className="inline-flex items-center gap-1.5 text-[#059669] text-[9px] font-black uppercase tracking-[0.2em] mb-2">
-                              ✓ {s.badge}
+         <div className="max-w-6xl mx-auto px-4 relative flex flex-col items-center">
+            
+            {/* Arrows Outside */}
+            <button
+               onClick={prev}
+               className="absolute left-0 md:left-4 top-[100px] -translate-y-1/2 z-20 h-10 w-10 md:h-12 md:w-12 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shadow-sm"
+            >
+               <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" strokeWidth={1.5} />
+            </button>
+            <button
+               onClick={next}
+               className="absolute right-0 md:right-4 top-[100px] -translate-y-1/2 z-20 h-10 w-10 md:h-12 md:w-12 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all shadow-sm"
+            >
+               <ChevronRight className="h-5 w-5 md:h-6 md:w-6" strokeWidth={1.5} />
+            </button>
+
+            {/* Banner Track */}
+            <div className="w-full max-w-5xl px-8 md:px-14">
+               <div className="relative overflow-hidden rounded-[2rem] bg-[#F1F3F5] h-[200px] shadow-sm">
+                  <div
+                     className="h-full w-full flex transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]"
+                     style={{ transform: `translateX(-${current * 100}%)` }}
+                  >
+                     {slides.map((s, i) => (
+                        <div key={i} className="min-w-full h-full flex flex-row">
+                           {/* Left Content */}
+                           <div className="flex-[1.3] px-8 md:px-12 py-5 flex flex-col justify-center bg-[#F1F3F5]">
+                              <h3 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight leading-snug mb-3">
+                                 {s.title}
+                              </h3>
+                              <p className="text-slate-800 text-sm font-semibold mb-5 flex items-center gap-1.5 flex-wrap">
+                                 <span className={s.badgeColor}>{s.badge}</span> {s.descInline}
+                              </p>
+                              <button className="self-start h-10 px-8 bg-gradient-brand text-white text-sm font-bold rounded-xl shadow-sm transition-colors">
+                                 Book Now
+                              </button>
                            </div>
-                           <h3 className="text-lg lg:text-xl font-bold text-slate-800 tracking-tight leading-snug mb-2">
-                              {s.title}
-                           </h3>
-                           <p className="text-slate-500 text-xs font-medium mb-3 max-w-sm leading-relaxed">
-                              {s.desc}
-                           </p>
-                           <button className="self-start h-9 px-6 bg-gradient-brand text-white text-xs font-semibold rounded-lg shadow-md hover:-translate-y-0.5 transition-all flex items-center gap-1.5">
-                              Book Now <ArrowRight className="h-3.5 w-3.5" />
-                           </button>
+                           {/* Right Image */}
+                           <div className="flex-[0.7] relative h-full hidden sm:block">
+                              <img src={s.img} className="w-full h-full object-cover" alt="Checkup" />
+                           </div>
                         </div>
-                        {/* Right Image */}
-                        <div className="flex-[0.8] relative h-full overflow-hidden hidden sm:block">
-                           <img src={s.img} className="w-full h-full object-cover" alt="Checkup" />
-                           <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white to-transparent" />
-                        </div>
-                     </div>
-                  ))}
+                     ))}
+                  </div>
                </div>
+            </div>
 
-               {/* Navigation arrows */}
-               <button
-                  onClick={prev}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 z-20 h-8 w-8 rounded-full bg-white/90 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#D32F2F] hover:border-red-200 transition-all opacity-0 group-hover:opacity-100 shadow-sm"
-               >
-                  <ChevronLeft className="h-4 w-4" />
-               </button>
-               <button
-                  onClick={next}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 z-20 h-8 w-8 rounded-full bg-white/90 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#D32F2F] hover:border-red-200 transition-all opacity-0 group-hover:opacity-100 shadow-sm"
-               >
-                  <ChevronRight className="h-4 w-4" />
-               </button>
-
-               {/* Dots */}
-               <div className="absolute bottom-3 left-8 flex gap-1.5 z-20">
-                  {slides.map((_, i) => (
+            {/* Dots Below with Pill style */}
+            <div className="flex items-center justify-center gap-2 mt-8">
+               {slides.map((_, i) => {
+                  if (i === current) {
+                     return (
+                        <div key={i} className="bg-gray-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                           {current + 1}/{slides.length}
+                        </div>
+                     );
+                  }
+                  return (
                      <div
                         key={i}
                         onClick={() => setCurrent(i)}
-                        className={cn(
-                           "h-1.5 transition-all duration-500 rounded-full cursor-pointer",
-                           i === current ? "w-6 bg-slate-800" : "w-1.5 bg-slate-300 hover:bg-slate-400"
-                        )}
+                        className="h-1.5 w-1.5 rounded-full bg-gray-200 hover:bg-gray-300 cursor-pointer transition-colors"
                      />
-                  ))}
-               </div>
+                  );
+               })}
             </div>
+            
          </div>
       </section>
    );

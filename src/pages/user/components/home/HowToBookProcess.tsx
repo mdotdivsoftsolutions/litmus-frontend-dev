@@ -67,9 +67,28 @@ export function HowToBookProcess() {
                 <div className="hidden md:block">
                     {/* Connected flow with icons */}
                     <div className="relative">
-                        {/* Connection line */}
-                        <div className="absolute top-10 left-[5%] right-[5%] h-0.5 bg-gradient-to-r from-[#008eb3] via-[#004e64] to-[#008eb3] opacity-30" />
-                        
+                        {/* Curved Dashed Connection Line */}
+                        <div className="absolute top-0 left-0 w-full h-20 pointer-events-none">
+                            <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1400 100">
+                                {/* Path for 7 items. Centers at 100, 300, 500, 700, 900, 1100, 1300 */}
+                                <path 
+                                    d="M 100 50 Q 200 0 300 50 T 500 50 T 700 50 T 900 50 T 1100 50 T 1300 50" 
+                                    stroke="#67CBA0" 
+                                    strokeWidth="3" 
+                                    strokeDasharray="8 8" 
+                                    fill="none" 
+                                    opacity="0.6" 
+                                />
+                                {/* Dots along the curve */}
+                                <circle cx="200" cy="25" r="5" fill="#008eb3" opacity="0.8" />
+                                <circle cx="400" cy="75" r="5" fill="#008eb3" opacity="0.8" />
+                                <circle cx="600" cy="25" r="5" fill="#008eb3" opacity="0.8" />
+                                <circle cx="800" cy="75" r="5" fill="#008eb3" opacity="0.8" />
+                                <circle cx="1000" cy="25" r="5" fill="#008eb3" opacity="0.8" />
+                                <circle cx="1200" cy="75" r="5" fill="#008eb3" opacity="0.8" />
+                            </svg>
+                        </div>
+
                         {/* Steps grid */}
                         <div className="grid grid-cols-7 gap-3 lg:gap-5">
                             {processSteps.map((step, idx) => {
@@ -80,17 +99,17 @@ export function HowToBookProcess() {
                                         <div className="relative z-10 mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white border-2 border-[#008eb3]/30 shadow-[0_4px_20px_-4px_rgba(0,78,100,0.15)] transition-all duration-300 group-hover:border-[#008eb3] group-hover:shadow-[0_8px_30px_-4px_rgba(0,78,100,0.25)] group-hover:scale-105">
                                             <Icon className="h-8 w-8 text-[#004e64] group-hover:text-[#008eb3] transition-colors" />
                                         </div>
-                                        
+
                                         {/* Step number badge */}
                                         <span className="text-[10px] font-black text-[#008eb3] tracking-wider mb-2">
                                             STEP {step.number}
                                         </span>
-                                        
+
                                         {/* Title */}
                                         <h4 className="text-sm font-bold text-slate-900 leading-tight mb-1.5">
                                             {step.title}
                                         </h4>
-                                        
+
                                         {/* Subtitle */}
                                         <p className="text-xs text-slate-500 leading-relaxed">
                                             {step.subtitle}

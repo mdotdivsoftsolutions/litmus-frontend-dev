@@ -130,7 +130,7 @@ export const HomeTests = ({ activeTab, setActiveTab, cartItems, addToCart, remov
           <SectionHeader
             title={
               <>
-                Popular Tests <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Near You</span>
+                Popular Packages <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Near You</span>
               </>
             }
             subtitle="Discover the most frequently booked food safety and quality analysis tests in your region."

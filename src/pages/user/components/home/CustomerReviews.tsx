@@ -50,16 +50,16 @@ export function CustomerReviews() {
 
          <div className="max-w-7xl mx-auto px-4 relative z-10 w-full">
             <SectionHeader
-              title={
-                <>
-                  Customer <span className="text-transparent bg-clip-text bg-gradient-brand">Reviews</span>
-                </>
-              }
-              subtitle="See why thousands of businesses trust Litmus for their uncompromising food safety testing."
-              action={{
-                label: "Read All Stories",
-                href: "#",
-              }}
+               title={
+                  <>
+                     Customer <span className="text-transparent bg-clip-text bg-gradient-brand">Reviews</span>
+                  </>
+               }
+               subtitle="See why thousands of businesses trust Litmus for their uncompromising food safety testing."
+               action={{
+                  label: "Read All Stories",
+                  href: "#",
+               }}
             />
          </div>
 
