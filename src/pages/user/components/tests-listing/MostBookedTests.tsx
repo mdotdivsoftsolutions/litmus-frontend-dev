@@ -59,7 +59,7 @@ export const MostBookedTests = ({
         <div className="grid gap-6 md:grid-cols-2">
           {/* Tests List (6 Rows x 2 Columns) */}
           {tests.map((t) => (
-              <div key={t.id} className="group bg-white rounded-[2rem] p-6 shadow-sm border-2 border-slate-50 flex items-center gap-6 hover:border-[#D32F2F]/20 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] transition-all duration-500">
+              <div key={t.id} className="group bg-white rounded-[1rem] p-6 shadow-sm border-2 border-slate-50 flex items-center gap-6 hover:border-[#D32F2F]/20 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] transition-all duration-500">
                 <div className="flex-1 min-w-0 space-y-2">
                   <h3 className="font-bold text-slate-800 text-lg tracking-tight group-hover:text-[#D32F2F] transition-colors">{t.name}</h3>
                   <div className="flex items-center gap-3 flex-wrap">

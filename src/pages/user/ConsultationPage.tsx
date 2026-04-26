@@ -1,6 +1,5 @@
 import { ConsultationHero } from "./components/consultation/ConsultationHero";
 import { ConsultationServices } from "./components/consultation/ConsultationServices";
-import { TrustedPartner } from "./components/consultation/TrustedPartner";
 import { PromoBanner } from "./components/home/PromoBanner";
 
 export default function ConsultationPage() {

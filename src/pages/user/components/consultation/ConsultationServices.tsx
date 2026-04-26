@@ -1,6 +1,7 @@
 import { Shield, Target, Bookmark, Activity, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ConsultationBookingModal } from "./ConsultationBookingModal";
 
 const services = [
   {
@@ -91,9 +92,11 @@ export function ConsultationServices() {
               </div>
 
               <div className="relative z-10 mt-8">
-                <Button className="h-9 px-6 rounded-lg bg-gradient-to-r from-[#F06C00] to-[#feba50] text-white font-semibold text-xs shadow-[0_4px_14px_rgba(240,108,0,0.3)] hover:shadow-[0_6px_20px_rgba(240,108,0,0.4)] hover:-translate-y-0.5 transition-all outline-none">
-                  Book Now <ArrowRight className="h-3 w-3 ml-1.5" />
-                </Button>
+                <ConsultationBookingModal serviceName={service.title}>
+                  <Button className="h-9 px-6 rounded-lg bg-primary hover:bg-primary-deep text-primary-foreground font-semibold text-xs shadow-sm transition-all outline-none">
+                    Book Now <ArrowRight className="h-3 w-3 ml-1.5" />
+                  </Button>
+                </ConsultationBookingModal>
               </div>
            </div>
          ))}
