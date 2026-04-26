@@ -1,13 +1,11 @@
 import { ConsultationHero } from "./components/consultation/ConsultationHero";
 import { ConsultationServices } from "./components/consultation/ConsultationServices";
-import { TrustedPartner } from "./components/consultation/TrustedPartner";
 import { PromoBanner } from "./components/home/PromoBanner";
 
 export default function ConsultationPage() {
   return (
     <div className="animate-fade-in min-h-screen bg-slate-50">
       <ConsultationHero />
-      <TrustedPartner />
       <ConsultationServices />
       <PromoBanner className="pb-20" />
     </div>

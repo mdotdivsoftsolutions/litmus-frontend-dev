@@ -19,7 +19,7 @@ export default function TestDetailPage() {
   const totalPrice = selected.length * 1200;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 py-12 md:pb-20 space-y-6 animate-fade-in">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
         <Link to="/tests" className="hover:text-foreground">Tests</Link>
