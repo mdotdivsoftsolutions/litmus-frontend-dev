@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ShoppingCart, Shield, Clock, Lock, MessageCircle, ChevronRight } from "lucide-react";
 import { tests as allTests, products } from "@/lib/placeholder-data";
+import { CartDrawer } from "@/components/cart/CartDrawer";
 
 export default function TestDetailPage() {
   const { id } = useParams();
@@ -92,16 +93,20 @@ export default function TestDetailPage() {
                   <Badge className="bg-litmus-teal text-primary-foreground border-0">FSSAI</Badge>
                 </div>
 
-                <Button className="w-full bg-primary hover:bg-primary-deep rounded-lg gap-2" disabled={selected.length === 0} asChild={selected.length > 0 ? true : undefined}>
-                  {selected.length > 0 ? (
-                    <Link to="/cart"><ShoppingCart className="h-4 w-4" /> Add to Cart</Link>
-                  ) : (
-                    <span><ShoppingCart className="h-4 w-4" /> Add to Cart</span>
-                  )}
-                </Button>
+                {selected.length > 0 ? (
+                  <CartDrawer>
+                    <Button className="w-full bg-primary hover:bg-primary-deep rounded-lg gap-2">
+                      <ShoppingCart className="h-4 w-4" /> Add to Cart
+                    </Button>
+                  </CartDrawer>
+                ) : (
+                  <Button className="w-full bg-primary hover:bg-primary-deep rounded-lg gap-2" disabled>
+                    <ShoppingCart className="h-4 w-4" /> Add to Cart
+                  </Button>
+                )}
                 <Button variant="outline" className="w-full rounded-lg border-primary text-primary hover:bg-flame-red-tint" disabled={selected.length === 0} asChild={selected.length > 0 ? true : undefined}>
                   {selected.length > 0 ? (
-                    <Link to="/bookings/new">Book Now</Link>
+                    <Link to="/bookings/new" className="flex items-center gap-2">Book Now</Link>
                   ) : (
                     <span>Book Now</span>
                   )}
