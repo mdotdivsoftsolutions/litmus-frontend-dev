@@ -8,12 +8,9 @@ import { cn } from "@/lib/utils";
 // Sub-components
 import { TestsHero } from "./components/tests-listing/TestsHero";
 import { TestsStatsStrip } from "./components/tests-listing/TestsStatsStrip";
-import { FilterNavigation } from "./components/tests-listing/FilterNavigation";
 import { MostBookedTests } from "./components/tests-listing/MostBookedTests";
 import { CategoryStrip } from "./components/tests-listing/CategoryStrip";
 import { TestsGrid } from "./components/tests-listing/TestsGrid";
-import { WhyLitmusTests } from "./components/tests-listing/WhyLitmusTests";
-import { TestsReviewsGrid } from "./components/tests-listing/TestsReviewsGrid";
 import { PromoBanner } from "./components/home/PromoBanner";
 import { TrustAndOrdering } from "./components/tests-listing/TrustAndOrdering";
 
@@ -86,7 +83,7 @@ export default function TestsListingPage() {
       <TestsHero search={search} setSearch={setSearch} />
 
       {/* 2. STATS STRIP */}
-      <TestsStatsStrip />
+      <TestsStatsStrip /> 
 
       {/* 3. CATEGORY STRIP — always at top for filtering */}
       <CategoryStrip
@@ -95,7 +92,7 @@ export default function TestsListingPage() {
       />
 
       {/* 4. TEST PACKAGES GRID */}
-      <div className="max-w-7xl mx-auto px-4 py-6 my-16">
+      {/* <div className="max-w-7xl mx-auto px-4 py-6 my-16">
         <TestsGrid
           products={paginatedProducts}
           cartItems={cartItems}
@@ -104,7 +101,7 @@ export default function TestsListingPage() {
           handleSeeMore={handleSeeMore}
           hasMore={hasMore}
         />
-      </div>
+      </div> */}
 
       {/* 5. MOST BOOKED DIAGNOSTICS */}
       <MostBookedTests
