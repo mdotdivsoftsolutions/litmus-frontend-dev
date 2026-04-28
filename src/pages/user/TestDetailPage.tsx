@@ -66,7 +66,7 @@ export default function TestDetailPage() {
 
         {/* Sticky Booking Panel - Right */}
         <div className="lg:col-span-2">
-          <div className="lg:sticky lg:top-20">
+          <div className="lg:sticky lg:top-28">
             <Card className="border border-border shadow-sm rounded-2xl overflow-hidden">
               <CardContent className="p-5 space-y-4">
                 <h3 className="font-bold text-foreground">{product.name}</h3>
