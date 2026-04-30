@@ -92,8 +92,10 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setSearchFocused(true)}
                   onBlur={() => setSearchFocused(false)}
-                  className="relative z-10 w-full rounded-2xl border-2 border-black bg-white py-3.5 pl-4 pr-12 text-sm text-slate-800 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] outline-none ring-[#1a237e]/20 placeholder:text-transparent focus:ring-2"
+                  className="relative placeholder:text-slate-400 z-10 w-full rounded-2xl border-2 border-[#008eb3]/30 bg-white py-3.5 pl-4 pr-12 text-sm text-slate-800 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] outline-none ring-[#1a237e]/20 focus:ring-none"
                   aria-label="Search for checkups"
+                  placeholder="Search for checkups..."
+
                 />
                 <Search
                   className="pointer-events-none absolute right-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-slate-400"
