@@ -149,15 +149,20 @@ export const packagesData = [
 ];
 
 interface PackagesGridProps {
+  search: string;
   selectedCategory: string;
   visibleCount: number;
   setVisibleCount: React.Dispatch<React.SetStateAction<number>>;
 }
 
-export function PackagesGrid({ selectedCategory, visibleCount, setVisibleCount }: PackagesGridProps) {
-  const filteredPackages = selectedCategory === "All"
-    ? packagesData
-    : packagesData.filter(p => p.category === selectedCategory);
+export function PackagesGrid({ search, selectedCategory, visibleCount, setVisibleCount }: PackagesGridProps) {
+  const filteredPackages = packagesData.filter(p => {
+    const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
+    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
+                         p.description.toLowerCase().includes(search.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
 
   const discountPct = (price: number, mrp: number) => Math.round(((mrp - price) / mrp) * 100);
 

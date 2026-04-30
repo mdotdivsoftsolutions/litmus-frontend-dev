@@ -5,6 +5,7 @@ import { PackagesGrid } from "./components/packages/PackagesGrid";
 import { PackagesCTA } from "./components/packages/PackagesCTA";
 
 export default function PackagesPage() {
+  const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [visibleCount, setVisibleCount] = useState(12);
   const categories = ["All", "Compliance", "Clinical", "Labeling"];
@@ -16,11 +17,14 @@ export default function PackagesPage() {
         categories={categories}
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
+        search={search}
+        setSearch={setSearch}
       />
 
       {/* 2. PACKAGES GRID */}
       <section className="bg-slate-50 ">
         <PackagesGrid
+          search={search}
           selectedCategory={selectedCategory}
           visibleCount={visibleCount}
           setVisibleCount={setVisibleCount}
