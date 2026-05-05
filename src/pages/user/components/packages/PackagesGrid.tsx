@@ -224,7 +224,7 @@ export function PackagesGrid({ search, selectedCategory, visibleCount, setVisibl
                   </span>
                 </div>
               </div>
-              <Button className="h-10 px-6 rounded-lg bg-gradient-to-r from-[#D32F2F] to-[#feba50] text-white font-bold text-xs shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all">
+              <Button className="h-10 px-6 rounded-lg bg-gradient-to-r from-brand-card-from to-brand-card-to text-white font-bold text-xs shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all">
                 Book Panel
               </Button>
             </div>

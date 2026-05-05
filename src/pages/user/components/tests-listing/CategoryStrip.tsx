@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 interface CategoryStripProps {
@@ -15,7 +15,7 @@ export const CategoryStrip = ({ selectedCategory, setSelectedCategory }: Categor
     { name: "Spices", img: "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?q=80&w=400", isLink: true, href: "/tests?category=Spices" },
     { name: "Meat & Poultry", img: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?q=80&w=400", isLink: true, href: "/tests?category=Meat%20%26%20Poultry" },
     { name: "Oils & Fats", img: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?q=80&w=400", isLink: true, href: "/tests?category=Oils%20%26%20Fats" },
-    { name: "Processed Foods", img:"https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400", isLink: true, href: "/tests?category=Processed%20Foods" },
+    { name: "Processed Foods", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400", isLink: true, href: "/tests?category=Processed%20Foods" },
     { name: "Snacks", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400", isLink: true, href: "/tests?category=Snacks" },
     { name: "Fruits", img: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?q=80&w=400", isLink: true, href: "/tests?category=Fruits" },
     { name: "Vegetables", img: "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?q=80&w=400", isLink: true, href: "/tests?category=Vegetables" },
@@ -25,10 +25,27 @@ export const CategoryStrip = ({ selectedCategory, setSelectedCategory }: Categor
     { name: "Nuts & Seeds", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400", isLink: true, href: "/tests?category=Nuts%20%26%20Seeds" },
     { name: "Supplements", img: "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=400", isLink: true, href: "/tests?category=Supplements" },
   ];
+  const location = useLocation();
+  const path = location.pathname === "/packages" ? true : false;
+  console.log(path);
 
   return (
-    <div className="w-full py-16 bg-white">
+    <div className="w-full py-16 md:py-20">
       <div className="max-w-7xl mx-auto px-4">
+        {path && (
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-8">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 text-[#D32F2F] text-[10px] font-black uppercase tracking-[0.4em]">Expert Packages</div>
+              <h2 className="text-2xl font-bold leading-tight tracking-tight text-slate-800 lg:text-3xl">
+                Check Specific <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Food</span> Packages.
+              </h2>
+              <p className="mt-4 text-md font-medium text-slate-500 max-w-xl leading-relaxed">
+                Here are some of our most frequently selected packages. If you don’t see what you need, <Link to="/contact" className="text-[#D32F2F] hover:underline font-bold">reach out</Link> for a custom solution.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col gap-6">
           {/* Grid Container for 16 categories */}
           <div className="grid grid-cols-4 md:grid-cols-8 gap-4 pb-4">

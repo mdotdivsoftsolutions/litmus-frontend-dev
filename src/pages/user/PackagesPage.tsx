@@ -37,7 +37,7 @@ export default function PackagesPage() {
       </section>
 
       {/* 4. FOOD CATEGORY WISE PACKAGES */}
-      <section className="bg-slate-50 py-10 md:py-10">
+      <section className="bg-slate-50 ">
         <CategoryStrip selectedCategory="" setSelectedCategory={() => { }} />
       </section>
     </div>

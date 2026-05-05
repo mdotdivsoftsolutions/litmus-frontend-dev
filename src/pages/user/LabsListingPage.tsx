@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { laboratories } from "@/lib/placeholder-data";
 import { LabsHero } from "./components/labs-listing/LabsHero";
-import { LabsCertificates } from "./components/labs-listing/LabsCertificates";
 import { LabsGrid } from "./components/labs-listing/LabsGrid";
+import { ConsultationServices } from "./components/consultation/ConsultationServices";
 
 export default function LabsListingPage() {
   const [search, setSearch] = useState("");
@@ -30,9 +30,7 @@ export default function LabsListingPage() {
           setVisibleCount={setVisibleCount}
         />
       </div>
-      <div className="">
-        <LabsCertificates />
-      </div>
+      <ConsultationServices />
     </div>
   );
 }

@@ -42,7 +42,7 @@ export const MostBookedTests = ({
   cn
 }: MostBookedTestsProps) => {
   return (
-    <div className="space-y-10 bg-slate-50 py-12 md:py-20">
+    <div className="space-y-10 bg-slate-50 pb-12 md:pb-20">
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-12">
         <SectionHeader
           title={
@@ -72,8 +72,8 @@ export const MostBookedTests = ({
                   <div className="font-black text-slate-800 text-2xl tracking-tighter">₹{t.price.toLocaleString()}</div>
                   <span className="bg-emerald-50 text-emerald-600 text-[10px] font-black px-2 py-0.5 rounded-md mt-1 inline-block uppercase tracking-widest border border-emerald-100">{discountPct(t.price, t.mrp)}% Off</span>
                 </div>
-                <Button size="sm" className="hidden sm:flex shrink-0 h-12 w-12 rounded-2xl bg-slate-50 text-slate-400 hover:bg-gradient-to-br hover:from-[#D32F2F] hover:to-[#F06C00] hover:text-white transition-all duration-500 p-0 shadow-sm border border-slate-100" asChild>
-                  <Link to={`/tests/${t.id}`}><Plus className="h-6 w-6" /></Link>
+                <Button size="sm" className="hidden sm:flex shrink-0 h-12 w-12 rounded-2xl bg-slate-50 group/plus text-slate-400 hover:bg-gradient-to-br hover:from-[#D32F2F] hover:to-[#F06C00] hover:text-white transition-all duration-500 p-0 shadow-sm border border-blue-100" asChild>
+                  <Link to={`/tests/${t.id}`}><Plus className="h-10 w-10 font-bold text-blue-800 group-hover/plus:text-white " /></Link>
                 </Button>
               </div>
           ))}
