@@ -173,7 +173,7 @@ export const TrustAndOrdering = () => {
                 <button
                   type="button"
                   onClick={() => navigate("/bookings/new")}
-                  className="h-14 md:h-16 mt-2 px-10 md:px-14 bg-gradient-to-r from-orange-400 to-[#F06C00] text-white font-black text-xl rounded-2xl shadow-xl shadow-orange-200 hover:shadow-orange-300 hover:-translate-y-1 transition-all z-10 relative"
+                  className="h-14 md:h-16 mt-2 px-10 md:px-14 bg-gradient-to-r from-orange-400 to-[#F06C00] text-white font-black text-xl rounded-xl  hover:-translate-y-1 transition-all z-10 relative"
                 >
                   Order Now
                 </button>
