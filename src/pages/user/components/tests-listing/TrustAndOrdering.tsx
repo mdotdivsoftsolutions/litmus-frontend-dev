@@ -1,257 +1,198 @@
-import { CheckCircle2, ChevronLeft, ChevronRight, Activity, FileText } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Check, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
-const packageCards = [
+const trustCarouselSlides = [
   {
-    tag1: "COMPLIANCE",
-    tag2: "MOST POPULAR",
-    title: "Complete FSSAI Basic Shield",
-    desc: "Essential testing parameters for small-scale food manufacturers and home bakers.",
-    parameters: "12+ Items",
-    reports: "3-5 Days",
-    features: [
-      "Microbial Load Analysis",
-      "Moisture & Ash Content",
-      "Heavy Metal Screening",
-      "Shelf Life Prediction"
-    ],
-    originalPrice: "₹8,500",
-    price: "₹4,999",
-    discount: "41% OFF"
+    heading: "Why Litmus?",
+    subheading: "Fast, Safe and Accurate",
+    highlightLine1: "100% on time",
+    highlightLine2: "sample collection",
+    body: "Each sample collected undergoes rigorous temperature mapping and real-time monitoring to ensure 100% clinical accuracy.",
+    packagesEyebrow: "Curated bundles",
+    packagesCaption: "NABL-aligned food safety panels tailored to manufacturers, retailers, and cloud kitchens.",
   },
   {
-    tag1: "HEALTH",
-    tag2: "RECOMMENDED",
-    title: "Advanced Full Body Check",
-    desc: "Comprehensive health screening covering all major vital organs and health parameters.",
-    parameters: "85+ Items",
-    reports: "24 Hours",
-    features: [
-      "Thyroid Profile",
-      "Lipid Profile",
-      "Liver Function Test",
-      "Kidney Panel"
-    ],
-    originalPrice: "₹4,000",
-    price: "₹1,999",
-    discount: "50% OFF"
+    heading: "Why Litmus?",
+    subheading: "NABL & FSSAI You Can Trust",
+    highlightLine1: "Accredited labs",
+    highlightLine2: "Pan-India coverage",
+    body: "Book tests through vetted laboratories with standardized sampling kits, sealed chain of custody, and audit-ready reporting.",
+    packagesEyebrow: "Structured programmes",
+    packagesCaption: "Choose from compliance packs covering microbiology, adulteration, label validation, and shelf-life studies.",
   },
   {
-    tag1: "WELLNESS",
-    tag2: "BEST VALUE",
-    title: "Women's Health Panel",
-    desc: "Specialized preventive health package designed specifically for women's wellness.",
-    parameters: "60+ Items",
-    reports: "24-48 Hours",
-    features: [
-      "Iron Deficiency",
-      "Bone Health",
-      "Hormone Profile",
-      "Vitamin D & B12"
-    ],
-    originalPrice: "₹5,500",
-    price: "₹2,499",
-    discount: "54% OFF"
-  }
+    heading: "Why Litmus?",
+    subheading: "Actionable Insights",
+    highlightLine1: "Compliance-ready",
+    highlightLine2: "reports & tracking",
+    body: "Get clear timelines, WhatsApp updates, and digital reports formatted for regulators so you spend less time on paperwork.",
+    packagesEyebrow: "Operational clarity",
+    packagesCaption: "Compare bundles by parameters and turnaround, then route straight into booking.",
+  },
 ];
 
 export const TrustAndOrdering = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const n = trustCarouselSlides.length;
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % packageCards.length);
-    }, 4000);
+    const timer = setInterval(() => setCurrentSlide((prev) => (prev + 1) % n), 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [n]);
 
-  const nextSlide = (e: React.MouseEvent) => {
+  const goNext = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentSlide((prev) => (prev + 1) % packageCards.length);
+    setCurrentSlide((prev) => (prev + 1) % n);
   };
 
-  const prevSlide = (e: React.MouseEvent) => {
+  const goPrev = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentSlide((prev) => (prev - 1 + packageCards.length) % packageCards.length);
+    setCurrentSlide((prev) => (prev - 1 + n) % n);
   };
 
-  const currentItem = packageCards[currentSlide];
+  const slide = trustCarouselSlides[currentSlide];
 
   return (
-    <section className="py-24 bg-white overflow-hidden">
+    <section className="py-16 md:py-20 bg-slate-50 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-          
-          {/* ═══════════ LEFT: PACKAGE CAROUSEL ═══════════ */}
-          <div 
-            onClick={() => navigate('/packages')}
-            className="lg:col-span-6 rounded-[2.5rem] bg-white border border-slate-100 p-8 md:p-10 pb-12 relative flex flex-col overflow-hidden group shadow-[0_0_40px_rgba(0,0,0,0.05)] cursor-pointer hover:-translate-y-1 transition-all duration-300"
-          >
-            {/* Navigation Arrows */}
-            <div className="absolute top-1/2 left-2 md:left-4 right-2 md:right-4 -translate-y-1/2 flex justify-between pointer-events-none z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div 
-                  onClick={prevSlide}
-                  className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white border border-slate-100 shadow-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 hover:scale-105 transition-all pointer-events-auto cursor-pointer"
-                >
-                    <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
+
+          {/* LEFT: Why Litmus — dark green carousel */}
+          <div className="lg:col-span-6 rounded-[2.5rem] relative min-h-[400px] md:min-h-[460px] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.12)] bg-[#0d3028] group">
+            <div className="pointer-events-none absolute -right-16 top-1/2 -translate-y-1/2 h-[340px] w-[340px] rounded-full bg-[#feba50]/35 blur-[80px]" />
+            <div className="pointer-events-none absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.04]" />
+
+            <button
+              type="button"
+              aria-label="Previous slide"
+              onClick={goPrev}
+              className="absolute left-3 md:left-5 top-1/2 z-20 -translate-y-1/2 flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/80 backdrop-blur-sm transition hover:bg-white/20 hover:text-white opacity-70 group-hover:opacity-100"
+            >
+              <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" strokeWidth={1.75} />
+            </button>
+            <button
+              type="button"
+              aria-label="Next slide"
+              onClick={goNext}
+              className="absolute right-3 md:right-5 top-1/2 z-20 -translate-y-1/2 flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/80 backdrop-blur-sm transition hover:bg-white/20 hover:text-white opacity-70 group-hover:opacity-100"
+            >
+              <ChevronRight className="h-5 w-5 md:h-6 md:w-6" strokeWidth={1.75} />
+            </button>
+
+            <div
+              key={currentSlide}
+              className="relative z-10 flex h-full min-h-[400px] md:min-h-[460px] flex-col justify-between p-8 md:p-10 pb-28 md:pb-28 animate-in fade-in slide-in-from-right-2 duration-500"
+            >
+              <div>
+                <h2 className="text-2xl md:text-[1.85rem] font-bold tracking-tight text-[#feba50]">{slide.heading}</h2>
+                <p className="mt-2 text-xl md:text-2xl font-bold text-white leading-snug">{slide.subheading}</p>
+
+                <div className="mt-7 md:mt-8 flex max-w-md flex-col gap-3 rounded-2xl border border-white/12 bg-black/20 p-4 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#feba50]/95 shadow-sm">
+                      <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-white">
+                        <Check className="h-3 w-3 text-[#0d3028]" strokeWidth={3.5} />
+                      </span>
+                    </div>
+                    <div className="text-left leading-tight">
+                      <p className="text-sm font-semibold tracking-wide text-white">{slide.highlightLine1}</p>
+                      <p className="text-sm font-medium text-white/85">{slide.highlightLine2}</p>
+                    </div>
+                  </div>
+                  <div className="h-px w-full bg-white/10 sm:hidden" />
+                  <div className="flex min-w-0 flex-col gap-2 border-t border-white/10 pt-3 sm:flex-1 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#feba50]/95">{slide.packagesEyebrow}</p>
+                    <p className="text-[12px] leading-snug text-white/65">{slide.packagesCaption}</p>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/packages")}
+                      className="group mt-1 inline-flex w-fit items-center gap-2 rounded-lg border border-white/25 bg-white/[0.07] px-3.5 py-2 text-left text-[13px] font-semibold text-white transition hover:border-white/40 hover:bg-white/[0.12]"
+                    >
+                      Explore packages
+                      <ArrowRight className="h-3.5 w-3.5 opacity-80 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    </button>
+                  </div>
                 </div>
-                <div 
-                  onClick={nextSlide}
-                  className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white border border-slate-100 shadow-lg flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-50 hover:scale-105 transition-all pointer-events-auto cursor-pointer"
-                >
-                    <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
-                </div>
+              </div>
+
+              <p className="text-sm md:text-[15px] leading-relaxed text-white/85 max-w-lg">{slide.body}</p>
             </div>
 
-            <div key={`content-${currentSlide}`} className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-500">
-              
-              {/* Tags */}
-              <div className="flex items-center justify-between mb-6">
-                <span className="px-4 py-1.5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold tracking-widest">{currentItem.tag1}</span>
-                <span className="px-4 py-1.5 rounded-full bg-red-50 text-red-500 text-xs font-bold tracking-widest">{currentItem.tag2}</span>
-              </div>
-
-              {/* Title & Desc */}
-              <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-bold text-slate-900 mb-3 tracking-tight leading-tight">{currentItem.title}</h2>
-              <p className="text-slate-500 text-sm md:text-base mb-6 leading-relaxed pr-4">
-                {currentItem.desc}
-              </p>
-
-              {/* Divider */}
-              <div className="h-px w-full bg-slate-100 mb-6" />
-
-              {/* Parameters & Reports */}
-              <div className="flex items-center gap-4 mb-6 px-2">
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="h-12 w-12 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
-                     <Activity className="h-6 w-6 text-orange-500" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">Parameters</p>
-                    <p className="text-base md:text-lg font-bold text-slate-900 leading-none">{currentItem.parameters}</p>
-                  </div>
-                </div>
-
-                <div className="h-12 w-px bg-slate-100" />
-
-                <div className="flex items-center gap-4 flex-1 pl-4">
-                  <div className="h-12 w-12 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
-                     <FileText className="h-6 w-6 text-red-500" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">Reports</p>
-                    <p className="text-base md:text-lg font-bold text-slate-900 leading-none">{currentItem.reports}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="h-px w-full bg-slate-100 mb-6" />
-
-              {/* Features Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-4 mb-8">
-                {currentItem.features.map((feature, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 text-emerald-500 shrink-0" />
-                    <span className="text-slate-600 font-medium text-sm md:text-base truncate">{feature}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Bottom Price Section */}
-              <div className="mt-auto bg-slate-50 rounded-2xl p-4 md:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                 <div className="w-full text-center sm:text-left">
-                   <p className="text-slate-400 font-bold line-through text-xs md:text-sm mb-1">{currentItem.originalPrice}</p>
-                   <div className="flex items-center justify-center sm:justify-start gap-3">
-                     <p className="text-2xl md:text-[2rem] font-black text-slate-900 tracking-tight">{currentItem.price}</p>
-                     <span className="px-2.5 py-1 rounded border border-emerald-200 bg-emerald-100/50 text-emerald-600 text-[10px] md:text-xs font-black tracking-wider uppercase">
-                       {currentItem.discount}
-                     </span>
-                   </div>
-                 </div>
-                 <button 
-                   onClick={(e) => {
-                     e.stopPropagation();
-                     navigate('/packages');
-                   }}
-                   className="w-full sm:w-auto px-6 py-3.5 bg-[#007f9c] hover:bg-[#006880] text-white font-bold tracking-wide rounded-xl transition-all shadow-md shadow-[#007f9c]/20 hover:-translate-y-0.5 whitespace-nowrap"
-                 >
-                   Book Panel
-                 </button>
-              </div>
-
-            </div>
-
-            {/* Manual Indicators */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-               {packageCards.map((_, idx) => (
-                 <div 
-                   key={idx}
-                   onClick={(e) => {
-                     e.stopPropagation();
-                     setCurrentSlide(idx);
-                   }}
-                   className={`h-1.5 rounded-full cursor-pointer transition-all duration-300 ${
-                     currentSlide === idx 
-                       ? "w-8 bg-[#007f9c]" 
-                       : "w-4 bg-slate-200 hover:bg-slate-300"
-                   }`} 
-                 />
-               ))}
+            <div className="absolute bottom-6 left-6 md:left-8 z-20 flex items-center gap-2">
+              {trustCarouselSlides.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  aria-label={`Go to slide ${idx + 1}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentSlide(idx);
+                  }}
+                  className={cn(
+                    "h-1 rounded-full transition-all duration-300",
+                    idx === currentSlide
+                      ? "w-9 bg-[#feba50]"
+                      : idx === n - 1
+                        ? "w-7 bg-[#2d5248]"
+                        : "w-7 bg-white/35 hover:bg-white/50",
+                  )}
+                />
+              ))}
             </div>
           </div>
 
-          {/* ═══════════ RIGHT: ORDERING ═══════════ */}
+          {/* RIGHT: ORDERING */}
           <div className="lg:col-span-6 flex flex-col gap-8">
-            
-            {/* TOP CARD: 3 STEPS */}
-            <div className="flex-1 rounded-[2.5rem] bg-white border border-slate-100 p-8 md:p-10 relative flex flex-col justify-between overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.05)]">
-              
+            <div className="flex-1 rounded-[2.5rem] border border-amber-100/80 bg-gradient-to-br from-amber-50/90 via-white to-orange-50/40 p-8 md:p-10 relative flex flex-col justify-between overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.05)] min-h-[400px] md:min-h-[460px]">
               <div className="relative z-10 space-y-6 md:space-y-8">
-                 <div>
-                    <h4 className="text-xl md:text-2xl font-bold text-slate-500 mb-2">Easy ordering in</h4>
-                    <h3 className="text-5xl md:text-6xl font-black text-[#10B981] tracking-tighter uppercase leading-none drop-shadow-sm">3 STEPS</h3>
-                 </div>
+                <div>
+                  <h4 className="text-xl md:text-2xl font-bold text-slate-500 mb-2">Easy ordering in</h4>
+                  <h3 className="text-5xl md:text-6xl font-black text-[#10B981] tracking-tighter uppercase leading-none drop-shadow-sm">
+                    3 STEPS
+                  </h3>
+                </div>
 
-                 <div className="space-y-5">
-                    {[
-                      { step: "Select tests" },
-                      { step: "Add your details" },
-                      { step: "Book your slot" }
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-4 md:gap-5">
-                         <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-[#10B981] flex items-center justify-center text-white p-0.5 shrink-0 shadow-md">
-                            <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6" />
-                         </div>
-                         <span className="text-slate-700 font-bold text-xl md:text-2xl">{item.step}</span>
+                <div className="space-y-5">
+                  {[
+                    { step: "Select tests" },
+                    { step: "Add your details" },
+                    { step: "Book your slot" },
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-4 md:gap-5">
+                      <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-[#10B981] flex items-center justify-center text-white p-0.5 shrink-0 shadow-md">
+                        <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6" />
                       </div>
-                    ))}
-                 </div>
+                      <span className="text-slate-700 font-bold text-xl md:text-2xl">{item.step}</span>
+                    </div>
+                  ))}
+                </div>
 
-                 <button className="h-14 md:h-16 mt-2 px-10 md:px-14 bg-gradient-to-r from-orange-400 to-[#F06C00] text-white font-black text-xl rounded-2xl shadow-xl shadow-orange-200 hover:shadow-orange-300 hover:-translate-y-1 transition-all z-10 relative">
-                    Order Now
-                 </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/bookings/new")}
+                  className="h-14 md:h-16 mt-2 px-10 md:px-14 bg-gradient-to-r from-orange-400 to-[#F06C00] text-white font-black text-xl rounded-2xl shadow-xl shadow-orange-200 hover:shadow-orange-300 hover:-translate-y-1 transition-all z-10 relative"
+                >
+                  Order Now
+                </button>
               </div>
 
-              {/* Ambassador Image */}
               <div className="absolute right-0 bottom-0 w-[60%] lg:w-[65%] h-full z-0 pointer-events-none overflow-hidden rounded-br-[2.5rem]">
-                 <img 
-                   src="https://images.unsplash.com/photo-1651008376811-b9dd05c85058?w=800&q=80" 
-                   className="w-full h-full object-cover object-center opacity-80 mix-blend-multiply" 
-                   alt="Ambassador" 
-                 />
-                 <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/80 to-white" />
-                 <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-white to-transparent" />
+                <img
+                  src="https://images.unsplash.com/photo-1651008376811-b9dd05c85058?w=800&q=80"
+                  className="w-full h-full object-cover object-center opacity-80 mix-blend-multiply"
+                  alt=""
+                />
+                <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/80 to-white" />
+                <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-white to-transparent" />
               </div>
 
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#10B981] opacity-5 blur-[60px]" />
               <div className="absolute inset-[2px] rounded-[2.5rem] border-[1.5px] border-transparent bg-gradient-to-br from-orange-100 to-emerald-100 opacity-30 pointer-events-none z-0" />
             </div>
-
           </div>
-
         </div>
       </div>
     </section>
