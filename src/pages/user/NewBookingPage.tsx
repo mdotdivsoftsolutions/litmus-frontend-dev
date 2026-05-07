@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   ClipboardList as ClipboardListIcon, 
   Building2 as BuildingIcon, 
@@ -27,35 +28,66 @@ import {
   Mail as MailIcon,
   Home as HomeIcon,
   Settings2 as EditIcon,
-  Plus as PlusIcon
+  Plus as PlusIcon,
+  ListChecks as ListChecksIcon,
 } from "lucide-react";
 import { laboratories, tests as allTestsData } from "@/lib/placeholder-data";
 import { cn } from "@/lib/utils";
 
+type TestLineDetail = {
+  productName: string;
+  specifics: string;
+};
+
+const emptyDetail = (): TestLineDetail => ({ productName: "", specifics: "" });
+
+type CartLine = {
+  id: string;
+  product: string;
+  category: string;
+  selectedTests: string[];
+  customTests: string[];
+  basePrice: number;
+  testProductDetails: Record<string, TestLineDetail>;
+  customTestDetails: Record<string, TestLineDetail>;
+};
+
 const wizardSteps = [
   { icon: ClipboardListIcon, label: "Review Tests" },
+  { icon: ListChecksIcon, label: "Samples & scope" },
   { icon: BuildingIcon, label: "Select Lab" },
   { icon: HomeIcon, label: "Collection" },
   { icon: CreditCardIcon, label: "Payment" },
   { icon: CheckCircleIcon, label: "Status" },
 ];
 
-const initialCart = [
-  { 
-    id: "1", 
-    product: "Full Cream Milk", 
-    category: "Dairy", 
-    selectedTests: ["1", "2", "3"], // IDs from tests data
-    customTests: [] as string[],
-    basePrice: 1200 // Price per test
+const initialCart: CartLine[] = [
+  {
+    id: "1",
+    product: "Full Cream Milk",
+    category: "Dairy",
+    selectedTests: ["1", "2", "3"],
+    customTests: [],
+    basePrice: 1200,
+    testProductDetails: {
+      "1": emptyDetail(),
+      "2": emptyDetail(),
+      "3": emptyDetail(),
+    },
+    customTestDetails: {},
   },
-  { 
-    id: "2", 
-    product: "Basmati Rice", 
-    category: "Grains", 
+  {
+    id: "2",
+    product: "Basmati Rice",
+    category: "Grains",
     selectedTests: ["4", "5"],
-    customTests: [] as string[],
-    basePrice: 1200
+    customTests: [],
+    basePrice: 1200,
+    testProductDetails: {
+      "4": emptyDetail(),
+      "5": emptyDetail(),
+    },
+    customTestDetails: {},
   },
 ];
 
@@ -84,8 +116,8 @@ export default function NewBookingPage() {
   }, [step]);
 
   // Calculate prices based on selected and custom tests
-  const calculateItemPrice = (item: typeof initialCart[0]) => (item.selectedTests.length + item.customTests.length) * item.basePrice;
-  const calculateItemMrp = (item: typeof initialCart[0]) => calculateItemPrice(item) * 1.75;
+  const calculateItemPrice = (item: CartLine) => (item.selectedTests.length + item.customTests.length) * item.basePrice;
+  const calculateItemMrp = (item: CartLine) => calculateItemPrice(item) * 1.75;
 
   const subtotal = items.reduce((acc, item) => acc + calculateItemPrice(item), 0);
   const totalMrp = items.reduce((acc, item) => acc + calculateItemMrp(item), 0);
@@ -93,55 +125,125 @@ export default function NewBookingPage() {
   const gst = Math.round(subtotal * 0.18);
   const total = subtotal + gst;
 
+  const canProceedSampleDetails =
+    items.length > 0 &&
+    items.every((item) => {
+      const hasParams = item.selectedTests.length + item.customTests.length > 0;
+      if (!hasParams) return false;
+      const stdOk = item.selectedTests.every((tid) => {
+        const d = item.testProductDetails[tid];
+        return d && d.productName.trim().length >= 2 && d.specifics.trim().length >= 8;
+      });
+      const custOk = item.customTests.every((ct) => {
+        const d = item.customTestDetails[ct];
+        return d && d.productName.trim().length >= 2 && d.specifics.trim().length >= 8;
+      });
+      return stdOk && custOk;
+    });
+
   const removeItem = (id: string) => {
     setItems(items.filter((i) => i.id !== id));
   };
 
   const toggleTest = (itemId: string, testId: string) => {
-    setItems(items.map(item => {
-      if (item.id === itemId) {
+    setItems(
+      items.map((item) => {
+        if (item.id !== itemId) return item;
         const isSelected = item.selectedTests.includes(testId);
-        const newTests = isSelected 
-          ? item.selectedTests.filter(id => id !== testId) 
-          : [...item.selectedTests, testId];
-        return { ...item, selectedTests: newTests };
-      }
-      return item;
-    }));
+        const newTests = isSelected ? item.selectedTests.filter((id) => id !== testId) : [...item.selectedTests, testId];
+        const nextDetails = { ...item.testProductDetails };
+        newTests.forEach((tid) => {
+          if (!nextDetails[tid]) nextDetails[tid] = emptyDetail();
+        });
+        Object.keys(nextDetails).forEach((tid) => {
+          if (!newTests.includes(tid)) delete nextDetails[tid];
+        });
+        return { ...item, selectedTests: newTests, testProductDetails: nextDetails };
+      }),
+    );
   };
 
   const addCustomTest = (itemId: string) => {
-    if (!customParamName.trim()) return;
-    setItems(items.map(item => {
-      if (item.id === itemId) {
-        return { ...item, customTests: [...item.customTests, customParamName.trim()] };
-      }
-      return item;
-    }));
+    const name = customParamName.trim();
+    if (!name) return;
+    setItems(
+      items.map((item) => {
+        if (item.id !== itemId) return item;
+        return {
+          ...item,
+          customTests: [...item.customTests, name],
+          customTestDetails: {
+            ...item.customTestDetails,
+            [name]: emptyDetail(),
+          },
+        };
+      }),
+    );
     setCustomParamName("");
   };
 
   const removeCustomTest = (itemId: string, testName: string) => {
-    setItems(items.map(item => {
-      if (item.id === itemId) {
-        return { ...item, customTests: item.customTests.filter(t => t !== testName) };
-      }
-      return item;
-    }));
+    setItems(
+      items.map((item) => {
+        if (item.id !== itemId) return item;
+        const rest = { ...item.customTestDetails };
+        delete rest[testName];
+        return {
+          ...item,
+          customTests: item.customTests.filter((t) => t !== testName),
+          customTestDetails: rest,
+        };
+      }),
+    );
+  };
+
+  const setStandardTestDetail = (
+    itemId: string,
+    testId: string,
+    patch: Partial<TestLineDetail>,
+  ) => {
+    setItems(
+      items.map((item) => {
+        if (item.id !== itemId) return item;
+        const cur = item.testProductDetails[testId] ?? emptyDetail();
+        return {
+          ...item,
+          testProductDetails: {
+            ...item.testProductDetails,
+            [testId]: { ...cur, ...patch },
+          },
+        };
+      }),
+    );
+  };
+
+  const setCustomTestDetailField = (
+    itemId: string,
+    customName: string,
+    patch: Partial<TestLineDetail>,
+  ) => {
+    setItems(
+      items.map((item) => {
+        if (item.id !== itemId) return item;
+        const cur = item.customTestDetails[customName] ?? emptyDetail();
+        return {
+          ...item,
+          customTestDetails: {
+            ...item.customTestDetails,
+            [customName]: { ...cur, ...patch },
+          },
+        };
+      }),
+    );
   };
 
   const handleNext = () => {
-    if (step === 3) {
-      setStep(4);
-    } else if (step < 4) {
-      setStep(step + 1);
-    }
+    if (step === 4) setStep(5);
+    else if (step < 5) setStep(step + 1);
   };
 
   const handleBack = () => {
-    if (step > 0 && step < 4) {
-      setStep(step - 1);
-    }
+    if (step > 0 && step < 5) setStep(step - 1);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -204,7 +306,7 @@ export default function NewBookingPage() {
           
           <div className={cn(
             "space-y-6 transition-all duration-500",
-            step === 4 ? "lg:col-span-12 max-w-4xl mx-auto w-full" : "lg:col-span-8"
+            step === 5 ? "lg:col-span-12 max-w-4xl mx-auto w-full" : "lg:col-span-8"
           )}>
             
             {/* STEP 0: Review Tests */}
@@ -212,7 +314,9 @@ export default function NewBookingPage() {
               <div className="space-y-6 animate-in slide-in-from-left-4 duration-500">
                 <div className="space-y-1">
                   <h1 className="text-2xl font-bold text-slate-900">Review Selected Tests</h1>
-                  <p className="text-slate-500 text-sm font-medium">Verify or edit the parameters for your selected food products.</p>
+                  <p className="text-slate-500 text-sm font-medium">
+                    Verify or edit parameters here; next you&apos;ll describe each sample and exactly what needs testing.
+                  </p>
                 </div>
 
                 {items.length === 0 ? (
@@ -221,7 +325,7 @@ export default function NewBookingPage() {
                       <ClipboardListIcon className="h-10 w-10 text-slate-400" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-800">Your selection is empty</h3>
-                    <p className="text-slate-50 mt-2 max-w-xs mx-auto">Looks like you haven't added any tests yet.</p>
+                    <p className="text-slate-500 mt-2 max-w-xs mx-auto text-sm">Looks like you haven&apos;t added any tests yet.</p>
                     <Button asChild className="mt-6 bg-primary hover:bg-primary-deep rounded-lg px-8 h-12 font-bold">
                       <Link to="/tests">Browse All Tests</Link>
                     </Button>
@@ -369,8 +473,153 @@ export default function NewBookingPage() {
               </div>
             )}
 
-            {/* STEP 1: Select Lab */}
+            {/* STEP 1: Per-parameter sample & product specifics */}
             {step === 1 && (
+              <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+                <div className="space-y-2">
+                  <h1 className="text-2xl font-bold text-slate-900">Samples & testing scope</h1>
+                  <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-2xl">
+                    You may not know every catalogue SKU — that&apos;s fine. For each parameter below, spell out which real-world product or sample we should test and what you need from the lab. Specialists use this to assign the correct method before pickup.
+                  </p>
+                </div>
+
+                {items.length === 0 ? (
+                  <Card className="rounded-lg border-dashed border-2 border-slate-200 bg-white/50 p-10 text-center">
+                    <p className="text-slate-600 text-sm mb-4">Add tests in the previous step first.</p>
+                    <Button type="button" variant="outline" onClick={() => setStep(0)} className="font-bold rounded-lg">
+                      Back to review
+                    </Button>
+                  </Card>
+                ) : (
+                  <div className="space-y-8">
+                    {items.map((item) => (
+                      <Card key={item.id} className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
+                        <div className="border-b border-slate-100 bg-slate-50/90 px-5 py-4 flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <Badge className="bg-flame-amber-tint text-accent border-0 mb-1 font-bold uppercase tracking-wider text-[10px]">
+                              {item.category}
+                            </Badge>
+                            <h3 className="font-bold text-lg text-slate-900">{item.product}</h3>
+                            <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide mt-0.5">
+                              {item.selectedTests.length + item.customTests.length} parameter
+                              {item.selectedTests.length + item.customTests.length !== 1 ? "s" : ""} • fill each row below
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="text-[10px] font-bold uppercase border-slate-200 text-slate-600">
+                            Cart line
+                          </Badge>
+                        </div>
+                        <CardContent className="p-0">
+                          <div className="divide-y divide-slate-100">
+                            {item.selectedTests.map((tid) => {
+                              const test = allTestsData.find((t) => t.id === tid);
+                              const d = item.testProductDetails[tid] ?? emptyDetail();
+                              return (
+                                <div key={tid} className="p-5 md:p-6 space-y-4 bg-white">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <Badge className="bg-primary/10 text-primary border-primary/15 font-bold text-[10px]">
+                                      Selected test
+                                    </Badge>
+                                    <span className="font-bold text-slate-900">{test?.name ?? `Test ${tid}`}</span>
+                                    {test?.type ? (
+                                      <span className="text-[10px] font-bold text-slate-400 uppercase">{test.type}</span>
+                                    ) : null}
+                                  </div>
+                                  <div className="grid gap-4">
+                                    <div className="space-y-1.5">
+                                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                        Product / sample name / identifier
+                                      </Label>
+                                      <Input
+                                        value={d.productName}
+                                        onChange={(e) =>
+                                          setStandardTestDetail(item.id, tid, { productName: e.target.value })
+                                        }
+                                        placeholder="e.g., Full cream toned milk pouch 500ml, Batch #APR-042, SKU as on invoice"
+                                        className="h-11 rounded-lg border-slate-200 bg-slate-50/80 text-sm"
+                                      />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                        What exactly should we analyse on this sample?
+                                      </Label>
+                                      <Textarea
+                                        value={d.specifics}
+                                        onChange={(e) =>
+                                          setStandardTestDetail(item.id, tid, { specifics: e.target.value })
+                                        }
+                                        placeholder="Material form (liquid / powder), packaging, suspicion (adulterant, legal limit check), regulator or customer mandate, sampling context…"
+                                        className="min-h-[96px] rounded-lg border-slate-200 bg-slate-50/80 text-sm resize-y"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            {item.customTests.map((ct) => {
+                              const d = item.customTestDetails[ct] ?? emptyDetail();
+                              return (
+                                <div key={`custom-${ct}`} className="p-5 md:p-6 space-y-4 bg-primary/[0.02]">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <Badge className="bg-amber-100 text-amber-900 border-amber-200/80 font-bold text-[10px]">
+                                      Custom parameter
+                                    </Badge>
+                                    <span className="font-bold text-slate-900">{ct}</span>
+                                  </div>
+                                  <div className="grid gap-4">
+                                    <div className="space-y-1.5">
+                                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                        Linked product / sample
+                                      </Label>
+                                      <Input
+                                        value={d.productName}
+                                        onChange={(e) =>
+                                          setCustomTestDetailField(item.id, ct, {
+                                            productName: e.target.value,
+                                          })
+                                        }
+                                        placeholder="What physical item relates to this custom request?"
+                                        className="h-11 rounded-lg border-slate-200 bg-white text-sm"
+                                      />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                      <Label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                        Detailed requirement
+                                      </Label>
+                                      <Textarea
+                                        value={d.specifics}
+                                        onChange={(e) =>
+                                          setCustomTestDetailField(item.id, ct, {
+                                            specifics: e.target.value,
+                                          })
+                                        }
+                                        placeholder="Describe the assay, comparator, mandatory standard, customer PO line, etc."
+                                        className="min-h-[96px] rounded-lg border-slate-200 bg-white text-sm resize-y"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm flex gap-3 items-start">
+                  <InfoIcon className="h-5 w-5 text-litmus-teal shrink-0 mt-0.5" />
+                  <p>
+                    <span className="font-bold text-slate-800">Not sure of the catalogue name?</span> Focus on truthful
+                    labels and intent — coordinators confirm methods and quotations before pickup.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: Select Lab */}
+            {step === 2 && (
               <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
                 <div className="space-y-1">
                   <h1 className="text-2xl font-bold text-slate-900">Choose Fulfilment Partner</h1>
@@ -410,8 +659,8 @@ export default function NewBookingPage() {
               </div>
             )}
 
-            {/* STEP 2: Collection Details */}
-            {step === 2 && (
+            {/* STEP 3: Collection Details */}
+            {step === 3 && (
               <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
                 <div className="space-y-1">
                   <h1 className="text-2xl font-bold text-slate-900">Collection Details</h1>
@@ -483,8 +732,8 @@ export default function NewBookingPage() {
               </div>
             )}
 
-            {/* STEP 3: Payment Details */}
-            {step === 3 && (
+            {/* STEP 4: Payment Details */}
+            {step === 4 && (
               <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
                 <div className="space-y-1">
                   <h1 className="text-2xl font-bold text-slate-900">Secure Payment</h1>
@@ -509,8 +758,8 @@ export default function NewBookingPage() {
               </div>
             )}
 
-            {/* STEP 4: Status / Confirmation */}
-            {step === 4 && (
+            {/* STEP 5: Status / Confirmation */}
+            {step === 5 && (
               <div className="animate-in fade-in zoom-in-95 duration-1000 space-y-8 py-4">
                  <div className="text-center space-y-4">
                     <div className="inline-flex items-center justify-center h-20 w-20 rounded-lg bg-litmus-mint/30 text-litmus-teal mb-2 relative"><div className="absolute inset-0 rounded-lg animate-ping bg-litmus-teal/20"></div><CheckCircle2Icon className="h-10 w-10 relative z-10" /></div>
@@ -528,8 +777,8 @@ export default function NewBookingPage() {
             )}
           </div>
 
-          {/* ===== RIGHT SIDEBAR: ORDER SUMMARY (Hidden on Step 4) ===== */}
-          {step < 4 && (
+          {/* ===== RIGHT SIDEBAR: ORDER SUMMARY (Hidden on confirmation) ===== */}
+          {step < 5 && (
             <div className="lg:col-span-4">
               <div className="lg:sticky lg:top-28 space-y-4">
                 <Card className="rounded-lg shadow-sm border border-slate-100 overflow-hidden bg-white">
@@ -538,14 +787,65 @@ export default function NewBookingPage() {
                     <div className="space-y-3 pt-2 border-t border-slate-100">
                       <div className="flex justify-between text-xs font-bold uppercase tracking-wide"><span className="text-slate-400">Total MRP</span><span className="text-slate-800">₹{totalMrp.toLocaleString()}</span></div>
                       <div className="flex justify-between text-xs font-bold uppercase tracking-wide"><span className="text-litmus-teal">Litmus Discount</span><span className="text-litmus-teal">- ₹{discount.toLocaleString()}</span></div>
-                      {step >= 3 && (<div className="flex justify-between text-xs font-bold uppercase tracking-wide pt-2 border-t border-dashed border-slate-200"><span className="text-slate-400">GST (18%)</span><span className="text-slate-800">+ ₹{gst.toLocaleString()}</span></div>)}
-                      <div className="pt-4 mt-1 flex flex-col gap-0.5"><div className="flex justify-between items-baseline"><span className="text-slate-900 font-bold text-lg">Total Amount</span><span className="text-2xl font-bold text-primary tracking-tight">₹{step >= 3 ? total.toLocaleString() : subtotal.toLocaleString()}</span></div><p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-right">Inc. of all taxes</p></div>
+                      {step >= 4 && (<div className="flex justify-between text-xs font-bold uppercase tracking-wide pt-2 border-t border-dashed border-slate-200"><span className="text-slate-400">GST (18%)</span><span className="text-slate-800">+ ₹{gst.toLocaleString()}</span></div>)}
+                      <div className="pt-4 mt-1 flex flex-col gap-0.5"><div className="flex justify-between items-baseline"><span className="text-slate-900 font-bold text-lg">Total Amount</span><span className="text-2xl font-bold text-primary tracking-tight">₹{step >= 4 ? total.toLocaleString() : subtotal.toLocaleString()}</span></div><p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-right">Inc. of all taxes</p></div>
                     </div>
                     <div className="pt-3 space-y-2">
-                       {step === 0 && (<Button disabled={items.length === 0} onClick={handleNext} className="w-full bg-primary hover:bg-primary-deep text-white rounded-lg h-14 font-bold text-base group transition-all">Select Lab Partner <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" /></Button>)}
-                       {step === 1 && (<Button disabled={!selectedLab} onClick={handleNext} className="w-full bg-primary hover:bg-primary-deep text-white rounded-lg h-14 font-bold text-base group transition-all">Enter Collection Details <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" /></Button>)}
-                       {step === 2 && (<Button onClick={handleNext} className="w-full bg-primary hover:bg-primary-deep text-white rounded-lg h-14 font-bold text-base group transition-all">Proceed to Payment <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" /></Button>)}
-                       {step === 3 && (<Button onClick={handleNext} className="w-full bg-slate-900 hover:bg-black text-white rounded-lg h-14 font-bold text-base transition-all">Pay ₹{total.toLocaleString()} Securely</Button>)}
+                       {step === 0 && (
+                         <Button
+                           disabled={
+                             items.length === 0 ||
+                             !items.every((item) => item.selectedTests.length + item.customTests.length > 0)
+                           }
+                           onClick={handleNext}
+                           className="w-full bg-primary hover:bg-primary-deep text-white rounded-lg h-14 font-bold text-base group transition-all"
+                         >
+                           Describe samples &amp; scope{" "}
+                           <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                         </Button>
+                       )}
+                       {step === 1 && (
+                         <Button
+                           disabled={!canProceedSampleDetails}
+                           onClick={handleNext}
+                           className="w-full bg-primary hover:bg-primary-deep text-white rounded-lg h-14 font-bold text-base group transition-all"
+                         >
+                           Select lab partner{" "}
+                           <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                         </Button>
+                       )}
+                       {step === 1 && !canProceedSampleDetails && items.length > 0 && (
+                         <p className="text-[11px] text-center text-slate-500 px-1 leading-snug">
+                           Complete each row: short product label and a brief testing note (at least 8 characters each).
+                         </p>
+                       )}
+                       {step === 2 && (
+                         <Button
+                           disabled={!selectedLab}
+                           onClick={handleNext}
+                           className="w-full bg-primary hover:bg-primary-deep text-white rounded-lg h-14 font-bold text-base group transition-all"
+                         >
+                           Enter collection details{" "}
+                           <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                         </Button>
+                       )}
+                       {step === 3 && (
+                         <Button
+                           onClick={handleNext}
+                           className="w-full bg-primary hover:bg-primary-deep text-white rounded-lg h-14 font-bold text-base group transition-all"
+                         >
+                           Proceed to payment{" "}
+                           <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                         </Button>
+                       )}
+                       {step === 4 && (
+                         <Button
+                           onClick={handleNext}
+                           className="w-full bg-slate-900 hover:bg-black text-white rounded-lg h-14 font-bold text-base transition-all"
+                         >
+                           Pay ₹{total.toLocaleString()} securely
+                         </Button>
+                       )}
                        {step > 0 && (<Button variant="ghost" onClick={handleBack} className="w-full h-10 rounded-lg text-slate-400 hover:text-slate-800 font-bold text-sm"><ChevronLeftIcon className="mr-1 h-4 w-4" /> Back</Button>)}
                     </div>
                   </CardContent>
