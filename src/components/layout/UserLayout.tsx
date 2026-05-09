@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { CartDrawerProvider } from "../cart/CartDrawerContext";
 import { Header } from "./header/Header";
 import { AuthModal } from "../auth/AuthModal";
 import { MainFooter } from "./footer/MainFooter";
@@ -41,36 +42,38 @@ export function UserLayout() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Header
-        scrolled={scrolled}
-        city={city}
-        setCity={setCity}
-        cartCount={cartCount}
-        showSearch={showSearch}
-        setShowSearch={setShowSearch}
-        mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
-        showAnnouncement={showAnnouncement}
-        onLoginClick={() => setIsAuthModalOpen(true)}
-      />
+    <CartDrawerProvider>
+      <div className="min-h-screen bg-slate-50 flex flex-col">
+        <Header
+          scrolled={scrolled}
+          city={city}
+          setCity={setCity}
+          cartCount={cartCount}
+          showSearch={showSearch}
+          setShowSearch={setShowSearch}
+          mobileMenuOpen={mobileMenuOpen}
+          setMobileMenuOpen={setMobileMenuOpen}
+          showAnnouncement={showAnnouncement}
+          onLoginClick={() => setIsAuthModalOpen(true)}
+        />
 
-      <main className="flex-1 pb-20 lg:pb-0">
-        <Outlet />
-      </main>
+        <main className="flex-1 pb-20 lg:pb-0">
+          <Outlet />
+        </main>
 
-      <FooterSearchLinks />
+        <FooterSearchLinks />
 
-      <MainFooter />
+        <MainFooter />
 
-      <FloatingSupportChat />
-      <MobileTabNavigation cartCount={cartCount} />
+        <FloatingSupportChat />
+        <MobileTabNavigation cartCount={cartCount} />
 
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        isSkippable={true}
-      />
-    </div>
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          isSkippable={true}
+        />
+      </div>
+    </CartDrawerProvider>
   );
 }

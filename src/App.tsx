@@ -17,7 +17,6 @@ import TestsListingPage from "./pages/user/TestsListingPage.tsx";
 import TestDetailPage from "./pages/user/TestDetailPage.tsx";
 import LabsListingPage from "./pages/user/LabsListingPage.tsx";
 import LabDetailConsumerPage from "./pages/user/LabDetailConsumerPage.tsx";
-import CartPage from "./pages/user/CartPage.tsx";
 import NewBookingPage from "./pages/user/NewBookingPage.tsx";
 import OrdersPage from "./pages/user/OrdersPage.tsx";
 import OrderDetailPage from "./pages/user/OrderDetailPage.tsx";
@@ -26,6 +25,18 @@ import ConsumerProfilePage from "./pages/user/ConsumerProfilePage.tsx";
 import PackagesPage from "./pages/user/PackagesPage.tsx";
 import ConsultationPage from "./pages/user/ConsultationPage.tsx";
 import SupportPage from "./pages/user/SupportPage.tsx";
+import TermsPage from "./pages/user/TermsPage.tsx";
+import PrivacyPage from "./pages/user/PrivacyPage.tsx";
+import NablDataPage from "./pages/user/NablDataPage.tsx";
+import CartOpenerPage from "./pages/user/CartOpenerPage.tsx";
+import HelpCenterPage from "./pages/user/HelpCenterPage.tsx";
+import FaqsPage from "./pages/user/FaqsPage.tsx";
+import AboutPage from "./pages/user/AboutPage.tsx";
+import ContactPage from "./pages/user/ContactPage.tsx";
+import CareersPage from "./pages/user/CareersPage.tsx";
+import CareerDetailPage from "./pages/user/CareerDetailPage.tsx";
+import BlogsPage from "./pages/user/BlogsPage.tsx";
+import BlogDetailPage from "./pages/user/BlogDetailPage.tsx";
 
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
@@ -87,6 +98,18 @@ const App = () => (
             <Route path="/packages" element={<PackagesPage />} />
             <Route path="/consultation" element={<ConsultationPage />} />
             <Route path="/support" element={<SupportPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/nabl" element={<NablDataPage />} />
+            <Route path="/cart" element={<CartOpenerPage />} />
+            <Route path="/help" element={<HelpCenterPage />} />
+            <Route path="/faqs" element={<FaqsPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/careers" element={<CareersPage />} />
+            <Route path="/careers/:slug" element={<CareerDetailPage />} />
+            <Route path="/blogs" element={<BlogsPage />} />
+            <Route path="/blogs/:slug" element={<BlogDetailPage />} />
             <Route path="/bookings/new" element={<NewBookingPage />} />
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/orders/:id" element={<OrderDetailPage />} />
