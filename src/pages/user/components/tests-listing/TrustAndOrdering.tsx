@@ -56,7 +56,7 @@ export const TrustAndOrdering = () => {
   const slide = trustCarouselSlides[currentSlide];
 
   return (
-    <section className="py-16 md:py-20 bg-slate-50 overflow-hidden">
+    <section className="py-16 md:py-20 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
 
@@ -84,7 +84,7 @@ export const TrustAndOrdering = () => {
 
             <div
               key={currentSlide}
-              className="relative z-10 flex h-full min-h-[400px] md:min-h-[460px] flex-col justify-between p-8 md:p-10 pb-28 md:pb-28 animate-in fade-in slide-in-from-right-2 duration-500"
+              className="relative z-10 flex h-full min-h-[400px] md:min-h-[460px] flex-col justify-between p-8 md:p-10 md:px-20 pb-28 md:pb-28 animate-in fade-in slide-in-from-right-2 duration-500"
             >
               <div>
                 <h2 className="text-2xl md:text-[1.85rem] font-bold tracking-tight text-[#feba50]">{slide.heading}</h2>
@@ -118,7 +118,7 @@ export const TrustAndOrdering = () => {
                 </div>
               </div>
 
-              <p className="text-sm md:text-[15px] leading-relaxed text-white/85 max-w-lg">{slide.body}</p>
+              <p className="text-sm md:text-[15px] leading-relaxed text-white/85 max-w-lg mt-5">{slide.body}</p>
             </div>
 
             <div className="absolute bottom-6 left-6 md:left-8 z-20 flex items-center gap-2">
@@ -150,7 +150,7 @@ export const TrustAndOrdering = () => {
               <div className="relative z-10 space-y-6 md:space-y-8">
                 <div>
                   <h4 className="text-xl md:text-2xl font-bold text-slate-500 mb-2">Easy ordering in</h4>
-                  <h3 className="text-5xl md:text-6xl font-black text-[#10B981] tracking-tighter uppercase leading-none drop-shadow-sm">
+                  <h3 className="text-5xl md:text-4xl font-black text-[#10B981] tracking-tighter uppercase leading-none drop-shadow-sm">
                     3 STEPS
                   </h3>
                 </div>
@@ -165,7 +165,7 @@ export const TrustAndOrdering = () => {
                       <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-[#10B981] flex items-center justify-center text-white p-0.5 shrink-0 shadow-md">
                         <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6" />
                       </div>
-                      <span className="text-slate-700 font-bold text-xl md:text-2xl">{item.step}</span>
+                      <span className="text-slate-700 font-bold text-xl ">{item.step}</span>
                     </div>
                   ))}
                 </div>
@@ -173,7 +173,7 @@ export const TrustAndOrdering = () => {
                 <button
                   type="button"
                   onClick={() => navigate("/bookings/new")}
-                  className="h-14 md:h-16 mt-2 px-10 md:px-14 bg-gradient-to-r from-orange-400 to-[#F06C00] text-white font-black text-xl rounded-xl  hover:-translate-y-1 transition-all z-10 relative"
+                  className="h-14 md:h-16 mt-2 px-10 md:px-14 bg-gradient-brand text-white font-semibold text-xl rounded-xl  hover:-translate-y-1 transition-all z-10 relative"
                 >
                   Order Now
                 </button>

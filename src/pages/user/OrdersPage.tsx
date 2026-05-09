@@ -31,7 +31,9 @@ export default function OrdersPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
          <div>
             <h1 className="text-2xl font-bold text-foreground">Order History</h1>
-            <p className="text-sm text-muted-foreground">Track and manage your diagnostic orders.</p>
+            <p className="text-sm text-muted-foreground">
+              Track progress, view lab assignment, and open reports — search by order ID or test name.
+            </p>
          </div>
          <div className="relative w-full md:w-64 bg-white">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

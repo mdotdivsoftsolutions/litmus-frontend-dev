@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useCartDrawer } from "./CartDrawerContext";
 import { 
   Sheet, 
   SheetContent, 
@@ -8,10 +9,8 @@ import {
   SheetTrigger 
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ShoppingCart, X, Lock, Shield, Tag, ChevronRight, Trash2, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ShoppingCart, Shield, Tag, ChevronRight, Trash2, ArrowRight } from "lucide-react";
 
 const initialCartItems = [
   { id: "1", product: "Full Cream Milk", tests: 3, lab: "Chennai Food Testing Laboratory", price: 3600, mrp: 6300 },
@@ -23,8 +22,8 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ children }: CartDrawerProps) {
+  const { open: isOpen, setOpen: setIsOpen } = useCartDrawer();
   const [items, setItems] = useState(initialCartItems);
-  const [isOpen, setIsOpen] = useState(false);
 
   const subtotal = items.reduce((a, b) => a + b.price, 0);
   const totalMrp = items.reduce((a, b) => a + b.mrp, 0);

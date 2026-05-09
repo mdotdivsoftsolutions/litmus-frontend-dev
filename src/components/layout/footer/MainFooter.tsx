@@ -21,11 +21,11 @@ const QUICK_LINKS = [
   { label: "Cart", href: "/cart" },
   { label: "Help Center", href: "/help" },
   { label: "FAQs", href: "/faqs" },
-  { label: "Track Order", href: "/track-order" },
+  { label: "Track Order", href: "/orders" },
 ];
 
 const POLICY_LINKS = [
-  { label: "Terms & Condition", href: "/terms" },
+  { label: "Terms & Conditions", href: "/terms" },
   { label: "Privacy Policy", href: "/privacy" },
   { label: "NABL Data", href: "/nabl" },
 ];
