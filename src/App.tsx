@@ -23,6 +23,7 @@ import OrderDetailPage from "./pages/user/OrderDetailPage.tsx";
 import ConsumerReportsPage from "./pages/user/ConsumerReportsPage.tsx";
 import ConsumerProfilePage from "./pages/user/ConsumerProfilePage.tsx";
 import PackagesPage from "./pages/user/PackagesPage.tsx";
+import PackageDetailPage from "./pages/user/PackageDetailPage.tsx";
 import ConsultationPage from "./pages/user/ConsultationPage.tsx";
 import SupportPage from "./pages/user/SupportPage.tsx";
 import TermsPage from "./pages/user/TermsPage.tsx";
@@ -96,6 +97,7 @@ const App = () => (
             <Route path="/labs" element={<LabsListingPage />} />
             <Route path="/labs/:id" element={<LabDetailConsumerPage />} />
             <Route path="/packages" element={<PackagesPage />} />
+            <Route path="/packages/:id" element={<PackageDetailPage />} />
             <Route path="/consultation" element={<ConsultationPage />} />
             <Route path="/support" element={<SupportPage />} />
             <Route path="/terms" element={<TermsPage />} />

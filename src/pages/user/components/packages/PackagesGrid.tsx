@@ -1,5 +1,6 @@
 import { Activity, FileText, CheckCircle2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export const packagesData = [
   {
@@ -158,8 +159,8 @@ interface PackagesGridProps {
 export function PackagesGrid({ search, selectedCategory, visibleCount, setVisibleCount }: PackagesGridProps) {
   const filteredPackages = packagesData.filter(p => {
     const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
-                         p.description.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.description.toLowerCase().includes(search.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -167,10 +168,10 @@ export function PackagesGrid({ search, selectedCategory, visibleCount, setVisibl
   const discountPct = (price: number, mrp: number) => Math.round(((mrp - price) / mrp) * 100);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12 md:py-20 relative z-20">
+    <div className="max-w-7xl mx-auto px-3 py-12 md:py-20 relative z-20">
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredPackages.slice(0, visibleCount).map((pkg) => (
-          <div key={pkg.id} className="group bg-white rounded-[1rem] p-5 md:p-6 border-2 border-slate-50 shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] hover:border-[#D32F2F]/20 transition-all duration-500 flex flex-col gap-5">
+          <Link key={pkg.id} to={`/packages/${pkg.id}`} className="group bg-white rounded-[1rem] p-5 md:p-6 border-2 border-slate-50 shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] hover:border-[#D32F2F]/20 transition-all duration-500 flex flex-col gap-5 cursor-pointer decoration-transparent">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="bg-slate-100 text-slate-500 text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">{pkg.category}</span>
@@ -224,11 +225,11 @@ export function PackagesGrid({ search, selectedCategory, visibleCount, setVisibl
                   </span>
                 </div>
               </div>
-              <Button className="h-10 px-6 rounded-lg bg-gradient-to-r from-brand-card-from to-brand-card-to text-white font-bold text-xs shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all">
+              <div className="inline-flex items-center justify-center h-10 px-6 rounded-lg bg-gradient-to-r from-brand-card-from to-brand-card-to text-white font-bold text-xs shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all">
                 Book Panel
-              </Button>
+              </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

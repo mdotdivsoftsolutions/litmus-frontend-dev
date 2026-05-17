@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -92,8 +92,37 @@ const initialCart: CartLine[] = [
 ];
 
 export default function NewBookingPage() {
+  const location = useLocation();
   const [step, setStep] = useState(0);
-  const [items, setItems] = useState(initialCart);
+  const [items, setItems] = useState<CartLine[]>(() => {
+    if (location.state && location.state.package) {
+      const pkg = location.state.package;
+      const features = pkg.features || [];
+      const testIds = features.map((feat: string) => `pkg-feat-${feat}`);
+      
+      const testProductDetails: Record<string, TestLineDetail> = {};
+      testIds.forEach((tid: string, idx: number) => {
+        testProductDetails[tid] = {
+          productName: pkg.name,
+          specifics: `Testing for parameter: ${features[idx]}`
+        };
+      });
+
+      return [
+        {
+          id: pkg.id,
+          product: pkg.name,
+          category: pkg.category,
+          selectedTests: testIds,
+          customTests: [],
+          basePrice: Math.round(pkg.price / (features.length || 1)),
+          testProductDetails,
+          customTestDetails: {},
+        }
+      ];
+    }
+    return initialCart;
+  });
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [customParamName, setCustomParamName] = useState("");
   const [selectedLab, setSelectedLab] = useState<string | null>(null);
@@ -439,7 +468,7 @@ export default function NewBookingPage() {
                                     const test = allTestsData.find(t => t.id === tid);
                                     return (
                                       <Badge key={tid} variant="secondary" className="bg-slate-100 text-slate-600 border-0 rounded-md font-medium text-xs px-2 py-0.5">
-                                        {test?.name}
+                                        {test?.name || (tid.startsWith("pkg-feat-") ? tid.replace("pkg-feat-", "") : tid)}
                                       </Badge>
                                     );
                                   })}
@@ -520,7 +549,7 @@ export default function NewBookingPage() {
                                     <Badge className="bg-primary/10 text-primary border-primary/15 font-bold text-[10px]">
                                       Selected test
                                     </Badge>
-                                    <span className="font-bold text-slate-900">{test?.name ?? `Test ${tid}`}</span>
+                                    <span className="font-bold text-slate-900">{test?.name ?? (tid.startsWith("pkg-feat-") ? tid.replace("pkg-feat-", "") : tid)}</span>
                                     {test?.type ? (
                                       <span className="text-[10px] font-bold text-slate-400 uppercase">{test.type}</span>
                                     ) : null}
