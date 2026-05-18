@@ -156,18 +156,16 @@ export default function NewBookingPage() {
 
   const canProceedSampleDetails =
     items.length > 0 &&
-    items.every((item) => {
-      const hasParams = item.selectedTests.length + item.customTests.length > 0;
-      if (!hasParams) return false;
-      const stdOk = item.selectedTests.every((tid) => {
+    items.some((item) => {
+      const stdOk = item.selectedTests.some((tid) => {
         const d = item.testProductDetails[tid];
-        return d && d.productName.trim().length >= 2 && d.specifics.trim().length >= 8;
+        return d && (d.productName.trim().length > 0 || d.specifics.trim().length > 0);
       });
-      const custOk = item.customTests.every((ct) => {
+      const custOk = item.customTests.some((ct) => {
         const d = item.customTestDetails[ct];
-        return d && d.productName.trim().length >= 2 && d.specifics.trim().length >= 8;
+        return d && (d.productName.trim().length > 0 || d.specifics.trim().length > 0);
       });
-      return stdOk && custOk;
+      return stdOk || custOk;
     });
 
   const removeItem = (id: string) => {
@@ -845,7 +843,7 @@ export default function NewBookingPage() {
                        )}
                        {step === 1 && !canProceedSampleDetails && items.length > 0 && (
                          <p className="text-[11px] text-center text-slate-500 px-1 leading-snug">
-                           Complete each row: short product label and a brief testing note (at least 8 characters each).
+                           Please fill in at least one field to proceed.
                          </p>
                        )}
                        {step === 2 && (
