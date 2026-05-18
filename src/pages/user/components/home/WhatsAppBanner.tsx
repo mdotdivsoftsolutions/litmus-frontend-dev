@@ -1,4 +1,6 @@
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { ConsultationBookingModal } from "../consultation/ConsultationBookingModal";
 
 // WhatsApp SVG logo (official green icon)
 const WhatsAppIcon = () => (
@@ -46,7 +48,7 @@ const actions = [
     cardBg: "bg-white/90",
     border: "border-white/60",
     hoverShadow: "hover:shadow-md hover:bg-white",
-    href: "tel:+918000000000",
+    href: "tel:+919876543210",
   },
   {
     id: "quick-order",
@@ -66,7 +68,7 @@ const actions = [
     cardBg: "bg-white/90",
     border: "border-white/60",
     hoverShadow: "hover:shadow-md hover:bg-white",
-    href: "https://wa.me/918000000000",
+    href: "https://wa.me/919876543210",
     target: "_blank",
   },
 ];
@@ -102,10 +104,26 @@ export function WhatsAppBanner({ className }: { className?: string }) {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-2">
               {actions.map((action) => {
                 const Icon = action.icon;
-                return (
+                const linkEl = (
                   <a
                     key={action.id}
-                    href={action.href}
+                    href={action.id === "quick-order" ? undefined : action.href}
+                    onClick={(e) => {
+                      if (action.id === "phone") {
+                        e.preventDefault();
+                        toast.success("Connecting you with our medical advisor...", {
+                          description: "Call initiated to +91 98765 43210 (Litmus Advisory Support).",
+                        });
+                      } else if (action.id === "whatsapp") {
+                        e.preventDefault();
+                        toast.success("Redirecting to WhatsApp...", {
+                          description: "Opening chat with +91 98765 43210.",
+                        });
+                        setTimeout(() => {
+                          window.open("https://wa.me/919876543210", "_blank");
+                        }, 800);
+                      }
+                    }}
                     target={action.target}
                     rel={action.target === "_blank" ? "noopener noreferrer" : undefined}
                     className={cn(
@@ -127,6 +145,16 @@ export function WhatsAppBanner({ className }: { className?: string }) {
                     </span>
                   </a>
                 );
+
+                if (action.id === "quick-order") {
+                  return (
+                    <ConsultationBookingModal key={action.id} serviceName="Quick Package Order">
+                      {linkEl}
+                    </ConsultationBookingModal>
+                  );
+                }
+
+                return linkEl;
               })}
             </div>
           </div>

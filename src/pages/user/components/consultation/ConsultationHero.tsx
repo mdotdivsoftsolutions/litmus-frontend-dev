@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ArrowRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ConsultationBookingModal } from "./ConsultationBookingModal";
 
 const consultationServices = [
   {
@@ -52,7 +53,7 @@ export function ConsultationHero() {
                <div 
                   key={idx} 
                   className={cn(
-                     "absolute inset-0 flex flex-col",
+                     "absolute inset-0 flex flex-col mb-10",
                      (isActive || isPrev) ? "transition-all duration-1000 ease-in-out" : "transition-none",
                      isActive ? "opacity-100 translate-x-0 z-20" : 
                      isPrev ? "opacity-0 -translate-x-full z-10 pointer-events-none" : 
@@ -94,6 +95,13 @@ export function ConsultationHero() {
                               </li>
                             ))}
                           </ul>
+                          <div className="mt-8">
+                            <ConsultationBookingModal serviceName={service.title}>
+                              <Button className="h-11 px-6 bg-gradient-to-r from-[#D32F2F] to-[#feba50] hover:opacity-95 text-white font-semibold text-xs rounded-lg flex items-center gap-2 transition-all shadow-md duration-300">
+                                Book {service.title} <ArrowRight className="h-4 w-4" />
+                              </Button>
+                            </ConsultationBookingModal>
+                          </div>
                         </div>
                      </div>
                   </div>
@@ -134,9 +142,11 @@ export function ConsultationHero() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-8">
-            <Button size="lg" className="h-14 px-10 bg-gradient-to-r from-[#D32F2F] to-[#feba50] text-white font-semibold text-sm rounded-xl flex items-center gap-4 transition-all">
-              Request Strategy Brief <ArrowRight className="h-5 w-5" />
-            </Button>
+            <ConsultationBookingModal serviceName="FSSAI Compliance Strategy">
+              <Button size="lg" className="h-14 px-10 bg-gradient-to-r from-[#D32F2F] to-[#feba50] text-white font-semibold text-sm rounded-xl flex items-center gap-4 transition-all">
+                Request Strategy Brief <ArrowRight className="h-5 w-5" />
+              </Button>
+            </ConsultationBookingModal>
             <div className="flex items-center gap-4">
               <div className="flex -space-x-3">
                 {[21, 22, 23, 24].map((i) => (

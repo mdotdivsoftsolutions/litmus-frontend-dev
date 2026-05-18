@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConsultationBookingModal } from "../consultation/ConsultationBookingModal";
 
 const mockCertificates = [
   {
@@ -34,36 +35,38 @@ export function LabsCertificates() {
       <div className="relative px-2 sm:px-12">
         <div className="grid md:grid-cols-3 gap-6">
           {mockCertificates.map((cert) => (
-            <div key={cert.id} className="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
-              {/* Top Image Section */}
-              <div className="relative h-44 overflow-hidden bg-slate-100">
-                <img src={cert.image} alt={cert.title} className="w-full h-full object-cover" />
-              </div>
-              
-              {/* Text Section */}
-              <div className="p-6 pb-12 text-center relative z-10 flex-1 flex flex-col justify-center">
-                <h3 className="text-lg font-bold text-slate-800">{cert.title}</h3>
-                <p className="text-[#10b981] font-bold text-sm mt-1.5">{cert.subtitle}</p>
-                <p className="text-sm text-slate-500 mt-4 leading-relaxed px-2 text-justify">
-                  {cert.description.length > 100 ? cert.description.slice(0, 100) + "..." : cert.description}
-                </p>
-              </div>
-
-              {/* Bottom Section with Salient Features */}
-              <div className="bg-white p-6 pt-10 relative border-t border-brand">
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-brand text-white text-xs font-bold px-6 py-1.5 rounded-full uppercase tracking-wider whitespace-nowrap shadow-sm border border-white/20">
-                  Salient Features
+            <ConsultationBookingModal key={cert.id} serviceName={cert.title}>
+              <div className="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden flex flex-col hover:shadow-lg hover:border-[#D32F2F]/20 hover:scale-[1.01] transition-all cursor-pointer">
+                {/* Top Image Section */}
+                <div className="relative h-44 overflow-hidden bg-slate-100">
+                  <img src={cert.image} alt={cert.title} className="w-full h-full object-cover" />
                 </div>
-                <ul className="space-y-3">
-                  {cert.features.map((feature, idx) => (
-                    <li key={idx} className="text-sm text-slate-700 flex items-start text-left font-medium truncate ">
-                      <span className="text-[#D32F2F] mr-3 mt-0.5">•</span>
-                      {feature}
-                    </li>   
-                  ))}
-                </ul>
+                
+                {/* Text Section */}
+                <div className="p-6 pb-12 text-center relative z-10 flex-1 flex flex-col justify-center">
+                  <h3 className="text-lg font-bold text-slate-800">{cert.title}</h3>
+                  <p className="text-[#10b981] font-bold text-sm mt-1.5">{cert.subtitle}</p>
+                  <p className="text-sm text-slate-500 mt-4 leading-relaxed px-2 text-justify">
+                    {cert.description.length > 100 ? cert.description.slice(0, 100) + "..." : cert.description}
+                  </p>
+                </div>
+
+                {/* Bottom Section with Salient Features */}
+                <div className="bg-white p-6 pt-10 relative border-t border-brand">
+                  <button type="button" className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-brand text-white text-xs font-bold px-6 py-1.5 rounded-full uppercase tracking-wider whitespace-nowrap shadow-sm border border-white/20 hover:scale-105 transition-transform duration-200 focus:outline-none">
+                    Salient Features
+                  </button>
+                  <ul className="space-y-3">
+                    {cert.features.map((feature, idx) => (
+                      <li key={idx} className="text-sm text-slate-700 flex items-start text-left font-medium truncate ">
+                        <span className="text-[#D32F2F] mr-3 mt-0.5">•</span>
+                        {feature}
+                      </li>   
+                    ))}
+                  </ul>
+                </div>
               </div>
-            </div>
+            </ConsultationBookingModal>
           ))}
         </div>
 

@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, Clock, User, Mail, Phone, Building2, CheckCircle2 } from "lucide-react";
+import { Calendar, Clock, User, Mail, Phone, Building2, CheckCircle2, X } from "lucide-react";
 
 interface ConsultationBookingModalProps {
   children: React.ReactNode;
@@ -52,9 +52,14 @@ export function ConsultationBookingModal({ children, serviceName = "Advisory Con
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-xl border border-border shadow-lg">
+      <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-xl border border-border shadow-lg [&>button]:hidden">
          {isSubmitted ? (
-           <div className="p-12 text-center flex flex-col items-center justify-center space-y-4 animate-in fade-in zoom-in duration-500 fill-mode-forwards">
+           <div className="p-12 text-center flex flex-col items-center justify-center space-y-4 animate-in fade-in zoom-in duration-500 fill-mode-forwards relative">
+              <DialogClose asChild>
+                <button className="absolute right-6 top-6 h-8 w-8 rounded-full border-2 border-red-200 bg-white text-red-500 hover:text-red-700 hover:border-red-400 hover:bg-red-50/50 flex items-center justify-center transition-all shadow-sm focus:outline-none">
+                  <X className="h-4 w-4 stroke-[3]" />
+                </button>
+              </DialogClose>
               <div className="h-20 w-20 bg-litmus-mint/20 text-litmus-teal rounded-full flex items-center justify-center mb-2">
                  <CheckCircle2 className="h-10 w-10" />
               </div>
@@ -65,11 +70,17 @@ export function ConsultationBookingModal({ children, serviceName = "Advisory Con
            </div>
          ) : (
            <div className="animate-in fade-in duration-300">
-              <div className="bg-card border-b border-border p-6 text-center sm:text-left">
+              <div className="bg-card border-b border-border p-6 relative text-center sm:text-left">
                  <DialogTitle className="text-xl font-bold text-foreground tracking-tight mb-1">Book Consultation</DialogTitle>
                  <DialogDescription className="text-sm text-muted-foreground font-medium">
                    {serviceName}
                  </DialogDescription>
+                 
+                 <DialogClose asChild>
+                   <button className="absolute right-6 top-6 h-8 w-8 rounded-full border-2 border-red-200 bg-white text-red-500 hover:text-red-700 hover:border-red-400 hover:bg-red-50/50 flex items-center justify-center transition-all shadow-sm focus:outline-none">
+                     <X className="h-4 w-4 stroke-[3]" />
+                   </button>
+                 </DialogClose>
               </div>
 
               <form onSubmit={handleSubmit} className="p-6 space-y-5 bg-slate-50/50">
@@ -125,7 +136,7 @@ export function ConsultationBookingModal({ children, serviceName = "Advisory Con
                  </div>
 
                  <div className="pt-2">
-                   <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary-deep text-primary-foreground font-semibold rounded-xl text-sm shadow-sm transition-all">
+                   <Button type="submit" className="w-full h-11 bg-[#D32F2F] hover:bg-[#b71c1c] text-white font-semibold rounded-xl text-sm shadow-sm transition-all duration-300">
                       Confirm Booking Request
                    </Button>
                    <p className="text-center text-[10px] text-muted-foreground mt-3 font-medium">
