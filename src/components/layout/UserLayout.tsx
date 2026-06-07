@@ -36,6 +36,8 @@ export function UserLayout() {
       await authApi.logout();
       queryClient.clear();
       toast.success("Logged out successfully");
+      // Force a hard reload to completely reset all React and Query state
+      window.location.href = "/";
     } catch (error) {
       toast.error("Failed to logout");
     }
