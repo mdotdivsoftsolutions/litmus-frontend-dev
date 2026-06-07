@@ -7,10 +7,11 @@ import { notifications } from "@/lib/placeholder-data";
 
 interface TopNavbarProps {
   onMenuClick: () => void;
-  userName?: string;
+  user?: any;
+  onLogoutClick?: () => void;
 }
 
-export function TopNavbar({ onMenuClick, userName = "Rajesh Kumar" }: TopNavbarProps) {
+export function TopNavbar({ onMenuClick, user, onLogoutClick }: TopNavbarProps) {
   const location = useLocation();
   const pathParts = location.pathname.split("/").filter(Boolean);
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -68,7 +69,7 @@ export function TopNavbar({ onMenuClick, userName = "Rajesh Kumar" }: TopNavbarP
             <Button variant="ghost" size="icon" className="p-0 hover:bg-transparent">
               <Avatar className="h-8 w-8 ring-2 ring-flame-orange ring-offset-1 ring-offset-card">
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                  {userName.split(" ").map((n) => n[0]).join("")}
+                  {user ? `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() : "U"}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -77,7 +78,9 @@ export function TopNavbar({ onMenuClick, userName = "Rajesh Kumar" }: TopNavbarP
             <DropdownMenuItem asChild><Link to="/dashboard/profile"><User className="mr-2 h-4 w-4" />Profile</Link></DropdownMenuItem>
             <DropdownMenuItem><Settings className="mr-2 h-4 w-4" />Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild><Link to="/login"><LogOut className="mr-2 h-4 w-4" />Logout</Link></DropdownMenuItem>
+            <DropdownMenuItem onClick={onLogoutClick} className="cursor-pointer">
+              <LogOut className="mr-2 h-4 w-4" />Logout
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

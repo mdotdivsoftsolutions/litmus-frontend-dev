@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound.tsx";
 import LoginPage from "./pages/LoginPage.tsx";
 import RegisterPage from "./pages/RegisterPage.tsx";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage.tsx";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute.tsx";
 
 // User Consumer Pages
 import HomePage from "./pages/user/HomePage.tsx";
@@ -43,10 +44,12 @@ import BlogDetailPage from "./pages/user/BlogDetailPage.tsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
 import UserManagement from "./pages/admin/UserManagement.tsx";
 import LabManagement from "./pages/admin/LabManagement.tsx";
+import LabFormPage from "./pages/admin/LabFormPage.tsx";
 import AdminBookings from "./pages/admin/AdminBookings.tsx";
 import CategoryManagement from "./pages/admin/CategoryManagement.tsx";
 import ProductManagement from "./pages/admin/ProductManagement.tsx";
 import TestManagement from "./pages/admin/TestManagement.tsx";
+import TestFormPage from "./pages/admin/TestFormPage.tsx";
 import AdminPayments from "./pages/admin/AdminPayments.tsx";
 import AdminAnalytics from "./pages/admin/AdminAnalytics.tsx";
 import AdminReports from "./pages/admin/AdminReports.tsx";
@@ -82,9 +85,6 @@ const App = () => (
           {/* Public Auth - Admin & Laboratory specific */}
           <Route path="/admin/login" element={<LoginPage role="admin" />} />
           <Route path="/laboratory/login" element={<LoginPage role="lab" />} />
-
-          {/* Redirect generic /login to home where modal will trigger if needed, or keep for direct hits */}
-          <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
@@ -112,38 +112,50 @@ const App = () => (
             <Route path="/careers/:slug" element={<CareerDetailPage />} />
             <Route path="/blogs" element={<BlogsPage />} />
             <Route path="/blogs/:slug" element={<BlogDetailPage />} />
-            <Route path="/bookings/new" element={<NewBookingPage />} />
-            <Route path="/orders" element={<OrdersPage />} />
-            <Route path="/orders/:id" element={<OrderDetailPage />} />
-            <Route path="/reports" element={<ConsumerReportsPage />} />
-            <Route path="/profile" element={<ConsumerProfilePage />} />
+            
+            {/* Protected User Routes */}
+            <Route element={<ProtectedRoute allowedRoles={["USER"]} />}>
+              <Route path="/bookings/new" element={<NewBookingPage />} />
+              <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/orders/:id" element={<OrderDetailPage />} />
+              <Route path="/reports" element={<ConsumerReportsPage />} />
+              <Route path="/profile" element={<ConsumerProfilePage />} />
+            </Route>
           </Route>
 
           {/* Admin Portal — sidebar stays */}
-          <Route path="/admin" element={<PortalLayout portal="admin" userName="Admin User" />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="users" element={<UserManagement />} />
-            <Route path="laboratories" element={<LabManagement />} />
-            <Route path="bookings" element={<AdminBookings />} />
-            <Route path="categories" element={<CategoryManagement />} />
-            <Route path="products" element={<ProductManagement />} />
-            <Route path="tests" element={<TestManagement />} />
-            <Route path="payments" element={<AdminPayments />} />
-            <Route path="analytics" element={<AdminAnalytics />} />
-            <Route path="reports" element={<AdminReports />} />
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+            <Route element={<PortalLayout portal="admin" />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="laboratories" element={<LabManagement />} />
+              <Route path="laboratories/new" element={<LabFormPage />} />
+              <Route path="laboratories/:id/edit" element={<LabFormPage />} />
+              <Route path="bookings" element={<AdminBookings />} />
+              <Route path="categories" element={<CategoryManagement />} />
+              <Route path="products" element={<ProductManagement />} />
+              <Route path="tests" element={<TestManagement />} />
+              <Route path="tests/new" element={<TestFormPage />} />
+              <Route path="tests/:id/edit" element={<TestFormPage />} />
+              <Route path="payments" element={<AdminPayments />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
+              <Route path="reports" element={<AdminReports />} />
+            </Route>
           </Route>
 
           {/* Lab Portal — sidebar stays */}
-          <Route path="/lab" element={<PortalLayout portal="lab" userName="Chennai Lab" />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<LabDashboard />} />
-            <Route path="bookings" element={<LabBookings />} />
-            <Route path="bookings/:id/upload" element={<UploadResultsPage />} />
-            <Route path="upload" element={<UploadResultsPage />} />
-            <Route path="pricing" element={<LabPricingPage />} />
-            <Route path="schedule" element={<LabSchedulePage />} />
-            <Route path="profile" element={<LabProfilePage />} />
+          <Route path="/lab" element={<ProtectedRoute allowedRoles={["LAB"]} />}>
+            <Route element={<PortalLayout portal="lab" />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<LabDashboard />} />
+              <Route path="bookings" element={<LabBookings />} />
+              <Route path="bookings/:id/upload" element={<UploadResultsPage />} />
+              <Route path="upload" element={<UploadResultsPage />} />
+              <Route path="pricing" element={<LabPricingPage />} />
+              <Route path="schedule" element={<LabSchedulePage />} />
+              <Route path="profile" element={<LabProfilePage />} />
+            </Route>
           </Route>
 
           <Route path="*" element={<NotFound />} />

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, ShoppingCart, MapPin, ChevronDown, Phone, Menu, X, Home, FlaskConical, Package, Building2, Stethoscope, Headphones, LogIn } from "lucide-react";
+import { Search, ShoppingCart, MapPin, ChevronDown, Phone, Menu, X, Home, FlaskConical, Package, Building2, Stethoscope, Headphones, LogIn, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -29,13 +29,20 @@ interface HeaderProps {
   setMobileMenuOpen: (open: boolean) => void;
   showAnnouncement: boolean;
   onLoginClick: () => void;
+  onLogoutClick?: () => void;
+  user?: any;
 }
 
 export function Header({ 
   scrolled, city, setCity, cartCount, showSearch, setShowSearch, 
-  mobileMenuOpen, setMobileMenuOpen, showAnnouncement, onLoginClick
+  mobileMenuOpen, setMobileMenuOpen, showAnnouncement, onLoginClick, onLogoutClick, user
 }: HeaderProps) {
   const location = useLocation();
+
+  const getInitials = () => {
+    if (!user) return "U";
+    return `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() || "U";
+  };
 
   return (
     <>
@@ -99,12 +106,6 @@ export function Header({
                 </Link>
               );
             })}
-            <button
-              onClick={onLoginClick}
-              className="px-3 py-1.5 text-sm font-semibold text-slate-900 hover:text-gradient-brand transition-colors"
-            >
-              Login
-            </button>
           </nav>
 
           <div className="flex-1 lg:hidden" />
@@ -143,22 +144,40 @@ export function Header({
             </CartDrawer>
 
             {/* Avatar — hidden on mobile */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 hidden sm:flex hover:bg-transparent">
-                  <Avatar className="h-7 w-7">
-                    <AvatarFallback className="bg-gradient-brand text-primary-foreground text-xs font-bold">RK</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild><Link to="/profile">Profile</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/orders">My Orders</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link to="/reports">Reports</Link></DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={onLoginClick}>Logout</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {!user ? (
+              <Button variant="ghost" size="icon" className="h-9 w-9 hidden sm:flex hover:bg-transparent" onClick={onLoginClick}>
+                <Avatar className="h-7 w-7">
+                  <AvatarFallback className="bg-muted text-muted-foreground"><User className="h-4 w-4" /></AvatarFallback>
+                </Avatar>
+              </Button>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 hidden sm:flex hover:bg-transparent">
+                    <Avatar className="h-7 w-7">
+                      <AvatarFallback className="bg-gradient-brand text-primary-foreground text-xs font-bold">{getInitials()}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {user.role === "ADMIN" && (
+                    <DropdownMenuItem asChild><Link to="/admin/dashboard">Admin Dashboard</Link></DropdownMenuItem>
+                  )}
+                  {user.role === "LAB" && (
+                    <DropdownMenuItem asChild><Link to="/lab/dashboard">Lab Dashboard</Link></DropdownMenuItem>
+                  )}
+                  {(!user.role || user.role === "USER") && (
+                    <>
+                      <DropdownMenuItem asChild><Link to="/profile">Profile</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link to="/orders">My Orders</Link></DropdownMenuItem>
+                      <DropdownMenuItem asChild><Link to="/reports">Reports</Link></DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onLogoutClick} className="cursor-pointer">Logout</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             {/* Hamburger — mobile only, no bg flash */}
             <Button
@@ -238,16 +257,49 @@ export function Header({
           })}
         </nav>
 
-        {/* Drawer footer — Login CTA */}
-        <div className="px-4 py-5 border-t border-border mb-14">
-          <button
-            onClick={() => { setMobileMenuOpen(false); onLoginClick(); }}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-brand text-white text-sm font-semibold shadow-sm hover:opacity-90 transition-opacity"
-          >
-            <LogIn className="h-4 w-4" />
-            Login / Sign Up
-          </button>
-        </div>
+        {/* Drawer footer — Login CTA or User Info */}
+        {!user ? (
+          <div className="px-4 py-5 border-t border-border mb-14">
+            <button
+              onClick={() => { setMobileMenuOpen(false); onLoginClick(); }}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-brand text-white text-sm font-semibold shadow-sm hover:opacity-90 transition-opacity"
+            >
+              <LogIn className="h-4 w-4" />
+              Login / Sign Up
+            </button>
+          </div>
+        ) : (
+          <div className="px-4 py-5 border-t border-border mb-14 space-y-4">
+            <div className="flex items-center gap-3 px-2">
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-gradient-brand text-primary-foreground font-bold">{getInitials()}</AvatarFallback>
+              </Avatar>
+              <div className="overflow-hidden">
+                <p className="text-sm font-bold text-foreground truncate">{user.firstName} {user.lastName}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.email || user.phone}</p>
+                {user.role !== "USER" && (
+                  <p className="text-[10px] text-brand-primary font-bold mt-0.5">{user.role} ACCOUNT</p>
+                )}
+              </div>
+            </div>
+            {user.role === "ADMIN" && (
+              <Link to="/admin/dashboard" className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-brand-primary/20 bg-brand-primary/5 text-brand-primary text-sm font-semibold hover:bg-brand-primary/10 transition-colors mb-2">
+                Go to Admin Dashboard
+              </Link>
+            )}
+            {user.role === "LAB" && (
+              <Link to="/lab/dashboard" className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-brand-primary/20 bg-brand-primary/5 text-brand-primary text-sm font-semibold hover:bg-brand-primary/10 transition-colors mb-2">
+                Go to Lab Dashboard
+              </Link>
+            )}
+            <button
+              onClick={() => { setMobileMenuOpen(false); if (onLogoutClick) onLogoutClick(); }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border text-foreground text-sm font-semibold hover:bg-muted transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

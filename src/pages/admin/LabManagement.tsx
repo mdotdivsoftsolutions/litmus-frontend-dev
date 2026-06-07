@@ -1,96 +1,36 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Plus, Search, Edit, Eye, Filter } from "lucide-react";
-import { laboratories } from "@/lib/placeholder-data";
-import { cn } from "@/lib/utils";
-import { CheckCircle2 } from "lucide-react";
-
-const modalSteps = ["Basic Info", "Accreditation", "Select Tests", "Set Pricing"];
+import { adminApi } from "@/lib/api/admin";
 
 export default function LabManagement() {
   const [search, setSearch] = useState("");
-  const [modalStep, setModalStep] = useState(0);
-  const [selectedLab, setSelectedLab] = useState<typeof laboratories[0] | null>(null);
+  const [selectedLab, setSelectedLab] = useState<any | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const filtered = laboratories.filter((l) => !search || l.name.toLowerCase().includes(search.toLowerCase()));
+  
+  const { data: labsData, isLoading } = useQuery({
+    queryKey: ["adminLabs"],
+    queryFn: adminApi.getLabs,
+  });
+
+  const labs = labsData?.data || [];
+  const filtered = labs.filter((l: any) => !search || l.labName?.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Laboratory Management</h1>
-        <Dialog onOpenChange={() => setModalStep(0)}>
-          <DialogTrigger asChild><Button className="gap-2 bg-primary hover:bg-primary-deep"><Plus className="h-4 w-4" />Add New Lab</Button></DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>Add New Laboratory</DialogTitle></DialogHeader>
-            <div className="flex items-center gap-2 mb-4">
-              {modalSteps.map((label, i) => (
-                <div key={i} className="flex items-center flex-1">
-                  <div className={cn("flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold", i < modalStep ? "bg-litmus-emerald text-white" : i === modalStep ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
-                    {i < modalStep ? <CheckCircle2 className="h-3 w-3" /> : i + 1}
-                  </div>
-                  {i < modalSteps.length - 1 && <div className={cn("mx-1 h-0.5 flex-1 rounded-full", i < modalStep ? "bg-litmus-emerald" : "bg-muted")} />}
-                </div>
-              ))}
-            </div>
-            {modalStep === 0 && (
-              <div className="space-y-3">
-                <div className="space-y-2"><Label className="text-sm font-medium">Lab Name</Label><Input placeholder="Chennai Food Testing Lab" /></div>
-                <div className="space-y-2"><Label className="text-sm font-medium">Address</Label><Input placeholder="123, Lab Street" /></div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2"><Label className="text-sm font-medium">Contact</Label><Input placeholder="+91 44 2345 6789" /></div>
-                  <div className="space-y-2"><Label className="text-sm font-medium">Email</Label><Input placeholder="lab@email.com" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2"><Label className="text-sm font-medium">City</Label><Input placeholder="Chennai" /></div>
-                  <div className="space-y-2"><Label className="text-sm font-medium">State</Label><Input placeholder="Tamil Nadu" /></div>
-                </div>
-              </div>
-            )}
-            {modalStep === 1 && (
-              <div className="space-y-3">
-                <div className="space-y-2"><Label className="text-sm font-medium">NABL Number</Label><Input placeholder="TC-XXXX" /></div>
-                <div className="space-y-2"><Label className="text-sm font-medium">NABL Expiry Date</Label><Input type="date" /></div>
-                <div className="flex items-center justify-between rounded-lg border border-border p-3"><Label className="text-sm font-medium">FSSAI Approved</Label><Switch /></div>
-              </div>
-            )}
-            {modalStep === 2 && (
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {["Fat Content Analysis", "Total Plate Count", "Moisture Content", "Acid Value", "Coliform Count", "Protein Content", "Lead Content", "Aflatoxin B1"].map((t) => (
-                  <label key={t} className="flex items-center gap-2 rounded-lg border border-border p-2.5 cursor-pointer hover:bg-muted/50 transition-colors">
-                    <input type="checkbox" className="rounded accent-primary" />
-                    <span className="text-sm">{t}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-            {modalStep === 3 && (
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {["Fat Content Analysis", "Total Plate Count", "Moisture Content"].map((t) => (
-                  <div key={t} className="flex items-center gap-3 rounded-lg border border-border p-2.5">
-                    <span className="text-sm flex-1">{t}</span>
-                    <Input className="w-24 text-sm" placeholder="₹ Price" />
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="flex gap-2 mt-4">
-              {modalStep > 0 && <Button variant="outline" onClick={() => setModalStep(modalStep - 1)}>Back</Button>}
-              {modalStep < 3 ? (
-                <Button className="bg-primary hover:bg-primary-deep" onClick={() => setModalStep(modalStep + 1)}>Next</Button>
-              ) : (
-                <Button className="bg-primary hover:bg-primary-deep">Save Lab</Button>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button className="gap-2 bg-primary hover:bg-primary-deep" asChild>
+          <Link to="/admin/laboratories/new"><Plus className="h-4 w-4" />Add New Lab</Link>
+        </Button>
       </div>
 
       <div className="flex gap-2">
@@ -127,35 +67,30 @@ export default function LabManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((lab) => (
-              <TableRow key={lab.id} className="hover:bg-muted/30">
-                <TableCell className="font-medium">{lab.name}</TableCell>
-                <TableCell>{lab.city}</TableCell>
-                <TableCell><div className="flex gap-1">{lab.nabl && <Badge variant="nabl">NABL</Badge>}{lab.fssai && <Badge variant="fssai">FSSAI</Badge>}</div></TableCell>
-                <TableCell>{lab.testsCount}</TableCell>
-                <TableCell>{lab.activeBookings}</TableCell>
-                <TableCell className="font-medium">₹{(lab.revenue / 1000).toFixed(0)}K</TableCell>
-                <TableCell><Switch defaultChecked /></TableCell>
+            {isLoading ? (
+              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">Loading laboratories...</TableCell></TableRow>
+            ) : filtered.length === 0 ? (
+              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">No laboratories found.</TableCell></TableRow>
+            ) : filtered.map((lab: any) => (
+              <TableRow key={lab._id} className="hover:bg-muted/30">
+                <TableCell className="font-medium">{lab.labName}</TableCell>
+                <TableCell>{lab.location?.city || "—"}</TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    {lab.isNablAccredited ? <Badge variant="nabl" className="bg-green-700 hover:bg-green-800 text-white border-transparent">NABL</Badge> : "—"}
+                    {lab.isFssaiApproved ? <Badge variant="fssai" className="bg-emerald-700 hover:bg-emerald-800 text-white border-transparent">FSSAI</Badge> : null}
+                  </div>
+                </TableCell>
+                <TableCell>{lab.tests?.length || "—"}</TableCell>
+                <TableCell>{"—"}</TableCell>
+                <TableCell>{"—"}</TableCell>
+                <TableCell><Switch checked={lab.isActive} /></TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="sm" className="gap-1" onClick={() => setSelectedLab(lab)}><Eye className="h-3.5 w-3.5" />View</Button>
-                    <Dialog>
-                      <DialogTrigger asChild><Button variant="ghost" size="sm" className="gap-1"><Edit className="h-3.5 w-3.5" />Edit</Button></DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader><DialogTitle>Edit — {lab.name}</DialogTitle></DialogHeader>
-                        <div className="space-y-4">
-                          <div className="space-y-2"><Label className="text-sm font-medium">Lab Name</Label><Input defaultValue={lab.name} /></div>
-                          <div className="space-y-2"><Label className="text-sm font-medium">City</Label><Input defaultValue={lab.city} /></div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-2"><Label className="text-sm font-medium">Contact</Label><Input placeholder="+91..." /></div>
-                            <div className="space-y-2"><Label className="text-sm font-medium">Email</Label><Input placeholder="lab@email.com" /></div>
-                          </div>
-                          <div className="flex items-center justify-between rounded-lg border border-border p-3"><Label className="text-sm font-medium">NABL Accredited</Label><Switch defaultChecked={lab.nabl} /></div>
-                          <div className="flex items-center justify-between rounded-lg border border-border p-3"><Label className="text-sm font-medium">FSSAI Approved</Label><Switch defaultChecked={lab.fssai} /></div>
-                          <Button className="w-full bg-primary hover:bg-primary-deep">Update Lab</Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    <Button variant="ghost" size="sm" className="gap-1" asChild>
+                      <Link to={`/admin/laboratories/${lab._id}/edit`}><Edit className="h-3.5 w-3.5" />Edit</Link>
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -169,26 +104,63 @@ export default function LabManagement() {
         <SheetContent className="overflow-y-auto sm:max-w-lg">
           {selectedLab && (
             <>
-              <SheetHeader><SheetTitle>{selectedLab.name}</SheetTitle></SheetHeader>
+              <SheetHeader><SheetTitle>{selectedLab.labName}</SheetTitle></SheetHeader>
               <div className="mt-6 space-y-6">
-                <div className="flex gap-2">{selectedLab.nabl && <Badge variant="nabl">NABL Accredited</Badge>}{selectedLab.fssai && <Badge variant="fssai">FSSAI Approved</Badge>}</div>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">City</p><p className="font-medium">{selectedLab.city}</p></div>
-                  <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">Rating</p><p className="font-medium">{selectedLab.rating} ⭐</p></div>
-                  <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">Tests Available</p><p className="font-medium">{selectedLab.testsCount}</p></div>
-                  <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">Active Bookings</p><p className="font-medium">{selectedLab.activeBookings}</p></div>
-                  <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">Revenue</p><p className="font-medium">₹{selectedLab.revenue.toLocaleString()}</p></div>
-                  <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">Starting Price</p><p className="font-medium">₹{selectedLab.priceFrom}</p></div>
+                <div className="flex gap-2">
+                  {selectedLab.isNablAccredited && <Badge variant="nabl" className="bg-green-700 hover:bg-green-800 text-white border-transparent">NABL Accredited</Badge>}
+                  {selectedLab.isFssaiApproved && <Badge variant="fssai" className="bg-emerald-700 hover:bg-emerald-800 text-white border-transparent">FSSAI Approved</Badge>}
                 </div>
-                <div className="border-t border-border pt-4">
-                  <h4 className="text-sm font-semibold mb-3">Available Tests</h4>
-                  <div className="space-y-2 text-sm">
-                    {["Fat Content Analysis", "Total Plate Count", "Moisture Content", "Acid Value", "Coliform Count"].map(t => (
-                      <div key={t} className="flex items-center justify-between rounded-lg border border-border p-2.5">
-                        <span>{t}</span><span className="text-muted-foreground">₹{(800 + Math.floor(Math.random() * 1000)).toLocaleString()}</span>
-                      </div>
-                    ))}
+                
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
+                    <p className="text-muted-foreground text-xs mb-1">City</p>
+                    <p className="font-medium">{selectedLab.location?.city || "—"}</p>
                   </div>
+                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
+                    <p className="text-muted-foreground text-xs mb-1">Rating</p>
+                    <p className="font-medium flex items-center">
+                      4.8 <span className="text-yellow-500 ml-1">★</span>
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
+                    <p className="text-muted-foreground text-xs mb-1">Tests Available</p>
+                    <p className="font-medium">{selectedLab.tests?.length || 0}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
+                    <p className="text-muted-foreground text-xs mb-1">Active Bookings</p>
+                    <p className="font-medium">34</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
+                    <p className="text-muted-foreground text-xs mb-1">Revenue</p>
+                    <p className="font-medium">₹485,000</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
+                    <p className="text-muted-foreground text-xs mb-1">Starting Price</p>
+                    <p className="font-medium">
+                      ₹{selectedLab.tests && selectedLab.tests.length > 0 
+                        ? Math.min(...selectedLab.tests.map((t: any) => t.price)) 
+                        : "0"}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedLab.tests && selectedLab.tests.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-bold mb-3">Available Tests</h4>
+                    <div className="space-y-2">
+                      {selectedLab.tests.map((test: any) => (
+                        <div key={test._id} className="flex items-center justify-between py-3 border-b border-border/50 text-sm">
+                          <span className="text-slate-700">{test.testName}</span>
+                          <span className="text-slate-500">₹{test.price.toLocaleString('en-IN')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-3 text-sm pt-2">
+                  <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">Email</p><p className="font-medium break-all">{selectedLab.contactEmail || "—"}</p></div>
+                  <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">Phone</p><p className="font-medium">{selectedLab.contactPhone || "—"}</p></div>
                 </div>
               </div>
             </>

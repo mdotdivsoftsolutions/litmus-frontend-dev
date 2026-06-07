@@ -42,7 +42,7 @@ export default function LoginPage({ role }: LoginPageProps) {
 
       {/* Right Panel — form */}
       <div className="flex flex-1 items-center justify-center bg-background px-6">
-        <LoginSection showLogo={!role} />
+        <LoginSection showLogo={!role} defaultRole={role} />
       </div>
     </div>
   );

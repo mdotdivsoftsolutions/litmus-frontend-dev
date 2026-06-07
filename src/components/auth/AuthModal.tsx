@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { Eye, EyeOff, Loader2, ArrowLeft, User, Mail, Phone, Lock, KeyRound, CheckCircle2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { authApi } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +17,14 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProps) {
+  const queryClient = useQueryClient();
   const [step, setStep] = useState<Step>("login");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showNewConfirm, setShowNewConfirm] = useState(false);
-  const [otp, setOtp] = useState(["", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
 
   // Login fields
   const [identifier, setIdentifier] = useState("");
@@ -38,24 +42,79 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
   const [newPassword, setNewPassword] = useState("");
   const [newConfirmPassword, setNewConfirmPassword] = useState("");
 
+  // ── API Mutations ──────────────────────────────────────────────────
+  const loginMutation = useMutation({
+    mutationFn: authApi.login,
+    onSuccess: () => {
+      toast.success("Welcome back!");
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Invalid credentials");
+    }
+  });
+
+  const sendOtpMutation = useMutation({
+    mutationFn: authApi.sendOtp,
+    onSuccess: () => {
+      toast.success("OTP sent to your email!");
+      setStep("otp");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+    }
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: authApi.register,
+    onSuccess: () => {
+      toast.success("Account created successfully!");
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Registration failed");
+    }
+  });
+
   // ── Handlers ──────────────────────────────────────────────────
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setStep("otp"); }, 1200);
+    loginMutation.mutate({ email: identifier, password });
   };
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     if (regPassword !== regConfirmPassword) return;
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setStep("otp"); }, 1200);
+
+    // Split full name into first and last name
+    const nameParts = regName.trim().split(" ");
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    sendOtpMutation.mutate({ email: regEmail });
   };
 
   const handleVerifyOtp = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setTimeout(() => { setLoading(false); onClose(); }, 1200);
+    const otpCode = otp.join("");
+    if (otpCode.length < 6) return;
+    
+    // Split full name into first and last name
+    const nameParts = regName.split(" ");
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    registerMutation.mutate({
+      firstName,
+      lastName,
+      email: regEmail,
+      phone: regPhone,
+      password: regPassword,
+      role: "USER" as any,
+      otp: otpCode
+    });
   };
 
   const handleForgotSend = (e: React.FormEvent) => {
@@ -82,7 +141,7 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
     const next = [...otp];
     next[index] = value;
     setOtp(next);
-    if (value && index < 3) document.getElementById(`${prefix}-${index + 1}`)?.focus();
+    if (value && index < 5) document.getElementById(`${prefix}-${index + 1}`)?.focus();
   };
 
   // Reset all state when modal closes
@@ -90,7 +149,7 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
     if (!isOpen) {
       setStep("login");
       setLoading(false);
-      setOtp(["", "", "", ""]);
+      setOtp(["", "", "", "", "", ""]);
       setIdentifier(""); setPassword("");
       setRegName(""); setRegEmail(""); setRegPhone("");
       setRegPassword(""); setRegConfirmPassword("");
@@ -104,9 +163,9 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
   const subtitles: Record<Step, string> = {
     login: "Welcome back! Sign in to continue.",
     register: "Create your account to get started.",
-    otp: "Enter the 4-digit code sent to your email.",
+    otp: "Enter the 6-digit code sent to your email.",
     forgot: "Enter your registered email or phone number.",
-    "forgot-otp": "Enter the 4-digit code sent to your account.",
+    "forgot-otp": "Enter the 6-digit code sent to your account.",
     "reset-password": "Set a new strong password for your account.",
     "reset-success": "",
   };
@@ -174,12 +233,12 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
                   </button>
                 </div>
 
-                <Button type="submit" disabled={loading || !identifier || !password}
+                <Button type="submit" disabled={loginMutation.isPending || !identifier || !password}
                   className={cn("w-full h-12 font-bold rounded-lg transition-all",
-                    loading || !identifier || !password
+                    loginMutation.isPending || !identifier || !password
                       ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                       : "bg-gradient-brand text-white hover:opacity-90 shadow-md")}>
-                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Sign In"}
+                  {loginMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Sign In"}
                 </Button>
               </form>
 
@@ -244,12 +303,12 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
               )}
 
               <Button type="submit"
-                disabled={loading || !regName || !regEmail || !regPhone || !regPassword || regPassword !== regConfirmPassword}
+                disabled={sendOtpMutation.isPending || !regName || !regEmail || !regPhone || !regPassword || regPassword !== regConfirmPassword}
                 className={cn("w-full h-12 font-bold rounded-lg transition-all",
-                  loading || !regName || !regEmail || !regPhone || !regPassword || regPassword !== regConfirmPassword
+                  sendOtpMutation.isPending || !regName || !regEmail || !regPhone || !regPassword || regPassword !== regConfirmPassword
                     ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                     : "bg-gradient-brand text-white hover:opacity-90 shadow-md")}>
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Create Account"}
+                {sendOtpMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Create Account"}
               </Button>
 
               <p className="text-center text-sm text-slate-500">
@@ -274,13 +333,13 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
                 ))}
               </div>
               <div className="text-center space-y-4">
-                <Button type="submit" disabled={loading || otp.some((d) => !d)}
+                <Button type="submit" disabled={registerMutation.isPending || otp.some((d) => !d)}
                   className="w-full h-12 bg-gradient-brand text-white font-bold rounded-lg shadow-lg transition-all">
-                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Verify & Proceed"}
+                  {registerMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Verify & Proceed"}
                 </Button>
                 <p className="text-sm text-slate-500">
                   Didn't receive the code?{" "}
-                  <button type="button" className="text-brand-primary font-bold hover:underline">Resend OTP</button>
+                  <button type="button" onClick={() => sendOtpMutation.mutate({ email: regEmail })} className="text-brand-primary font-bold hover:underline">Resend OTP</button>
                 </p>
               </div>
             </form>
