@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, CheckCircle2, Beaker, FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { testApi } from "@/lib/api/test";
+import { categoryApi } from "@/lib/api/category";
 
 const stepLabels = ["Basic Details", "Parameters & Pricing"];
 
@@ -25,6 +27,8 @@ export default function TestFormPage() {
     testName: "",
     description: "",
     price: "",
+    isApplicableToAll: true,
+    applicableCategories: [],
     metadata: {
       method: "",
       type: "chemical",
@@ -38,6 +42,13 @@ export default function TestFormPage() {
     enabled: isEditing,
   });
 
+  const { data: categoriesData, isLoading: categoriesIsLoading } = useQuery({
+    queryKey: ["adminCategories"],
+    queryFn: () => categoryApi.getCategories(),
+  });
+
+  const categories = categoriesData?.data?.data || [];
+
   useEffect(() => {
     if (testData?.data) {
       const test = testData.data;
@@ -45,6 +56,8 @@ export default function TestFormPage() {
         testName: test.testName || "",
         description: test.description || "",
         price: test.price?.toString() || "",
+        isApplicableToAll: test.isApplicableToAll !== undefined ? test.isApplicableToAll : true,
+        applicableCategories: test.applicableCategories?.map((c: any) => typeof c === 'string' ? c : c._id) || [],
         metadata: {
           method: test.metadata?.method || "",
           type: test.metadata?.type || "chemical",
@@ -132,23 +145,20 @@ export default function TestFormPage() {
         </div>
       </div>
 
-      <div className="flex w-full items-center justify-between mb-8 px-4 max-w-3xl mx-auto">
+      <div className="flex w-full mb-8 border-b border-border">
         {stepLabels.map((label, i) => (
-          <div key={i} className="flex flex-1 items-center">
-            <div className="flex flex-col items-center gap-2">
-              <div className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition-colors shadow-sm",
-                i < step ? "bg-litmus-emerald text-white" : i === step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-              )}>
-                {i < step ? <CheckCircle2 className="h-5 w-5" /> : i + 1}
-              </div>
-              <span className={cn(
-                "text-xs font-medium",
-                i <= step ? "text-foreground" : "text-muted-foreground"
-              )}>{label}</span>
-            </div>
-            {i < stepLabels.length - 1 && <div className={cn("mx-4 h-1 flex-1 rounded-full transition-colors", i < step ? "bg-litmus-emerald" : "bg-muted")} />}
-          </div>
+          <button
+            key={i}
+            onClick={() => setStep(i)}
+            className={cn(
+              "px-6 py-3 text-sm font-medium transition-colors border-b-2 outline-none",
+              step === i 
+                ? "border-primary text-primary bg-primary/5" 
+                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            )}
+          >
+            {label}
+          </button>
         ))}
       </div>
 
@@ -178,9 +188,9 @@ export default function TestFormPage() {
                   <Input value={formData.metadata.method} onChange={(e) => handleMetadataChange("method", e.target.value)} placeholder="e.g. IS:1479" className="bg-background/50" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Test Category</Label>
+                  <Label className="text-sm font-medium">Test Type</Label>
                   <Select value={formData.metadata.type} onValueChange={(val) => handleMetadataChange("type", val)}>
-                    <SelectTrigger className="bg-background/50"><SelectValue placeholder="Select Category" /></SelectTrigger>
+                    <SelectTrigger className="bg-background/50"><SelectValue placeholder="Select Type" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="physical">Physical Analysis</SelectItem>
                       <SelectItem value="chemical">Chemical Analysis</SelectItem>
@@ -190,7 +200,61 @@ export default function TestFormPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-4 pt-4 border-t border-border/50">
+                <h3 className="text-lg font-semibold">Category Applicability</h3>
+                <div className="flex items-center justify-between rounded-lg border border-border p-4 bg-background/30 hover:bg-muted/20 transition-colors">
+                  <div>
+                    <Label className="text-base font-medium">Applicable to All Categories</Label>
+                    <p className="text-sm text-muted-foreground mt-1">If enabled, this test can be assigned to any product regardless of its category.</p>
+                  </div>
+                  <Switch 
+                    checked={formData.isApplicableToAll} 
+                    onCheckedChange={(checked) => setFormData({ ...formData, isApplicableToAll: checked })} 
+                  />
+                </div>
+                
+                {!formData.isApplicableToAll && (
+                  <div className="space-y-2 pt-2 animate-in fade-in slide-in-from-top-2">
+                    <Label className="text-sm font-medium">Select Applicable Categories <span className="text-destructive">*</span></Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {categoriesIsLoading ? (
+                        <div className="col-span-full text-sm text-muted-foreground">Loading categories...</div>
+                      ) : categories.length === 0 ? (
+                        <div className="col-span-full text-sm text-muted-foreground">No categories available.</div>
+                      ) : (
+                        categories.map((cat: any) => {
+                          const isSelected = formData.applicableCategories.includes(cat._id);
+                          return (
+                            <label 
+                              key={cat._id} 
+                              className={cn(
+                                "flex items-center gap-2 rounded-lg border p-3 cursor-pointer transition-colors text-sm",
+                                isSelected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                              )}
+                            >
+                              <input 
+                                type="checkbox" 
+                                className="accent-primary"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFormData({ ...formData, applicableCategories: [...formData.applicableCategories, cat._id] });
+                                  } else {
+                                    setFormData({ ...formData, applicableCategories: formData.applicableCategories.filter((id: string) => id !== cat._id) });
+                                  }
+                                }}
+                              />
+                              <span className="font-medium truncate">{cat.name}</span>
+                            </label>
+                          )
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2 pt-2">
                 <Label className="text-sm font-medium">Detailed Description</Label>
                 <Textarea name="description" value={formData.description} onChange={handleChange} placeholder="Describe the testing methodology and purpose..." className="min-h-[120px] bg-background/50" />
               </div>

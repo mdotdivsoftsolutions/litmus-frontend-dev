@@ -8,14 +8,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, Search, Edit, Trash2, Filter, AlertTriangle } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Plus, Search, Edit, Trash2, Filter, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { testApi } from "@/lib/api/test";
+
+const ITEMS_PER_PAGE = 10;
 
 export default function TestManagement() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [testToDelete, setTestToDelete] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
 
   const { data: testsData, isLoading } = useQuery({
@@ -34,12 +41,6 @@ export default function TestManagement() {
     }
   });
 
-  const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this test protocol? This action cannot be undone.")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
   const tests = testsData?.data || [];
   
   const filtered = tests.filter((t: any) => {
@@ -47,6 +48,12 @@ export default function TestManagement() {
     const matchesType = typeFilter === "all" || t.metadata?.type === typeFilter;
     return matchesSearch && matchesType;
   });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedTests = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 max-w-7xl mx-auto">
@@ -60,7 +67,15 @@ export default function TestManagement() {
       <div className="flex gap-2">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search tests..." className="pl-9 bg-background/50" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input 
+            placeholder="Search tests..." 
+            className="pl-9 bg-background/50" 
+            value={search} 
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }} 
+          />
         </div>
         <Sheet open={showFilters} onOpenChange={setShowFilters}>
           <Button variant="outline" className="gap-2 bg-background/50" onClick={() => setShowFilters(true)}>
@@ -71,11 +86,11 @@ export default function TestManagement() {
             <SheetHeader><SheetTitle>Filter Tests</SheetTitle></SheetHeader>
             <div className="mt-6 space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Test Category</label>
+                <label className="text-sm font-medium">Test Type</label>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger><SelectValue placeholder="All Categories" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="All Types" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="all">All Types</SelectItem>
                     <SelectItem value="physical">Physical</SelectItem>
                     <SelectItem value="chemical">Chemical</SelectItem>
                     <SelectItem value="microbiological">Microbiological</SelectItem>
@@ -98,7 +113,7 @@ export default function TestManagement() {
               <TableRow className="bg-muted/50">
                 <TableHead>Test Name</TableHead>
                 <TableHead>Method</TableHead>
-                <TableHead>Category</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Parameters</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -106,14 +121,16 @@ export default function TestManagement() {
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    <div className="flex flex-col items-center gap-2">
-                       <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                       <span>Loading tests...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-8 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto rounded-md" /></TableCell>
+                  </TableRow>
+                ))
               ) : filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
@@ -123,7 +140,7 @@ export default function TestManagement() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : filtered.map((t: any) => (
+              ) : paginatedTests.map((t: any) => (
                 <TableRow key={t._id} className="hover:bg-muted/30 transition-colors">
                   <TableCell className="font-medium max-w-[200px] truncate" title={t.testName}>{t.testName}</TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">{t.metadata?.method || 'N/A'}</TableCell>
@@ -141,21 +158,82 @@ export default function TestManagement() {
                     ₹{t.price?.toLocaleString() || 0}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="sm" className="gap-1 hover:bg-primary/10 hover:text-primary transition-colors" asChild>
-                        <Link to={`/admin/tests/${t._id}/edit`}><Edit className="h-3.5 w-3.5" />Edit</Link>
-                      </Button>
-                      <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" onClick={() => handleDelete(t._id)} disabled={deleteMutation.isPending}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                          <span className="sr-only">Open menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link to={`/admin/tests/${t._id}/edit`} className="w-full flex items-center cursor-pointer">
+                            <Edit className="mr-2 h-4 w-4" />
+                            <span>Edit Test</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => setTestToDelete(t._id)}
+                          className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Delete</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
+
+        {!isLoading && filtered.length > 0 && (
+          <div className="flex items-center justify-between border-t border-border px-4 py-3 bg-muted/20">
+            <p className="text-sm text-muted-foreground">
+              Showing <span className="font-medium text-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}</span> of <span className="font-medium text-foreground">{filtered.length}</span> tests
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="text-sm font-medium">
+                Page {currentPage} of {Math.max(1, totalPages)}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setCurrentPage((p) => Math.min(Math.max(1, totalPages), p + 1))}
+                disabled={currentPage >= totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
+
+      <ConfirmDialog 
+        open={!!testToDelete}
+        onOpenChange={(open) => !open && setTestToDelete(null)}
+        title="Delete Test Protocol"
+        description="Are you sure you want to delete this test protocol? This action cannot be undone."
+        onConfirm={() => {
+          if (testToDelete) {
+            deleteMutation.mutate(testToDelete);
+            setTestToDelete(null);
+          }
+        }}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

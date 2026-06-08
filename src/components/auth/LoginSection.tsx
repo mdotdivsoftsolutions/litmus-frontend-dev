@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, EyeOff, Flame } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Eye, EyeOff, Flame, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { authApi } from "@/lib/api/auth";
@@ -22,6 +23,7 @@ export function LoginSection({ className, showLogo = false, defaultRole }: Login
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showBlockedModal, setShowBlockedModal] = useState(false);
   const navigate = useNavigate();
 
   const roleRedirects: Record<string, string> = { 
@@ -46,7 +48,11 @@ export function LoginSection({ className, showLogo = false, defaultRole }: Login
       navigate(roleRedirects[role]);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Login failed");
+      if (error.response?.data?.message === "ACCOUNT_BLOCKED") {
+        setShowBlockedModal(true);
+      } else {
+        toast.error(error.response?.data?.message || "Login failed");
+      }
     }
   });
 
@@ -56,7 +62,8 @@ export function LoginSection({ className, showLogo = false, defaultRole }: Login
   };
 
   return (
-    <Card className={cn("w-full max-w-md shadow-lg border border-border bg-card/50 backdrop-blur-sm", className)}>
+    <>
+      <Card className={cn("w-full max-w-md shadow-lg border border-border bg-card/50 backdrop-blur-sm", className)}>
       <CardHeader className="items-center pb-2">
         {showLogo && (
           <Link to="/" className="flex items-center gap-2 mb-6">
@@ -130,5 +137,25 @@ export function LoginSection({ className, showLogo = false, defaultRole }: Login
         )}
       </CardContent>
     </Card>
+
+    <Dialog open={showBlockedModal} onOpenChange={setShowBlockedModal}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader className="items-center text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 mb-4">
+            <AlertCircle className="h-6 w-6 text-red-600" />
+          </div>
+          <DialogTitle className="text-xl">Account Suspended</DialogTitle>
+          <DialogDescription className="pt-2 text-base text-center">
+            Your account is temporarily blocked. Please contact the administrator to resolve this issue and restore your access.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="sm:justify-center mt-6">
+          <Button onClick={() => setShowBlockedModal(false)} className="w-full sm:w-auto px-8">
+            Understood
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

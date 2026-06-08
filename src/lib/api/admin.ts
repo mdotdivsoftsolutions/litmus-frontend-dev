@@ -11,6 +11,26 @@ export const adminApi = {
     return response.data;
   },
 
+  getBookings: async () => {
+    const response = await apiClient.get('/admin/bookings');
+    return response.data;
+  },
+
+  getPayments: async () => {
+    const response = await apiClient.get('/admin/payments');
+    return response.data;
+  },
+
+  approveReport: async (id: string) => {
+    const response = await apiClient.patch(`/admin/booking/${id}/approve-result`);
+    return response.data;
+  },
+
+  rejectReport: async (id: string, reason: string) => {
+    const response = await apiClient.patch(`/admin/booking/${id}/reject-result`, { reason });
+    return response.data;
+  },
+
   getLabById: async (id: string) => {
     const response = await apiClient.get(`/admin/lab/${id}`);
     return response.data;
@@ -33,6 +53,22 @@ export const adminApi = {
 
   getStats: async () => {
     const response = await apiClient.get('/admin/stats');
+    return response.data;
+  },
+
+  uploadFile: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  deleteLab: async (id: string) => {
+    const response = await apiClient.delete(`/admin/lab/${id}`);
     return response.data;
   }
 };

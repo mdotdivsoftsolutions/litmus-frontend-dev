@@ -7,11 +7,35 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Upload, CheckCircle2, MapPin, Beaker, Receipt } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { adminApi } from "@/lib/api/admin";
 
 const stepLabels = ["Basic Info", "Location & Media", "Tests & Pricing"];
+
+interface LabFormData {
+  labName: string;
+  contactEmail: string;
+  contactPhone: string;
+  password?: string;
+  startingYear: string;
+  additionalDetails: string;
+  affiliationDocs: string[];
+  nablAccreditationNumber: string;
+  isNablAccredited: boolean;
+  isFssaiApproved: boolean;
+  location: {
+    address: string;
+    city: string;
+    state: string;
+    lat: string;
+    lng: string;
+  };
+  metadata: {
+    images: string[];
+  };
+}
 
 export default function LabFormPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,10 +44,15 @@ export default function LabFormPage() {
   const isEditing = !!id;
 
   const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState<any>({
+  const [isUploading, setIsUploading] = useState(false);
+  const [formData, setFormData] = useState<LabFormData>({
     labName: "",
     contactEmail: "",
     contactPhone: "",
+    password: "",
+    startingYear: "",
+    additionalDetails: "",
+    affiliationDocs: [],
     nablAccreditationNumber: "",
     isNablAccredited: false,
     isFssaiApproved: false,
@@ -52,6 +81,10 @@ export default function LabFormPage() {
         labName: lab.labName || "",
         contactEmail: lab.contactEmail || "",
         contactPhone: lab.contactPhone || "",
+        password: "",
+        startingYear: lab.startingYear || "",
+        additionalDetails: lab.additionalDetails || "",
+        affiliationDocs: lab.affiliationDocs || [],
         nablAccreditationNumber: lab.nablAccreditationNumber || "",
         isNablAccredited: lab.isNablAccredited || false,
         isFssaiApproved: lab.isFssaiApproved || false,
@@ -71,8 +104,11 @@ export default function LabFormPage() {
 
   const saveMutation = useMutation({
     mutationFn: (data: any) => isEditing ? adminApi.updateLab(id!, data) : adminApi.createLab(data),
-    onSuccess: () => {
+    onSuccess: (res: any) => {
       toast.success(isEditing ? "Laboratory updated successfully!" : "Laboratory created successfully!");
+      if (res.generatedPassword) {
+        alert(`Lab created successfully!\n\nAuto-generated password for the lab account:\n${res.generatedPassword}\n\nPlease copy and share this securely with the lab.`);
+      }
       queryClient.invalidateQueries({ queryKey: ["adminLabs"] });
       navigate("/admin/laboratories");
     },
@@ -96,16 +132,48 @@ export default function LabFormPage() {
     setFormData({ ...formData, [name]: checked });
   };
 
-  const handleMockImageUpload = () => {
-    const mockImage = `https://picsum.photos/seed/${Math.random()}/400/300`;
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'images' | 'affiliationDocs' = 'images') => {
+    const targetElement = e.target;
+    const file = targetElement.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      const res = await adminApi.uploadFile(file);
+      if (res.success && res.data?.url) {
+        if (target === 'images') {
+          setFormData(prev => ({
+            ...prev,
+            metadata: {
+              ...prev.metadata,
+              images: [...(prev.metadata?.images || []), res.data.url]
+            }
+          }));
+        } else {
+          setFormData(prev => ({
+            ...prev,
+            affiliationDocs: [...(prev.affiliationDocs || []), res.data.url]
+          }));
+        }
+        toast.success("File uploaded!");
+      } else {
+        toast.error("Failed to upload file.");
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Error uploading file");
+    } finally {
+      setIsUploading(false);
+      targetElement.value = '';
+    }
+  };
+
+  const handleRemoveAffiliationDoc = (index: number) => {
+    const newDocs = [...formData.affiliationDocs];
+    newDocs.splice(index, 1);
     setFormData({
       ...formData,
-      metadata: {
-        ...formData.metadata,
-        images: [...(formData.metadata?.images || []), mockImage]
-      }
+      affiliationDocs: newDocs
     });
-    toast.success("Image uploaded!");
   };
 
   const handleRemoveImage = (index: number) => {
@@ -122,7 +190,25 @@ export default function LabFormPage() {
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading laboratory details...</div>;
+    return (
+      <div className="space-y-6 animate-pulse pb-20 max-w-7xl mx-auto">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-10 rounded-md" />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+        </div>
+        
+        <div className="flex w-full items-center mb-8 gap-4">
+          <Skeleton className="h-12 flex-1" />
+          <Skeleton className="h-12 flex-1" />
+          <Skeleton className="h-12 flex-1" />
+        </div>
+
+        <Skeleton className="h-[400px] w-full rounded-xl" />
+      </div>
+    );
   }
 
   return (
@@ -141,24 +227,37 @@ export default function LabFormPage() {
         </div>
       </div>
 
-      <div className="flex w-full items-center justify-between mb-8 px-4">
-        {stepLabels.map((label, i) => (
-          <div key={i} className="flex flex-1 items-center">
-            <div className="flex flex-col items-center gap-2">
-              <div className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition-colors shadow-sm",
-                i < step ? "bg-litmus-emerald text-white" : i === step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-              )}>
-                {i < step ? <CheckCircle2 className="h-5 w-5" /> : i + 1}
+      <div className="flex w-full items-center mb-8">
+        {stepLabels.map((label, i) => {
+          const isCompleted = i < step;
+          const isActive = i === step;
+          
+          return (
+            <div 
+              key={i} 
+              className={cn(
+                "flex-1 flex items-center justify-between py-4 px-4 md:px-6 border-b-2 transition-all",
+                isCompleted ? "border-litmus-emerald" : isActive ? "border-primary" : "border-muted"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className={cn(
+                  "text-2xl font-bold",
+                  isCompleted ? "text-litmus-emerald" : isActive ? "text-primary" : "text-muted-foreground/50"
+                )}>
+                  {(i + 1).toString().padStart(2, '0')}
+                </span>
+                <span className={cn(
+                  "text-sm font-semibold whitespace-nowrap",
+                  isCompleted ? "text-foreground" : isActive ? "text-primary" : "text-muted-foreground"
+                )}>
+                  {label}
+                </span>
               </div>
-              <span className={cn(
-                "text-xs font-medium",
-                i <= step ? "text-foreground" : "text-muted-foreground"
-              )}>{label}</span>
+              {isCompleted && <CheckCircle2 className="h-5 w-5 text-litmus-emerald" />}
             </div>
-            {i < stepLabels.length - 1 && <div className={cn("mx-4 h-1 flex-1 rounded-full transition-colors", i < step ? "bg-litmus-emerald" : "bg-muted")} />}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <Card className="border-0 shadow-md">
@@ -194,9 +293,30 @@ export default function LabFormPage() {
                   <Input name="contactEmail" value={formData.contactEmail} onChange={handleChange} placeholder="lab@email.com" type="email" className="bg-background/50" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Contact Phone</Label>
+                  <Label className="text-sm font-medium">Contact Phone <span className="text-destructive">*</span></Label>
                   <Input name="contactPhone" value={formData.contactPhone} onChange={handleChange} placeholder="+91 44 2345 6789" className="bg-background/50" />
                 </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Password (Optional)</Label>
+                  <Input name="password" type="text" value={formData.password} onChange={handleChange} placeholder="Leave blank to auto-generate" className="bg-background/50" />
+                  <p className="text-xs text-muted-foreground">If left blank, a password will be automatically generated.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Starting Year</Label>
+                  <Input name="startingYear" type="number" value={formData.startingYear} onChange={handleChange} placeholder="e.g. 2015" className="bg-background/50" />
+                </div>
+              </div>
+              <div className="space-y-2 pt-2">
+                <Label className="text-sm font-medium">Additional Details</Label>
+                <textarea 
+                  name="additionalDetails" 
+                  value={formData.additionalDetails} 
+                  onChange={handleChange as any} 
+                  placeholder="Any other information or special requirements..." 
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
               </div>
               <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
                 <div className="flex items-center justify-between rounded-lg border border-border p-4 bg-background/30 hover:bg-muted/20 transition-colors">
@@ -256,16 +376,68 @@ export default function LabFormPage() {
                       </div>
                     </div>
                   ))}
-                  <button 
-                    type="button"
-                    onClick={handleMockImageUpload}
-                    className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors aspect-video text-primary cursor-pointer"
+                  <label 
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors aspect-video text-primary cursor-pointer",
+                      isUploading && "opacity-50 cursor-not-allowed"
+                    )}
                   >
-                    <Upload className="h-6 w-6" />
-                    <span className="text-sm font-medium">Upload Image</span>
-                  </button>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={(e) => handleFileUpload(e, 'images')} 
+                      disabled={isUploading} 
+                    />
+                    {isUploading ? (
+                      <span className="text-sm font-medium animate-pulse">Uploading...</span>
+                    ) : (
+                      <>
+                        <Upload className="h-6 w-6" />
+                        <span className="text-sm font-medium">Upload Image</span>
+                      </>
+                    )}
+                  </label>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">Uploading high-quality images of the facility increases trust among food businesses.</p>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold border-b border-border/50 pb-2">Affiliation Documents</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {formData.affiliationDocs?.map((doc: string, i: number) => (
+                    <div key={i} className="relative group rounded-lg overflow-hidden border border-border aspect-video bg-muted flex flex-col items-center justify-center p-4">
+                      <div className="text-center truncate w-full text-xs break-all z-10 font-medium" title={doc}>{doc.split('/').pop()}</div>
+                      {doc.match(/\.(jpeg|jpg|gif|png)$/i) && <img src={doc} alt="Doc" className="absolute inset-0 w-full h-full object-cover opacity-20" />}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
+                        <Button variant="destructive" size="sm" onClick={() => handleRemoveAffiliationDoc(i)}>Remove</Button>
+                      </div>
+                    </div>
+                  ))}
+                  <label 
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors aspect-video text-primary cursor-pointer",
+                      isUploading && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <input 
+                      type="file" 
+                      accept=".pdf,image/*" 
+                      className="hidden" 
+                      onChange={(e) => handleFileUpload(e, 'affiliationDocs')} 
+                      disabled={isUploading} 
+                    />
+                    {isUploading ? (
+                      <span className="text-sm font-medium animate-pulse">Uploading...</span>
+                    ) : (
+                      <>
+                        <Upload className="h-6 w-6" />
+                        <span className="text-sm font-medium text-center">Upload Document<br/>(PDF/Image)</span>
+                      </>
+                    )}
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">Upload any certifications, affiliation documents, or licenses.</p>
               </div>
             </div>
           )}

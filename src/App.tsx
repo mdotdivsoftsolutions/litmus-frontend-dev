@@ -48,6 +48,7 @@ import LabFormPage from "./pages/admin/LabFormPage.tsx";
 import AdminBookings from "./pages/admin/AdminBookings.tsx";
 import CategoryManagement from "./pages/admin/CategoryManagement.tsx";
 import ProductManagement from "./pages/admin/ProductManagement.tsx";
+import ProductFormPage from "./pages/admin/ProductFormPage.tsx";
 import TestManagement from "./pages/admin/TestManagement.tsx";
 import TestFormPage from "./pages/admin/TestFormPage.tsx";
 import AdminPayments from "./pages/admin/AdminPayments.tsx";
@@ -61,6 +62,7 @@ import UploadResultsPage from "./pages/lab/UploadResultsPage.tsx";
 import LabPricingPage from "./pages/lab/LabPricingPage.tsx";
 import LabSchedulePage from "./pages/lab/LabSchedulePage.tsx";
 import LabProfilePage from "./pages/lab/LabProfilePage.tsx";
+import CategoryFormPage from "./pages/admin/CategoryFormPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -134,7 +136,11 @@ const App = () => (
               <Route path="laboratories/:id/edit" element={<LabFormPage />} />
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="categories" element={<CategoryManagement />} />
+              <Route path="categories/new" element={<CategoryFormPage />} />
+              <Route path="categories/:id/edit" element={<CategoryFormPage />} />
               <Route path="products" element={<ProductManagement />} />
+              <Route path="products/new" element={<ProductFormPage />} />
+              <Route path="products/:id/edit" element={<ProductFormPage />} />
               <Route path="tests" element={<TestManagement />} />
               <Route path="tests/new" element={<TestFormPage />} />
               <Route path="tests/:id/edit" element={<TestFormPage />} />

@@ -35,7 +35,7 @@ const adminNav = [
   { label: "Products", icon: ShoppingBag, href: "/admin/products" },
   { label: "Tests", icon: TestTubes, href: "/admin/tests" },
   { label: "Payments", icon: DollarSign, href: "/admin/payments" },
-  { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
+  // { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
   { label: "Reports", icon: FileCheck, href: "/admin/reports" },
 ];
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,34 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, Search, Edit, Eye, Filter } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus, Search, Edit, Eye, Filter, MoreVertical, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
+
+const ITEMS_PER_PAGE = 10;
 import { adminApi } from "@/lib/api/admin";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LabManagement() {
   const [search, setSearch] = useState("");
   const [selectedLab, setSelectedLab] = useState<any | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [labToDelete, setLabToDelete] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const queryClient = useQueryClient();
+  
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => adminApi.deleteLab(id),
+    onSuccess: () => {
+      toast.success("Laboratory deleted successfully");
+      setLabToDelete(null);
+      queryClient.invalidateQueries({ queryKey: ["adminLabs"] });
+    },
+    onError: () => {
+      toast.error("Failed to delete laboratory");
+    }
+  });
   
   const { data: labsData, isLoading } = useQuery({
     queryKey: ["adminLabs"],
@@ -23,6 +44,12 @@ export default function LabManagement() {
 
   const labs = labsData?.data || [];
   const filtered = labs.filter((l: any) => !search || l.labName?.toLowerCase().includes(search.toLowerCase()));
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedLabs = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -36,7 +63,15 @@ export default function LabManagement() {
       <div className="flex gap-2">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search labs..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input 
+            placeholder="Search labs..." 
+            className="pl-9" 
+            value={search} 
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }} 
+          />
         </div>
         <Sheet open={showFilters} onOpenChange={setShowFilters}>
           <Button variant="outline" className="gap-2" onClick={() => setShowFilters(true)}><Filter className="h-4 w-4" />Filters</Button>
@@ -68,10 +103,21 @@ export default function LabManagement() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">Loading laboratories...</TableCell></TableRow>
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><div className="flex gap-1"><Skeleton className="h-5 w-12 rounded-full" /><Skeleton className="h-5 w-12 rounded-full" /></div></TableCell>
+                  <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-8" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-10 rounded-full" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto rounded-md" /></TableCell>
+                </TableRow>
+              ))
             ) : filtered.length === 0 ? (
               <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">No laboratories found.</TableCell></TableRow>
-            ) : filtered.map((lab: any) => (
+            ) : paginatedLabs.map((lab: any) => (
               <TableRow key={lab._id} className="hover:bg-muted/30">
                 <TableCell className="font-medium">{lab.labName}</TableCell>
                 <TableCell>{lab.location?.city || "—"}</TableCell>
@@ -86,18 +132,70 @@ export default function LabManagement() {
                 <TableCell>{"—"}</TableCell>
                 <TableCell><Switch checked={lab.isActive} /></TableCell>
                 <TableCell>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="gap-1" onClick={() => setSelectedLab(lab)}><Eye className="h-3.5 w-3.5" />View</Button>
-                    <Button variant="ghost" size="sm" className="gap-1" asChild>
-                      <Link to={`/admin/laboratories/${lab._id}/edit`}><Edit className="h-3.5 w-3.5" />Edit</Link>
-                    </Button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical className="h-4 w-4" />
+                        <span className="sr-only">Open menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setSelectedLab(lab)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        <span>View Details</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to={`/admin/laboratories/${lab._id}/edit`} className="w-full flex items-center cursor-pointer">
+                          <Edit className="mr-2 h-4 w-4" />
+                          <span>Edit Lab</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => setLabToDelete(lab._id)}
+                        className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Delete</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </Card>
+
+      {!isLoading && filtered.length > 0 && (
+        <div className="flex items-center justify-between border border-border px-4 py-3 bg-muted/20 rounded-lg shadow-sm">
+          <p className="text-sm text-muted-foreground">
+            Showing <span className="font-medium text-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}</span> of <span className="font-medium text-foreground">{filtered.length}</span> laboratories
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 bg-background"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="text-sm font-medium px-2">
+              Page {currentPage} of {Math.max(1, totalPages)}
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 bg-background"
+              onClick={() => setCurrentPage((p) => Math.min(Math.max(1, totalPages), p + 1))}
+              disabled={currentPage >= totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Lab Detail Sheet */}
       <Sheet open={!!selectedLab} onOpenChange={(open) => !open && setSelectedLab(null)}>
@@ -162,11 +260,27 @@ export default function LabManagement() {
                   <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">Email</p><p className="font-medium break-all">{selectedLab.contactEmail || "—"}</p></div>
                   <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">Phone</p><p className="font-medium">{selectedLab.contactPhone || "—"}</p></div>
                 </div>
+
+                <div className="pt-6 mt-4 border-t border-border/50">
+                  <Button className="w-full bg-primary hover:bg-primary-deep shadow-md" asChild>
+                    <Link to={`/admin/laboratories/${selectedLab._id}`}>View Full Profile</Link>
+                  </Button>
+                </div>
               </div>
             </>
           )}
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog 
+        open={!!labToDelete}
+        onOpenChange={(open) => !open && setLabToDelete(null)}
+        title="Delete Laboratory"
+        description="Are you sure you want to delete this laboratory? Past bookings will still retain the lab details (soft delete)."
+        onConfirm={() => labToDelete && deleteMutation.mutate(labToDelete)}
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }
