@@ -21,7 +21,6 @@ const ITEMS_PER_PAGE = 10;
 export default function UserManagement() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [userToToggle, setUserToToggle] = useState<{id: string, isActive: boolean} | null>(null);
@@ -52,12 +51,11 @@ export default function UserManagement() {
       (u.email && u.email.toLowerCase().includes(search.toLowerCase())) || 
       (u.phone && u.phone.includes(search));
     
-    const matchesRole = roleFilter === "all" || u.role === roleFilter;
     const matchesStatus = statusFilter === "all" || 
       (statusFilter === "active" && u.isActive) || 
       (statusFilter === "inactive" && !u.isActive);
 
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch && matchesStatus;
   });
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
@@ -95,17 +93,7 @@ export default function UserManagement() {
           />
         </div>
         
-        <Select value={roleFilter} onValueChange={(val) => { setRoleFilter(val); setCurrentPage(1); }}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            <SelectItem value="USER">User</SelectItem>
-            <SelectItem value="LAB">Lab</SelectItem>
-            <SelectItem value="ADMIN">Admin</SelectItem>
-          </SelectContent>
-        </Select>
+
 
         <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
           <SelectTrigger className="w-36">
@@ -124,7 +112,6 @@ export default function UserManagement() {
           <TableHeader>
             <TableRow>
               <TableHead>User</TableHead>
-              <TableHead className="hidden md:table-cell">Role</TableHead>
               <TableHead className="hidden sm:table-cell">Mobile</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Joined</TableHead>
@@ -144,7 +131,6 @@ export default function UserManagement() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
                   <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-20" /></TableCell>
@@ -172,11 +158,6 @@ export default function UserManagement() {
                           <p className="text-xs text-muted-foreground">{u.email}</p>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <Badge variant="outline" className="text-xs font-semibold">
-                        {u.role}
-                      </Badge>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell text-sm">{u.phone}</TableCell>
                     <TableCell>
