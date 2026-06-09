@@ -76,14 +76,22 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
             }}
           >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-4">
-              <div className="relative min-w-0 flex-1">
+              <form 
+                className="relative min-w-0 flex-1"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (searchQuery.trim()) {
+                    window.location.href = `/tests?search=${encodeURIComponent(searchQuery.trim())}`;
+                  }
+                }}
+              >
                 {!searchQuery && !searchFocused && (
                   <span
                     className="pointer-events-none absolute left-4 top-1/2 z-0 -translate-y-1/2 text-sm select-none"
                     aria-hidden
                   >
                     <span className="text-slate-600">Search for </span>
-                    <span className="font-medium text-brand-primary">checkups</span>
+                    <span className="font-medium text-brand-primary">tests</span>
                   </span>
                 )}
                 <input
@@ -93,15 +101,16 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                   onFocus={() => setSearchFocused(true)}
                   onBlur={() => setSearchFocused(false)}
                   className="relative placeholder:text-slate-400 z-10 w-full rounded-2xl border-2 border-[#008eb3]/30 bg-white py-3.5 pl-4 pr-12 text-sm text-slate-800 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] outline-none ring-[#1a237e]/20 focus:ring-none"
-                  aria-label="Search for checkups"
-                  placeholder="Search for checkups..."
-
+                  aria-label="Search for tests"
+                  placeholder="Search for tests, categories..."
                 />
-                <Search
-                  className="pointer-events-none absolute right-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-slate-400"
-                  aria-hidden
-                />
-              </div>
+                <button type="submit" className="absolute right-4 top-1/2 z-20 -translate-y-1/2 text-slate-400 hover:text-brand-primary">
+                  <Search
+                    className="h-5 w-5"
+                    aria-hidden
+                  />
+                </button>
+              </form>
               <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
                   to="/tests"

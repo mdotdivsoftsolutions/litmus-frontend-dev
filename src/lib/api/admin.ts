@@ -67,6 +67,28 @@ export const adminApi = {
     return response.data;
   },
 
+  // --- Reviews ---
+  getReviews: async (params?: { page?: number; limit?: number }) => {
+    const response = await apiClient.get('/reviews', { params });
+    return response.data;
+  },
+  getReviewById: async (id: string) => {
+    const response = await apiClient.get(`/reviews/${id}`);
+    return response.data;
+  },
+  createReview: async (data: Record<string, unknown>) => {
+    const response = await apiClient.post('/reviews', data);
+    return response.data;
+  },
+  updateReview: async (id: string, data: Record<string, unknown>) => {
+    const response = await apiClient.patch(`/reviews/${id}`, data);
+    return response.data;
+  },
+  deleteReview: async (id: string) => {
+    const response = await apiClient.delete(`/reviews/${id}`);
+    return response.data;
+  },
+
   deleteLab: async (id: string) => {
     const response = await apiClient.delete(`/admin/lab/${id}`);
     return response.data;

@@ -27,6 +27,9 @@ export default function TestFormPage() {
     testName: "",
     description: "",
     price: "",
+    offerPrice: "",
+    turnAroundTime: "",
+    isPopular: false,
     isApplicableToAll: true,
     applicableCategories: [],
     metadata: {
@@ -56,6 +59,9 @@ export default function TestFormPage() {
         testName: test.testName || "",
         description: test.description || "",
         price: test.price?.toString() || "",
+        offerPrice: test.offerPrice?.toString() || "",
+        turnAroundTime: test.turnAroundTime || "",
+        isPopular: test.isPopular || false,
         isApplicableToAll: test.isApplicableToAll !== undefined ? test.isApplicableToAll : true,
         applicableCategories: test.applicableCategories?.map((c: any) => typeof c === 'string' ? c : c._id) || [],
         metadata: {
@@ -121,7 +127,8 @@ export default function TestFormPage() {
   const handleSave = () => {
     saveMutation.mutate({
       ...formData,
-      price: Number(formData.price) || 0
+      price: Number(formData.price) || 0,
+      offerPrice: formData.offerPrice ? Number(formData.offerPrice) : undefined,
     });
   };
 
@@ -198,6 +205,10 @@ export default function TestFormPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Turn Around Time</Label>
+                  <Input name="turnAroundTime" value={formData.turnAroundTime} onChange={handleChange} placeholder="e.g. 24 hours" className="bg-background/50" />
+                </div>
               </div>
 
               <div className="space-y-4 pt-4 border-t border-border/50">
@@ -268,6 +279,24 @@ export default function TestFormPage() {
                   <Label className="text-sm font-medium">Standard Base Price (₹) <span className="text-destructive">*</span></Label>
                   <Input name="price" type="number" value={formData.price} onChange={handleChange} placeholder="e.g. 500" className="bg-background/50" />
                   <p className="text-xs text-muted-foreground mt-1">This is the default recommended pricing.</p>
+                </div>
+                <div className="space-y-2 max-w-xs">
+                  <Label className="text-sm font-medium">Offer Price (₹)</Label>
+                  <Input name="offerPrice" type="number" value={formData.offerPrice} onChange={handleChange} placeholder="e.g. 450" className="bg-background/50" />
+                  <p className="text-xs text-muted-foreground mt-1">Optional discounted price for this test.</p>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-border/50 mt-6">
+                <div className="flex items-center justify-between rounded-lg border border-border p-4 bg-background/30 hover:bg-muted/20 transition-colors">
+                  <div>
+                    <Label className="text-base font-medium">Popular Test (Home Screen)</Label>
+                    <p className="text-sm text-muted-foreground mt-1">If enabled, this test will appear in the popular tests section on the home screen.</p>
+                  </div>
+                  <Switch 
+                    checked={formData.isPopular} 
+                    onCheckedChange={(checked) => setFormData({ ...formData, isPopular: checked })} 
+                  />
                 </div>
               </div>
 

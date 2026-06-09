@@ -116,6 +116,7 @@ export default function TestManagement() {
                 <TableHead>Type</TableHead>
                 <TableHead>Parameters</TableHead>
                 <TableHead>Price</TableHead>
+                <TableHead>Offer Price</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -128,12 +129,13 @@ export default function TestManagement() {
                     <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-8 rounded-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                     <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto rounded-md" /></TableCell>
                   </TableRow>
                 ))
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
                        <AlertTriangle className="h-8 w-8 text-muted-foreground/50" />
                        <span>No test protocols found matching your criteria.</span>
@@ -156,6 +158,9 @@ export default function TestManagement() {
                   </TableCell>
                   <TableCell className="font-medium text-emerald-600 dark:text-emerald-400">
                     ₹{t.price?.toLocaleString() || 0}
+                  </TableCell>
+                  <TableCell className="font-medium text-primary">
+                    {t.offerPrice ? `₹${t.offerPrice.toLocaleString()}` : '-'}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

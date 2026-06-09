@@ -1,8 +1,8 @@
 import { apiClient } from './axios';
 
 export const testApi = {
-  getTests: async () => {
-    const response = await apiClient.get('/tests');
+  getTests: async (params?: any) => {
+    const response = await apiClient.get('/tests', { params });
     return response.data;
   },
   

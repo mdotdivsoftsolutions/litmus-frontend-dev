@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, Package, FlaskConical, BookOpen, CreditCard, FileText, FolderOpen, UserCircle,
   Users, Building2, ClipboardList, Grid3X3, ShoppingBag, TestTubes, BarChart3, FileCheck,
-  Upload, DollarSign, CalendarDays, X, Flame, ChevronLeft, ChevronRight
+  Upload, DollarSign, CalendarDays, X, Flame, ChevronLeft, ChevronRight, MessageSquareQuote
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -35,6 +35,7 @@ const adminNav = [
   { label: "Products", icon: ShoppingBag, href: "/admin/products" },
   { label: "Tests", icon: TestTubes, href: "/admin/tests" },
   { label: "Payments", icon: DollarSign, href: "/admin/payments" },
+  { label: "Reviews", icon: MessageSquareQuote, href: "/admin/reviews" },
   // { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
   { label: "Reports", icon: FileCheck, href: "/admin/reports" },
 ];

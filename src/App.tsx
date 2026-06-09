@@ -54,6 +54,8 @@ import TestFormPage from "./pages/admin/TestFormPage.tsx";
 import AdminPayments from "./pages/admin/AdminPayments.tsx";
 import AdminAnalytics from "./pages/admin/AdminAnalytics.tsx";
 import AdminReports from "./pages/admin/AdminReports.tsx";
+import ReviewManagement from "./pages/admin/ReviewManagement.tsx";
+import ReviewFormPage from "./pages/admin/ReviewFormPage.tsx";
 
 // Lab
 import LabDashboard from "./pages/lab/LabDashboard.tsx";
@@ -145,6 +147,9 @@ const App = () => (
               <Route path="tests/new" element={<TestFormPage />} />
               <Route path="tests/:id/edit" element={<TestFormPage />} />
               <Route path="payments" element={<AdminPayments />} />
+              <Route path="reviews" element={<ReviewManagement />} />
+              <Route path="reviews/new" element={<ReviewFormPage />} />
+              <Route path="reviews/:id/edit" element={<ReviewFormPage />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="reports" element={<AdminReports />} />
             </Route>

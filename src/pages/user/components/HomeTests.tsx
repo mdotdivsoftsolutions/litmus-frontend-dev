@@ -4,42 +4,58 @@ import { products } from "@/lib/placeholder-data";
 import { Activity, FileText, Plus, Minus, ChevronRight, ArrowRight, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SectionHeader } from "./home/SectionHeader";
+import { useQuery } from "@tanstack/react-query";
+import { testApi } from "@/lib/api/test";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Product = (typeof products)[number];
 
 export type TestCardProps = {
-  p: Product;
+  p?: Product;
+  t?: any;
   cartItems: Record<string, number>;
   addToCart: (id: string, e: MouseEvent<HTMLButtonElement>) => void;
   removeFromCart: (id: string, e: MouseEvent<HTMLButtonElement>) => void;
 };
 
-export const TestCard = ({ p, cartItems, addToCart, removeFromCart }: TestCardProps) => {
-  const discountPct = (price: number, mrp: number) => Math.round(((mrp - price) / mrp) * 100);
-  const price = p.testCount * 150 + 999;
-  const mrp = p.testCount * 260 + 1500;
-  const qty = cartItems[p.id] || 0;
+export const TestCard = ({ p, t, cartItems, addToCart, removeFromCart }: TestCardProps) => {
+  const discountPct = (price: number, mrp: number) => {
+    if (!mrp || mrp <= price) return 0;
+    return Math.round(((mrp - price) / mrp) * 100);
+  };
+  
+  const id = t?._id || p?.id || "unknown";
+  const name = t?.testName || p?.name || "Food Safety Test";
+  const parametersCount = t?.metadata?.parameters?.length || p?.testCount || 0;
+  const price = t?.offerPrice ? t.offerPrice : (t?.price || (p?.testCount ? p.testCount * 150 + 999 : 999));
+  const mrp = t?.price || (p?.testCount ? p.testCount * 260 + 1500 : 1500);
+  const qty = cartItems[id] || 0;
   const discount = discountPct(price, mrp);
+  const turnAroundTime = t?.turnAroundTime || "2-3 Days";
 
   return (
     <Link
-      to={`/tests/${p.id}`}
+      to={`/tests/${id}`}
       className="group m-2 flex w-[385px] shrink-0 flex-col overflow-hidden rounded-[1.25rem] border border-brand-card-from/10 bg-white shadow-[0_2px_12px_-2px_rgb(var(--brand-card-rgb)/0.08)] transition-all hover:-translate-y-1 hover:border-brand-card-to/25 hover:shadow-[0_16px_40px_-12px_rgb(var(--brand-card-rgb)/0.22)]"
     >
       <div className="relative flex h-[120px] flex-col justify-end rounded-b-[1.25rem] bg-gradient-card p-5 pb-5 text-white shadow-[0_6px_24px_-4px_rgb(var(--brand-card-rgb)/0.45)] transition-colors">
-        <div className="absolute right-4 top-0 rounded-b-md bg-gradient-card-badge px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-[0_4px_12px_rgb(var(--brand-card-rgb)/0.35)]">
-          Checkup
-        </div>
+        {t?.isPopular && (
+          <div className="absolute right-4 top-0 rounded-b-md bg-gradient-card-badge px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-[0_4px_12px_rgb(var(--brand-card-rgb)/0.35)]">
+            Popular
+          </div>
+        )}
         <div className="flex items-start justify-between">
-          <h3 className="w-3/5 pr-2 text-lg font-semibold leading-tight tracking-tight">{p.name || "Food Safety Test"}</h3>
+          <h3 className="w-3/5 pr-2 text-lg font-semibold leading-tight tracking-tight">{name}</h3>
           <div className="flex flex-col items-end pt-1">
             <div className="flex items-center gap-1.5">
-              <span className="text-[11px] text-white/70 line-through">₹{mrp}</span>
-              <span className="text-[1.50rem] font-extrabold tracking-tight drop-shadow-sm">₹{price}</span>
+              {discount > 0 && <span className="text-[11px] text-white/70 line-through">₹{mrp?.toLocaleString()}</span>}
+              <span className="text-[1.50rem] font-extrabold tracking-tight drop-shadow-sm">₹{price?.toLocaleString()}</span>
             </div>
-            <span className="mt-0.5 rounded bg-gradient-brand px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-white shadow-[0_2px_8px_rgb(var(--brand-card-rgb)/0.35)]">
-              {discount}% Off
-            </span>
+            {discount > 0 && (
+              <span className="mt-0.5 rounded bg-gradient-brand px-2 py-1 text-[8px] font-bold uppercase tracking-wider text-white shadow-[0_2px_8px_rgb(var(--brand-card-rgb)/0.35)]">
+                {discount}% Off
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -50,7 +66,7 @@ export const TestCard = ({ p, cartItems, addToCart, removeFromCart }: TestCardPr
               <Activity className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-[13px] leading-none text-slate-800">{p.testCount} parameters</p>
+              <p className="text-[13px] leading-none text-slate-800">{parametersCount} parameters</p>
               <p className="mt-1 text-[11px] text-brand-card-from/55">included</p>
             </div>
           </div>
@@ -60,7 +76,7 @@ export const TestCard = ({ p, cartItems, addToCart, removeFromCart }: TestCardPr
             </div>
             <div>
               <p className="text-[11px] leading-none text-brand-card-from/55">Reports within</p>
-              <p className="mt-1 text-[13px] text-slate-800">Fri, 03 Apr</p>
+              <p className="mt-1 text-[13px] text-slate-800">{turnAroundTime}</p>
             </div>
           </div>
         </div>
@@ -76,7 +92,7 @@ export const TestCard = ({ p, cartItems, addToCart, removeFromCart }: TestCardPr
               type="button"
               onClick={(e) => {
                 e.preventDefault();
-                addToCart(p.id, e);
+                addToCart(id, e);
               }}
               className="h-11 flex-1 rounded-xl bg-gradient-to-r from-brand-card-from to-brand-card-to text-sm font-medium text-white shadow-[0_4px_16px_-2px_rgb(var(--brand-card-rgb)/0.45)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-4px_rgb(var(--brand-card-rgb)/0.5)] focus:outline-none"
             >
@@ -88,7 +104,7 @@ export const TestCard = ({ p, cartItems, addToCart, removeFromCart }: TestCardPr
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
-                  removeFromCart(p.id, e);
+                  removeFromCart(id, e);
                 }}
                 className="rounded-full bg-white p-0.5 text-brand-card-from shadow-sm hover:text-brand-card-deep focus:outline-none"
               >
@@ -99,7 +115,7 @@ export const TestCard = ({ p, cartItems, addToCart, removeFromCart }: TestCardPr
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
-                  addToCart(p.id, e);
+                  addToCart(id, e);
                 }}
                 className="rounded-full bg-white p-0.5 text-brand-card-from shadow-sm hover:text-brand-card-deep focus:outline-none"
               >
@@ -123,6 +139,13 @@ export type HomeTestsProps = {
 };
 
 export const HomeTests = ({ activeTab, setActiveTab, cartItems, addToCart, removeFromCart }: HomeTestsProps) => {
+  const { data: popularTestsData, isLoading } = useQuery({
+    queryKey: ['popularTests'],
+    queryFn: () => testApi.getTests({ isPopular: true, limit: 3 })
+  });
+
+  const popularTests = popularTestsData?.data || [];
+
   return (
     <>
       <section className="pt-16 pb-10  relative overflow-hidden bg-slate-50">
@@ -141,9 +164,40 @@ export const HomeTests = ({ activeTab, setActiveTab, cartItems, addToCart, remov
           />
 
           <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-5 pt-2 -mx-2">
-               {[...products].reverse().map((p, i) => (
-                 <TestCard key={`popular-${p.id}-${i}`} p={p} cartItems={cartItems} addToCart={addToCart} removeFromCart={removeFromCart} />
-               ))}
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="m-2 flex w-[385px] shrink-0 flex-col overflow-hidden rounded-[1.25rem] border border-brand-card-from/10 bg-white">
+                  <div className="h-[120px] bg-slate-100 rounded-b-[1.25rem] p-5 flex flex-col justify-end">
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-8 w-1/3" />
+                  </div>
+                  <div className="flex-1 p-5 flex flex-col bg-gradient-to-b from-[#f4fafc] to-white">
+                    <div className="mb-6 flex items-center justify-between">
+                      <div className="w-1/2">
+                        <Skeleton className="h-4 w-3/4 mb-2" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                      <div className="w-1/2 pl-4 border-l border-slate-100">
+                        <Skeleton className="h-3 w-1/2 mb-2" />
+                        <Skeleton className="h-4 w-3/4" />
+                      </div>
+                    </div>
+                    <div className="mt-auto flex items-center gap-3">
+                      <Skeleton className="h-11 flex-1 rounded-xl" />
+                      <Skeleton className="h-11 flex-1 rounded-xl" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : popularTests.length > 0 ? (
+              popularTests.map((t: any) => (
+                <TestCard key={`popular-${t._id}`} t={t} cartItems={cartItems} addToCart={addToCart} removeFromCart={removeFromCart} />
+              ))
+            ) : (
+              <div className="w-full text-center py-10 text-muted-foreground">
+                No popular tests found.
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CategoryStrip } from "./CategoryStrip";
 import { SectionHeader } from "../home/SectionHeader";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface FeaturedTest {
   id: string;
@@ -30,6 +31,7 @@ interface MostBookedTestsProps {
   categories: Category[];
   iconMap: Record<string, React.ElementType>;
   cn: (...args: (string | undefined | false | null)[]) => string;
+  isLoading?: boolean;
 }
 
 export const MostBookedTests = ({
@@ -39,7 +41,8 @@ export const MostBookedTests = ({
   setSelectedCategory,
   categories,
   iconMap,
-  cn
+  cn,
+  isLoading
 }: MostBookedTestsProps) => {
   return (
     <div className="space-y-10 bg-slate-50 pb-12 md:pb-20">
@@ -57,8 +60,27 @@ export const MostBookedTests = ({
         />
 
         <div className="grid gap-6 md:grid-cols-2">
-          {/* Tests List (6 Rows x 2 Columns) */}
-          {tests.map((t) => (
+          {isLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-[1rem] p-6 shadow-sm border-2 border-slate-50 flex items-center gap-6">
+                <div className="flex-1 min-w-0 space-y-4">
+                  <Skeleton className="h-6 w-3/4 rounded-md" />
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-5 w-24 rounded-full" />
+                    <Skeleton className="h-4 w-24 rounded-md" />
+                  </div>
+                </div>
+                <div className="text-right shrink-0 flex flex-col items-end gap-2">
+                  <Skeleton className="h-3 w-12 rounded-md" />
+                  <Skeleton className="h-8 w-20 rounded-md" />
+                  <Skeleton className="h-4 w-16 rounded-md" />
+                </div>
+                <Skeleton className="hidden sm:block shrink-0 h-12 w-12 rounded-2xl" />
+              </div>
+            ))
+          ) : (
+            /* Tests List (6 Rows x 2 Columns) */
+            tests.map((t) => (
               <Link to={`/tests/${t.id}`} key={t.id} className="group bg-white rounded-[1rem] p-6 shadow-sm border-2 border-slate-50 flex items-center gap-6 hover:border-[#D32F2F]/20 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] transition-all duration-500">
                 <div className="flex-1 min-w-0 space-y-2">
                   <h3 className="font-bold text-slate-800 text-lg tracking-tight group-hover:text-[#D32F2F] transition-colors">{t.name}</h3>
@@ -68,15 +90,16 @@ export const MostBookedTests = ({
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="flex items-baseline justify-end gap-2 text-slate-400 line-through text-xs font-medium">₹{t.mrp.toLocaleString()}</div>
-                  <div className="font-black text-slate-800 text-2xl tracking-tighter">₹{t.price.toLocaleString()}</div>
+                  <div className="flex items-baseline justify-end gap-2 text-slate-400 line-through text-xs font-medium">₹{t.mrp?.toLocaleString()}</div>
+                  <div className="font-black text-slate-800 text-2xl tracking-tighter">₹{t.price?.toLocaleString()}</div>
                   <span className="bg-emerald-50 text-emerald-600 text-[10px] font-black px-2 py-0.5 rounded-md mt-1 inline-block uppercase tracking-widest border border-emerald-100">{discountPct(t.price, t.mrp)}% Off</span>
                 </div>
                 <Button size="sm" className="hidden sm:flex shrink-0 h-12 w-12 rounded-2xl bg-slate-50 group/plus text-slate-400 hover:bg-gradient-to-br hover:from-[#D32F2F] hover:to-[#F06C00] hover:text-white transition-all duration-500 p-0 shadow-sm border border-blue-100" asChild>
                   <Link to={`/tests/${t.id}`}><Plus className="h-10 w-10 font-bold text-blue-800 group-hover/plus:text-white " /></Link>
                 </Button>
               </Link>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

@@ -1,30 +1,30 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 interface CategoryStripProps {
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
+  categories: any[];
+  isLoading?: boolean;
 }
 
-export const CategoryStrip = ({ selectedCategory, setSelectedCategory }: CategoryStripProps) => {
-  const categories = [
-    { name: "General", img: "https://images.unsplash.com/photo-1490818387583-1baba5e638af?q=80&w=400", isLink: true, href: "/packages" },
-    { name: "Dairy", img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?q=80&w=400", isLink: true, href: "/tests?category=Dairy" },
-    { name: "Beverages", img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=400", isLink: true, href: "/tests?category=Beverages" },
-    { name: "Grains & Cereals", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400", isLink: true, href: "/tests?category=Grains%20%26%20Cereals" },
-    { name: "Spices", img: "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?q=80&w=400", isLink: true, href: "/tests?category=Spices" },
-    { name: "Meat & Poultry", img: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?q=80&w=400", isLink: true, href: "/tests?category=Meat%20%26%20Poultry" },
-    { name: "Oils & Fats", img: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?q=80&w=400", isLink: true, href: "/tests?category=Oils%20%26%20Fats" },
-    { name: "Processed Foods", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400", isLink: true, href: "/tests?category=Processed%20Foods" },
-    { name: "Snacks", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400", isLink: true, href: "/tests?category=Snacks" },
-    { name: "Fruits", img: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?q=80&w=400", isLink: true, href: "/tests?category=Fruits" },
-    { name: "Vegetables", img: "https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?q=80&w=400", isLink: true, href: "/tests?category=Vegetables" },
-    { name: "Confectionery", img: "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?q=80&w=400", isLink: true, href: "/tests?category=Confectionery" },
-    { name: "Bakery", img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=400", isLink: true, href: "/tests?category=Bakery" },
-    { name: "Seafood", img: "https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?q=80&w=400", isLink: true, href: "/tests?category=Seafood" },
-    { name: "Nuts & Seeds", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400", isLink: true, href: "/tests?category=Nuts%20%26%20Seeds" },
-    { name: "Supplements", img: "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=400", isLink: true, href: "/tests?category=Supplements" },
-  ];
+export const CategoryStrip = ({ selectedCategory, setSelectedCategory, categories, isLoading }: CategoryStripProps) => {
+  // If no categories from API, fallback to a single "All" category or just render what we have.
+  const displayCategories = categories?.length > 0 
+    ? [
+        { name: "All", img: "https://images.unsplash.com/photo-1490818387583-1baba5e638af?q=80&w=400", isLink: false },
+        ...categories.map(c => ({
+          name: c.name,
+          img: c.imageUrl || "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400",
+          isLink: false,
+        }))
+      ]
+    : [
+        { name: "All", img: "https://images.unsplash.com/photo-1490818387583-1baba5e638af?q=80&w=400", isLink: false }
+      ];
+
   const location = useLocation();
   const path = location.pathname === "/packages" ? true : false;
   console.log(path);
@@ -49,8 +49,13 @@ export const CategoryStrip = ({ selectedCategory, setSelectedCategory }: Categor
         <div className="flex flex-col gap-6">
           {/* Grid Container for 16 categories */}
           <div className="grid grid-cols-4 md:grid-cols-8 gap-4 pb-4">
-            {categories.map((cat) => {
-              const innerContent = (
+            {isLoading ? (
+              Array.from({ length: 16 }).map((_, i) => (
+                <Skeleton key={i} className="h-[140px] md:h-[180px] w-full rounded-[2rem]" />
+              ))
+            ) : (
+              displayCategories.map((cat) => {
+                const innerContent = (
                 <>
                   <img
                     src={cat.img}
@@ -97,7 +102,8 @@ export const CategoryStrip = ({ selectedCategory, setSelectedCategory }: Categor
                   {innerContent}
                 </button>
               );
-            })}
+            })
+            )}
           </div>
         </div>
       </div>
