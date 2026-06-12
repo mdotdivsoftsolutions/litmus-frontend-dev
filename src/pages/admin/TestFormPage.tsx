@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { testApi } from "@/lib/api/test";
 import { categoryApi } from "@/lib/api/category";
+import { testTypeApi } from "@/lib/api/testType";
+import { adminApi } from "@/lib/api/admin";
 
 const stepLabels = ["Basic Details", "Parameters & Pricing"];
 
@@ -31,10 +33,12 @@ export default function TestFormPage() {
     turnAroundTime: "",
     isPopular: false,
     isApplicableToAll: true,
+    creatorType: "ADMIN",
+    labId: "",
     applicableCategories: [],
     metadata: {
       method: "",
-      type: "chemical",
+      type: "",
       parameters: [{ name: "", unit: "", minLimit: "", maxLimit: "" }]
     }
   });
@@ -50,6 +54,16 @@ export default function TestFormPage() {
     queryFn: () => categoryApi.getCategories(),
   });
 
+  const { data: testTypesData } = useQuery({
+    queryKey: ["adminTestTypes"],
+    queryFn: () => testTypeApi.getTestTypes(),
+  });
+
+  const { data: labsData } = useQuery({
+    queryKey: ["adminLabs"],
+    queryFn: () => adminApi.getLabs(),
+  });
+
   const categories = categoriesData?.data?.data || [];
 
   useEffect(() => {
@@ -63,10 +77,12 @@ export default function TestFormPage() {
         turnAroundTime: test.turnAroundTime || "",
         isPopular: test.isPopular || false,
         isApplicableToAll: test.isApplicableToAll !== undefined ? test.isApplicableToAll : true,
+        creatorType: test.creatorType || "ADMIN",
+        labId: test.labId?._id || test.labId || "",
         applicableCategories: test.applicableCategories?.map((c: any) => typeof c === 'string' ? c : c._id) || [],
         metadata: {
           method: test.metadata?.method || "",
-          type: test.metadata?.type || "chemical",
+          type: test.metadata?.type || "",
           parameters: test.metadata?.parameters?.length > 0 ? test.metadata.parameters : [{ name: "", unit: "", minLimit: "", maxLimit: "" }]
         }
       });
@@ -129,6 +145,7 @@ export default function TestFormPage() {
       ...formData,
       price: Number(formData.price) || 0,
       offerPrice: formData.offerPrice ? Number(formData.offerPrice) : undefined,
+      labId: formData.creatorType === 'LAB' ? formData.labId : undefined,
     });
   };
 
@@ -183,7 +200,7 @@ export default function TestFormPage() {
         </CardHeader>
         <CardContent className="pt-6 space-y-6">
           {step === 0 && (
-            <div className="space-y-6 animate-fade-in max-w-4xl">
+            <div className="space-y-6 animate-fade-in w-full">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Test Name <span className="text-destructive">*</span></Label>
                 <Input name="testName" value={formData.testName} onChange={handleChange} placeholder="e.g. Fat Content Analysis" className="bg-background/50" />
@@ -196,12 +213,15 @@ export default function TestFormPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Test Type</Label>
-                  <Select value={formData.metadata.type} onValueChange={(val) => handleMetadataChange("type", val)}>
+                  <Select value={formData.metadata.type || undefined} onValueChange={(val) => handleMetadataChange("type", val)}>
                     <SelectTrigger className="bg-background/50"><SelectValue placeholder="Select Type" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="physical">Physical Analysis</SelectItem>
-                      <SelectItem value="chemical">Chemical Analysis</SelectItem>
-                      <SelectItem value="microbiological">Microbiological Analysis</SelectItem>
+                      {testTypesData?.data?.map((type: any) => (
+                        <SelectItem key={type._id} value={type.name}>{type.name}</SelectItem>
+                      ))}
+                      {(!testTypesData || testTypesData.data.length === 0) && (
+                        <SelectItem value="chemical" disabled>No Test Types Available</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -209,6 +229,35 @@ export default function TestFormPage() {
                   <Label className="text-sm font-medium">Turn Around Time</Label>
                   <Input name="turnAroundTime" value={formData.turnAroundTime} onChange={handleChange} placeholder="e.g. 24 hours" className="bg-background/50" />
                 </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Test Creator</Label>
+                  <Select value={formData.creatorType} onValueChange={(val) => setFormData({ ...formData, creatorType: val, labId: val === "ADMIN" ? "" : formData.labId })}>
+                    <SelectTrigger className="bg-background/50"><SelectValue placeholder="Select Creator" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ADMIN">Platform (Admin)</SelectItem>
+                      <SelectItem value="LAB">Personalized (Lab)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {formData.creatorType === "LAB" && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Select Laboratory <span className="text-destructive">*</span></Label>
+                    <Select value={formData.labId || undefined} onValueChange={(val) => setFormData({ ...formData, labId: val })}>
+                      <SelectTrigger className="bg-background/50"><SelectValue placeholder="Select Lab" /></SelectTrigger>
+                      <SelectContent>
+                        {labsData?.data?.map((lab: any) => (
+                          <SelectItem key={lab._id} value={lab._id}>{lab.labName}</SelectItem>
+                        ))}
+                        {(!labsData || labsData.data.length === 0) && (
+                          <SelectItem value="none" disabled>No Laboratories Available</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4 pt-4 border-t border-border/50">

@@ -1,15 +1,77 @@
 import { Link, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Star, MapPin, Phone, Mail, ShoppingCart, Shield, Clock, FileText, CheckCircle2, ChevronRight, Share2, Heart, Activity, ArrowRight, Microscope, FlaskConical, Award, Zap, Target, Quote, TrendingUp } from "lucide-react";
-import { laboratories, tests as allTests } from "@/lib/placeholder-data";
+import { labApi } from "@/lib/api/lab";
 import { cn } from "@/lib/utils";
 
 export default function LabDetailConsumerPage() {
    const { id } = useParams();
-   const lab = laboratories.find((l) => l.id === id) || laboratories[0];
+   
+   const { data: response, isLoading } = useQuery({
+     queryKey: ["publicLab", id],
+     queryFn: () => labApi.getLabByIdPublic(id!),
+     enabled: !!id
+   });
+
+   const lab = response?.data;
+
+   const getLowestPrice = (pricing?: Record<string, number>) => {
+     if (!pricing || Object.keys(pricing).length === 0) return 'N/A';
+     return `₹${Math.min(...Object.values(pricing))}`;
+   };
+
+   const getRating = (reviews?: any[]) => {
+     if (!reviews || reviews.length === 0) return 'New';
+     return (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1);
+   };
+
+   const getRatingDistribution = (reviews?: any[]) => {
+     if (!reviews || reviews.length === 0) return [0, 0, 0, 0, 0];
+     const counts = [0, 0, 0, 0, 0];
+     reviews.forEach(r => {
+        if (r.rating >= 1 && r.rating <= 5) counts[5 - Math.round(r.rating)]++;
+     });
+     return counts.map(c => Math.round((c / reviews.length) * 100));
+   };
+
+   if (isLoading) {
+     return (
+       <div className="animate-fade-in min-h-screen bg-white pb-20">
+         <section className="relative pt-12 pb-12 bg-slate-50 border-b border-slate-100">
+           <div className="max-w-7xl mx-auto px-6">
+             <div className="flex flex-col lg:flex-row lg:items-center gap-10">
+               <Skeleton className="h-28 w-28 rounded-[2rem] shrink-0" />
+               <div className="flex-1 space-y-4">
+                 <div className="flex gap-3"><Skeleton className="h-6 w-24 rounded-full" /><Skeleton className="h-6 w-32 rounded-full" /></div>
+                 <Skeleton className="h-10 w-3/4 max-w-md" />
+                 <div className="flex gap-6"><Skeleton className="h-5 w-32" /><Skeleton className="h-5 w-40" /></div>
+               </div>
+             </div>
+           </div>
+         </section>
+         <div className="max-w-7xl mx-auto px-6 pt-10 space-y-12">
+            <Skeleton className="h-12 w-full max-w-md" />
+            <div className="grid lg:grid-cols-3 gap-12 pt-4">
+              <div className="lg:col-span-2 space-y-6">
+                 <Skeleton className="h-24 w-full rounded-2xl" />
+                 <Skeleton className="h-24 w-full rounded-2xl" />
+                 <Skeleton className="h-24 w-full rounded-2xl" />
+              </div>
+              <div className="space-y-8">
+                 <Skeleton className="h-64 w-full rounded-[2.5rem]" />
+              </div>
+            </div>
+         </div>
+       </div>
+     );
+   }
+
+   if (!lab) return <div className="p-20 text-center text-muted-foreground">Laboratory not found.</div>;
 
    return (
       <div className="animate-fade-in min-h-screen bg-white pb-20">
@@ -23,32 +85,37 @@ export default function LabDetailConsumerPage() {
 
             <div className="relative z-10 max-w-7xl mx-auto px-6">
                <div className="flex flex-col lg:flex-row lg:items-center gap-10">
-                  <div className="h-28 w-28 rounded-[2rem] bg-white shadow-xl border border-slate-100 flex items-center justify-center font-bold text-2xl text-[#D32F2F] shrink-0 transform -rotate-3 transition-transform hover:rotate-0 duration-500">
-                     {lab.name.split(" ").map(w => w[0]).slice(0, 2).join("")}
+                  <div className="h-28 w-28 rounded-[2rem] bg-white shadow-xl border border-slate-100 flex items-center justify-center font-bold text-2xl text-[#D32F2F] shrink-0 transform -rotate-3 transition-transform hover:rotate-0 duration-500 overflow-hidden">
+                     {lab.metadata?.images?.[0] ? (
+                       <img src={lab.metadata.images[0]} alt={lab.labName} className="w-full h-full object-cover" />
+                     ) : (
+                       lab.labName?.split(" ").map((w: string) => w[0]).slice(0, 2).join("")
+                     )}
                   </div>
 
                   <div className="flex-1 space-y-4">
                      <div className="flex flex-wrap items-center gap-3">
-                        <Badge className="bg-slate-900 border-0 text-[10px] uppercase font-semibold tracking-widest px-3 h-6">Verified Facility</Badge>
-                        {lab.nabl && <Badge className="bg-[#D32F2F] border-0 text-[10px] uppercase font-semibold tracking-widest px-3 h-6">NABL Accredited</Badge>}
+                        {lab.isTrusted && <Badge className="bg-slate-900 border-0 text-[10px] uppercase font-semibold tracking-widest px-3 h-6">Verified Facility</Badge>}
+                        {lab.isNablAccredited && <Badge className="bg-[#D32F2F] border-0 text-[10px] uppercase font-semibold tracking-widest px-3 h-6">NABL Accredited</Badge>}
+                        {lab.isFssaiApproved && <Badge className="bg-blue-600 border-0 text-[10px] uppercase font-semibold tracking-widest px-3 h-6">FSSAI Approved</Badge>}
                         <div className="flex items-center gap-1.5 px-3 h-6 rounded-full bg-white border border-slate-200">
                            <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                           <span className="text-[10px] font-semibold text-slate-700">{lab.rating} Rating</span>
+                           <span className="text-[10px] font-semibold text-slate-700">{getRating(lab.reviews)} Rating</span>
                         </div>
                      </div>
 
                      <h1 className="text-4xl lg:text-4xl font-semibold text-slate-800 tracking-tight leading-tight">
-                        {lab.name}
+                        {lab.labName}
                      </h1>
 
                      <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-slate-500">
                         <div className="flex items-center gap-2">
                            <MapPin className="h-4 w-4 text-[#D32F2F]" />
-                           <span>{lab.city}, India</span>
+                           <span>{lab.location?.city || "India"}</span>
                         </div>
                         <div className="flex items-center gap-2">
                            <Clock className="h-4 w-4 text-emerald-500" />
-                           <span className="text-emerald-600 font-semibold tracking-tight">Open for Samples</span>
+                           <span className="text-emerald-600 font-semibold tracking-tight">{lab.activityStatus || "Operational Now"}</span>
                         </div>
                      </div>
                   </div>
@@ -87,26 +154,27 @@ export default function LabDetailConsumerPage() {
                            <h2 className="text-3xl lg:text-2xl font-semibold text-slate-800 tracking-tight leading-tight">
                               Available <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Panels & Pricing.</span>
                            </h2>
-                           <Badge variant="outline" className="rounded-xl px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#D32F2F] border-[#D32F2F]/20 h-10 flex items-center justify-center">{allTests.length} Items Listed</Badge>
+                           <Badge variant="outline" className="rounded-xl px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#D32F2F] border-[#D32F2F]/20 h-10 flex items-center justify-center">{lab.tests?.length || 0} Items Listed</Badge>
                         </div>
 
                         <div className="grid gap-4">
-                           {allTests.map((test) => (
-                              <div key={test.id} className="group flex flex-col sm:flex-row items-start sm:items-center gap-6 p-6 rounded-2xl bg-white border border-slate-100 hover:border-[#D32F2F]/20 hover:shadow-[0_24px_48px_rgba(0,0,0,0.03)] transition-all duration-300">
+                           {lab.tests?.length === 0 ? (
+                             <div className="text-center py-10 border rounded-xl border-dashed">No tests available</div>
+                           ) : lab.tests?.map((test: any) => (
+                              <div key={test._id} className="group flex flex-col sm:flex-row items-start sm:items-center gap-6 p-6 rounded-2xl bg-white border border-slate-100 hover:border-[#D32F2F]/20 hover:shadow-[0_24px_48px_rgba(0,0,0,0.03)] transition-all duration-300">
                                  <div className="h-14 w-14 rounded-2xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100 group-hover:bg-[#D32F2F]/5 group-hover:border-[#D32F2F]/10 transition-colors">
                                     <Activity className="h-6 w-6 text-slate-400 group-hover:text-[#D32F2F] transition-colors" />
                                  </div>
                                  <div className="flex-1 space-y-2">
-                                    <p className="font-semibold text-slate-800 text-lg tracking-tight group-hover:text-[#D32F2F] transition-colors">{test.name}</p>
+                                    <p className="font-semibold text-slate-800 text-lg tracking-tight group-hover:text-[#D32F2F] transition-colors">{test.testName || test.name}</p>
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                                       <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Method: {test.method}</span>
-                                       <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">TAT: 3-5 Working Days</span>
+                                       <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Method: {test.method || "Standard"}</span>
+                                       <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">TAT: {test.turnAroundTime || test.turnaroundTime || "3-5"}</span>
                                     </div>
                                  </div>
                                  <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-8">
                                     <div className="text-right">
-                                       <p className="text-xs text-slate-300 line-through font-bold">₹1,800</p>
-                                       <p className="text-xl font-bold text-slate-800 tracking-tighter">₹1,200</p>
+                                       <p className="text-xl font-bold text-slate-800 tracking-tighter">₹{lab.pricing?.[test._id] || lab.pricing?.[test.id] || test.offerPrice || test.price || "N/A"}</p>
                                     </div>
                                     <Button className="bg-gradient-to-r from-[#D32F2F] to-[#feba50] hover:shadow-[0_12px_24px_rgba(211,47,47,0.25)] text-white font-semibold text-xs rounded-xl h-11 px-8 flex items-center gap-2 transition-all hover:-translate-y-0.5 active:scale-95 border-0">
                                        <ShoppingCart className="h-4 w-4" /> Book Now
@@ -123,13 +191,13 @@ export default function LabDetailConsumerPage() {
                               Diagnostic <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Excellence.</span>
                            </h2>
                            <p className="text-slate-500 font-medium leading-relaxed text-lg">
-                              {lab.name} stands as a cornerstone of diagnostic excellence in {lab.city}. With a legacy of precision testing spans over a decade, we provide critical nutritional and safety analytics to enterprise food brands and producers.
+                              {lab.overview || `${lab.labName} stands as a cornerstone of diagnostic excellence in ${lab.location?.city || 'India'}. With a legacy of precision testing, we provide critical nutritional and safety analytics to enterprise food brands and producers.`}
                            </p>
                            <div className="grid sm:grid-cols-3 gap-6 pt-6">
                               {[
-                                 { label: "Tests Conducted", val: "1.2M+" },
-                                 { label: "Accuracy Rate", val: "99.98%" },
-                                 { label: "Scientists", val: "42+" },
+                                 { label: "Tests Conducted", val: lab.testsConducted !== undefined ? `${lab.testsConducted}+` : "0+" },
+                                 { label: "Accuracy Rate", val: lab.accuracyRate ? `${lab.accuracyRate}%` : "99.9%" },
+                                 { label: "Employees", val: lab.employeeCount !== undefined ? `${lab.employeeCount}+` : "0+" },
                               ].map((stat, i) => (
                                  <div key={i} className="p-6 rounded-[2rem] bg-slate-50 border border-slate-100 shadow-sm">
                                     <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">{stat.label}</p>
@@ -139,26 +207,32 @@ export default function LabDetailConsumerPage() {
                            </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                           <div className="p-8 rounded-[2.5rem] bg-white border border-slate-100 flex items-start gap-5 hover:border-[#D32F2F]/20 transition-all shadow-sm">
-                              <div className="h-12 w-12 rounded-2xl bg-[#D32F2F]/5 flex items-center justify-center shrink-0">
-                                 <Shield className="h-6 w-6 text-[#D32F2F]" />
-                              </div>
-                              <div className="space-y-2">
-                                 <p className="text-lg font-semibold text-slate-800 tracking-tight">FSSAI Protocol Compliance</p>
-                                 <p className="text-sm text-slate-500 font-medium leading-relaxed">Our clinical workflows are strictly mapped to FSSAI 2024 revised testing standards.</p>
-                              </div>
+                        {(lab.isFssaiApproved || lab.isNablAccredited) && (
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                              {lab.isFssaiApproved && (
+                                 <div className="p-8 rounded-[2.5rem] bg-white border border-slate-100 flex items-start gap-5 hover:border-[#D32F2F]/20 transition-all shadow-sm">
+                                    <div className="h-12 w-12 rounded-2xl bg-[#D32F2F]/5 flex items-center justify-center shrink-0">
+                                       <Shield className="h-6 w-6 text-[#D32F2F]" />
+                                    </div>
+                                    <div className="space-y-2">
+                                       <p className="text-lg font-semibold text-slate-800 tracking-tight">FSSAI Protocol Compliance</p>
+                                       <p className="text-sm text-slate-500 font-medium leading-relaxed">Our clinical workflows are strictly mapped to FSSAI 2024 revised testing standards.</p>
+                                    </div>
+                                 </div>
+                              )}
+                              {lab.isNablAccredited && (
+                                 <div className="p-8 rounded-[2.5rem] bg-white border border-slate-100 flex items-start gap-5 hover:border-blue-200 transition-all shadow-sm">
+                                    <div className="h-12 w-12 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
+                                       <Award className="h-6 w-6 text-blue-500" />
+                                    </div>
+                                    <div className="space-y-2">
+                                       <p className="text-lg font-semibold text-slate-800 tracking-tight">ISO 17025 Accreditation</p>
+                                       <p className="text-sm text-slate-500 font-medium leading-relaxed">Globally recognized quality management systems ensuring result legal validity.</p>
+                                    </div>
+                                 </div>
+                              )}
                            </div>
-                           <div className="p-8 rounded-[2.5rem] bg-white border border-slate-100 flex items-start gap-5 hover:border-blue-200 transition-all shadow-sm">
-                              <div className="h-12 w-12 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
-                                 <Award className="h-6 w-6 text-blue-500" />
-                              </div>
-                              <div className="space-y-2">
-                                 <p className="text-lg font-semibold text-slate-800 tracking-tight">ISO 17025 Accreditation</p>
-                                 <p className="text-sm text-slate-500 font-medium leading-relaxed">Globally recognized quality management systems ensuring result legal validity.</p>
-                              </div>
-                           </div>
-                        </div>
+                        )}
                      </TabsContent>
 
                      <TabsContent value="facility" className="mt-0 animate-slide-up space-y-12">
@@ -167,22 +241,19 @@ export default function LabDetailConsumerPage() {
                               Infrastructure <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">& Logistics.</span>
                            </h2>
                            <div className="grid sm:grid-cols-2 gap-6">
-                              {[
-                                 { icon: Microscope, title: "Advanced HPLC Systems", desc: "For high-precision chemical and nutritional profiling." },
-                                 { icon: FlaskConical, title: "Microbial Incubators", desc: "State-of-the-art pathogen detection and shelf stability." },
-                                 { icon: Clock, title: "Sub-Zero Storage", desc: "Certified cold-chain inventory for sensitive samples." },
-                                 { icon: Shield, title: "Automated Reporting", desc: "Digital verification pipeline with zero manual entry errors." },
-                              ].map((item, i) => (
+                              {lab.infrastructure?.length > 0 ? lab.infrastructure.map((item: any, i: number) => (
                                  <div key={i} className="group p-6 rounded-3xl bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-xl transition-all duration-500">
                                     <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#D32F2F] group-hover:scale-110 transition-transform">
-                                       <item.icon className="h-6 w-6" />
+                                       <Microscope className="h-6 w-6" />
                                     </div>
                                     <div className="mt-6 space-y-2">
                                        <p className="font-semibold text-slate-800 tracking-tight">{item.title}</p>
-                                       <p className="text-sm text-slate-500 font-medium leading-relaxed">{item.desc}</p>
+                                       <p className="text-sm text-slate-500 font-medium leading-relaxed">{item.description}</p>
                                     </div>
                                  </div>
-                              ))}
+                              )) : (
+                                <div className="col-span-2 text-center py-10 border rounded-xl border-dashed">No infrastructure details available.</div>
+                              )}
                            </div>
                         </div>
                      </TabsContent>
@@ -204,20 +275,19 @@ export default function LabDetailConsumerPage() {
                               <div className="md:col-span-4 relative rounded-[2.5rem] bg-slate-900 p-8 flex flex-col items-center justify-center text-center overflow-hidden group shadow-2xl">
                                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#D32F2F]/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
                                  <div className="relative z-10 space-y-4">
-                                    <p className="text-6xl font-bold text-white tracking-tighter">4.9</p>
+                                    <p className="text-6xl font-bold text-white tracking-tighter">{getRating(lab.reviews)}</p>
                                     <div className="flex items-center justify-center gap-1.5">
-                                       {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 fill-[#feba50] text-[#feba50]" />)}
+                                       {[...Array(Math.round(Number(getRating(lab.reviews)) || 5))].map((_, i) => <Star key={i} className="h-5 w-5 fill-[#feba50] text-[#feba50]" />)}
                                     </div>
                                     <div className="space-y-1">
-                                       <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">1.2k Verified Audits</p>
-                                       <p className="text-[10px] text-white/40 font-medium">Updated 2h ago</p>
+                                       <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{lab.reviews?.length || 0} Verified Audits</p>
                                     </div>
                                  </div>
                               </div>
 
                               {/* Detailed Bar Distribution */}
                               <div className="md:col-span-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 p-10 flex flex-col justify-center space-y-4 shadow-sm">
-                                 {[85, 10, 3, 1, 1].map((p, i) => (
+                                 {getRatingDistribution(lab.reviews).map((p, i) => (
                                     <div key={i} className="flex items-center gap-6 group/bar">
                                        <span className="text-[10px] font-bold text-slate-400 min-w-[50px] uppercase tracking-widest">{5 - i} Stars</span>
                                        <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -233,40 +303,7 @@ export default function LabDetailConsumerPage() {
                            </div>
 
                            <div className="grid sm:grid-cols-2 gap-6 pb-4">
-                              {[
-                                 { 
-                                    name: "Rahul Srivastava", 
-                                    role: "Dairy Quality Manager",
-                                    rating: 5, 
-                                    date: "2 days ago", 
-                                    comment: "Remarkable turnaround for our export dairy samples. The depth of the FSSAI compliance report was beyond our internal laboratory's capability. Highly recommended for safety verification.",
-                                    verified: true
-                                 },
-                                 { 
-                                    name: "Ananya Mehtre", 
-                                    role: "Organic Exports Lead",
-                                    rating: 5, 
-                                    date: "1 week ago", 
-                                    comment: "The NABL e-reports were automatically imported into our compliance dashboard. Zero manual errors and clean digital trails. This lab is a true technical partner.",
-                                    verified: true
-                                 },
-                                 { 
-                                    name: "Vikram Panicker", 
-                                    role: "Food Startup Founder",
-                                    rating: 4, 
-                                    date: "2 weeks ago", 
-                                    comment: "Modern facility and transparent pricing. The shelf-life stability tests were conducted using the latest micro-analyzers. A few delays in logistics but results were sharp.",
-                                    verified: false
-                                 },
-                                 { 
-                                    name: "Sneha Reddy", 
-                                    role: "HORECA Consultant",
-                                    rating: 5, 
-                                    date: "1 month ago", 
-                                    comment: "Clinical-grade precision for pathogen screening. We use this lab for all our high-tier client audits across Bangalore.",
-                                    verified: true
-                                 }
-                              ].map((rev, i) => (
+                              {lab.reviews?.length > 0 ? lab.reviews.map((rev: any, i: number) => (
                                  <Card key={i} className="group relative border border-slate-100 rounded-[2rem] shadow-sm hover:border-[#D32F2F]/20 hover:shadow-xl transition-all duration-500 overflow-hidden bg-white">
                                     <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
                                        <Quote className="h-20 w-20 text-[#D32F2F]" />
@@ -274,31 +311,41 @@ export default function LabDetailConsumerPage() {
                                     <CardContent className="p-8 space-y-6">
                                        <div className="flex items-start justify-between relative z-10">
                                           <div className="flex items-center gap-4">
-                                             <div className="h-14 w-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:border-[#D32F2F]/20 group-hover:bg-slate-100 transition-all">
-                                                <img src={`https://i.pravatar.cc/150?u=${rev.name}`} className="h-full w-full object-cover rounded-2xl grayscale group-hover:grayscale-0 transition-all duration-500" alt={rev.name} />
+                                             <div className="h-14 w-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:border-[#D32F2F]/20 group-hover:bg-slate-100 transition-all overflow-hidden">
+                                                {rev.userImage ? (
+                                                   <img src={rev.userImage} className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" alt={rev.reviewerName} />
+                                                ) : (
+                                                   <span className="text-xl font-bold text-slate-400">{rev.reviewerName?.[0]}</span>
+                                                )}
                                              </div>
                                              <div>
                                                 <div className="flex items-center gap-2">
-                                                   <p className="font-bold text-slate-800 tracking-tight">{rev.name}</p>
-                                                   {rev.verified && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                                                   <p className="font-bold text-slate-800 tracking-tight">{rev.reviewerName}</p>
+                                                   {rev.isLitmusVerified && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
                                                 </div>
-                                                <p className="text-[10px] font-bold text-slate-400 border-b border-slate-100 inline-block uppercase tracking-widest">{rev.role}</p>
+                                                <p className="text-[10px] font-bold text-slate-400 border-b border-slate-100 inline-block uppercase tracking-widest">{rev.role || "Client"}</p>
                                              </div>
                                           </div>
                                           <div className="flex items-center gap-0.5">
-                                             {[...Array(rev.rating)].map((_, j) => <Star key={j} className="h-3 w-3 fill-[#feba50] text-[#feba50]" />)}
+                                             {[...Array(rev.rating || 5)].map((_, j) => <Star key={j} className="h-3 w-3 fill-[#feba50] text-[#feba50]" />)}
                                           </div>
                                        </div>
                                        <p className="text-slate-500 font-medium text-sm leading-relaxed relative z-10 italic">
                                           "{rev.comment}"
                                        </p>
                                        <div className="flex items-center justify-between pt-4 border-t border-slate-50 relative z-10">
-                                          <Badge className="bg-slate-50 border-0 text-[10px] font-bold text-slate-400 px-3 uppercase tracking-widest">NABL Verified</Badge>
-                                          <p className="text-[10px] text-slate-300 font-bold">{rev.date}</p>
+                                          {rev.isLitmusVerified ? (
+                                            <Badge className="bg-slate-50 border-0 text-[10px] font-bold text-slate-400 px-3 uppercase tracking-widest">Litmus Verified</Badge>
+                                          ) : (
+                                            <div />
+                                          )}
+                                          <p className="text-[10px] text-slate-300 font-bold">{new Date(rev.date).toLocaleDateString()}</p>
                                        </div>
                                     </CardContent>
                                  </Card>
-                              ))}
+                              )) : (
+                                <div className="col-span-2 text-center py-10 border rounded-xl border-dashed">No reviews yet.</div>
+                              )}
                            </div>
                         </div>
                      </TabsContent>
@@ -314,7 +361,7 @@ export default function LabDetailConsumerPage() {
                               </div>
                               <div>
                                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Lab Location</p>
-                                 <p className="text-sm font-semibold text-slate-800">{lab.city}, India</p>
+                                 <p className="text-sm font-semibold text-slate-800">{lab.location?.city || "India"}</p>
                               </div>
                            </div>
                            <div className="flex items-center gap-3">
@@ -323,7 +370,7 @@ export default function LabDetailConsumerPage() {
                               </div>
                               <div>
                                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Direct Sample Support</p>
-                                 <p className="text-sm font-semibold text-slate-800">+91 1800 248 8342</p>
+                                 <p className="text-sm font-semibold text-slate-800">{lab.contactPhone || "Not provided"}</p>
                               </div>
                            </div>
                            <div className="flex items-center gap-3">
@@ -332,7 +379,7 @@ export default function LabDetailConsumerPage() {
                               </div>
                               <div>
                                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Administrative Email</p>
-                                 <p className="text-sm font-semibold text-slate-800">info@{lab.name.toLowerCase().replace(/\s+/g, "")}.ai</p>
+                                 <p className="text-sm font-semibold text-slate-800">{lab.contactEmail || `info@${lab.labName?.toLowerCase().replace(/\s+/g, "")}.ai`}</p>
                               </div>
                            </div>
                         </div>
@@ -340,17 +387,14 @@ export default function LabDetailConsumerPage() {
                         <div className="mt-10 pt-8 border-t border-slate-50">
                            <h4 className="text-sm font-semibold text-slate-800 uppercase tracking-widest mb-6">Service Area & Logistics</h4>
                            <div className="space-y-4">
-                              {[
-                                 "Standard Sample Pickup Available",
-                                 "Express Courier Partnership",
-                                 "Cold-Chain Logistics Support",
-                                 "International Export Samples"
-                              ].map((s, i) => (
+                              {lab.serviceAreaLogistics?.length > 0 ? lab.serviceAreaLogistics.map((s: any, i: number) => (
                                  <div key={i} className="flex items-center gap-3">
                                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                                    <span className="text-xs font-semibold text-slate-500">{s}</span>
+                                    <span className="text-xs font-semibold text-slate-500">{typeof s === 'string' ? s : s.method}</span>
                                  </div>
-                              ))}
+                              )) : (
+                                 <div className="text-xs text-slate-400 italic">No logistics info available.</div>
+                              )}
                            </div>
                         </div>
 

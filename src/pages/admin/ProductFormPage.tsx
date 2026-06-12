@@ -182,9 +182,9 @@ export default function ProductFormPage() {
             
             <div className="space-y-2">
               <Label className="text-sm font-medium">Category <span className="text-destructive">*</span></Label>
-              <Select value={formData.categoryId} onValueChange={handleSelectChange}>
+              <Select value={formData.categoryId || undefined} onValueChange={handleSelectChange}>
                 <SelectTrigger className="bg-background/50">
-                  <SelectValue placeholder="Select a category" />
+                  <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat: Category) => (

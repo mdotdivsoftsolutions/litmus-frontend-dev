@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { categoryApi } from "@/lib/api/category";
 import { CategoryStrip } from "./components/tests-listing/CategoryStrip";
 import { PackagesHero } from "./components/packages/PackagesHero";
 import { PackagesGrid } from "./components/packages/PackagesGrid";
@@ -8,13 +11,24 @@ export default function PackagesPage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [visibleCount, setVisibleCount] = useState(12);
-  const categories = ["All", "Compliance", "Clinical", "Labeling"];
+  const navigate = useNavigate();
+  const heroCategories = ["All", "Compliance", "Clinical", "Labeling"];
+
+  const { data: catRes, isLoading: catLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const res = await categoryApi.getCategories();
+      return res.data;
+    }
+  });
+
+  const apiCategories = catRes?.data || [];
 
   return (
     <div className="animate-fade-in bg-white min-h-screen">
       {/* 1. VIBRANT PANORAMIC HERO */}
       <PackagesHero
-        categories={categories}
+        categories={heroCategories}
         selectedCategory={selectedCategory}
         setSelectedCategory={setSelectedCategory}
         search={search}
@@ -38,7 +52,18 @@ export default function PackagesPage() {
 
       {/* 4. FOOD CATEGORY WISE PACKAGES */}
       <section className="bg-slate-50 ">
-        <CategoryStrip selectedCategory="" setSelectedCategory={() => { }} />
+        <CategoryStrip 
+          selectedCategory={""} 
+          setSelectedCategory={(cat) => {
+            if (cat === "All") {
+              navigate("/tests");
+            } else {
+              navigate(`/tests?category=${encodeURIComponent(cat)}`);
+            }
+          }} 
+          categories={apiCategories}
+          isLoading={catLoading}
+        />
       </section>
     </div>
   );

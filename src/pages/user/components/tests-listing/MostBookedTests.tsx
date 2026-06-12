@@ -62,20 +62,20 @@ export const MostBookedTests = ({
         <div className="grid gap-6 md:grid-cols-2">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-[1rem] p-6 shadow-sm border-2 border-slate-50 flex items-center gap-6">
-                <div className="flex-1 min-w-0 space-y-4">
-                  <Skeleton className="h-6 w-3/4 rounded-md" />
+              <div key={i} className="bg-white rounded-[1rem] p-6 shadow-sm border-2 border-slate-50 flex items-center gap-6 relative overflow-hidden">
+                <div className="flex-1 min-w-0 space-y-3 relative z-10">
+                  <div className="h-5 md:h-6 w-3/4 bg-slate-200 rounded-md animate-pulse" />
                   <div className="flex items-center gap-3">
-                    <Skeleton className="h-5 w-24 rounded-full" />
-                    <Skeleton className="h-4 w-24 rounded-md" />
+                    <div className="h-6 w-28 bg-red-50 rounded-full animate-pulse border border-red-50" />
+                    <div className="h-4 w-24 bg-slate-100 rounded-md animate-pulse" />
                   </div>
                 </div>
-                <div className="text-right shrink-0 flex flex-col items-end gap-2">
-                  <Skeleton className="h-3 w-12 rounded-md" />
-                  <Skeleton className="h-8 w-20 rounded-md" />
-                  <Skeleton className="h-4 w-16 rounded-md" />
+                <div className="text-right shrink-0 flex flex-col items-end gap-1.5 relative z-10">
+                  <div className="h-3 w-12 bg-slate-100 rounded-md animate-pulse" />
+                  <div className="h-7 w-20 bg-slate-200 rounded-md animate-pulse" />
+                  <div className="h-4 w-16 bg-emerald-50 rounded-md animate-pulse" />
                 </div>
-                <Skeleton className="hidden sm:block shrink-0 h-12 w-12 rounded-2xl" />
+                <div className="hidden sm:block shrink-0 h-12 w-12 rounded-2xl bg-slate-100 animate-pulse relative z-10" />
               </div>
             ))
           ) : (

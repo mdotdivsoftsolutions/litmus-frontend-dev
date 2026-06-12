@@ -165,7 +165,7 @@ export default function RegisterPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Business Type</Label>
-                  <Select onValueChange={(val) => setFormData({...formData, businessType: val})}><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                  <Select value={formData.businessType || undefined} onValueChange={(val) => setFormData({...formData, businessType: val})}><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                     <SelectContent>
                       {["Manufacturer", "Trader", "Importer", "Retailer"].map((t) => <SelectItem key={t} value={t.toLowerCase()}>{t}</SelectItem>)}
                     </SelectContent>

@@ -34,10 +34,12 @@ const adminNav = [
   { label: "Categories", icon: Grid3X3, href: "/admin/categories" },
   { label: "Products", icon: ShoppingBag, href: "/admin/products" },
   { label: "Tests", icon: TestTubes, href: "/admin/tests" },
+  { label: "Packages", icon: Package, href: "/admin/packages" },
   { label: "Payments", icon: DollarSign, href: "/admin/payments" },
   { label: "Reviews", icon: MessageSquareQuote, href: "/admin/reviews" },
   // { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
   { label: "Reports", icon: FileCheck, href: "/admin/reports" },
+  { label: "Settings", icon: Flame, href: "/admin/settings" },
 ];
 
 const labNav = [
@@ -45,6 +47,7 @@ const labNav = [
   { label: "Bookings", icon: ClipboardList, href: "/lab/bookings" },
   { label: "Upload Results", icon: Upload, href: "/lab/upload" },
   { label: "Pricing", icon: DollarSign, href: "/lab/pricing" },
+  { label: "Packages", icon: Package, href: "/lab/packages" },
   { label: "Schedule", icon: CalendarDays, href: "/lab/schedule" },
   { label: "Profile", icon: UserCircle, href: "/lab/profile" },
 ];

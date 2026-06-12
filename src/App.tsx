@@ -56,6 +56,9 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics.tsx";
 import AdminReports from "./pages/admin/AdminReports.tsx";
 import ReviewManagement from "./pages/admin/ReviewManagement.tsx";
 import ReviewFormPage from "./pages/admin/ReviewFormPage.tsx";
+import PackageManagement from "./pages/admin/PackageManagement.tsx";
+import PackageFormPage from "./pages/admin/PackageFormPage.tsx";
+import AdminSettings from "./pages/admin/AdminSettings.tsx";
 
 // Lab
 import LabDashboard from "./pages/lab/LabDashboard.tsx";
@@ -65,6 +68,7 @@ import LabPricingPage from "./pages/lab/LabPricingPage.tsx";
 import LabSchedulePage from "./pages/lab/LabSchedulePage.tsx";
 import LabProfilePage from "./pages/lab/LabProfilePage.tsx";
 import CategoryFormPage from "./pages/admin/CategoryFormPage.tsx";
+import LaboratoryDetailPage from "./pages/admin/LaboratoryDetailPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -135,6 +139,7 @@ const App = () => (
               <Route path="users" element={<UserManagement />} />
               <Route path="laboratories" element={<LabManagement />} />
               <Route path="laboratories/new" element={<LabFormPage />} />
+              <Route path="laboratories/:id" element={<LaboratoryDetailPage />} />
               <Route path="laboratories/:id/edit" element={<LabFormPage />} />
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="categories" element={<CategoryManagement />} />
@@ -146,12 +151,16 @@ const App = () => (
               <Route path="tests" element={<TestManagement />} />
               <Route path="tests/new" element={<TestFormPage />} />
               <Route path="tests/:id/edit" element={<TestFormPage />} />
+              <Route path="packages" element={<PackageManagement />} />
+              <Route path="packages/new" element={<PackageFormPage />} />
+              <Route path="packages/:id/edit" element={<PackageFormPage />} />
               <Route path="payments" element={<AdminPayments />} />
               <Route path="reviews" element={<ReviewManagement />} />
               <Route path="reviews/new" element={<ReviewFormPage />} />
               <Route path="reviews/:id/edit" element={<ReviewFormPage />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="reports" element={<AdminReports />} />
+              <Route path="settings" element={<AdminSettings />} />
             </Route>
           </Route>
 
@@ -164,6 +173,9 @@ const App = () => (
               <Route path="bookings/:id/upload" element={<UploadResultsPage />} />
               <Route path="upload" element={<UploadResultsPage />} />
               <Route path="pricing" element={<LabPricingPage />} />
+              <Route path="packages" element={<PackageManagement />} />
+              <Route path="packages/new" element={<PackageFormPage />} />
+              <Route path="packages/:id/edit" element={<PackageFormPage />} />
               <Route path="schedule" element={<LabSchedulePage />} />
               <Route path="profile" element={<LabProfilePage />} />
             </Route>

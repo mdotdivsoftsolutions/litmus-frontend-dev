@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Edit, Trash2, Filter, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Filter, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Eye, Tag, Beaker, FileText, CheckCircle2, IndianRupee } from "lucide-react";
 import { toast } from "sonner";
 import { testApi } from "@/lib/api/test";
 
@@ -22,6 +22,7 @@ export default function TestManagement() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [testToDelete, setTestToDelete] = useState<string | null>(null);
+  const [selectedTest, setSelectedTest] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
 
@@ -112,6 +113,7 @@ export default function TestManagement() {
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead>Test Name</TableHead>
+                <TableHead>Creator</TableHead>
                 <TableHead>Method</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Parameters</TableHead>
@@ -125,6 +127,7 @@ export default function TestManagement() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-8 rounded-full" /></TableCell>
@@ -145,6 +148,18 @@ export default function TestManagement() {
               ) : paginatedTests.map((t: any) => (
                 <TableRow key={t._id} className="hover:bg-muted/30 transition-colors">
                   <TableCell className="font-medium max-w-[200px] truncate" title={t.testName}>{t.testName}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <Badge variant={t.creatorType === 'LAB' ? "secondary" : "default"} className="w-fit text-[10px]">
+                        {t.creatorType === 'LAB' ? "Personalized" : "Platform"}
+                      </Badge>
+                      {t.creatorType === 'LAB' && t.labId && (
+                        <span className="text-[10px] text-muted-foreground truncate max-w-[120px]" title={t.labId.labName}>
+                          {t.labId.labName}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">{t.metadata?.method || 'N/A'}</TableCell>
                   <TableCell>
                     <Badge variant={t.metadata?.type === "chemical" ? "pending" : t.metadata?.type === "microbiological" ? "inprogress" : "outline"} className="capitalize shadow-sm">
@@ -171,6 +186,10 @@ export default function TestManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setSelectedTest(t)} className="cursor-pointer">
+                          <Eye className="mr-2 h-4 w-4" />
+                          <span>View Details</span>
+                        </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link to={`/admin/tests/${t._id}/edit`} className="w-full flex items-center cursor-pointer">
                             <Edit className="mr-2 h-4 w-4" />
@@ -224,6 +243,89 @@ export default function TestManagement() {
           </div>
         )}
       </Card>
+
+      {/* Test Detail Sheet */}
+      <Sheet open={!!selectedTest} onOpenChange={(open) => !open && setSelectedTest(null)}>
+        <SheetContent className="flex flex-col overflow-y-auto sm:max-w-xl">
+          {selectedTest && (
+            <>
+              <SheetHeader className="shrink-0">
+                <SheetTitle className="text-xl flex items-center gap-2">
+                  <Beaker className="h-5 w-5 text-primary" /> {selectedTest.testName}
+                </SheetTitle>
+              </SheetHeader>
+              <div className="mt-6 space-y-6 flex-1 overflow-y-auto pr-2 pb-6">
+                <div className="flex gap-2 flex-wrap">
+                  <Badge variant={selectedTest.creatorType === 'LAB' ? "secondary" : "default"}>
+                    {selectedTest.creatorType === 'LAB' ? "Personalized (Lab)" : "Platform (Admin)"}
+                  </Badge>
+                  {selectedTest.isPopular && <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Popular</Badge>}
+                  {selectedTest.isApplicableToAll && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Universal Test</Badge>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
+                    <p className="text-muted-foreground text-xs mb-1 flex items-center gap-1"><IndianRupee className="h-3 w-3" /> Base Price</p>
+                    <p className="font-bold text-lg">₹{selectedTest.price?.toLocaleString() || 0}</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
+                    <p className="text-muted-foreground text-xs mb-1 flex items-center gap-1"><Tag className="h-3 w-3" /> Offer Price</p>
+                    <p className="font-bold text-lg text-emerald-600">{selectedTest.offerPrice ? `₹${selectedTest.offerPrice.toLocaleString()}` : "—"}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-bold flex items-center gap-2 mb-2"><FileText className="h-4 w-4 text-primary" /> Details & Metadata</h4>
+                    <div className="rounded-lg border border-border divide-y divide-border/50 text-sm">
+                      <div className="flex justify-between p-3"><span className="text-muted-foreground">Type</span><span className="font-medium capitalize">{selectedTest.metadata?.type || 'Standard'}</span></div>
+                      <div className="flex justify-between p-3"><span className="text-muted-foreground">FSSAI Method</span><span className="font-mono font-medium">{selectedTest.metadata?.method || 'N/A'}</span></div>
+                      <div className="flex justify-between p-3"><span className="text-muted-foreground">Turn Around Time</span><span className="font-medium">{selectedTest.turnAroundTime || 'N/A'}</span></div>
+                    </div>
+                  </div>
+                  
+                  {selectedTest.description && (
+                    <div className="rounded-lg bg-muted/30 p-4 border border-border text-sm">
+                      <h4 className="font-bold mb-2 text-xs uppercase tracking-wider text-muted-foreground">Description</h4>
+                      <p className="text-slate-700 leading-relaxed">{selectedTest.description}</p>
+                    </div>
+                  )}
+
+                  <div>
+                    <h4 className="text-sm font-bold flex items-center gap-2 mb-2"><Beaker className="h-4 w-4 text-primary" /> Parameters ({selectedTest.metadata?.parameters?.length || 0})</h4>
+                    {selectedTest.metadata?.parameters?.length > 0 ? (
+                      <div className="rounded-lg border border-border overflow-hidden">
+                        <table className="w-full text-xs text-left">
+                          <thead className="bg-muted text-muted-foreground uppercase font-semibold">
+                            <tr><th className="px-3 py-2">Parameter</th><th className="px-3 py-2">Unit</th><th className="px-3 py-2">Limit</th></tr>
+                          </thead>
+                          <tbody className="divide-y divide-border/50">
+                            {selectedTest.metadata.parameters.map((p: any, i: number) => (
+                              <tr key={i} className="hover:bg-muted/30">
+                                <td className="px-3 py-2 font-medium">{p.name}</td>
+                                <td className="px-3 py-2">{p.unit || '-'}</td>
+                                <td className="px-3 py-2 font-mono">{p.acceptableLimit || '-'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center rounded-lg border border-border border-dashed text-sm text-muted-foreground">No parameters defined.</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-border mt-auto shrink-0 bg-background">
+                <Button className="w-full bg-primary hover:bg-primary-deep shadow-md" asChild>
+                  <Link to={`/admin/tests/${selectedTest._id}/edit`}><Edit className="mr-2 h-4 w-4" /> Edit Test Protocol</Link>
+                </Button>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <ConfirmDialog 
         open={!!testToDelete}

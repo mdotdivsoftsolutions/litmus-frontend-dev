@@ -18,19 +18,58 @@ import {
   FlaskConical,
   Award
 } from "lucide-react";
-import { packagesData } from "./components/packages/PackagesGrid";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useQuery } from "@tanstack/react-query";
+import { packageApi } from "@/lib/api/package";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PackageDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const pkg = packagesData.find((p) => p.id === id) || packagesData[0];
 
-  const discountPct = (price: number, mrp: number) => Math.round(((mrp - price) / mrp) * 100);
+  const { data: packageResponse, isLoading } = useQuery({
+    queryKey: ["package", id],
+    queryFn: () => packageApi.getPackage(id!),
+    enabled: !!id,
+  });
+
+  const pkg = packageResponse?.data;
+
+  const discountPct = (price: number, mrp: number) => {
+    if (!mrp || !price) return 0;
+    return Math.round(((mrp - price) / mrp) * 100);
+  };
 
   const handleBookNow = () => {
-    navigate("/bookings/new", { state: { package: pkg } });
+    if (pkg) {
+      navigate("/bookings/new", { state: { package: pkg } });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center p-8">
+         <Skeleton className="h-12 w-64 mb-8" />
+         <div className="flex gap-8 w-full max-w-7xl">
+            <Skeleton className="h-[400px] flex-1 rounded-xl" />
+            <Skeleton className="h-[400px] w-[350px] rounded-xl" />
+         </div>
+      </div>
+    );
+  }
+
+  if (!pkg) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-slate-800">Package Not Found</h2>
+          <p className="text-slate-500 mt-2">The package you are looking for does not exist.</p>
+          <Button className="mt-6" onClick={() => navigate("/packages")}>Back to Packages</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-20 animate-fade-in font-inter">

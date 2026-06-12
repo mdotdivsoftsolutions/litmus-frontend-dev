@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Edit, Trash2, MoreVertical, Package, ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Plus, Edit, Trash2, MoreVertical, Package, ImageIcon, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { categoryApi } from "@/lib/api/category";
 import { toast } from "sonner";
 
@@ -14,6 +15,7 @@ export default function CategoryManagement() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 8;
 
@@ -89,6 +91,10 @@ export default function CategoryManagement() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setSelectedCategory(cat)}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      <span>View Details</span>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate(`/admin/categories/${cat._id}/edit`)}>
                       <Edit className="mr-2 h-4 w-4" />
                       <span>Edit Category</span>
@@ -122,6 +128,52 @@ export default function CategoryManagement() {
           ))
         )}
       </div>
+
+      {/* Category Detail Sheet */}
+      <Sheet open={!!selectedCategory} onOpenChange={(open) => !open && setSelectedCategory(null)}>
+        <SheetContent className="flex flex-col sm:max-w-md">
+          {selectedCategory && (
+            <>
+              <SheetHeader className="shrink-0">
+                <SheetTitle className="text-xl">Category Details</SheetTitle>
+              </SheetHeader>
+              <div className="mt-8 space-y-6 flex-1 overflow-y-auto pr-2 pb-6">
+                <div className="aspect-video w-full rounded-xl overflow-hidden bg-muted border border-border flex items-center justify-center relative shadow-sm">
+                  {selectedCategory.imageUrl ? (
+                    <img src={selectedCategory.imageUrl} alt={selectedCategory.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <ImageIcon className="h-10 w-10 text-muted-foreground/30" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <h2 className="absolute bottom-4 left-4 text-white font-black text-2xl tracking-tight">{selectedCategory.name}</h2>
+                </div>
+
+                <div className="rounded-lg border border-border p-5 bg-background shadow-sm space-y-5">
+                  <div>
+                    <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-1.5">Category Name</p>
+                    <p className="font-bold text-lg text-slate-900">{selectedCategory.name}</p>
+                  </div>
+                  <div className="pt-4 border-t border-border/50">
+                    <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-2">Platform Statistics</p>
+                    <p className="font-medium text-slate-700 flex items-center gap-2">
+                      <Package className="h-4 w-4 text-primary" />
+                      {selectedCategory.productCount || 0} Connected Products
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-border mt-auto shrink-0 bg-background">
+                <Button className="w-full bg-primary hover:bg-primary-deep shadow-md" onClick={() => {
+                  navigate(`/admin/categories/${selectedCategory._id}/edit`);
+                }}>
+                  <Edit className="mr-2 h-4 w-4" /> Edit Category
+                </Button>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
 
       {!isLoading && categories.length > 0 && (
         <div className="flex items-center justify-between border border-border px-4 py-3 bg-muted/20 mt-6 rounded-lg shadow-sm">

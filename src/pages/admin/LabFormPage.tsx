@@ -6,13 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Upload, CheckCircle2, MapPin, Beaker, Receipt } from "lucide-react";
+import { ArrowLeft, Upload, CheckCircle2, MapPin, Beaker, Receipt, Shield, Star, Trash2, Edit2, User, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { adminApi } from "@/lib/api/admin";
+import { testApi } from "@/lib/api/test";
+import { logisticsApi } from "@/lib/api/logistics";
+import { infrastructureApi } from "@/lib/api/infrastructure";
+import { activityStatusApi } from "@/lib/api/activityStatus";
+import { Badge } from "@/components/ui/badge";
 
-const stepLabels = ["Basic Info", "Location & Media", "Tests & Pricing"];
+const stepLabels = ["Basic Info", "Location & Media", "Profile & Infrastructure", "Reviews", "Tests & Pricing"];
 
 interface LabFormData {
   labName: string;
@@ -33,9 +41,20 @@ interface LabFormData {
     lat: string;
     lng: string;
   };
+  overview: string;
+  employeeCount: string;
+  accuracyRate: string;
+  testsConducted: string;
+  activityStatus: string;
+  serviceAreaLogistics: string[];
+  infrastructure: { title: string; description: string; icon: string }[];
+  expertiseArea: string[];
+  reviews: { reviewerName: string; reviewerRole: string; userImage?: string; rating: number; comment: string; isVerified: boolean; date: string }[];
   metadata: {
     images: string[];
   };
+  tests: string[];
+  pricing: Record<string, number>;
 }
 
 export default function LabFormPage() {
@@ -46,6 +65,26 @@ export default function LabFormPage() {
 
   const [step, setStep] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isReviewDrawerOpen, setIsReviewDrawerOpen] = useState(false);
+  const [activeReviewIndex, setActiveReviewIndex] = useState<number | null>(null);
+  const [activeReview, setActiveReview] = useState<{
+    reviewerName: string;
+    reviewerRole: string;
+    userImage?: string;
+    rating: number;
+    comment: string;
+    isVerified: boolean;
+    date: string;
+  }>({
+    reviewerName: "",
+    reviewerRole: "",
+    userImage: "",
+    rating: 5,
+    comment: "",
+    isVerified: false,
+    date: new Date().toISOString().split('T')[0]
+  });
+  
   const [formData, setFormData] = useState<LabFormData>({
     labName: "",
     contactEmail: "",
@@ -65,9 +104,20 @@ export default function LabFormPage() {
       lat: "",
       lng: ""
     },
+    overview: "",
+    employeeCount: "",
+    accuracyRate: "",
+    testsConducted: "",
+    activityStatus: "Operational Now",
+    serviceAreaLogistics: [],
+    infrastructure: [],
+    expertiseArea: [],
+    reviews: [],
     metadata: {
       images: []
-    }
+    },
+    tests: [],
+    pricing: {}
   });
 
   const { data: labData, isLoading } = useQuery({
@@ -75,6 +125,30 @@ export default function LabFormPage() {
     queryFn: () => adminApi.getLabById(id!),
     enabled: isEditing,
   });
+
+  const { data: testsData, isLoading: testsLoading } = useQuery({
+    queryKey: ["adminTests"],
+    queryFn: () => testApi.getTests(),
+  });
+
+  const { data: logisticsData } = useQuery({
+    queryKey: ["adminLogistics"],
+    queryFn: () => logisticsApi.getLogisticsOptions(),
+  });
+
+  const { data: infrastructureData } = useQuery({
+    queryKey: ["adminInfrastructure"],
+    queryFn: () => infrastructureApi.getInfrastructureOptions(),
+  });
+
+  const { data: activityStatusData } = useQuery({
+    queryKey: ["adminActivityStatus"],
+    queryFn: () => activityStatusApi.getActivityStatuses()
+  });
+
+  const logisticsOptions = logisticsData?.data || [];
+  const infrastructureOptions = infrastructureData?.data || [];
+  const activityStatuses = activityStatusData?.data || [];
 
   useEffect(() => {
     if (labData?.data) {
@@ -98,15 +172,35 @@ export default function LabFormPage() {
           lat: lab.location?.lat || lab.location?.latitude || "",
           lng: lab.location?.lng || lab.location?.longitude || ""
         },
+        overview: lab.overview || "",
+        employeeCount: lab.employeeCount?.toString() || "",
+        accuracyRate: lab.accuracyRate?.toString() || "",
+        testsConducted: lab.testsConducted?.toString() || "",
+        activityStatus: lab.activityStatus || "Operational Now",
+        serviceAreaLogistics: lab.serviceAreaLogistics || [],
+        infrastructure: lab.infrastructure || [],
+        expertiseArea: lab.expertiseArea || [],
+        reviews: lab.reviews || [],
         metadata: {
           images: lab.metadata?.images || []
-        }
+        },
+        tests: lab.tests?.map((t: any) => typeof t === 'string' ? t : t._id) || [],
+        pricing: lab.pricing || {}
       });
     }
   }, [labData]);
 
   const saveMutation = useMutation({
-    mutationFn: (data: any) => isEditing ? adminApi.updateLab(id!, data) : adminApi.createLab(data),
+    mutationFn: (data: any) => {
+      // transform numbers before sending
+      const payload = {
+        ...data,
+        employeeCount: data.employeeCount ? Number(data.employeeCount) : 0,
+        accuracyRate: data.accuracyRate ? Number(data.accuracyRate) : 0,
+        testsConducted: data.testsConducted ? Number(data.testsConducted) : 0,
+      };
+      return isEditing ? adminApi.updateLab(id!, payload) : adminApi.createLab(payload);
+    },
     onSuccess: (res: any) => {
       toast.success(isEditing ? "Laboratory updated successfully!" : "Laboratory created successfully!");
       if (res.generatedPassword) {
@@ -133,6 +227,108 @@ export default function LabFormPage() {
 
   const handleSwitchChange = (name: string, checked: boolean) => {
     setFormData({ ...formData, [name]: checked });
+  };
+
+  const handleTestToggle = (testId: string, checked: boolean) => {
+    setFormData((prev) => {
+      if (checked) {
+        return { ...prev, tests: [...prev.tests, testId] };
+      } else {
+        const newPricing = { ...prev.pricing };
+        delete newPricing[testId];
+        return { 
+          ...prev, 
+          tests: prev.tests.filter(id => id !== testId),
+          pricing: newPricing
+        };
+      }
+    });
+  };
+
+  const handleCustomPriceChange = (testId: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      pricing: { ...prev.pricing, [testId]: Number(value) }
+    }));
+  };
+
+  const handleServiceLogisticsToggle = (item: string, checked: boolean) => {
+    setFormData((prev) => {
+      if (checked) {
+        return { ...prev, serviceAreaLogistics: [...prev.serviceAreaLogistics, item] };
+      } else {
+        return { ...prev, serviceAreaLogistics: prev.serviceAreaLogistics.filter(i => i !== item) };
+      }
+    });
+  };
+
+  const handleInfrastructureToggle = (opt: any, checked: boolean) => {
+    setFormData((prev) => {
+      if (checked) {
+        return { 
+          ...prev, 
+          infrastructure: [...prev.infrastructure, { title: opt.title, description: opt.description, icon: opt.icon }] 
+        };
+      } else {
+        return { 
+          ...prev, 
+          infrastructure: prev.infrastructure.filter(i => i.title !== opt.title) 
+        };
+      }
+    });
+  };
+
+  const handleOpenReviewDrawer = (index: number | null = null) => {
+    if (index !== null) {
+      setActiveReviewIndex(index);
+      setActiveReview(formData.reviews[index]);
+    } else {
+      setActiveReviewIndex(null);
+      setActiveReview({ reviewerName: "", reviewerRole: "", userImage: "", rating: 5, comment: "", isVerified: true, date: new Date().toISOString().split('T')[0] });
+    }
+    setIsReviewDrawerOpen(true);
+  };
+
+  const handleSaveReview = () => {
+    setFormData(prev => {
+      const newReviews = [...prev.reviews];
+      if (activeReviewIndex !== null) {
+        newReviews[activeReviewIndex] = activeReview;
+      } else {
+        newReviews.push(activeReview);
+      }
+      return { ...prev, reviews: newReviews };
+    });
+    setIsReviewDrawerOpen(false);
+  };
+
+  const handleRemoveReview = (index: number) => {
+    setFormData(prev => {
+      const newReviews = [...prev.reviews];
+      newReviews.splice(index, 1);
+      return { ...prev, reviews: newReviews };
+    });
+  };
+
+  const handleReviewImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      const res = await adminApi.uploadFile(file);
+      if (res.success && res.data?.url) {
+        setActiveReview(prev => ({ ...prev, userImage: res.data.url }));
+        toast.success("Profile image uploaded!");
+      } else {
+        toast.error("Failed to upload image.");
+      }
+    } catch (error: any) {
+      toast.error("Error uploading image");
+    } finally {
+      setIsUploading(false);
+      e.target.value = '';
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'images' | 'affiliationDocs' = 'images') => {
@@ -230,7 +426,7 @@ export default function LabFormPage() {
         </div>
       </div>
 
-      <div className="flex w-full items-center mb-8">
+      <div className="flex w-full items-center mb-8 overflow-x-auto">
         {stepLabels.map((label, i) => {
           const isCompleted = i < step;
           const isActive = i === step;
@@ -238,8 +434,9 @@ export default function LabFormPage() {
           return (
             <div 
               key={i} 
+              onClick={() => setStep(i)}
               className={cn(
-                "flex-1 flex items-center justify-between py-4 px-4 md:px-6 border-b-2 transition-all",
+                "flex-1 flex items-center justify-between py-4 px-4 md:px-6 border-b-2 transition-all cursor-pointer hover:bg-muted/30",
                 isCompleted ? "border-litmus-emerald" : isActive ? "border-primary" : "border-muted"
               )}
             >
@@ -268,13 +465,17 @@ export default function LabFormPage() {
           <CardTitle className="text-xl flex items-center gap-2">
             {step === 0 && <Beaker className="h-5 w-5 text-primary" />}
             {step === 1 && <MapPin className="h-5 w-5 text-primary" />}
-            {step === 2 && <Receipt className="h-5 w-5 text-primary" />}
+            {step === 2 && <Shield className="h-5 w-5 text-primary" />}
+            {step === 3 && <Star className="h-5 w-5 text-primary" />}
+            {step === 4 && <Receipt className="h-5 w-5 text-primary" />}
             {stepLabels[step]}
           </CardTitle>
           <CardDescription>
             {step === 0 && "Provide the fundamental details about the laboratory."}
             {step === 1 && "Specify the exact map location and upload photos of the facility."}
-            {step === 2 && "Select the tests they provide and configure base pricing."}
+            {step === 2 && "Detail the lab's infrastructure, analytical capabilities, and logistical support."}
+            {step === 3 && "Manage institutional and customer reviews."}
+            {step === 4 && "Select the tests they provide and configure base pricing."}
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-6 space-y-6">
@@ -311,7 +512,7 @@ export default function LabFormPage() {
                   <Input name="startingYear" type="number" value={formData.startingYear} onChange={handleChange} placeholder="e.g. 2015" className="bg-background/50" />
                 </div>
               </div>
-              <div className="space-y-2 pt-2">
+              <div className="space-y-2 pt-2 border-t border-border/50">
                 <Label className="text-sm font-medium">Additional Details</Label>
                 <textarea 
                   name="additionalDetails" 
@@ -455,12 +656,354 @@ export default function LabFormPage() {
           )}
 
           {step === 2 && (
-            <div className="space-y-6 animate-fade-in text-center py-12">
-               <Receipt className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-               <h3 className="text-xl font-semibold">Test Configurations (Coming Soon)</h3>
-               <p className="text-muted-foreground max-w-md mx-auto">
-                 In a future update, you will be able to select standard tests and set base pricing directly during onboarding.
-               </p>
+            <div className="space-y-8 animate-fade-in">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold border-b border-border/50 pb-2">Overview & Analytics</h3>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Diagnostic Excellence Overview</Label>
+                  <textarea 
+                    name="overview" 
+                    value={formData.overview} 
+                    onChange={handleChange as any} 
+                    placeholder="Describe the laboratory's legacy, precision, and excellence..." 
+                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-muted-foreground">Tests Conducted (Auto-generated)</Label>
+                    <Input name="testsConducted" type="number" value={formData.testsConducted} readOnly placeholder="Auto-calculated" className="bg-muted cursor-not-allowed opacity-70" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-muted-foreground">Accuracy Rate (%) (Auto-generated)</Label>
+                    <Input name="accuracyRate" type="number" step="0.01" value={formData.accuracyRate} readOnly placeholder="Auto-calculated" className="bg-muted cursor-not-allowed opacity-70" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Total Scientists</Label>
+                    <Input name="employeeCount" type="number" value={formData.employeeCount} onChange={handleChange} placeholder="e.g. 42" className="bg-background/50" />
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6 pt-2">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Activity Status</Label>
+                    <select
+                      name="activityStatus"
+                      value={formData.activityStatus}
+                      onChange={handleChange as any}
+                      className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="" disabled>Select a status</option>
+                      {activityStatuses.map((status: any) => (
+                        <option key={status._id} value={status.name}>{status.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-border/50">
+                <h3 className="text-lg font-semibold border-b border-border/50 pb-2">Expertise Areas</h3>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="e.g. Dairy, Water, Chemical (Press Enter to add)" 
+                      className="bg-background/50 max-w-md" 
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const val = e.currentTarget.value.trim();
+                          if (val && formData.expertiseArea.length < 4 && !formData.expertiseArea.includes(val)) {
+                            setFormData(prev => ({ ...prev, expertiseArea: [...prev.expertiseArea, val] }));
+                            e.currentTarget.value = '';
+                          }
+                        }
+                      }}
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={(e) => {
+                        const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                        const val = input.value.trim();
+                        if (val && formData.expertiseArea.length < 4 && !formData.expertiseArea.includes(val)) {
+                          setFormData(prev => ({ ...prev, expertiseArea: [...prev.expertiseArea, val] }));
+                          input.value = '';
+                        }
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Maximum 4 areas. These will be highlighted on the laboratory card.</p>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {formData.expertiseArea.map((exp, i) => (
+                      <Badge key={i} variant="secondary" className="px-3 py-1 text-sm flex items-center gap-2">
+                        {exp}
+                        <button type="button" onClick={() => setFormData(prev => ({ ...prev, expertiseArea: prev.expertiseArea.filter((_, idx) => idx !== i) }))} className="hover:text-destructive">×</button>
+                      </Badge>
+                    ))}
+                    {formData.expertiseArea.length === 0 && <span className="text-sm text-muted-foreground italic">No expertise areas added.</span>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold border-b border-border/50 pb-2">Service Area & Logistics</h3>
+                {logisticsOptions.length === 0 && (
+                  <p className="text-sm text-muted-foreground border-dashed border rounded-lg p-4 text-center">No logistics options available. Please add them in Settings.</p>
+                )}
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {logisticsOptions.map((opt: any) => (
+                    <div key={opt._id} className="flex items-center space-x-3 rounded-lg border p-3 hover:bg-muted/20">
+                      <Switch 
+                        checked={formData.serviceAreaLogistics?.includes(opt.name) || false} 
+                        onCheckedChange={(c) => handleServiceLogisticsToggle(opt.name, c)} 
+                      />
+                      <Label className="text-sm font-medium cursor-pointer leading-none">{opt.name}</Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                  <h3 className="text-lg font-semibold">Infrastructure & Equipment</h3>
+                  <Link to="/admin/settings" target="_blank" className="text-sm text-primary hover:underline">
+                    Manage Templates
+                  </Link>
+                </div>
+                {infrastructureOptions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4 text-center border border-dashed rounded-lg">No infrastructure templates found. Please add them in Settings.</p>
+                ) : (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {infrastructureOptions.map((opt: any) => {
+                      const isSelected = formData.infrastructure?.some(i => i.title === opt.title) || false;
+                      return (
+                        <div key={opt._id} className={cn("flex items-start gap-3 p-4 border rounded-xl transition-all cursor-pointer hover:border-primary/50", isSelected ? "bg-primary/5 border-primary/50" : "bg-muted/10")} onClick={() => handleInfrastructureToggle(opt, !isSelected)}>
+                          <div className="pt-1">
+                            <Switch 
+                              checked={isSelected} 
+                              onCheckedChange={(c) => handleInfrastructureToggle(opt, c)} 
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-sm">{opt.title}</h4>
+                            <p className="text-xs text-muted-foreground mt-1">{opt.description}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Institutional Reviews</h3>
+                  <p className="text-sm text-muted-foreground">Add and manage reviews that will be displayed on the laboratory's public profile.</p>
+                </div>
+                <Button type="button" onClick={() => handleOpenReviewDrawer()} className="bg-primary hover:bg-primary-deep text-white shadow-md">
+                  + Add Review
+                </Button>
+              </div>
+
+              {(!formData.reviews || formData.reviews.length === 0) ? (
+                <div className="text-center py-12 text-muted-foreground border rounded-xl border-dashed">
+                  No reviews added yet. Click "Add Review" to create one.
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Reviewer</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead>Verified</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {formData.reviews.map((review, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={review.userImage || ""} />
+                            <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+                          </Avatar>
+                          {review.reviewerName}
+                        </TableCell>
+                        <TableCell>{review.reviewerRole}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-yellow-500">
+                            {review.rating} <Star className="h-3 w-3 fill-current" />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {review.isVerified ? (
+                            <span className="inline-flex items-center gap-1 text-xs text-primary bg-primary/10 px-2 py-1 rounded-full"><Shield className="h-3 w-3" /> Litmus Verified</span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Unverified</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenReviewDrawer(index)} className="text-primary hover:text-primary-deep hover:bg-primary/10">
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleRemoveReview(index)} className="text-destructive hover:bg-destructive/10">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+
+              <Sheet open={isReviewDrawerOpen} onOpenChange={setIsReviewDrawerOpen}>
+                <SheetContent className="sm:max-w-[500px] overflow-y-auto">
+                  <SheetHeader className="mb-6">
+                    <SheetTitle>{activeReviewIndex !== null ? "Edit Review" : "Add Review"}</SheetTitle>
+                    <SheetDescription>Fill out the reviewer's details and feedback.</SheetDescription>
+                  </SheetHeader>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Reviewer Profile Image (Optional)</Label>
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-16 w-16 border">
+                          <AvatarImage src={activeReview.userImage || ""} />
+                          <AvatarFallback><User className="h-8 w-8 text-muted-foreground" /></AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <Label htmlFor="review-image-upload" className="cursor-pointer border border-dashed rounded-lg p-4 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/50 transition-colors w-full">
+                            {isUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5 mb-2" />}
+                            <span className="text-xs">Click to upload image</span>
+                            <Input id="review-image-upload" type="file" className="hidden" accept="image/*" onChange={handleReviewImageUpload} disabled={isUploading} />
+                          </Label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm">Reviewer Name</Label>
+                      <Input value={activeReview.reviewerName} onChange={(e) => setActiveReview({ ...activeReview, reviewerName: e.target.value })} placeholder="e.g. Ananya Mehtre" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm">Reviewer Role</Label>
+                      <Input value={activeReview.reviewerRole} onChange={(e) => setActiveReview({ ...activeReview, reviewerRole: e.target.value })} placeholder="e.g. Organic Exports Lead" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm">Date Text</Label>
+                        <Input value={activeReview.date} onChange={(e) => setActiveReview({ ...activeReview, date: e.target.value })} placeholder="e.g. Just now" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm">Rating (1-5)</Label>
+                        <Input type="number" min="1" max="5" value={activeReview.rating} onChange={(e) => setActiveReview({ ...activeReview, rating: Number(e.target.value) })} />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm">Review Comment</Label>
+                      <textarea 
+                        value={activeReview.comment} 
+                        onChange={(e) => setActiveReview({ ...activeReview, comment: e.target.value })} 
+                        placeholder="e.g. The reports were automatically imported..." 
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg border p-3 bg-muted/30">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-medium">Litmus Verified Badge</Label>
+                        <p className="text-xs text-muted-foreground">Show official verified badge</p>
+                      </div>
+                      <Switch checked={activeReview.isVerified} onCheckedChange={(c) => setActiveReview({ ...activeReview, isVerified: c })} />
+                    </div>
+                    <div className="pt-4 flex justify-end gap-3">
+                      <Button variant="outline" onClick={() => setIsReviewDrawerOpen(false)}>Cancel</Button>
+                      <Button onClick={handleSaveReview} className="bg-primary hover:bg-primary-deep text-white">Save Review</Button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Available Tests</h3>
+                  <p className="text-sm text-muted-foreground">Select the tests this laboratory provides and set custom pricing if needed.</p>
+                </div>
+              </div>
+
+              {testsLoading ? (
+                <div className="space-y-4 animate-pulse">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-20 w-full rounded-xl" />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {testsData?.data?.map((test: any) => {
+                    const isSelected = formData.tests.includes(test._id);
+                    const customPrice = formData.pricing[test._id];
+                    return (
+                      <div 
+                        key={test._id} 
+                        className={cn(
+                          "flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border p-4 transition-all",
+                          isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/30"
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="pt-1">
+                            <Switch 
+                              checked={isSelected} 
+                              onCheckedChange={(c) => handleTestToggle(test._id, c)} 
+                            />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold">{test.testName}</h4>
+                              <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground capitalize">
+                                {test.metadata?.type || 'Standard'}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{test.description || 'No description available.'}</p>
+                            <div className="flex gap-4 mt-2 text-xs">
+                              <span className="text-muted-foreground">Platform Price: <span className="font-medium text-foreground">₹{test.price}</span></span>
+                              <span className="text-muted-foreground">Method: <span className="font-medium text-foreground">{test.metadata?.method || 'N/A'}</span></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {isSelected && (
+                          <div className="flex items-center gap-3 sm:w-64 bg-background/50 p-3 rounded-lg border border-border/50">
+                            <Label className="text-xs font-medium whitespace-nowrap">Lab Price (₹):</Label>
+                            <Input 
+                              type="number" 
+                              placeholder={test.price?.toString()}
+                              value={customPrice || ""}
+                              onChange={(e) => handleCustomPriceChange(test._id, e.target.value)}
+                              className="h-8"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {(!testsData?.data || testsData.data.length === 0) && (
+                    <div className="text-center py-12 text-muted-foreground border rounded-xl border-dashed">
+                      No tests found in the platform. Please add tests in Test Management first.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -470,7 +1013,7 @@ export default function LabFormPage() {
         <Button variant="outline" onClick={() => setStep(step - 1)} disabled={step === 0} className="w-32">
           Back
         </Button>
-        {step < 2 ? (
+        {step < 4 ? (
           <Button onClick={() => setStep(step + 1)} className="w-32 bg-primary hover:bg-primary-deep shadow-md shadow-primary/20">
             Next Step
           </Button>

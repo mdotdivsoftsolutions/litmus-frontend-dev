@@ -50,8 +50,14 @@ export const CategoryStrip = ({ selectedCategory, setSelectedCategory, categorie
           {/* Grid Container for 16 categories */}
           <div className="grid grid-cols-4 md:grid-cols-8 gap-4 pb-4">
             {isLoading ? (
-              Array.from({ length: 16 }).map((_, i) => (
-                <Skeleton key={i} className="h-[140px] md:h-[180px] w-full rounded-[2rem]" />
+              Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="relative h-[140px] md:h-[180px] w-full rounded-[2rem] overflow-hidden bg-slate-100 flex flex-col justify-end p-4 border-2 border-slate-50/50">
+                   <div className="absolute inset-0 bg-slate-200/50 animate-pulse" />
+                   <div className="absolute inset-0 bg-gradient-to-t from-slate-300/50 to-transparent" />
+                   <div className="relative z-10">
+                      <div className="h-2.5 md:h-3 w-16 bg-slate-300 rounded-full animate-pulse" />
+                   </div>
+                </div>
               ))
             ) : (
               displayCategories.map((cat) => {

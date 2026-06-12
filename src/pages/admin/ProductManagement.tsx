@@ -12,7 +12,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Settings2, Edit, Trash2, Filter, MoreVertical, ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Settings2, Edit, Trash2, Filter, MoreVertical, ImageIcon, ChevronLeft, ChevronRight, Eye, Package } from "lucide-react";
 import { productApi } from "@/lib/api/product";
 import { toast } from "sonner";
 import { tests } from "@/lib/placeholder-data";
@@ -35,6 +35,7 @@ export default function ProductManagement() {
   const [search, setSearch] = useState("");
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [testsProduct, setTestsProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
@@ -193,6 +194,10 @@ export default function ProductManagement() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setSelectedProduct(p)} className="cursor-pointer">
+                            <Eye className="mr-2 h-4 w-4" />
+                            <span>View Details</span>
+                          </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link to={`/admin/products/${p._id}/edit`} className="cursor-pointer">
                               <Edit className="mr-2 h-4 w-4" />
@@ -251,6 +256,63 @@ export default function ProductManagement() {
           </div>
         )}
       </Card>
+
+      <Sheet open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
+        <SheetContent className="flex flex-col sm:max-w-md">
+          {selectedProduct && (
+            <>
+              <SheetHeader className="shrink-0">
+                <SheetTitle className="text-xl">Product Details</SheetTitle>
+              </SheetHeader>
+              <div className="mt-8 space-y-6 flex-1 overflow-y-auto pr-2 pb-6">
+                <div className="aspect-video w-full rounded-xl overflow-hidden bg-muted border border-border flex items-center justify-center relative shadow-sm">
+                  {selectedProduct.imageUrl ? (
+                    <img src={selectedProduct.imageUrl} alt={selectedProduct.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <ImageIcon className="h-10 w-10 text-muted-foreground/30" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <h2 className="absolute bottom-4 left-4 text-white font-black text-2xl tracking-tight">{selectedProduct.name}</h2>
+                </div>
+
+                <div className="rounded-lg border border-border p-5 bg-background shadow-sm space-y-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-1.5">Category</p>
+                      <Badge variant="secondary" className="bg-muted text-muted-foreground font-normal">
+                        {selectedProduct.categoryId?.name || "Uncategorized"}
+                      </Badge>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-1.5">Status</p>
+                      <StatusBadge status={selectedProduct.isActive ? "Active" : "Inactive"} />
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t border-border/50">
+                    <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-2">Platform Statistics</p>
+                    <p className="font-medium text-slate-700 flex items-center gap-2">
+                      <Package className="h-4 w-4 text-primary" />
+                      {selectedProduct.availableTests?.length || 0} Connected Tests
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-border mt-auto shrink-0 bg-background space-y-3">
+                <Button className="w-full bg-primary hover:bg-primary-deep shadow-md" asChild>
+                  <Link to={`/admin/products/${selectedProduct._id}/edit`}><Edit className="mr-2 h-4 w-4" /> Edit Product</Link>
+                </Button>
+                <Button variant="outline" className="w-full" onClick={() => {
+                  setTestsProduct(selectedProduct);
+                  setSelectedProduct(null);
+                }}>
+                  <Settings2 className="mr-2 h-4 w-4" /> Manage Tests
+                </Button>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <Sheet open={!!testsProduct} onOpenChange={(open) => !open && setTestsProduct(null)}>
         <SheetContent className="overflow-y-auto">

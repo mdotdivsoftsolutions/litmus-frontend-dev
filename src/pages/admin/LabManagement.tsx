@@ -22,6 +22,7 @@ export default function LabManagement() {
   const [selectedLab, setSelectedLab] = useState<any | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [labToDelete, setLabToDelete] = useState<string | null>(null);
+  const [labToToggle, setLabToToggle] = useState<{lab: any, targetState: boolean} | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
   
@@ -34,6 +35,18 @@ export default function LabManagement() {
     },
     onError: () => {
       toast.error("Failed to delete laboratory");
+    }
+  });
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => adminApi.updateLab(id, { isActive }),
+    onSuccess: () => {
+      toast.success("Laboratory visibility updated");
+      setLabToToggle(null);
+      queryClient.invalidateQueries({ queryKey: ["adminLabs"] });
+    },
+    onError: () => {
+      toast.error("Failed to update laboratory visibility");
     }
   });
   
@@ -130,7 +143,13 @@ export default function LabManagement() {
                 <TableCell>{lab.tests?.length || "—"}</TableCell>
                 <TableCell>{"—"}</TableCell>
                 <TableCell>{"—"}</TableCell>
-                <TableCell><Switch checked={lab.isActive} /></TableCell>
+                <TableCell>
+                  <Switch 
+                    checked={lab.isActive} 
+                    onCheckedChange={(checked) => setLabToToggle({ lab, targetState: checked })} 
+                    disabled={toggleStatusMutation.isPending} 
+                  />
+                </TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -199,11 +218,13 @@ export default function LabManagement() {
 
       {/* Lab Detail Sheet */}
       <Sheet open={!!selectedLab} onOpenChange={(open) => !open && setSelectedLab(null)}>
-        <SheetContent className="overflow-y-auto sm:max-w-lg">
+        <SheetContent className="flex flex-col sm:max-w-md">
           {selectedLab && (
             <>
-              <SheetHeader><SheetTitle>{selectedLab.labName}</SheetTitle></SheetHeader>
-              <div className="mt-6 space-y-6">
+              <SheetHeader className="shrink-0">
+                <SheetTitle className="text-xl">Laboratory Details</SheetTitle>
+              </SheetHeader>
+              <div className="mt-8 space-y-6 flex-1 overflow-y-auto pr-2 pb-6">
                 <div className="flex gap-2">
                   {selectedLab.isNablAccredited && <Badge variant="nabl" className="bg-green-700 hover:bg-green-800 text-white border-transparent">NABL Accredited</Badge>}
                   {selectedLab.isFssaiApproved && <Badge variant="fssai" className="bg-emerald-700 hover:bg-emerald-800 text-white border-transparent">FSSAI Approved</Badge>}
@@ -217,7 +238,10 @@ export default function LabManagement() {
                   <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
                     <p className="text-muted-foreground text-xs mb-1">Rating</p>
                     <p className="font-medium flex items-center">
-                      4.8 <span className="text-yellow-500 ml-1">★</span>
+                      {selectedLab.reviews && selectedLab.reviews.length > 0 
+                        ? (selectedLab.reviews.reduce((acc: number, rev: any) => acc + rev.rating, 0) / selectedLab.reviews.length).toFixed(1) 
+                        : "New"} 
+                      <span className="text-yellow-500 ml-1">★</span>
                     </p>
                   </div>
                   <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
@@ -225,19 +249,18 @@ export default function LabManagement() {
                     <p className="font-medium">{selectedLab.tests?.length || 0}</p>
                   </div>
                   <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
-                    <p className="text-muted-foreground text-xs mb-1">Active Bookings</p>
-                    <p className="font-medium">34</p>
-                  </div>
-                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
-                    <p className="text-muted-foreground text-xs mb-1">Revenue</p>
-                    <p className="font-medium">₹485,000</p>
+                    <p className="text-muted-foreground text-xs mb-1">Tests Conducted</p>
+                    <p className="font-medium">{selectedLab.testsConducted !== undefined ? `${selectedLab.testsConducted}+` : "0+"}</p>
                   </div>
                   <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
                     <p className="text-muted-foreground text-xs mb-1">Starting Price</p>
                     <p className="font-medium">
-                      ₹{selectedLab.tests && selectedLab.tests.length > 0 
-                        ? Math.min(...selectedLab.tests.map((t: any) => t.price)) 
-                        : "0"}
+                      {selectedLab.tests && selectedLab.tests.length > 0 
+                        ? `₹${Math.min(...selectedLab.tests.map((t: any) => {
+                            const customPrice = selectedLab.pricing?.testOverrides?.[t._id];
+                            return customPrice !== undefined ? customPrice : (t.offerPrice || t.price);
+                          }))}` 
+                        : "N/A"}
                     </p>
                   </div>
                 </div>
@@ -246,12 +269,16 @@ export default function LabManagement() {
                   <div>
                     <h4 className="text-sm font-bold mb-3">Available Tests</h4>
                     <div className="space-y-2">
-                      {selectedLab.tests.map((test: any) => (
-                        <div key={test._id} className="flex items-center justify-between py-3 border-b border-border/50 text-sm">
-                          <span className="text-slate-700">{test.testName}</span>
-                          <span className="text-slate-500">₹{test.price.toLocaleString('en-IN')}</span>
-                        </div>
-                      ))}
+                      {selectedLab.tests.map((test: any) => {
+                        const customPrice = selectedLab.pricing?.testOverrides?.[test._id];
+                        const displayPrice = customPrice !== undefined ? customPrice : (test.offerPrice || test.price);
+                        return (
+                          <div key={test._id} className="flex items-center justify-between py-3 border-b border-border/50 text-sm">
+                            <span className="text-slate-700">{test.testName}</span>
+                            <span className="text-slate-500">₹{displayPrice?.toLocaleString('en-IN') || "N/A"}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -260,12 +287,12 @@ export default function LabManagement() {
                   <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">Email</p><p className="font-medium break-all">{selectedLab.contactEmail || "—"}</p></div>
                   <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">Phone</p><p className="font-medium">{selectedLab.contactPhone || "—"}</p></div>
                 </div>
+              </div>
 
-                <div className="pt-6 mt-4 border-t border-border/50">
-                  <Button className="w-full bg-primary hover:bg-primary-deep shadow-md" asChild>
-                    <Link to={`/admin/laboratories/${selectedLab._id}`}>View Full Profile</Link>
-                  </Button>
-                </div>
+              <div className="pt-4 border-t border-border mt-auto shrink-0 bg-background">
+                <Button className="w-full bg-primary hover:bg-primary-deep shadow-md" asChild>
+                  <Link to={`/admin/laboratories/${selectedLab._id}`}>View Full Profile</Link>
+                </Button>
               </div>
             </>
           )}
@@ -280,6 +307,19 @@ export default function LabManagement() {
         onConfirm={() => labToDelete && deleteMutation.mutate(labToDelete)}
         confirmText="Delete"
         variant="destructive"
+      />
+
+      <ConfirmDialog 
+        open={!!labToToggle}
+        onOpenChange={(open) => !open && setLabToToggle(null)}
+        title={labToToggle?.targetState ? "Enable Public Visibility" : "Disable Public Visibility"}
+        description={labToToggle?.targetState 
+          ? `Are you sure you want to make ${labToToggle?.lab.labName} visible to the public? Users will be able to search and book tests for this laboratory.`
+          : `Are you sure you want to hide ${labToToggle?.lab.labName} from the public? Users will no longer be able to find or book new tests for this laboratory.`
+        }
+        onConfirm={() => labToToggle && toggleStatusMutation.mutate({ id: labToToggle.lab._id, isActive: labToToggle.targetState })}
+        confirmText={labToToggle?.targetState ? "Make Visible" : "Hide Laboratory"}
+        variant={labToToggle?.targetState ? "default" : "destructive"}
       />
     </div>
   );
