@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Input } from "@/components/ui/input";
-import { MapPin, Download, Search, FlaskConical, ChevronRight } from "lucide-react";
-import { bookings } from "@/lib/placeholder-data";
+import { MapPin, Download, Search, FlaskConical, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { bookingApi } from "@/lib/api/booking";
 
 const tabs = ["All Orders", "Active", "Completed", "Reports Ready"];
 
@@ -13,14 +14,48 @@ export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("All Orders");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filtered = bookings.filter((b) => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['myBookings'],
+    queryFn: bookingApi.getMyBookings,
+  });
+
+  const apiBookings = data?.data || [];
+
+  const formattedBookings = apiBookings.map((b: any) => {
+    // Collect all products and tests
+    const products = new Set<string>();
+    let totalSamples = 0;
+    
+    b.items?.forEach((item: any) => {
+      if (item.testId?.testName) products.add(item.testId.testName);
+      if (item.packageId?.name) products.add(item.packageId.name);
+      totalSamples += item.samples?.length || 0;
+    });
+
+    const productNames = Array.from(products);
+    const mainProduct = productNames.length > 0 ? productNames[0] + (productNames.length > 1 ? ` + ${productNames.length - 1} more` : '') : 'Custom Testing';
+
+    return {
+      id: `#LTMS-${b._id.slice(-6).toUpperCase()}`,
+      originalId: b._id,
+      date: new Date(b.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      product: mainProduct,
+      testsCount: totalSamples,
+      lab: b.labId?.labName || 'Litmus Partner Lab',
+      status: b.status.charAt(0) + b.status.slice(1).toLowerCase(),
+      amount: b.totalAmount || b.items?.reduce((acc: number, item: any) => acc + item.price, 0) || 0,
+      reportUrl: b.reportFiles?.[0],
+    };
+  });
+
+  const filtered = formattedBookings.filter((b: any) => {
     if (searchQuery && !b.id.toLowerCase().includes(searchQuery.toLowerCase()) && !b.product.toLowerCase().includes(searchQuery.toLowerCase())) {
        return false;
     }
     if (activeTab === "All Orders") return true;
-    if (activeTab === "Active") return ["Pending", "Approved", "In Progress"].includes(b.status);
+    if (activeTab === "Active") return ["Pending", "Approved", "In progress"].includes(b.status);
     if (activeTab === "Completed") return b.status === "Completed";
-    if (activeTab === "Reports Ready") return b.status === "Completed";
+    if (activeTab === "Reports Ready") return b.status === "Completed" && b.reportUrl;
     return true;
   });
 
@@ -63,8 +98,15 @@ export default function OrdersPage() {
 
       {/* Compact Order List */}
       <div className="grid gap-3">
-         {filtered.map((b) => (
-           <Link to={`/orders/${b.id}`} key={b.id} className="block bg-card rounded-xl border border-border shadow-sm hover:border-accent transition-colors p-4 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+         {isLoading ? (
+            <div className="text-center py-16 bg-slate-50/50 rounded-xl border border-border">
+               <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+               <p className="text-muted-foreground text-sm">Loading your orders...</p>
+            </div>
+         ) : (
+           <>
+             {filtered.map((b: any) => (
+           <Link to={`/orders/${b.originalId}`} key={b.id} className="block bg-card rounded-xl border border-border shadow-sm hover:border-accent transition-colors p-4 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
               
               <div className="flex-1 min-w-0 w-full flex flex-col md:flex-row gap-4 md:items-center">
                  <div className="shrink-0 space-y-1 w-24">
@@ -99,10 +141,12 @@ export default function OrdersPage() {
            </Link>
          ))}
 
-         {filtered.length === 0 && (
+         {filtered.length === 0 && !isLoading && (
            <div className="text-center py-16 bg-slate-50/50 rounded-xl border border-border">
               <p className="text-muted-foreground text-sm">No orders found matching your criteria.</p>
            </div>
+         )}
+         </>
          )}
       </div>
     </div>

@@ -25,11 +25,15 @@ export default function TestFormPage() {
   const isEditing = !!id;
 
   const [step, setStep] = useState(0);
+  const [tatValue, setTatValue] = useState("");
+  const [tatUnit, setTatUnit] = useState("hours");
   const [formData, setFormData] = useState<any>({
     testName: "",
     description: "",
     price: "",
     offerPrice: "",
+    discountType: "NONE",
+    discountValue: "",
     turnAroundTime: "",
     isPopular: false,
     isApplicableToAll: true,
@@ -39,7 +43,7 @@ export default function TestFormPage() {
     metadata: {
       method: "",
       type: "",
-      parameters: [{ name: "", unit: "", minLimit: "", maxLimit: "" }]
+      parameters: [{ name: "", unit: "", minLimit: "", maxLimit: "", price: "" }]
     }
   });
 
@@ -69,12 +73,41 @@ export default function TestFormPage() {
   useEffect(() => {
     if (testData?.data) {
       const test = testData.data;
+      
+      // Parse Turn Around Time
+      let tValue = "";
+      let tUnit = "hours";
+      const tat = test.turnAroundTime || "";
+      if (tat) {
+        const match = tat.match(/(\d+)/);
+        if (match) {
+          const num = parseInt(match[0]);
+          if (tat.toLowerCase().includes('day') || tat.toLowerCase().includes('d')) {
+            tValue = num.toString();
+            tUnit = "days";
+          } else {
+            // Assume hours, check if divisible by 24
+            if (num > 0 && num % 24 === 0) {
+              tValue = (num / 24).toString();
+              tUnit = "days";
+            } else {
+              tValue = num.toString();
+              tUnit = "hours";
+            }
+          }
+        }
+      }
+      setTatValue(tValue);
+      setTatUnit(tUnit);
+
       setFormData({
         testName: test.testName || "",
         description: test.description || "",
         price: test.price?.toString() || "",
         offerPrice: test.offerPrice?.toString() || "",
-        turnAroundTime: test.turnAroundTime || "",
+        discountType: test.discountType || "NONE",
+        discountValue: test.discountValue?.toString() || "",
+        turnAroundTime: tat,
         isPopular: test.isPopular || false,
         isApplicableToAll: test.isApplicableToAll !== undefined ? test.isApplicableToAll : true,
         creatorType: test.creatorType || "ADMIN",
@@ -83,7 +116,7 @@ export default function TestFormPage() {
         metadata: {
           method: test.metadata?.method || "",
           type: test.metadata?.type || "",
-          parameters: test.metadata?.parameters?.length > 0 ? test.metadata.parameters : [{ name: "", unit: "", minLimit: "", maxLimit: "" }]
+          parameters: test.metadata?.parameters?.length > 0 ? test.metadata.parameters : [{ name: "", unit: "", minLimit: "", maxLimit: "", price: "" }]
         }
       });
     }
@@ -94,6 +127,9 @@ export default function TestFormPage() {
     onSuccess: () => {
       toast.success(isEditing ? "Test updated successfully!" : "Test created successfully!");
       queryClient.invalidateQueries({ queryKey: ["adminTests"] });
+      if (isEditing) {
+        queryClient.invalidateQueries({ queryKey: ["test", id] });
+      }
       navigate("/admin/tests");
     },
     onError: (error: any) => {
@@ -117,7 +153,7 @@ export default function TestFormPage() {
       ...formData,
       metadata: {
         ...formData.metadata,
-        parameters: [...formData.metadata.parameters, { name: "", unit: "", minLimit: "", maxLimit: "" }]
+        parameters: [...formData.metadata.parameters, { name: "", unit: "", minLimit: "", maxLimit: "", price: "" }]
       }
     });
   };
@@ -141,10 +177,31 @@ export default function TestFormPage() {
   };
 
   const handleSave = () => {
+    let finalTat = formData.turnAroundTime;
+    if (tatValue) {
+      if (tatUnit === "days") {
+        finalTat = `${parseInt(tatValue) * 24}hr`;
+      } else {
+        finalTat = `${tatValue}hr`;
+      }
+    }
+
+    const calculatedBasePrice = formData.metadata.parameters.reduce((sum: number, p: any) => sum + (Number(p.price) || 0), 0);
+    
+    let calculatedOfferPrice = calculatedBasePrice;
+    if (formData.discountType === 'FLAT') {
+      calculatedOfferPrice = Math.max(0, calculatedBasePrice - (Number(formData.discountValue) || 0));
+    } else if (formData.discountType === 'PERCENTAGE') {
+      calculatedOfferPrice = Math.max(0, calculatedBasePrice - (calculatedBasePrice * ((Number(formData.discountValue) || 0) / 100)));
+    }
+
     saveMutation.mutate({
       ...formData,
-      price: Number(formData.price) || 0,
-      offerPrice: formData.offerPrice ? Number(formData.offerPrice) : undefined,
+      turnAroundTime: finalTat,
+      price: calculatedBasePrice,
+      offerPrice: formData.discountType !== 'NONE' && formData.discountValue ? calculatedOfferPrice : undefined,
+      discountType: formData.discountType,
+      discountValue: formData.discountType !== 'NONE' ? Number(formData.discountValue) : 0,
       labId: formData.creatorType === 'LAB' ? formData.labId : undefined,
     });
   };
@@ -227,7 +284,24 @@ export default function TestFormPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Turn Around Time</Label>
-                  <Input name="turnAroundTime" value={formData.turnAroundTime} onChange={handleChange} placeholder="e.g. 24 hours" className="bg-background/50" />
+                  <div className="flex gap-2">
+                    <Input 
+                      type="number" 
+                      value={tatValue} 
+                      onChange={(e) => setTatValue(e.target.value)} 
+                      placeholder="e.g. 24" 
+                      className="bg-background/50" 
+                    />
+                    <Select value={tatUnit} onValueChange={setTatUnit}>
+                      <SelectTrigger className="w-[120px] bg-background/50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hours">Hours</SelectItem>
+                        <SelectItem value="days">Days</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
 
@@ -326,13 +400,42 @@ export default function TestFormPage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2 max-w-xs">
                   <Label className="text-sm font-medium">Standard Base Price (₹) <span className="text-destructive">*</span></Label>
-                  <Input name="price" type="number" value={formData.price} onChange={handleChange} placeholder="e.g. 500" className="bg-background/50" />
-                  <p className="text-xs text-muted-foreground mt-1">This is the default recommended pricing.</p>
+                  <Input name="price" type="number" value={formData.metadata.parameters.reduce((sum: number, p: any) => sum + (Number(p.price) || 0), 0)} readOnly className="bg-muted text-muted-foreground cursor-not-allowed" />
+                  <p className="text-xs text-muted-foreground mt-1">Calculated automatically from parameter prices.</p>
                 </div>
                 <div className="space-y-2 max-w-xs">
-                  <Label className="text-sm font-medium">Offer Price (₹)</Label>
-                  <Input name="offerPrice" type="number" value={formData.offerPrice} onChange={handleChange} placeholder="e.g. 450" className="bg-background/50" />
-                  <p className="text-xs text-muted-foreground mt-1">Optional discounted price for this test.</p>
+                  <Label className="text-sm font-medium">Discount Offer</Label>
+                  <div className="flex gap-2">
+                    <Select value={formData.discountType} onValueChange={(val) => setFormData({...formData, discountType: val, discountValue: val === 'NONE' ? '' : formData.discountValue})}>
+                      <SelectTrigger className="w-[120px] bg-background/50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="NONE">No Offer</SelectItem>
+                        <SelectItem value="FLAT">Flat (₹)</SelectItem>
+                        <SelectItem value="PERCENTAGE">Percent (%)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {formData.discountType !== 'NONE' && (
+                      <Input name="discountValue" type="number" value={formData.discountValue} onChange={handleChange} placeholder={formData.discountType === 'PERCENTAGE' ? "e.g. 10" : "e.g. 100"} className="bg-background/50 flex-1" />
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Configures a dynamic discount off the calculated base price.</p>
+                </div>
+                
+                <div className="space-y-2 max-w-xs">
+                  <Label className="text-sm font-medium">Final Offer Price (₹)</Label>
+                  <Input 
+                    type="number" 
+                    value={
+                      formData.discountType === 'FLAT' ? Math.max(0, formData.metadata.parameters.reduce((sum: number, p: any) => sum + (Number(p.price) || 0), 0) - (Number(formData.discountValue) || 0)) :
+                      formData.discountType === 'PERCENTAGE' ? Math.max(0, formData.metadata.parameters.reduce((sum: number, p: any) => sum + (Number(p.price) || 0), 0) - (formData.metadata.parameters.reduce((sum: number, p: any) => sum + (Number(p.price) || 0), 0) * ((Number(formData.discountValue) || 0) / 100))) :
+                      formData.metadata.parameters.reduce((sum: number, p: any) => sum + (Number(p.price) || 0), 0)
+                    } 
+                    readOnly 
+                    className="bg-muted text-litmus-teal font-bold cursor-not-allowed" 
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Calculated final price after discount.</p>
                 </div>
               </div>
 
@@ -359,16 +462,17 @@ export default function TestFormPage() {
                 
                 <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-4">
                   <div className="grid grid-cols-12 gap-3 text-xs font-semibold text-muted-foreground px-1 uppercase tracking-wider">
-                    <div className="col-span-4">Parameter Name</div>
+                    <div className="col-span-3">Parameter Name</div>
                     <div className="col-span-2">Unit</div>
                     <div className="col-span-2">Min Limit</div>
-                    <div className="col-span-3">Max Limit</div>
+                    <div className="col-span-2">Max Limit</div>
+                    <div className="col-span-2">Price (₹)</div>
                     <div className="col-span-1 text-center">Action</div>
                   </div>
                   
                   {formData.metadata.parameters.map((param: any, i: number) => (
                     <div key={i} className="grid grid-cols-12 gap-3 items-center group">
-                      <div className="col-span-4">
+                      <div className="col-span-3">
                         <Input value={param.name} onChange={(e) => handleParameterChange(i, "name", e.target.value)} placeholder="e.g. Saturated Fat" className="h-9 text-sm bg-background" />
                       </div>
                       <div className="col-span-2">
@@ -377,8 +481,11 @@ export default function TestFormPage() {
                       <div className="col-span-2">
                         <Input value={param.minLimit} onChange={(e) => handleParameterChange(i, "minLimit", e.target.value)} placeholder="0.0" className="h-9 text-sm bg-background" />
                       </div>
-                      <div className="col-span-3">
+                      <div className="col-span-2">
                         <Input value={param.maxLimit} onChange={(e) => handleParameterChange(i, "maxLimit", e.target.value)} placeholder="10.0" className="h-9 text-sm bg-background" />
+                      </div>
+                      <div className="col-span-2">
+                        <Input type="number" value={param.price} onChange={(e) => handleParameterChange(i, "price", e.target.value)} placeholder="150" className="h-9 text-sm bg-background border-primary/30" />
                       </div>
                       <div className="col-span-1 flex justify-center">
                         <Button variant="ghost" size="icon" onClick={() => removeParameterRow(i)} className="text-muted-foreground hover:text-destructive opacity-50 group-hover:opacity-100 transition-opacity h-8 w-8">

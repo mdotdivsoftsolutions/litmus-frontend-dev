@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { authApi } from "@/lib/api/auth";
+import { cartApi } from "@/lib/api/cart";
 import { CartDrawerProvider } from "../cart/CartDrawerContext";
 import { Header } from "./header/Header";
 import { AuthModal } from "../auth/AuthModal";
@@ -19,7 +20,6 @@ export function UserLayout() {
   const [city, setCity] = useState("Chennai");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAnnouncement] = useState(true);
-  const [cartCount] = useState(2);
   const [showSearch, setShowSearch] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
@@ -29,7 +29,13 @@ export function UserLayout() {
     retry: false,
   });
 
+  const { data: cartResponse } = useQuery({
+    queryKey: ['cart'],
+    queryFn: () => cartApi.getCart(),
+  });
+
   const user = userResponse?.data;
+  const cartCount = cartResponse?.data?.items?.length || 0;
 
   const handleLogout = async () => {
     try {

@@ -122,7 +122,7 @@ const App = () => (
             <Route path="/blogs/:slug" element={<BlogDetailPage />} />
             
             {/* Protected User Routes */}
-            <Route element={<ProtectedRoute allowedRoles={["USER"]} />}>
+            <Route element={<ProtectedRoute allowedRoles={["USER", "ADMIN", "LAB"]} />}>
               <Route path="/bookings/new" element={<NewBookingPage />} />
               <Route path="/orders" element={<OrdersPage />} />
               <Route path="/orders/:id" element={<OrderDetailPage />} />

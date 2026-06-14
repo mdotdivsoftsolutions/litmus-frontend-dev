@@ -54,7 +54,7 @@ interface LabFormData {
     images: string[];
   };
   tests: string[];
-  pricing: Record<string, number>;
+  pricing: Record<string, any>;
 }
 
 export default function LabFormPage() {
@@ -245,11 +245,22 @@ export default function LabFormPage() {
     });
   };
 
-  const handleCustomPriceChange = (testId: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      pricing: { ...prev.pricing, [testId]: Number(value) }
-    }));
+  const handleParameterPriceChange = (testId: string, paramName: string, value: string) => {
+    setFormData((prev) => {
+      const currentPricing = prev.pricing[testId] || {};
+      const newTestPricing = typeof currentPricing === 'object' ? { ...currentPricing } : {};
+      
+      if (value === "") {
+        delete newTestPricing[paramName];
+      } else {
+        newTestPricing[paramName] = Number(value);
+      }
+      
+      return {
+        ...prev,
+        pricing: { ...prev.pricing, [testId]: newTestPricing }
+      };
+    });
   };
 
   const handleServiceLogisticsToggle = (item: string, checked: boolean) => {
@@ -956,7 +967,7 @@ export default function LabFormPage() {
                       <div 
                         key={test._id} 
                         className={cn(
-                          "flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border p-4 transition-all",
+                          "flex flex-col gap-4 rounded-xl border p-4 transition-all",
                           isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/30"
                         )}
                       >
@@ -983,15 +994,30 @@ export default function LabFormPage() {
                         </div>
 
                         {isSelected && (
-                          <div className="flex items-center gap-3 sm:w-64 bg-background/50 p-3 rounded-lg border border-border/50">
-                            <Label className="text-xs font-medium whitespace-nowrap">Lab Price (₹):</Label>
-                            <Input 
-                              type="number" 
-                              placeholder={test.price?.toString()}
-                              value={customPrice || ""}
-                              onChange={(e) => handleCustomPriceChange(test._id, e.target.value)}
-                              className="h-8"
-                            />
+                          <div className="flex flex-col gap-3 mt-4 sm:w-full bg-background/50 p-4 rounded-lg border border-border/50">
+                            <Label className="text-sm font-bold">Parameter-wise Pricing (₹)</Label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {test.metadata?.parameters?.map((param: any) => {
+                                 const currentPricing = formData.pricing[test._id] || {};
+                                 const paramPrice = typeof currentPricing === 'object' ? currentPricing[param.name] : '';
+                                 
+                                 return (
+                                   <div key={param.name} className="flex items-center justify-between gap-3 border p-2 rounded bg-white shadow-sm">
+                                     <span className="text-xs font-medium truncate" title={param.name}>{param.name}</span>
+                                     <Input 
+                                       type="number" 
+                                       placeholder={param.price?.toString() || "0"}
+                                       value={paramPrice !== undefined ? paramPrice : ""}
+                                       onChange={(e) => handleParameterPriceChange(test._id, param.name, e.target.value)}
+                                       className="h-7 w-20 text-right text-xs"
+                                     />
+                                   </div>
+                                 )
+                              })}
+                            </div>
+                            {(!test.metadata?.parameters || test.metadata.parameters.length === 0) && (
+                               <div className="text-sm text-muted-foreground italic">No parameters defined for this test.</div>
+                            )}
                           </div>
                         )}
                       </div>

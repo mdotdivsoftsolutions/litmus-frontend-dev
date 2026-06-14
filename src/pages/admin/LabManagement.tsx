@@ -257,8 +257,25 @@ export default function LabManagement() {
                     <p className="font-medium">
                       {selectedLab.tests && selectedLab.tests.length > 0 
                         ? `₹${Math.min(...selectedLab.tests.map((t: any) => {
-                            const customPrice = selectedLab.pricing?.testOverrides?.[t._id];
-                            return customPrice !== undefined ? customPrice : (t.offerPrice || t.price);
+                            const specificTestPricing = selectedLab.pricing?.[t._id] || selectedLab.pricing?.testOverrides?.[t._id];
+                            
+                            let calculatedPrice = 0;
+                            if (specificTestPricing && typeof specificTestPricing === 'object') {
+                              t.metadata?.parameters?.forEach((p: any) => {
+                                if (specificTestPricing[p.name] !== undefined) {
+                                  calculatedPrice += Number(specificTestPricing[p.name]);
+                                } else {
+                                  calculatedPrice += (Number(p.price) || 0);
+                                }
+                              });
+                              if (calculatedPrice === 0) calculatedPrice = t.offerPrice || t.price;
+                            } else if (typeof specificTestPricing === 'number') {
+                              calculatedPrice = specificTestPricing;
+                            } else {
+                              calculatedPrice = t.offerPrice || t.price;
+                            }
+
+                            return calculatedPrice;
                           }))}` 
                         : "N/A"}
                     </p>
@@ -270,8 +287,26 @@ export default function LabManagement() {
                     <h4 className="text-sm font-bold mb-3">Available Tests</h4>
                     <div className="space-y-2">
                       {selectedLab.tests.map((test: any) => {
-                        const customPrice = selectedLab.pricing?.testOverrides?.[test._id];
-                        const displayPrice = customPrice !== undefined ? customPrice : (test.offerPrice || test.price);
+                        const specificTestPricing = selectedLab.pricing?.[test._id] || selectedLab.pricing?.testOverrides?.[test._id];
+                        console.log("LabManagement specificTestPricing:", specificTestPricing);
+                        console.log("LabManagement test.metadata.parameters:", test.metadata?.parameters);
+                        
+                        let displayPrice = 0;
+                        if (specificTestPricing && typeof specificTestPricing === 'object') {
+                          test.metadata?.parameters?.forEach((p: any) => {
+                            if (specificTestPricing[p.name] !== undefined) {
+                              displayPrice += Number(specificTestPricing[p.name]);
+                            } else {
+                              displayPrice += (Number(p.price) || 0);
+                            }
+                          });
+                          if (displayPrice === 0) displayPrice = test.offerPrice || test.price;
+                        } else if (typeof specificTestPricing === 'number') {
+                          displayPrice = specificTestPricing;
+                        } else {
+                          displayPrice = test.offerPrice || test.price;
+                        }
+
                         return (
                           <div key={test._id} className="flex items-center justify-between py-3 border-b border-border/50 text-sm">
                             <span className="text-slate-700">{test.testName}</span>

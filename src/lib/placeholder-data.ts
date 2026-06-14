@@ -33,16 +33,16 @@ export const products = [
 ];
 
 export const tests = [
-  { id: "1", name: "Fat Content Analysis", method: "IS:1479", type: "Chemical", parameters: 3, usedIn: 5 },
-  { id: "2", name: "Total Plate Count", method: "IS:5402", type: "Microbiological", parameters: 1, usedIn: 12 },
-  { id: "3", name: "Moisture Content", method: "IS:1165", type: "Physical", parameters: 1, usedIn: 18 },
-  { id: "4", name: "Acid Value", method: "IS:548", type: "Chemical", parameters: 2, usedIn: 4 },
-  { id: "5", name: "Coliform Count", method: "IS:5401", type: "Microbiological", parameters: 1, usedIn: 10 },
-  { id: "6", name: "Protein Content (Kjeldahl)", method: "IS:7219", type: "Chemical", parameters: 2, usedIn: 8 },
-  { id: "7", name: "Lead Content", method: "IS:5451", type: "Chemical", parameters: 1, usedIn: 15 },
-  { id: "8", name: "Aflatoxin B1", method: "IS:1656", type: "Chemical", parameters: 1, usedIn: 7 },
-  { id: "9", name: "Salmonella Detection", method: "IS:5887", type: "Microbiological", parameters: 1, usedIn: 6 },
-  { id: "10", name: "Viscosity Test", method: "IS:1206", type: "Physical", parameters: 2, usedIn: 3 },
+  { id: "1", name: "Fat Content Analysis", method: "IS:1479", type: "Chemical", parameters: 3, parametersList: ["Total fat", "Saturated fat", "Trans fat (% w/w)"], usedIn: 5 },
+  { id: "2", name: "Total Plate Count", method: "IS:5402", type: "Microbiological", parameters: 1, parametersList: ["Colony forming units per gram (CFU/g)"], usedIn: 12 },
+  { id: "3", name: "Moisture Content", method: "IS:1165", type: "Physical", parameters: 1, parametersList: ["Moisture percentage (% w/w)"], usedIn: 18 },
+  { id: "4", name: "Acid Value", method: "IS:548", type: "Chemical", parameters: 2, parametersList: ["Acid Value", "Free Fatty Acids"], usedIn: 4 },
+  { id: "5", name: "Coliform Count", method: "IS:5401", type: "Microbiological", parameters: 1, parametersList: ["Coliform bacteria count"], usedIn: 10 },
+  { id: "6", name: "Protein Content (Kjeldahl)", method: "IS:7219", type: "Chemical", parameters: 2, parametersList: ["Total Nitrogen", "Protein equivalent"], usedIn: 8 },
+  { id: "7", name: "Lead Content", method: "IS:5451", type: "Chemical", parameters: 1, parametersList: ["Lead (Pb)"], usedIn: 15 },
+  { id: "8", name: "Aflatoxin B1", method: "IS:1656", type: "Chemical", parameters: 1, parametersList: ["Aflatoxin B1"], usedIn: 7 },
+  { id: "9", name: "Salmonella Detection", method: "IS:5887", type: "Microbiological", parameters: 1, parametersList: ["Salmonella spp. presence"], usedIn: 6 },
+  { id: "10", name: "Viscosity Test", method: "IS:1206", type: "Physical", parameters: 2, parametersList: ["Dynamic Viscosity", "Kinematic Viscosity"], usedIn: 3 },
 ];
 
 export const laboratories = [

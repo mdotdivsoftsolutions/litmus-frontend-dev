@@ -30,5 +30,10 @@ export const authApi = {
   updateProfile: async (data: any) => {
     const response = await apiClient.patch('/auth/profile', data);
     return response.data;
+  },
+
+  changePassword: async (data: any) => {
+    const response = await apiClient.post('/auth/change-password', data);
+    return response.data;
   }
 };

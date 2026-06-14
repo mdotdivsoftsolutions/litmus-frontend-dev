@@ -16,16 +16,23 @@ import {
   AlertCircle,
   HelpCircle,
   FlaskConical,
-  Award
+  Award,
+  ShoppingCart,
+  Loader2
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { packageApi } from "@/lib/api/package";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCartDrawer } from "@/components/cart/CartDrawerContext";
+import { cartApi } from "@/lib/api/cart";
+import { toast } from "sonner";
 
 export default function PackageDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { openCart } = useCartDrawer();
+  const queryClient = useQueryClient();
 
   const { data: packageResponse, isLoading } = useQuery({
     queryKey: ["package", id],
@@ -41,9 +48,28 @@ export default function PackageDetailPage() {
   };
 
   const handleBookNow = () => {
-    if (pkg) {
-      navigate("/bookings/new", { state: { package: pkg } });
+    if (!pkg) return;
+    navigate(`/bookings/new?packageId=${pkg._id}`);
+  };
+
+  const addMutation = useMutation({
+    mutationFn: (data: any) => cartApi.addToCart(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      toast.success("Package added to cart!");
+      openCart();
+    },
+    onError: () => {
+      toast.error("Failed to add to cart");
     }
+  });
+
+  const handleAddToCart = () => {
+    if (!pkg) return;
+    addMutation.mutate({
+      itemType: 'PACKAGE',
+      packageId: pkg._id,
+    });
   };
 
   if (isLoading) {
@@ -164,15 +190,32 @@ export default function PackageDetailPage() {
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
-                {pkg.features.map((feature, i) => (
-                  <div key={i} className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl hover:bg-white hover:border-[#D32F2F]/20 border border-slate-100 transition-all duration-300 group">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
-                    <div>
-                      <span className="text-sm text-slate-700 font-bold block">{feature}</span>
-                      <span className="text-[11px] text-slate-400 font-medium">Standard analytical testing method</span>
+                {pkg.tests && pkg.tests.length > 0 ? (
+                  pkg.tests.map((test: any, i: number) => (
+                    <div key={test._id || i} className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl hover:bg-white hover:border-[#D32F2F]/20 border border-slate-100 transition-all duration-300 group">
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                      <div>
+                        <span className="text-sm text-slate-700 font-bold block">{test.testName}</span>
+                        <div className="mt-1">
+                          {test.offerPrice && test.price > test.offerPrice ? (
+                            <span className="text-[11px] text-slate-400 font-medium line-through mr-2">₹{test.price.toLocaleString()}</span>
+                          ) : null}
+                          <span className="text-[11px] text-[#D32F2F] font-bold">₹{(test.offerPrice || test.price || 0).toLocaleString()}</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  pkg.features?.map((feature: string, i: number) => (
+                    <div key={i} className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl hover:bg-white hover:border-[#D32F2F]/20 border border-slate-100 transition-all duration-300 group">
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                      <div>
+                        <span className="text-sm text-slate-700 font-bold block">{feature}</span>
+                        <span className="text-[11px] text-slate-400 font-medium">Standard analytical testing method</span>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -257,6 +300,16 @@ export default function PackageDetailPage() {
                 </div>
 
                 <div className="pt-2 space-y-3">
+                  <Button 
+                    onClick={handleAddToCart}
+                    disabled={addMutation.isPending}
+                    variant="outline"
+                    className="w-full h-12 rounded-xl border-2 border-primary text-primary hover:bg-primary/5 hover:text-primary font-extrabold text-sm transition-all flex items-center justify-center gap-2 group"
+                  >
+                    {addMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShoppingCart className="h-5 w-5" />} 
+                    {addMutation.isPending ? "Adding..." : "Add to Cart"}
+                  </Button>
+
                   <Button 
                     onClick={handleBookNow}
                     className="w-full h-12 rounded-xl bg-gradient-to-r from-brand-card-from to-brand-card-to hover:shadow-lg text-white font-extrabold text-sm transition-all flex items-center justify-center gap-2 group"
