@@ -174,7 +174,15 @@ export default function LabDetailConsumerPage() {
                                  </div>
                                  <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-8">
                                     <div className="text-right">
-                                       <p className="text-xl font-bold text-slate-800 tracking-tighter">₹{lab.pricing?.[test._id] || lab.pricing?.[test.id] || test.offerPrice || test.price || "N/A"}</p>
+                                       <p className="text-xl font-bold text-slate-800 tracking-tighter">
+                                          ₹{(() => {
+                                             const p = lab.pricing?.[test._id] || lab.pricing?.[test.id];
+                                             if (typeof p === 'object' && p !== null) {
+                                                return Object.values(p).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
+                                             }
+                                             return p || test.offerPrice || test.price || "N/A";
+                                          })()}
+                                       </p>
                                     </div>
                                     <Button className="bg-gradient-to-r from-[#D32F2F] to-[#feba50] hover:shadow-[0_12px_24px_rgba(211,47,47,0.25)] text-white font-semibold text-xs rounded-xl h-11 px-8 flex items-center gap-2 transition-all hover:-translate-y-0.5 active:scale-95 border-0">
                                        <ShoppingCart className="h-4 w-4" /> Book Now

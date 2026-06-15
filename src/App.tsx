@@ -11,6 +11,7 @@ import LoginPage from "./pages/LoginPage.tsx";
 import RegisterPage from "./pages/RegisterPage.tsx";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage.tsx";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute.tsx";
+import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 
 // User Consumer Pages
 import HomePage from "./pages/user/HomePage.tsx";
@@ -90,7 +91,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ScrollToTop />
-        <Routes>
+        <ErrorBoundary>
+          <Routes>
           {/* Public Auth - Admin & Laboratory specific */}
           <Route path="/admin/login" element={<LoginPage role="admin" />} />
           <Route path="/laboratory/login" element={<LoginPage role="lab" />} />
@@ -184,7 +186,8 @@ const App = () => (
           </Route>
 
           <Route path="*" element={<NotFound />} />
-        </Routes>
+          </Routes>
+        </ErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
