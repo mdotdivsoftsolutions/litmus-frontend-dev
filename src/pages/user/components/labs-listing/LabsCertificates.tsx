@@ -54,7 +54,7 @@ export function LabsCertificates() {
                 {/* Bottom Section with Salient Features */}
                 <div className="bg-white p-6 pt-10 relative border-t border-brand">
                   <button type="button" className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-brand text-white text-xs font-bold px-6 py-1.5 rounded-full uppercase tracking-wider whitespace-nowrap shadow-sm border border-white/20 hover:scale-105 transition-transform duration-200 focus:outline-none">
-                    Salient Features
+                    Book Now
                   </button>
                   <ul className="space-y-3">
                     {cert.features.map((feature, idx) => (

@@ -1,6 +1,8 @@
 import { CheckCircle2, ChevronLeft, ChevronRight, Check, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { authApi } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 
 const trustCarouselSlides = [
@@ -37,6 +39,9 @@ export const TrustAndOrdering = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const n = trustCarouselSlides.length;
+
+  const { data: userResponse } = useQuery({ queryKey: ["userProfile"], queryFn: authApi.getMe, retry: false });
+  const user = userResponse?.data;
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentSlide((prev) => (prev + 1) % n), 5000);
@@ -172,7 +177,13 @@ export const TrustAndOrdering = () => {
 
                 <button
                   type="button"
-                  onClick={() => navigate("/bookings/new")}
+                  onClick={() => {
+                    if (!user) {
+                      window.dispatchEvent(new Event('openAuthModal'));
+                    } else {
+                      navigate("/bookings/new");
+                    }
+                  }}
                   className="h-14 md:h-16 mt-2 px-10 md:px-14 bg-gradient-brand text-white font-semibold text-xl rounded-xl  hover:-translate-y-1 transition-all z-10 relative"
                 >
                   Order Now

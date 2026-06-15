@@ -1,5 +1,5 @@
 import { apiClient } from './axios';
-import { RegisterInput, LoginInput, SendOtpInput } from '../../../../backend/src/validators/auth.validator';
+import { RegisterInput, LoginInput, SendOtpInput, ForgotPasswordInput, ResetPasswordInput } from '../../../../backend/src/validators/auth.validator';
 
 export const authApi = {
   sendOtp: async (data: SendOtpInput) => {
@@ -19,6 +19,16 @@ export const authApi = {
 
   logout: async () => {
     const response = await apiClient.post('/auth/logout');
+    return response.data;
+  },
+
+  forgotPassword: async (data: ForgotPasswordInput) => {
+    const response = await apiClient.post('/auth/forgot-password', data);
+    return response.data;
+  },
+
+  resetPassword: async (data: ResetPasswordInput) => {
+    const response = await apiClient.post('/auth/reset-password', data);
     return response.data;
   },
 

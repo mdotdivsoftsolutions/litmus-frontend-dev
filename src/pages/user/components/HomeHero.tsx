@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { Search, Shield, FileText, Package, Microscope, Ticket, Currency, CurrencyIcon } from "lucide-react";
 import { useState } from "react";
+import { SearchAutocomplete } from "@/components/common/SearchAutocomplete";
+import { ConsultationBookingModal } from "./consultation/ConsultationBookingModal";
 import heroScientist from "@/assets/banner-hero-1.jpg";
 
 interface HomeHeroProps {
@@ -77,7 +79,7 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
           >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-4">
               <form 
-                className="relative min-w-0 flex-1"
+                className="relative min-w-0 flex-1 flex"
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (searchQuery.trim()) {
@@ -85,31 +87,19 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                   }
                 }}
               >
-                {!searchQuery && !searchFocused && (
-                  <span
-                    className="pointer-events-none absolute left-4 top-1/2 z-0 -translate-y-1/2 text-sm select-none"
-                    aria-hidden
-                  >
-                    <span className="text-slate-600">Search for </span>
-                    <span className="font-medium text-brand-primary">tests</span>
-                  </span>
-                )}
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setSearchFocused(true)}
-                  onBlur={() => setSearchFocused(false)}
-                  className="relative placeholder:text-slate-400 z-10 w-full rounded-2xl border-2 border-[#008eb3]/30 bg-white py-3.5 pl-4 pr-12 text-sm text-slate-800 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] outline-none ring-[#1a237e]/20 focus:ring-none"
-                  aria-label="Search for tests"
+
+                <SearchAutocomplete
+                  hideIcon
                   placeholder="Search for tests, categories..."
-                />
-                <button type="submit" className="absolute right-4 top-1/2 z-20 -translate-y-1/2 text-slate-400 hover:text-brand-primary">
-                  <Search
-                    className="h-5 w-5"
-                    aria-hidden
-                  />
-                </button>
+                  inputClassName="relative placeholder:text-slate-400 z-10 w-full rounded-2xl border-2 border-[#008eb3]/30 bg-white py-3.5 pl-4 pr-12 text-sm text-slate-800 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] outline-none ring-[#1a237e]/20 focus:ring-none h-[52px]"
+                >
+                  <button type="submit" className="absolute right-4 top-1/2 z-20 -translate-y-1/2 text-slate-400 hover:text-brand-primary">
+                    <Search
+                      className="h-5 w-5"
+                      aria-hidden
+                    />
+                  </button>
+                </SearchAutocomplete>
               </form>
               <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
                 <Link
@@ -119,13 +109,15 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                   Book test
                   <Microscope className="h-5 w-5 shrink-0 opacity-95" strokeWidth={2} />
                 </Link>
-                <Link
-                  to="/packages"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#008eb3] to-[#004e64] px-5 py-3.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_-4px_rgba(32,178,170,0.45)] transition hover:brightness-105"
-                >
-                  Book free consultation
-                  <Ticket className="h-5 w-5 shrink-0 opacity-95" strokeWidth={2} />
-                </Link>
+                <ConsultationBookingModal serviceName="General Consultation" source="Home Hero">
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-[#008eb3] to-[#004e64] px-5 py-3.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_-4px_rgba(32,178,170,0.45)] transition hover:brightness-105"
+                  >
+                    Book free consultation
+                    <Ticket className="h-5 w-5 shrink-0 opacity-95" strokeWidth={2} />
+                  </button>
+                </ConsultationBookingModal>
                 <Link
                   to="/packages"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-brand px-5 py-3.5 text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_4px_14px_-4px_rgb(var(--brand-primary-rgb)/0.55)] transition hover:brightness-105"

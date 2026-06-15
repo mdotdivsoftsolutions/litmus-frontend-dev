@@ -2,6 +2,7 @@ import { PhoneCall, Package, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ConsultationBookingModal } from "../consultation/ConsultationBookingModal";
+import { WHATSAPP_URL, WHATSAPP_NUMBER } from "@/lib/constants";
 
 export function PackagesCTA() {
   const handlePhoneClick = () => {
@@ -12,10 +13,10 @@ export function PackagesCTA() {
 
   const handleWhatsappClick = () => {
     toast.success("Redirecting to WhatsApp...", {
-      description: "Opening chat with +91 98765 43210.",
+      description: `Opening chat with +${WHATSAPP_NUMBER}.`,
     });
     setTimeout(() => {
-      window.open("https://wa.me/919876543210", "_blank");
+      window.open(WHATSAPP_URL, "_blank");
     }, 800);
   };
 

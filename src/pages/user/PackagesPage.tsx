@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { categoryApi } from "@/lib/api/category";
+import { packageApi } from "@/lib/api/package";
 import { CategoryStrip } from "./components/tests-listing/CategoryStrip";
 import { PackagesHero } from "./components/packages/PackagesHero";
 import { PackagesGrid } from "./components/packages/PackagesGrid";
@@ -13,6 +15,7 @@ export default function PackagesPage() {
   const [visibleCount, setVisibleCount] = useState(12);
   const navigate = useNavigate();
   const heroCategories = ["All", "Compliance", "Clinical", "Labeling"];
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const { data: catRes, isLoading: catLoading } = useQuery({
     queryKey: ['categories'],
@@ -22,7 +25,21 @@ export default function PackagesPage() {
     }
   });
 
+  const debouncedSearch = useDebounce(search, 300);
+
+  const { data: pkgRes } = useQuery({
+    queryKey: ['packages', debouncedSearch],
+    queryFn: () => packageApi.getAllPackages({ search: debouncedSearch })
+  });
+
   const apiCategories = catRes?.data || [];
+  const packagesData = pkgRes?.data || [];
+
+  const handleSearch = () => {
+    if (resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
     <div className="animate-fade-in bg-white min-h-screen">
@@ -33,12 +50,16 @@ export default function PackagesPage() {
         setSelectedCategory={setSelectedCategory}
         search={search}
         setSearch={setSearch}
+        packages={packagesData}
+        onSearch={handleSearch}
       />
 
       {/* 2. PACKAGES GRID */}
-      <section className="bg-slate-50 ">
+      <section ref={resultsRef} className="bg-slate-50 scroll-mt-6">
         <PackagesGrid
+          packages={packagesData}
           search={search}
+          isLoading={!pkgRes}
           selectedCategory={selectedCategory}
           visibleCount={visibleCount}
           setVisibleCount={setVisibleCount}

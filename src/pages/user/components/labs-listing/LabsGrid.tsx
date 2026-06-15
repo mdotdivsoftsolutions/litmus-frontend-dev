@@ -74,66 +74,68 @@ export function LabsGrid({ filtered, visibleCount, setVisibleCount, isLoading }:
             </Card>
           ))
         ) : filtered.slice(0, visibleCount).map((lab) => (
-          <Card key={lab.id} className="group border-1 border-slate-50 shadow-sm hover:border-[#D32F2F]/10 hover:shadow-[0_40px_80px_rgba(0,0,0,0.05)] transition-all duration-500 rounded-[1rem] overflow-hidden bg-white">
-            <CardContent className="p-4 space-y-4">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 text-[#D32F2F] flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-transform group-hover:-rotate-6">
-                    {lab.name.split(" ").map(w => w[0]).slice(0, 2).join("")}
+          <Link key={lab.id} to={`/labs/${lab.id}`} className="block group decoration-transparent">
+            <Card className="h-full border-1 border-slate-50 shadow-sm group-hover:border-[#D32F2F]/10 group-hover:shadow-[0_40px_80px_rgba(0,0,0,0.05)] transition-all duration-500 rounded-[1rem] overflow-hidden bg-white">
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 text-[#D32F2F] flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-transform group-hover:-rotate-6">
+                      {lab.name.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
+                    </div>
+                    <div className="space-y-0.5">
+                      <h3 className="text-lg font-semibold text-slate-800 tracking-tight group-hover:text-[#D32F2F] transition-colors">{lab.name}</h3>
+                      <p className="text-[10px] font-semibold text-slate-400 flex items-center gap-1 uppercase tracking-widest"><MapPin className="h-3 w-3 text-[#D32F2F]" />{lab.city}, India</p>
+                    </div>
                   </div>
-                  <div className="space-y-0.5">
-                    <h3 className="text-lg font-semibold text-slate-800 tracking-tight group-hover:text-[#D32F2F] transition-colors">{lab.name}</h3>
-                    <p className="text-[10px] font-semibold text-slate-400 flex items-center gap-1 uppercase tracking-widest"><MapPin className="h-3 w-3 text-[#D32F2F]" />{lab.city}, India</p>
+                     <div className="flex flex-col items-end gap-1">
+                     <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                        <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
+                        <span className="text-[10px] font-bold text-amber-700">{lab.rating?.toFixed(1) || '0.0'}</span>
+                     </div>
+                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{lab.reviewCount || 0} Reviews</p>
                   </div>
                 </div>
-                   <div className="flex flex-col items-end gap-1">
-                   <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
-                      <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
-                      <span className="text-[10px] font-bold text-amber-700">{lab.rating?.toFixed(1) || '0.0'}</span>
-                   </div>
-                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{lab.reviewCount || 0} Reviews</p>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-3 gap-2 border-y border-slate-50 py-3">
-                <div className="space-y-1">
-                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Status</p>
-                   <div className="flex flex-wrap gap-1 mt-1">
-                      {lab.nabl && <Badge className="bg-slate-900 border-0 text-[8px] px-1 py-0 h-4 tracking-tighter">NABL</Badge>}
-                      {lab.fssai && <Badge className="bg-[#D32F2F] border-0 text-[8px] px-1 py-0 h-4 tracking-tighter">FSSAI</Badge>}
+                <div className="grid grid-cols-3 gap-2 border-y border-slate-50 py-3">
+                  <div className="space-y-1">
+                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Status</p>
+                     <div className="flex flex-wrap gap-1 mt-1">
+                        {lab.nabl && <Badge className="bg-slate-900 border-0 text-[8px] px-1 py-0 h-4 tracking-tighter">NABL</Badge>}
+                        {lab.fssai && <Badge className="bg-[#D32F2F] border-0 text-[8px] px-1 py-0 h-4 tracking-tighter">FSSAI</Badge>}
+                     </div>
+                  </div>
+                   <div className="space-y-1 border-l border-slate-50 pl-3">
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Starting</p>
+                      <p className="text-xs font-bold text-slate-800 mt-1">₹{lab.priceFrom}</p>
                    </div>
+                   <div className="space-y-1 border-l border-slate-50 pl-3">
+                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Expertise</p>
+                     <div className="flex items-center gap-1 mt-1">
+                        <Activity className="h-2.5 w-2.5 text-emerald-500" />
+                        <span className="text-[9px] font-bold text-slate-600">
+                          {lab.expertiseArea?.length > 0 ? (
+                            <>
+                              {lab.expertiseArea[0]} 
+                              {lab.expertiseArea.length > 1 && <span className="text-slate-400"> +{lab.expertiseArea.length - 1}</span>}
+                            </>
+                          ) : "General"}
+                        </span>
+                     </div>
+                  </div>
                 </div>
-                 <div className="space-y-1 border-l border-slate-50 pl-3">
-                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Starting</p>
-                    <p className="text-xs font-bold text-slate-800 mt-1">₹{lab.priceFrom}</p>
-                 </div>
-                 <div className="space-y-1 border-l border-slate-50 pl-3">
-                   <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none">Expertise</p>
-                   <div className="flex items-center gap-1 mt-1">
-                      <Activity className="h-2.5 w-2.5 text-emerald-500" />
-                      <span className="text-[9px] font-bold text-slate-600">
-                        {lab.expertiseArea?.length > 0 ? (
-                          <>
-                            {lab.expertiseArea[0]} 
-                            {lab.expertiseArea.length > 1 && <span className="text-slate-400"> +{lab.expertiseArea.length - 1}</span>}
-                          </>
-                        ) : "General"}
-                      </span>
-                   </div>
-                </div>
-              </div>
 
-              <div className="flex items-center justify-between">
-                 <div className="flex items-center gap-1.5">
-                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Operational Now</span>
-                 </div>
-                 <Button variant="ghost" className="h-8 px-3 rounded-lg hover:bg-slate-50 text-slate-600 hover:text-[#D32F2F] font-semibold text-[10px] transition-all gap-1.5 group/btn" asChild>
-                   <Link to={`/labs/${lab.id}`}>Explore Laboratory <ArrowRight className="h-3 w-3 group-hover/btn:translate-x-1 transition-transform" /></Link>
-                 </Button>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-1.5">
+                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Operational Now</span>
+                   </div>
+                   <div className="flex items-center justify-center h-8 px-3 rounded-lg group-hover:bg-slate-50 text-slate-600 group-hover:text-[#D32F2F] font-semibold text-[10px] transition-all gap-1.5">
+                     Explore Laboratory <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 

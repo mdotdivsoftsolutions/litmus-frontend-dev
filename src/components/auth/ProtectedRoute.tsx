@@ -32,9 +32,9 @@ export const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   if (isError || !user) {
     // Determine the best login route based on the requested path or allowed roles
     let loginPath = "/?login=true";
-    if (allowedRoles?.includes("ADMIN") || location.pathname.startsWith("/admin")) {
+    if (location.pathname.startsWith("/admin")) {
       loginPath = "/admin/login";
-    } else if (allowedRoles?.includes("LAB") || location.pathname.startsWith("/lab")) {
+    } else if (location.pathname.startsWith("/lab")) {
       loginPath = "/laboratory/login";
     }
 

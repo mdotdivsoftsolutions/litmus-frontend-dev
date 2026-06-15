@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ConsultationBookingModal } from "../consultation/ConsultationBookingModal";
+import { WHATSAPP_URL, WHATSAPP_NUMBER } from "@/lib/constants";
 
 // WhatsApp SVG logo (official green icon)
 const WhatsAppIcon = () => (
@@ -117,10 +118,10 @@ export function WhatsAppBanner({ className }: { className?: string }) {
                       } else if (action.id === "whatsapp") {
                         e.preventDefault();
                         toast.success("Redirecting to WhatsApp...", {
-                          description: "Opening chat with +91 98765 43210.",
+                          description: `Opening chat with +${WHATSAPP_NUMBER}.`,
                         });
                         setTimeout(() => {
-                          window.open("https://wa.me/919876543210", "_blank");
+                          window.open(WHATSAPP_URL, "_blank");
                         }, 800);
                       }
                     }}

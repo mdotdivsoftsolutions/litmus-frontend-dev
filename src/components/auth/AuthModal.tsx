@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Eye, EyeOff, Loader2, ArrowLeft, User, Mail, Phone, Lock, KeyRound, CheckCircle2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -78,6 +79,28 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
     }
   });
 
+  const forgotPasswordMutation = useMutation({
+    mutationFn: authApi.forgotPassword,
+    onSuccess: () => {
+      toast.success("Password reset code sent to your email!");
+      setStep("forgot-otp");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to send reset code");
+    }
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: authApi.resetPassword,
+    onSuccess: () => {
+      toast.success("Password reset successfully!");
+      setStep("reset-success");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to reset password");
+    }
+  });
+
   // ── Handlers ──────────────────────────────────────────────────
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,21 +142,25 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
 
   const handleForgotSend = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setStep("forgot-otp"); }, 1200);
+    forgotPasswordMutation.mutate({ email: forgotIdentifier });
   };
 
   const handleForgotOtp = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setStep("reset-password"); }, 1200);
+    const otpCode = otp.join("");
+    if (otpCode.length < 6) return;
+    setStep("reset-password");
   };
 
   const handleResetPassword = (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== newConfirmPassword) return;
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setStep("reset-success"); }, 1200);
+    const otpCode = otp.join("");
+    resetPasswordMutation.mutate({
+      email: forgotIdentifier,
+      otp: otpCode,
+      newPassword: newPassword,
+    });
   };
 
   const handleOtpChange = (index: number, value: string, prefix = "otp") => {
@@ -355,12 +382,12 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
                   value={forgotIdentifier} onChange={(e) => setForgotIdentifier(e.target.value)} required />
               </div>
 
-              <Button type="submit" disabled={loading || !forgotIdentifier}
+              <Button type="submit" disabled={forgotPasswordMutation.isPending || !forgotIdentifier}
                 className={cn("w-full h-12 font-bold rounded-lg transition-all",
-                  loading || !forgotIdentifier
+                  forgotPasswordMutation.isPending || !forgotIdentifier
                     ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                     : "bg-gradient-brand text-white hover:opacity-90 shadow-md")}>
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Send Reset Code"}
+                {forgotPasswordMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Send Reset Code"}
               </Button>
 
               <p className="text-center text-sm text-slate-500">
@@ -385,13 +412,13 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
                 ))}
               </div>
               <div className="text-center space-y-4">
-                <Button type="submit" disabled={loading || otp.some((d) => !d)}
+                <Button type="submit" disabled={otp.some((d) => !d)}
                   className="w-full h-12 bg-gradient-brand text-white font-bold rounded-lg shadow-lg transition-all">
-                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Verify Code"}
+                  Verify Code
                 </Button>
                 <p className="text-sm text-slate-500">
                   Didn't receive the code?{" "}
-                  <button type="button" className="text-brand-primary font-bold hover:underline">Resend OTP</button>
+                  <button type="button" onClick={() => forgotPasswordMutation.mutate({ email: forgotIdentifier })} className="text-brand-primary font-bold hover:underline">Resend OTP</button>
                 </p>
               </div>
             </form>
@@ -428,12 +455,12 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
               )}
 
               <Button type="submit"
-                disabled={loading || !newPassword || newPassword !== newConfirmPassword}
+                disabled={resetPasswordMutation.isPending || !newPassword || newPassword !== newConfirmPassword}
                 className={cn("w-full h-12 font-bold rounded-lg transition-all",
-                  loading || !newPassword || newPassword !== newConfirmPassword
+                  resetPasswordMutation.isPending || !newPassword || newPassword !== newConfirmPassword
                     ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                     : "bg-gradient-brand text-white hover:opacity-90 shadow-md")}>
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Reset Password"}
+                {resetPasswordMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Reset Password"}
               </Button>
             </form>
           )}
@@ -460,9 +487,9 @@ export function AuthModal({ isOpen, onClose, isSkippable = true }: AuthModalProp
             <div className="mt-7 text-center px-4">
               <p className="text-[11px] text-slate-400 leading-relaxed">
                 By proceeding, you agree to our{" "}
-                <button className="underline hover:text-slate-600">Terms of Service</button>{" "}
+                <Link to="/terms" onClick={onClose} className="underline hover:text-slate-600">Terms of Service</Link>{" "}
                 &{" "}
-                <button className="underline hover:text-slate-600">Privacy Policy</button>
+                <Link to="/privacy" onClick={onClose} className="underline hover:text-slate-600">Privacy Policy</Link>
               </p>
             </div>
           )}

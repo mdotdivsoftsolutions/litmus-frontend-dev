@@ -41,6 +41,7 @@ export function UserLayout() {
     try {
       await authApi.logout();
       queryClient.clear();
+      localStorage.removeItem('litmus_session_id');
       toast.success("Logged out successfully");
       // Force a hard reload to completely reset all React and Query state
       window.location.href = "/";
@@ -69,6 +70,13 @@ export function UserLayout() {
       window.history.replaceState({}, '', location.pathname);
     }
   }, [location.search, location.pathname]);
+
+  // Handle global event for opening auth modal
+  useEffect(() => {
+    const handleOpenAuth = () => setIsAuthModalOpen(true);
+    window.addEventListener('openAuthModal', handleOpenAuth);
+    return () => window.removeEventListener('openAuthModal', handleOpenAuth);
+  }, []);
 
   // Handle auto-opening of the modal on first load if not logged in
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { apiClient } from './axios';
 
 export const labApi = {
-  getLabsPublic: async (params?: { lat?: number; lng?: number; location?: string, isTrusted?: boolean }) => {
+  getLabsPublic: async (params?: { lat?: number; lng?: number; location?: string, isTrusted?: boolean, search?: string }) => {
     const response = await apiClient.get('/labs', { params });
     return response.data;
   },

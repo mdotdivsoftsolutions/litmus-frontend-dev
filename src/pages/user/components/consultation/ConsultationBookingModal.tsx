@@ -3,14 +3,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, Clock, User, Mail, Phone, Building2, CheckCircle2, X } from "lucide-react";
+import { Calendar, Clock, User, Mail, Phone, Building2, CheckCircle2, X, Loader2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { consultationApi } from "@/lib/api/consultation";
+import { toast } from "sonner";
 
 interface ConsultationBookingModalProps {
   children: React.ReactNode;
   serviceName?: string;
+  source?: string;
 }
 
-export function ConsultationBookingModal({ children, serviceName = "Advisory Consultation" }: ConsultationBookingModalProps) {
+export function ConsultationBookingModal({ children, serviceName = "Advisory Consultation", source = "General" }: ConsultationBookingModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   
@@ -28,19 +32,30 @@ export function ConsultationBookingModal({ children, serviceName = "Advisory Con
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const consultationMutation = useMutation({
+    mutationFn: consultationApi.createConsultation,
+    onSuccess: () => {
+      setIsSubmitted(true);
+      setTimeout(() => {
+        setIsOpen(false);
+        setTimeout(() => {
+          setIsSubmitted(false);
+          setFormData({ name: "", business: "", email: "", phone: "", date: "", time: "" }); // Reset
+        }, 500); 
+      }, 3000);
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to submit request.");
+    }
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    // Simulate API call with the formData
-    console.log("Submitting booking:", formData);
-    
-    setTimeout(() => {
-      setIsOpen(false);
-      setTimeout(() => {
-        setIsSubmitted(false);
-        setFormData({ name: "", business: "", email: "", phone: "", date: "", time: "" }); // Reset
-      }, 500); 
-    }, 3000);
+    consultationMutation.mutate({
+      ...formData,
+      serviceName,
+      source
+    });
   };
 
   return (
@@ -123,21 +138,46 @@ export function ConsultationBookingModal({ children, serviceName = "Advisory Con
                       <Label className="text-xs font-semibold text-muted-foreground">Preferred Date</Label>
                       <div className="relative">
                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                         <Input name="date" value={formData.date} onChange={handleChange} required type="date" className="pl-9 h-10 rounded-lg bg-card" />
+                         <Input min={new Date().toISOString().split('T')[0]} name="date" value={formData.date} onChange={handleChange} required type="date" className="pl-9 h-10 rounded-lg bg-card" />
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs font-semibold text-muted-foreground">Preferred Time</Label>
                       <div className="relative">
                          <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                         <Input name="time" value={formData.time} onChange={handleChange} required type="time" className="pl-9 h-10 rounded-lg bg-card" />
+                         <select 
+                           name="time" 
+                           value={formData.time} 
+                           onChange={(e: any) => handleChange(e)} 
+                           required 
+                           className="flex h-10 w-full rounded-lg border border-input bg-card pl-9 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                         >
+                           <option value="" disabled>Select a time</option>
+                           <option value="09:00 AM">09:00 AM</option>
+                           <option value="09:30 AM">09:30 AM</option>
+                           <option value="10:00 AM">10:00 AM</option>
+                           <option value="10:30 AM">10:30 AM</option>
+                           <option value="11:00 AM">11:00 AM</option>
+                           <option value="11:30 AM">11:30 AM</option>
+                           <option value="12:00 PM">12:00 PM</option>
+                           <option value="12:30 PM">12:30 PM</option>
+                           <option value="01:00 PM">01:00 PM</option>
+                           <option value="01:30 PM">01:30 PM</option>
+                           <option value="02:00 PM">02:00 PM</option>
+                           <option value="02:30 PM">02:30 PM</option>
+                           <option value="03:00 PM">03:00 PM</option>
+                           <option value="03:30 PM">03:30 PM</option>
+                           <option value="04:00 PM">04:00 PM</option>
+                           <option value="04:30 PM">04:30 PM</option>
+                           <option value="05:00 PM">05:00 PM</option>
+                         </select>
                       </div>
                     </div>
                  </div>
 
                  <div className="pt-2">
-                   <Button type="submit" className="w-full h-11 bg-[#D32F2F] hover:bg-[#b71c1c] text-white font-semibold rounded-xl text-sm shadow-sm transition-all duration-300">
-                      Confirm Booking Request
+                   <Button disabled={consultationMutation.isPending} type="submit" className="w-full h-11 bg-[#D32F2F] hover:bg-[#b71c1c] text-white font-semibold rounded-xl text-sm shadow-sm transition-all duration-300">
+                      {consultationMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</> : "Confirm Booking Request"}
                    </Button>
                    <p className="text-center text-[10px] text-muted-foreground mt-3 font-medium">
                      By booking, you agree to our Advisory Terms of Service.

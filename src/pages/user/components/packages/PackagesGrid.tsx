@@ -1,30 +1,20 @@
-import { Activity, FileText, CheckCircle2, ArrowRight } from "lucide-react";
+import { Activity, FileText, CheckCircle2, ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { packageApi } from "@/lib/api/package";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface PackagesGridProps {
+  packages: any[];
   search: string;
+  isLoading: boolean;
   selectedCategory: string;
   visibleCount: number;
   setVisibleCount: React.Dispatch<React.SetStateAction<number>>;
 }
 
-export function PackagesGrid({ search, selectedCategory, visibleCount, setVisibleCount }: PackagesGridProps) {
-  const { data: packagesResponse, isLoading } = useQuery({
-    queryKey: ["packages"],
-    queryFn: packageApi.getAllPackages,
-  });
-
-  const packagesData = packagesResponse?.data || [];
-
-  const filteredPackages = packagesData.filter((p: any) => {
-    const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.description.toLowerCase().includes(search.toLowerCase());
-    return matchesCategory && matchesSearch;
+export function PackagesGrid({ packages, search, isLoading, selectedCategory, visibleCount, setVisibleCount }: PackagesGridProps) {
+  const filteredPackages = packages.filter((p: any) => {
+    return selectedCategory === "All" || p.category === selectedCategory;
   });
 
 
@@ -88,7 +78,7 @@ export function PackagesGrid({ search, selectedCategory, visibleCount, setVisibl
               </div>
             </div>
 
-            <div className="mt-auto bg-slate-50 rounded-xl p-4 flex items-center justify-between">
+              <div className="mt-auto bg-slate-50 rounded-xl p-4 flex items-center justify-between">
               <div>
                 <span className="text-[10px] text-slate-400 line-through font-bold block">₹{pkg.mrp.toLocaleString()}</span>
                 <div className="flex items-center gap-2">
@@ -104,6 +94,18 @@ export function PackagesGrid({ search, selectedCategory, visibleCount, setVisibl
             </div>
           </Link>
         ))}
+
+        {!isLoading && filteredPackages.length === 0 && (
+          <div className="col-span-full py-16 flex flex-col items-center justify-center text-center bg-white rounded-[1.5rem] border-2 border-slate-50 border-dashed">
+            <div className="h-20 w-20 rounded-full bg-slate-50 flex items-center justify-center mb-5">
+              <Search className="h-8 w-8 text-slate-300" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 tracking-tight">No packages found</h3>
+            <p className="text-sm text-slate-500 font-medium max-w-sm mt-3 leading-relaxed">
+              We couldn't find any packages matching "{search}". Try searching with different keywords or category.
+            </p>
+          </div>
+        )}
       </div>
 
       {filteredPackages.length > visibleCount && (

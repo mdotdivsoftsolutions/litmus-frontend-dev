@@ -1,47 +1,101 @@
-import { useState, useEffect, type MouseEvent } from "react";
+import { type MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import { products } from "@/lib/placeholder-data";
-import { Activity, FileText, Plus, Minus, ChevronRight, ArrowRight, ChevronLeft } from "lucide-react";
+import { Activity, FileText,  Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SectionHeader } from "./home/SectionHeader";
-import { useQuery } from "@tanstack/react-query";
-import { testApi } from "@/lib/api/test";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { packageApi } from "@/lib/api/package";
+import { cartApi } from "@/lib/api/cart";
+import { authApi } from "@/lib/api/auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { useCartDrawer } from "@/components/cart/CartDrawerContext";
 
 type Product = (typeof products)[number];
 
 export type TestCardProps = {
   p?: Product;
   t?: any;
-  cartItems: Record<string, number>;
-  addToCart: (id: string, e: MouseEvent<HTMLButtonElement>) => void;
-  removeFromCart: (id: string, e: MouseEvent<HTMLButtonElement>) => void;
+  cartItems?: Record<string, number>;
+  addToCart?: (id: string, e: MouseEvent<HTMLButtonElement>) => void;
+  removeFromCart?: (id: string, e: MouseEvent<HTMLButtonElement>) => void;
 };
 
-export const TestCard = ({ p, t, cartItems, addToCart, removeFromCart }: TestCardProps) => {
+export const TestCard = ({ p, t }: TestCardProps) => {
+  const queryClient = useQueryClient();
+  const { openCart } = useCartDrawer();
+
   const discountPct = (price: number, mrp: number) => {
     if (!mrp || mrp <= price) return 0;
     return Math.round(((mrp - price) / mrp) * 100);
   };
   
   const id = t?._id || p?.id || "unknown";
-  const name = t?.testName || p?.name || "Food Safety Test";
-  const parametersCount = t?.metadata?.parameters?.length || p?.testCount || 0;
+  
+  // Determine if this is a package or a test
+  const isPackage = t && (t.name !== undefined || t.category !== undefined);
+  const isTest = t && t.testName !== undefined;
+  const itemType = isTest ? 'TEST' : 'PACKAGE'; // Default mock products to PACKAGE
+
+  const name = t?.testName || t?.name || p?.name || "Food Safety Test";
+  const parametersCount = t?.metadata?.parameters?.length || t?.testCount || p?.testCount || 0;
+  
+  // For tests offerPrice is the selling price, price is MRP. For packages, price is selling price, mrp is MRP.
   const price = t?.offerPrice ? t.offerPrice : (t?.price || (p?.testCount ? p.testCount * 150 + 999 : 999));
-  const mrp = t?.price || (p?.testCount ? p.testCount * 260 + 1500 : 1500);
-  const qty = cartItems[id] || 0;
+  const mrp = isTest ? t?.price : (t?.mrp || (p?.testCount ? p.testCount * 260 + 1500 : 1500));
+  
   const discount = discountPct(price, mrp);
-  const turnAroundTime = t?.turnAroundTime || "2-3 Days";
+  const turnAroundTime = t?.turnAroundTime || t?.tat || "2-3 Days";
+  const badgeText = t?.tag || (p as any)?.badge || (t?.isPopular ? "Popular" : null);
+
+  const { data: cartResponse } = useQuery({ queryKey: ['cart'], queryFn: cartApi.getCart });
+  const cartItems = cartResponse?.data?.items || [];
+  
+  // Determine if this item is in the cart
+  const isInCart = cartItems.some((item: any) => 
+    (item.itemType === 'TEST' && item.testId?._id === id) || 
+    (item.itemType === 'PACKAGE' && item.packageId?._id === id)
+  );
+
+  const addMutation = useMutation({
+    mutationFn: (data: any) => cartApi.addToCart(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      toast.success("Added to cart!");
+      openCart();
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || "Failed to add to cart");
+    }
+  });
+
+  const { data: userResponse } = useQuery({ queryKey: ["userProfile"], queryFn: authApi.getMe, retry: false });
+  const user = userResponse?.data;
+
+  const handleAddToCart = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (!user) {
+      window.dispatchEvent(new Event('openAuthModal'));
+      return;
+    }
+    if (isInCart || addMutation.isPending) return;
+    addMutation.mutate({
+      itemType,
+      ...(itemType === 'TEST' ? { testId: id } : { packageId: id }),
+      parameters: []
+    });
+  };
 
   return (
     <Link
-      to={`/tests/${id}`}
+      to={itemType === 'TEST' ? `/tests/${id}` : `/packages/${id}`}
       className="group m-2 flex w-[385px] shrink-0 flex-col overflow-hidden rounded-[1.25rem] border border-brand-card-from/10 bg-white shadow-[0_2px_12px_-2px_rgb(var(--brand-card-rgb)/0.08)] transition-all hover:-translate-y-1 hover:border-brand-card-to/25 hover:shadow-[0_16px_40px_-12px_rgb(var(--brand-card-rgb)/0.22)]"
     >
       <div className="relative flex h-[120px] flex-col justify-end rounded-b-[1.25rem] bg-gradient-card p-5 pb-5 text-white shadow-[0_6px_24px_-4px_rgb(var(--brand-card-rgb)/0.45)] transition-colors">
-        {t?.isPopular && (
+        {badgeText && (
           <div className="absolute right-4 top-0 rounded-b-md bg-gradient-card-badge px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-[0_4px_12px_rgb(var(--brand-card-rgb)/0.35)]">
-            Popular
+            {badgeText}
           </div>
         )}
         <div className="flex items-start justify-between">
@@ -87,42 +141,21 @@ export const TestCard = ({ p, t, cartItems, addToCart, removeFromCart }: TestCar
           >
             View Details
           </button>
-          {qty === 0 ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                addToCart(id, e);
-              }}
-              className="h-11 flex-1 rounded-xl bg-gradient-to-r from-brand-card-from to-brand-card-to text-sm font-medium text-white shadow-[0_4px_16px_-2px_rgb(var(--brand-card-rgb)/0.45)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-4px_rgb(var(--brand-card-rgb)/0.5)] focus:outline-none"
-            >
-              Add to Cart
-            </button>
-          ) : (
-            <div className="flex h-11 flex-1 items-center justify-between rounded-xl border border-brand-card-to/25 bg-[#e8f6fa] px-3 shadow-[inset_0_1px_2px_rgb(var(--brand-card-rgb)/0.06)]">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  removeFromCart(id, e);
-                }}
-                className="rounded-full bg-white p-0.5 text-brand-card-from shadow-sm hover:text-brand-card-deep focus:outline-none"
-              >
-                <Minus className="h-4 w-4" />
-              </button>
-              <span className="text-sm font-semibold text-brand-card-from">{qty}</span>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  addToCart(id, e);
-                }}
-                className="rounded-full bg-white p-0.5 text-brand-card-from shadow-sm hover:text-brand-card-deep focus:outline-none"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={isInCart || addMutation.isPending}
+            className={cn(
+              "h-11 flex-1 flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition-all focus:outline-none",
+              isInCart 
+                ? "bg-[#e8f6fa] text-brand-card-from border border-brand-card-to/25 cursor-not-allowed" 
+                : "bg-gradient-to-r from-brand-card-from to-brand-card-to text-white shadow-[0_4px_16px_-2px_rgb(var(--brand-card-rgb)/0.45)] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-4px_rgb(var(--brand-card-rgb)/0.5)] disabled:opacity-70 disabled:cursor-not-allowed"
+            )}
+          >
+            {addMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            {!addMutation.isPending && isInCart && <Check className="h-4 w-4" />}
+            {isInCart ? "In Cart" : "Add to Cart"}
+          </button>
         </div>
       </div>
     </Link>
@@ -139,12 +172,14 @@ export type HomeTestsProps = {
 };
 
 export const HomeTests = ({ activeTab, setActiveTab, cartItems, addToCart, removeFromCart }: HomeTestsProps) => {
-  const { data: popularTestsData, isLoading } = useQuery({
-    queryKey: ['popularTests'],
-    queryFn: () => testApi.getTests({ isPopular: true, limit: 3 })
+  const { data: popularPackagesData, isLoading } = useQuery({
+    queryKey: ['popularPackages'],
+    queryFn: () => packageApi.getAllPackages()
   });
 
-  const popularTests = popularTestsData?.data || [];
+  const popularPackages = popularPackagesData?.data || [];
+  // Take first 3 for UI, ideally should have isPopular param
+  const displayPackages = popularPackages.slice(0, 3);
 
   return (
     <>
@@ -156,10 +191,10 @@ export const HomeTests = ({ activeTab, setActiveTab, cartItems, addToCart, remov
                 Popular Packages <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Near You</span>
               </>
             }
-            subtitle="Discover the most frequently booked food safety and quality analysis tests in your region."
+            subtitle="Discover the most frequently booked food safety and quality analysis packages in your region."
             action={{
-              label: "View All Tests",
-              href: "/tests",
+              label: "View All Packages",
+              href: "/packages",
             }}
           />
 
@@ -189,13 +224,13 @@ export const HomeTests = ({ activeTab, setActiveTab, cartItems, addToCart, remov
                   </div>
                 </div>
               ))
-            ) : popularTests.length > 0 ? (
-              popularTests.map((t: any) => (
-                <TestCard key={`popular-${t._id}`} t={t} cartItems={cartItems} addToCart={addToCart} removeFromCart={removeFromCart} />
+            ) : displayPackages.length > 0 ? (
+              displayPackages.map((t: any) => (
+                <TestCard key={`popular-pkg-${t._id}`} t={t} cartItems={cartItems} addToCart={addToCart} removeFromCart={removeFromCart} />
               ))
             ) : (
               <div className="w-full text-center py-10 text-muted-foreground">
-                No popular tests found.
+                No popular packages found.
               </div>
             )}
           </div>

@@ -28,6 +28,7 @@ const userNav = [
 
 const adminNav = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/admin/dashboard" },
+  { label: "Consultations", icon: FileText, href: "/admin/consultations" },
   { label: "Users", icon: Users, href: "/admin/users" },
   { label: "Laboratories", icon: Building2, href: "/admin/laboratories" },
   { label: "Bookings", icon: ClipboardList, href: "/admin/bookings" },

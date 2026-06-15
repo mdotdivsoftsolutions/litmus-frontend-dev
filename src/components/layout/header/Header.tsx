@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { CartDrawer } from "../../cart/CartDrawer";
+import { SearchAutocomplete } from "@/components/common/SearchAutocomplete";
 
 const cities = ["Chennai", "Mumbai", "New Delhi", "Bangalore", "Hyderabad", "Kolkata"];
 
@@ -85,10 +86,10 @@ export function Header({
 
           {/* Desktop Search Bar */}
           <div className="hidden lg:flex flex-1 max-w-md mx-4 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
+            <SearchAutocomplete 
               placeholder="Search for tests, products..."
-              className="pl-9 h-10 rounded-full border-border focus:border-accent bg-background text-sm"
+              className="w-full"
+              inputClassName="h-10 rounded-full border-border focus:border-accent bg-background text-sm"
             />
           </div>
 
@@ -197,10 +198,11 @@ export function Header({
         {/* Mobile search bar */}
         {showSearch && (
           <div className="lg:hidden px-4 pb-3 animate-fade-in">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search for tests, products..." className="pl-9 h-10 rounded-full border-border bg-background text-sm" autoFocus />
-            </div>
+            <SearchAutocomplete 
+              placeholder="Search for tests, products..." 
+              className="w-full"
+              inputClassName="h-10 rounded-full border-border bg-background text-sm" 
+            />
           </div>
         )}
       </header>

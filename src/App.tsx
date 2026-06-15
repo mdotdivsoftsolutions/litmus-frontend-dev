@@ -59,6 +59,7 @@ import ReviewFormPage from "./pages/admin/ReviewFormPage.tsx";
 import PackageManagement from "./pages/admin/PackageManagement.tsx";
 import PackageFormPage from "./pages/admin/PackageFormPage.tsx";
 import AdminSettings from "./pages/admin/AdminSettings.tsx";
+import AdminConsultations from "./pages/admin/AdminConsultations.tsx";
 
 // Lab
 import LabDashboard from "./pages/lab/LabDashboard.tsx";
@@ -160,6 +161,7 @@ const App = () => (
               <Route path="reviews/:id/edit" element={<ReviewFormPage />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="reports" element={<AdminReports />} />
+              <Route path="consultations" element={<AdminConsultations />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
           </Route>

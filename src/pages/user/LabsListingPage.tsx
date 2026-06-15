@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { laboratories } from "@/lib/placeholder-data";
 import { LabsHero } from "./components/labs-listing/LabsHero";
 import { LabsGrid } from "./components/labs-listing/LabsGrid";
@@ -12,15 +13,19 @@ export default function LabsListingPage() {
   const [selectedCity, setSelectedCity] = useState("All Cities");
   const [visibleCount, setVisibleCount] = useState(10);
 
+  const debouncedSearch = useDebounce(search, 300);
+
   const { data: labsResponse, isLoading } = useQuery({
-    queryKey: ["publicLabs", { location: selectedCity !== "All Cities" ? selectedCity : undefined }],
-    queryFn: () => labApi.getLabsPublic({ location: selectedCity !== "All Cities" ? selectedCity : undefined }),
+    queryKey: ["publicLabs", { location: selectedCity !== "All Cities" ? selectedCity : undefined, search: debouncedSearch }],
+    queryFn: () => labApi.getLabsPublic({ 
+      location: selectedCity !== "All Cities" ? selectedCity : undefined,
+      search: debouncedSearch
+    }),
   });
 
   const rawLabs = labsResponse?.data || [];
 
-  const filtered = rawLabs
-    .map((l: any) => ({
+  const mappedLabs = rawLabs.map((l: any) => ({
       id: l._id,
       name: l.labName,
       city: l.location?.city || "Unknown",
@@ -31,11 +36,16 @@ export default function LabsListingPage() {
       priceFrom: l.pricing ? Math.min(...Object.values(l.pricing as Record<string, number>).filter(v => typeof v === 'number')) : 500,
       testsCount: l.tests?.length || 0,
       expertiseArea: l.expertiseArea || [],
-    }))
-    .filter((l: any) => {
-      if (search && !l.name.toLowerCase().includes(search.toLowerCase()) && !l.city.toLowerCase().includes(search.toLowerCase())) return false;
-      return true;
-    });
+  }));
+
+  const filtered = mappedLabs;
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  const handleSearch = () => {
+    if (resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
     <div className="animate-fade-in min-h-screen bg-white">
@@ -44,8 +54,10 @@ export default function LabsListingPage() {
         setSearch={setSearch}
         selectedCity={selectedCity}
         setSelectedCity={setSelectedCity}
+        labs={mappedLabs}
+        onSearch={handleSearch}
       />
-      <div className="bg-slate-50">
+      <div ref={resultsRef} className="bg-slate-50 scroll-mt-6">
         <LabsGrid
           filtered={filtered}
           visibleCount={visibleCount}

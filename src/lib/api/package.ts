@@ -1,8 +1,8 @@
 import { apiClient } from './axios';
 
 export const packageApi = {
-  getAllPackages: async () => {
-    const response = await apiClient.get('/packages');
+  getAllPackages: async (params?: any) => {
+    const response = await apiClient.get('/packages', { params });
     return response.data;
   },
 

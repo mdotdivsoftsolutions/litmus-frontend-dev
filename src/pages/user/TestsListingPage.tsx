@@ -1,4 +1,5 @@
-import { useState, type MouseEvent } from "react";
+import { useState, useRef, type MouseEvent } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 
 import { useSearchParams } from "react-router-dom";
 import { Package, Milk, Coffee, Wheat, Flame, Drumstick, Droplets, Cookie } from "lucide-react";
@@ -35,11 +36,6 @@ export default function TestsListingPage() {
   const [cartItems, setCartItems] = useState<Record<string, number>>({});
   const [visibleItems, setVisibleItems] = useState(12);
 
-  const { data: testsRes, isLoading: testsLoading } = useQuery({
-    queryKey: ['tests'],
-    queryFn: () => testApi.getTests()
-  });
-
   const { data: catRes, isLoading: catLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
@@ -48,20 +44,17 @@ export default function TestsListingPage() {
     }
   });
 
-  const testsData = testsRes?.data || [];
   const categoriesData = catRes?.data || [];
+  const selectedCategoryId = selectedCategory !== "All" ? categoriesData.find((c: any) => c.name === selectedCategory)?._id : undefined;
+  const debouncedSearch = useDebounce(search, 300);
 
-  const filtered = Array.isArray(testsData) ? testsData.filter((t: any) => {
-    // Category filter
-    if (selectedCategory !== "All") {
-      const isAppToAll = t.isApplicableToAll;
-      const hasCat = t.applicableCategories?.some((c: any) => c.name === selectedCategory);
-      if (!isAppToAll && !hasCat) return false;
-    }
-    // Search filter
-    if (search && !t.testName?.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  }) : [];
+  const { data: testsRes, isLoading: testsLoading } = useQuery({
+    queryKey: ['tests', debouncedSearch, selectedCategoryId],
+    queryFn: () => testApi.getTests({ search: debouncedSearch, category: selectedCategoryId })
+  });
+
+  const testsData = testsRes?.data || [];
+  const filtered = testsData;
 
   const formattedTests = filtered.slice(0, visibleItems).map((t: any) => ({
     id: t._id,
@@ -95,11 +88,19 @@ export default function TestsListingPage() {
     ...(selectedType ? [{ label: selectedType, clear: () => setSelectedType("") }] : []),
   ];
 
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  const handleSearch = () => {
+    if (resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className="animate-fade-in bg-slate-50 min-h-screen">
 
       {/* 1. PANORAMIC HERO */}
-      <TestsHero search={search} setSearch={setSearch} />
+      <TestsHero search={search} setSearch={setSearch} tests={testsData} onSearch={handleSearch} />
 
       {/* 2. STATS STRIP */}
       <TestsStatsStrip /> 
@@ -120,16 +121,18 @@ export default function TestsListingPage() {
       </div> */}
 
       {/* 5. MOST BOOKED DIAGNOSTICS */}
-      <MostBookedTests
-        tests={formattedTests}
-        discountPct={discountPct}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={handleCategoryChange}
-        categories={categoriesData}
-        iconMap={iconMap}
-        cn={cn}
-        isLoading={testsLoading}
-      />
+      <div ref={resultsRef} className="scroll-mt-6">
+        <MostBookedTests
+          tests={formattedTests}
+          discountPct={discountPct}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={handleCategoryChange}
+          categories={categoriesData}
+          iconMap={iconMap}
+          cn={cn}
+          isLoading={testsLoading}
+        />
+      </div>
 
       {/* TRUST & ORDERING SECTION (Customized for Litmus) */}
       <TrustAndOrdering />
@@ -138,11 +141,7 @@ export default function TestsListingPage() {
       <PromoBanner className="py-12 bg-slate-50 md:py-20" />
 
       <div className="max-w-7xl mx-auto px-4">
-        {filtered.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground">No products found matching your filters.</p>
-          </div>
-        )}
+        {/* Empty state is now handled inside MostBookedTests */}
       </div>
     </div>
   );

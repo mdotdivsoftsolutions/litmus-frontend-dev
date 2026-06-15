@@ -4,13 +4,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ShoppingCart, Shield, Clock, Lock, MessageCircle, ChevronRight, Loader2, FlaskConical } from "lucide-react";
-import { testApi } from "@/lib/api/test";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Check, Info, Shield, Droplets, Thermometer, Microscope, Loader2, PlayCircle, Eye, Activity, FileText, ShoppingCart, Clock, Lock, MessageCircle, ChevronRight, FlaskConical } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { useCartDrawer } from "@/components/cart/CartDrawerContext";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { testApi } from "@/lib/api/test";
 import { cartApi } from "@/lib/api/cart";
+import { authApi } from "@/lib/api/auth";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 export default function TestDetailPage() {
   const { id } = useParams();
@@ -20,6 +23,16 @@ export default function TestDetailPage() {
   const { openCart } = useCartDrawer();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  const { data: userResponse } = useQuery({ queryKey: ["userProfile"], queryFn: authApi.getMe, retry: false });
+  const user = userResponse?.data;
+
+  const { data: cartResponse } = useQuery({ queryKey: ['cart'], queryFn: cartApi.getCart });
+  const cartItems = cartResponse?.data?.items || [];
+  
+  const isInCart = testObj && cartItems.some((item: any) => 
+    item.itemType === 'TEST' && item.testId?._id === testObj._id
+  );
 
   const addMutation = useMutation({
     mutationFn: (data: any) => cartApi.addToCart(data),
@@ -34,7 +47,11 @@ export default function TestDetailPage() {
   });
 
   const handleAddToCart = () => {
-    if (!testObj) return;
+    if (!user) {
+      window.dispatchEvent(new Event('openAuthModal'));
+      return;
+    }
+    if (!testObj || isInCart || addMutation.isPending) return;
     addMutation.mutate({
       itemType: 'TEST',
       testId: testObj._id,
@@ -43,6 +60,10 @@ export default function TestDetailPage() {
   };
 
   const handleBookNow = () => {
+    if (!user) {
+      window.dispatchEvent(new Event('openAuthModal'));
+      return;
+    }
     if (!testObj) return;
     const searchParams = new URLSearchParams();
     searchParams.set("testId", testObj._id);
@@ -113,7 +134,22 @@ export default function TestDetailPage() {
   }
 
   if (!testObj) {
-    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Test not found</div>;
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4 animate-in fade-in zoom-in duration-500">
+        <div className="h-24 w-24 bg-slate-100 rounded-full flex items-center justify-center mb-6 border-8 border-slate-50">
+          <FlaskConical className="h-10 w-10 text-slate-400" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Test Not Found</h2>
+        <p className="text-slate-500 max-w-md mx-auto mb-8">
+          We couldn't find the test you're looking for. It might have been removed or the URL is incorrect.
+        </p>
+        <Link to="/tests">
+          <Button className="bg-primary hover:bg-primary-deep h-11 px-8 rounded-xl font-medium shadow-sm transition-all duration-300">
+            Browse All Tests
+          </Button>
+        </Link>
+      </div>
+    );
   }
 
   const parameters = testObj.metadata?.parameters || [];
@@ -258,22 +294,25 @@ export default function TestDetailPage() {
                 <div className="space-y-3 pt-2">
                   <Button 
                     onClick={handleAddToCart}
-                    disabled={addMutation.isPending}
-                    className="w-full bg-primary hover:bg-primary-deep rounded-lg gap-2 h-12 text-base shadow-sm">
-                    {addMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShoppingCart className="h-5 w-5" />} 
-                    {addMutation.isPending ? "Adding..." : "Add to Cart"}
+                    disabled={isInCart || addMutation.isPending}
+                    className="w-full bg-primary hover:bg-primary-deep rounded-lg gap-2 h-12 text-base shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                    {addMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : isInCart ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />} 
+                    {isInCart ? "In Cart" : "Add to Cart"}
                   </Button>
                   
                   <Button 
                     onClick={handleBookNow}
-                    disabled={addMutation.isPending}
                     variant="outline" 
-                    className="w-full rounded-lg border-2 border-primary text-primary hover:bg-primary/5 hover:text-primary h-12 text-base font-semibold">
+                    className="w-full bg-white hover:bg-slate-50 text-foreground border border-border h-12 rounded-lg text-base shadow-sm">
                     Book Now
                   </Button>
                 </div>
-
-                <a href="#" className="flex items-center justify-center gap-2 text-sm font-medium text-litmus-teal hover:underline pt-2">
+                <a 
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer" 
+                  className="flex items-center justify-center gap-2 text-sm font-medium text-litmus-teal hover:underline pt-2"
+                >
                   <MessageCircle className="h-4 w-4" /> Need help? Chat on WhatsApp
                 </a>
 

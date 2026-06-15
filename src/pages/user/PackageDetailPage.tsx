@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { 
   Activity, 
   FileText, 
@@ -18,7 +16,8 @@ import {
   FlaskConical,
   Award,
   ShoppingCart,
-  Loader2
+  Loader2,
+  Check
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -26,13 +25,25 @@ import { packageApi } from "@/lib/api/package";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCartDrawer } from "@/components/cart/CartDrawerContext";
 import { cartApi } from "@/lib/api/cart";
+import { authApi } from "@/lib/api/auth";
 import { toast } from "sonner";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 export default function PackageDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { openCart } = useCartDrawer();
   const queryClient = useQueryClient();
+
+  const { data: userResponse } = useQuery({ queryKey: ["userProfile"], queryFn: authApi.getMe, retry: false });
+  const user = userResponse?.data;
+
+  const { data: cartResponse } = useQuery({ queryKey: ['cart'], queryFn: cartApi.getCart });
+  const cartItems = cartResponse?.data?.items || [];
+  
+  const isInCart = cartItems.some((item: any) => 
+    item.itemType === 'PACKAGE' && item.packageId?._id === id
+  );
 
   const { data: packageResponse, isLoading } = useQuery({
     queryKey: ["package", id],
@@ -48,6 +59,10 @@ export default function PackageDetailPage() {
   };
 
   const handleBookNow = () => {
+    if (!user) {
+      window.dispatchEvent(new Event('openAuthModal'));
+      return;
+    }
     if (!pkg) return;
     navigate(`/bookings/new?packageId=${pkg._id}`);
   };
@@ -65,7 +80,11 @@ export default function PackageDetailPage() {
   });
 
   const handleAddToCart = () => {
-    if (!pkg) return;
+    if (!user) {
+      window.dispatchEvent(new Event('openAuthModal'));
+      return;
+    }
+    if (!pkg || isInCart || addMutation.isPending) return;
     addMutation.mutate({
       itemType: 'PACKAGE',
       packageId: pkg._id,
@@ -302,12 +321,12 @@ export default function PackageDetailPage() {
                 <div className="pt-2 space-y-3">
                   <Button 
                     onClick={handleAddToCart}
-                    disabled={addMutation.isPending}
+                    disabled={isInCart || addMutation.isPending}
                     variant="outline"
-                    className="w-full h-12 rounded-xl border-2 border-primary text-primary hover:bg-primary/5 hover:text-primary font-extrabold text-sm transition-all flex items-center justify-center gap-2 group"
+                    className="w-full h-12 rounded-xl border-2 border-primary text-primary hover:bg-primary/5 hover:text-primary font-extrabold text-sm transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {addMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShoppingCart className="h-5 w-5" />} 
-                    {addMutation.isPending ? "Adding..." : "Add to Cart"}
+                    {addMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : isInCart ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />} 
+                    {isInCart ? "In Cart" : "Add to Cart"}
                   </Button>
 
                   <Button 
@@ -318,7 +337,7 @@ export default function PackageDetailPage() {
                   </Button>
 
                   <a 
-                    href="https://wa.me/919876543210" 
+                    href={WHATSAPP_URL} 
                     target="_blank" 
                     rel="noreferrer"
                     className="flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"

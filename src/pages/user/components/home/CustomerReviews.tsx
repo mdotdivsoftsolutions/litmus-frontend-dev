@@ -56,10 +56,6 @@ export function CustomerReviews() {
                   </>
                }
                subtitle="See why thousands of businesses trust Litmus for their uncompromising food safety testing."
-               action={{
-                  label: "Read All Stories",
-                  href: "#",
-               }}
             />
          </div>
 

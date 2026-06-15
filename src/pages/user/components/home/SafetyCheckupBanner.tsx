@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ConsultationBookingModal } from "../consultation/ConsultationBookingModal";
 
 const slides = [
    {
@@ -8,6 +9,7 @@ const slides = [
       badgeColor: "text-[#004e64]",
       descInline: "Vitamin D, B12, HbA1c & more",
       title: <>Full Body Checkup <span className="text-[#F06C00]">Essential at ₹1599</span></>,
+      titleText: "Full Body Checkup Essential at ₹1599",
       img: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=1000&auto=format&fit=crop",
    },
    {
@@ -15,6 +17,7 @@ const slides = [
       badgeColor: "text-[#004e64]",
       descInline: "Microbial Scan, Adulteration Check",
       title: <>Advanced Food <span className="text-[#F06C00]">Safety Checkup</span></>,
+      titleText: "Advanced Food Safety Checkup",
       img: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=1000&auto=format&fit=crop",
    },
    {
@@ -22,6 +25,7 @@ const slides = [
       badgeColor: "text-[#004e64]",
       descInline: "Adulteration, Fat Content, SNF analysis",
       title: <>Premium Dairy <span className="text-[#F06C00]">Purity Panel</span></>,
+      titleText: "Premium Dairy Purity Panel",
       img: "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1000&auto=format&fit=crop",
    },
    {
@@ -29,6 +33,7 @@ const slides = [
       badgeColor: "text-[#004e64]",
       descInline: "Heavy metals, Pesticide residues",
       title: <>Complete Spice <span className="text-[#F06C00]">Purity Audit</span></>,
+      titleText: "Complete Spice Purity Audit",
       img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=1000&auto=format&fit=crop",
    },
 ];
@@ -79,9 +84,11 @@ export function SafetyCheckupBanner() {
                               <p className="text-slate-800 text-sm font-semibold mb-5 flex items-center gap-1.5 flex-wrap">
                                  <span className={s.badgeColor}>{s.badge}</span> {s.descInline}
                               </p>
-                              <button className="self-start h-10 px-8 bg-gradient-brand text-white text-sm font-bold rounded-xl shadow-sm transition-colors">
-                                 Book Now
-                              </button>
+                              <ConsultationBookingModal serviceName={s.titleText} source="Home Banner">
+                                 <button type="button" className="self-start h-10 px-8 bg-gradient-brand text-white text-sm font-bold rounded-xl shadow-sm transition-colors">
+                                    Book Now
+                                 </button>
+                              </ConsultationBookingModal>
                            </div>
                            {/* Right Image */}
                            <div className="flex-[0.7] relative h-full hidden sm:block">
