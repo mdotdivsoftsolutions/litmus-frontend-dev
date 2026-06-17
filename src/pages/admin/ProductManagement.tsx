@@ -14,8 +14,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Settings2, Edit, Trash2, Filter, MoreVertical, ImageIcon, ChevronLeft, ChevronRight, Eye, Package } from "lucide-react";
 import { productApi } from "@/lib/api/product";
+import { testApi } from "@/lib/api/test";
 import { toast } from "sonner";
-import { tests } from "@/lib/placeholder-data";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -44,6 +44,12 @@ export default function ProductManagement() {
     queryKey: ["adminProducts"],
     queryFn: () => productApi.getProducts(),
   });
+
+  const { data: testsData } = useQuery({
+    queryKey: ["adminTests"],
+    queryFn: () => testApi.getTests(),
+  });
+  const allTests = testsData?.data || [];
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => productApi.deleteProduct(id),
@@ -318,15 +324,18 @@ export default function ProductManagement() {
         <SheetContent className="overflow-y-auto">
           <SheetHeader><SheetTitle>Manage Tests — {testsProduct?.name}</SheetTitle></SheetHeader>
           <div className="mt-4 space-y-2">
-            {tests.map((t) => (
-              <label key={t.id} className="flex items-center gap-2 rounded-lg border border-border p-3 cursor-pointer hover:bg-muted/50 transition-colors">
-                <input type="checkbox" defaultChecked={Math.random() > 0.5} className="rounded accent-primary" />
+            {allTests.map((t: any) => (
+              <label key={t._id} className="flex items-center gap-2 rounded-lg border border-border p-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                <input type="checkbox" defaultChecked={testsProduct?.availableTests?.some((pt: any) => pt._id === t._id || pt === t._id)} className="rounded accent-primary" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">FSSAI {t.method} · {t.type}</p>
+                  <p className="text-xs text-muted-foreground">{t.method} · {t.typeId?.name || t.type}</p>
                 </div>
               </label>
             ))}
+            {allTests.length === 0 && (
+              <p className="text-sm text-muted-foreground py-4 text-center">No tests found.</p>
+            )}
           </div>
         </SheetContent>
       </Sheet>

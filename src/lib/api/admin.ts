@@ -31,6 +31,16 @@ export const adminApi = {
     return response.data;
   },
 
+  assignLab: async (id: string, labId: string) => {
+    const response = await apiClient.patch(`/admin/booking/${id}/assign-lab`, { labId });
+    return response.data;
+  },
+
+  rejectBooking: async (id: string, reason: string) => {
+    const response = await apiClient.patch(`/admin/booking/${id}/reject`, { reason });
+    return response.data;
+  },
+
   getLabById: async (id: string) => {
     const response = await apiClient.get(`/admin/lab/${id}`);
     return response.data;
@@ -53,6 +63,11 @@ export const adminApi = {
 
   getStats: async () => {
     const response = await apiClient.get('/admin/stats');
+    return response.data;
+  },
+
+  getAnalytics: async () => {
+    const response = await apiClient.get('/admin/analytics');
     return response.data;
   },
 

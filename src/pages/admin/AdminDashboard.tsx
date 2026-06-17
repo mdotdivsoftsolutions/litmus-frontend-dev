@@ -1,35 +1,58 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { adminApi } from "@/lib/api/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Building2, ClipboardList, DollarSign, Clock, TrendingUp, TrendingDown } from "lucide-react";
-import { bookings, laboratories } from "@/lib/placeholder-data";
+import { Users, Building2, ClipboardList, DollarSign, Clock, TrendingUp, TrendingDown, Loader2 } from "lucide-react";
 import { PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
-const kpis = [
-  { label: "Total Users", value: "1,247", icon: Users, trend: "+12%", up: true },
-  { label: "Active Labs", value: "52", icon: Building2, trend: "+3", up: true },
-  { label: "Bookings Today", value: "34", icon: ClipboardList, trend: "+8%", up: true },
-  { label: "Revenue This Month", value: "₹12.4L", icon: DollarSign, trend: "+15%", up: true },
-  { label: "Pending Approvals", value: "8", icon: Clock, trend: "-2", up: false },
-];
-
-const pieData = [
-  { name: "Pending", value: 15, color: "#E03A18" },
-  { name: "Approved", value: 25, color: "#2D8F6F" },
-  { name: "In Progress", value: 30, color: "#F59E2B" },
-  { name: "Completed", value: 45, color: "#1A6B54" },
-  { name: "Rejected", value: 5, color: "#C01F0E" },
-];
-
-const revenueData = Array.from({ length: 30 }, (_, i) => ({
-  day: `${i + 1}`,
-  revenue: Math.floor(Math.random() * 50000) + 20000,
-}));
-
 export default function AdminDashboard() {
-  const pendingBookings = bookings.filter((b) => b.status === "Pending");
+  const { data: statsData, isLoading: statsLoading } = useQuery({ queryKey: ["adminStats"], queryFn: adminApi.getStats });
+  const { data: bookingsData, isLoading: bookingsLoading } = useQuery({ queryKey: ["adminBookings"], queryFn: adminApi.getBookings });
+  const { data: analyticsData, isLoading: analyticsLoading } = useQuery({ queryKey: ["adminAnalytics"], queryFn: adminApi.getAnalytics });
+  const { data: labsData, isLoading: labsLoading } = useQuery({ queryKey: ["adminLabs"], queryFn: adminApi.getLabs });
+
+  const isLoading = statsLoading || bookingsLoading || analyticsLoading || labsLoading;
+
+  if (isLoading) {
+    return <div className="flex h-[400px] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  const stats = statsData?.data || { totalUsers: 0, totalLabs: 0, totalBookings: 0, totalRevenue: 0 };
+  const rawBookings = bookingsData?.data || [];
+  const labs = labsData?.data || [];
+  const analytics = analyticsData?.data || { bookingVolume: [] };
+
+  const pendingBookings = rawBookings.filter((b: any) => b.status === "Pending" || b.status === "PENDING").slice(0, 5);
+
+  const kpis = [
+    { label: "Total Users", value: stats.totalUsers.toLocaleString(), icon: Users, trend: "+12%", up: true },
+    { label: "Active Labs", value: stats.totalLabs.toLocaleString(), icon: Building2, trend: "+3", up: true },
+    { label: "Total Bookings", value: stats.totalBookings.toLocaleString(), icon: ClipboardList, trend: "+8%", up: true },
+    { label: "Total Revenue", value: `₹${(stats.totalRevenue / 100000).toFixed(1)}L`, icon: DollarSign, trend: "+15%", up: true },
+    { label: "Pending Approvals", value: pendingBookings.length.toString(), icon: Clock, trend: "-2", up: false },
+  ];
+
+  const statuses = rawBookings.reduce((acc: any, b: any) => {
+    const s = b.status === "PENDING" ? "Pending" : b.status === "COMPLETED" ? "Completed" : b.status === "IN_PROGRESS" ? "In Progress" : b.status || 'Pending';
+    acc[s] = (acc[s] || 0) + 1;
+    return acc;
+  }, {});
+
+  const pieData = [
+    { name: "Pending", value: statuses['Pending'] || 0, color: "#E03A18" },
+    { name: "Approved", value: statuses['Approved'] || 0, color: "#2D8F6F" },
+    { name: "In Progress", value: statuses['In Progress'] || 0, color: "#F59E2B" },
+    { name: "Completed", value: statuses['Completed'] || 0, color: "#1A6B54" },
+    { name: "Rejected", value: statuses['Rejected'] || 0, color: "#C01F0E" },
+  ].filter(d => d.value > 0);
+  
+  if (pieData.length === 0) pieData.push({ name: "No Data", value: 1, color: "#CCC" });
+
+  // Fallback to empty array if no data
+  const revenueData = analytics.bookingVolume?.length > 0 ? analytics.bookingVolume : [{ day: "1", bookings: 0 }];
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -85,9 +108,8 @@ export default function AdminDashboard() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F0EBE4" />
                 <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#9A9A9A" }} />
-                <YAxis tick={{ fontSize: 10, fill: "#9A9A9A" }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
-                <Tooltip contentStyle={{ background: "#1C1C1E", border: "none", borderRadius: 8, color: "#fff" }} formatter={(v: number) => [`₹${v.toLocaleString()}`, "Revenue"]} />
-                <Area type="monotone" dataKey="revenue" stroke="#E03A18" strokeWidth={2} fill="url(#revenueGrad)" />
+                <Tooltip contentStyle={{ background: "#1C1C1E", border: "none", borderRadius: 8, color: "#fff" }} />
+                <Area type="monotone" dataKey="bookings" stroke="#E03A18" strokeWidth={2} fill="url(#revenueGrad)" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -104,21 +126,25 @@ export default function AdminDashboard() {
           <Table>
             <TableHeader><TableRow className="bg-muted/50"><TableHead>Booking ID</TableHead><TableHead>User</TableHead><TableHead>Product</TableHead><TableHead>Amount</TableHead><TableHead>Status</TableHead><TableHead></TableHead></TableRow></TableHeader>
             <TableBody>
-              {pendingBookings.map((b) => (
-                <TableRow key={b.id} className="hover:bg-muted/30">
-                  <TableCell className="font-medium font-mono text-sm">{b.id}</TableCell>
-                  <TableCell>{b.user}</TableCell>
-                  <TableCell>{b.product}</TableCell>
-                  <TableCell className="font-medium">₹{b.amount.toLocaleString()}</TableCell>
-                  <TableCell><StatusBadge status={b.status} /></TableCell>
+              {pendingBookings.map((b: any) => (
+                <TableRow key={b._id} className="hover:bg-muted/30">
+                  <TableCell className="font-medium font-mono text-sm">BKG-{b._id.substring(b._id.length - 6).toUpperCase()}</TableCell>
+                  <TableCell>{b.userId?.firstName} {b.userId?.lastName}</TableCell>
+                  <TableCell>{b.items?.[0]?.samples?.[0]?.productName || b.items?.[0]?.packageId?.name || b.items?.[0]?.testId?.name || "Service Item"}</TableCell>
+                  <TableCell className="font-medium">₹{(b.items?.reduce((sum: number, item: any) => sum + (item.price || 0), 0) || 0).toLocaleString()}</TableCell>
+                  <TableCell><StatusBadge status={b.status === "PENDING" ? "Pending" : b.status} /></TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button size="sm" className="h-7 bg-litmus-emerald hover:bg-litmus-teal text-white">Approve</Button>
-                      <Button size="sm" variant="outline" className="h-7 text-status-rejected border-status-rejected hover:bg-status-rejected-bg">Reject</Button>
+                      <Button size="sm" className="h-7 bg-litmus-emerald hover:bg-litmus-teal text-white" asChild><Link to="/admin/bookings">Review</Link></Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
+              {pendingBookings.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">No pending approvals</TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -131,10 +157,10 @@ export default function AdminDashboard() {
           <Table>
             <TableHeader><TableRow className="bg-muted/50"><TableHead>Lab Name</TableHead><TableHead>Bookings</TableHead><TableHead>Avg TAT</TableHead><TableHead>Completion Rate</TableHead><TableHead>Revenue</TableHead></TableRow></TableHeader>
             <TableBody>
-              {laboratories.map((lab) => (
-                <TableRow key={lab.id} className="hover:bg-muted/30">
-                  <TableCell className="font-medium">{lab.name}</TableCell>
-                  <TableCell>{lab.activeBookings}</TableCell>
+              {labs.slice(0, 5).map((lab: any) => (
+                <TableRow key={lab._id} className="hover:bg-muted/30">
+                  <TableCell className="font-medium">{lab.labName}</TableCell>
+                  <TableCell>N/A</TableCell>
                   <TableCell>3.5 days</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -144,9 +170,14 @@ export default function AdminDashboard() {
                       <span className="text-sm">96%</span>
                     </div>
                   </TableCell>
-                  <TableCell className="font-medium">₹{(lab.revenue / 1000).toFixed(0)}K</TableCell>
+                  <TableCell className="font-medium">N/A</TableCell>
                 </TableRow>
               ))}
+              {labs.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">No labs found</TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

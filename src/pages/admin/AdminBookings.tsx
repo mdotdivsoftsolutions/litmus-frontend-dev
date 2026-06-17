@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
+import { toast } from "sonner";
 import { adminApi } from "@/lib/api/admin";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,15 +16,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Eye, Filter, ChevronLeft, ChevronRight, AlertTriangle, Calendar as CalendarIcon, Beaker } from "lucide-react";
-import { bookings as dummyBookings } from "@/lib/placeholder-data";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function AdminBookings() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Assignment & Rejection State
+  const [selectedLabId, setSelectedLabId] = useState("");
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   // Filters
   const [statusFilter, setStatusFilter] = useState("all");
@@ -36,24 +43,60 @@ export default function AdminBookings() {
     queryFn: adminApi.getBookings,
   });
 
+  const { data: labsResponse } = useQuery({
+    queryKey: ["adminLabs"],
+    queryFn: adminApi.getLabs,
+  });
+  const labs = labsResponse?.data || [];
+
   const rawBookings = response?.data || [];
 
+  const assignLabMutation = useMutation({
+    mutationFn: ({ id, labId }: { id: string, labId: string }) => adminApi.assignLab(id, labId),
+    onSuccess: () => {
+      toast.success("Laboratory assigned successfully");
+      queryClient.invalidateQueries({ queryKey: ["adminBookings"] });
+      setSelectedBooking(null);
+      setSelectedLabId("");
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || "Failed to assign lab")
+  });
+
+  const rejectBookingMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string, reason: string }) => adminApi.rejectBooking(id, reason),
+    onSuccess: () => {
+      toast.success("Booking rejected successfully");
+      queryClient.invalidateQueries({ queryKey: ["adminBookings"] });
+      setSelectedBooking(null);
+      setIsRejecting(false);
+      setRejectReason("");
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || "Failed to reject booking")
+  });
+
   // Map API data to our table format. Prioritize API data only.
-  const mappedBookings = rawBookings.map((b: any) => ({
-    id: b._id,
-    displayId: `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`,
-    user: `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim(),
-    product: b.productId?.name || "Unknown Product",
-    lab: b.labId?.labName || "Unknown Lab",
-    testsCount: b.selectedTests?.length || 0,
-    selectedTests: b.selectedTests || [],
-    amount: b.selectedTests?.reduce((sum: number, t: any) => sum + (t.price || 0), 0) || 0,
-    paymentStatus: b.paymentStatus || "Pending",
-    status: b.status || "Pending",
-    date: format(new Date(b.createdAt || new Date()), "MMM d, yyyy"),
-    rawDate: new Date(b.createdAt || new Date()),
-    isReportApprovedByAdmin: b.isReportApprovedByAdmin
-  }));
+  const mappedBookings = rawBookings.map((b: any) => {
+    const productNames = b.items?.map((i: any) => i.samples?.[0]?.productName || i.packageId?.name || i.testId?.name).filter(Boolean);
+    const product = productNames?.length > 0 ? productNames.join(", ") : "Unknown Product";
+    const testsCount = b.items?.reduce((count: number, i: any) => count + (i.samples?.[0]?.selectedParameters?.length || 1), 0) || 0;
+    
+    return {
+      id: b._id,
+      displayId: `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`,
+      user: `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim() || b.collectionDetails?.name || "Unknown User",
+      product,
+      lab: b.labId?.labName || "Litmus Smart Allocation",
+      testsCount,
+      amount: b.totalAmount || b.items?.reduce((sum: number, item: any) => sum + (item.price || 0), 0) || 0,
+      paymentStatus: b.paymentStatus || "PENDING",
+      status: b.status || "PENDING",
+      date: format(new Date(b.createdAt || new Date()), "MMM d, yyyy"),
+      rawDate: new Date(b.createdAt || new Date()),
+      isReportApprovedByAdmin: b.isReportApprovedByAdmin,
+      rawItems: b.items || [],
+      collectionDetails: b.collectionDetails || {}
+    };
+  });
 
   const filtered = mappedBookings.filter((b: any) => {
     const matchesSearch = !search || 
@@ -88,12 +131,12 @@ export default function AdminBookings() {
 
   const timelineSteps = [
     { label: "Booking Placed", done: true },
-    { label: "Payment Confirmed", done: selectedBooking?.paymentStatus === "Paid" },
-    { label: "Admin Approved", done: selectedBooking?.status !== "Pending" },
-    { label: "Lab Assigned", done: ["In Progress", "Completed"].includes(selectedBooking?.status || "") },
-    { label: "Testing In Progress", done: selectedBooking?.status === "In Progress" || selectedBooking?.status === "Completed" },
-    { label: "Report Uploaded", done: selectedBooking?.status === "Completed" },
-    { label: "Complete", done: selectedBooking?.status === "Completed" },
+    { label: "Payment Confirmed", done: selectedBooking?.paymentStatus?.toLowerCase() === "paid" },
+    { label: "Admin Approved", done: selectedBooking?.status?.toLowerCase() !== "pending" },
+    { label: "Lab Assigned", done: ["in progress", "completed"].includes(selectedBooking?.status?.toLowerCase() || "") },
+    { label: "Testing In Progress", done: selectedBooking?.status?.toLowerCase() === "in progress" || selectedBooking?.status?.toLowerCase() === "completed" },
+    { label: "Report Uploaded", done: selectedBooking?.status?.toLowerCase() === "completed" },
+    { label: "Complete", done: selectedBooking?.status?.toLowerCase() === "completed" },
   ];
 
   const renderTable = (items: any[]) => (
@@ -145,7 +188,16 @@ export default function AdminBookings() {
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{b.lab}</TableCell>
                   <TableCell><StatusBadge status={b.paymentStatus === "Paid" ? "Approved" : b.paymentStatus === "Refunded" ? "Rejected" : "Pending"} /></TableCell>
                   <TableCell><StatusBadge status={b.status} /></TableCell>
-                  <TableCell><Button variant="ghost" size="sm" className="gap-1" onClick={(e) => { e.stopPropagation(); setSelectedBooking(b); }}><Eye className="h-3.5 w-3.5" />View</Button></TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" className="gap-1" onClick={(e) => { e.stopPropagation(); setSelectedBooking(b); }}>
+                        <Eye className="h-3.5 w-3.5" />View
+                      </Button>
+                      <Button variant="outline" size="sm" className="gap-1 h-8" onClick={(e) => { e.stopPropagation(); navigate(`/admin/bookings/${b.id}`); }}>
+                        Details
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
               {!isLoading && items.length > 0 && (
@@ -258,11 +310,23 @@ export default function AdminBookings() {
       </Tabs>
 
       {/* Detailed View Sheet */}
-      <Sheet open={!!selectedBooking} onOpenChange={(open) => !open && setSelectedBooking(null)}>
+      <Sheet open={!!selectedBooking} onOpenChange={(open) => {
+        if (!open) {
+          setSelectedBooking(null);
+          setIsRejecting(false);
+          setRejectReason("");
+          setSelectedLabId("");
+        }
+      }}>
         <SheetContent className="overflow-y-auto sm:max-w-md w-[95vw]">
           {selectedBooking && (
             <>
-              <SheetHeader><SheetTitle>Booking Details</SheetTitle></SheetHeader>
+              <SheetHeader>
+                <SheetTitle className="flex justify-between items-center mr-4">
+                  <span>Booking Details</span>
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/admin/bookings/${selectedBooking.id}`)}>View Full Page</Button>
+                </SheetTitle>
+              </SheetHeader>
               <div className="mt-6 space-y-5 pb-10">
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="rounded-lg border border-border bg-muted/20 p-3 break-all"><p className="text-muted-foreground text-xs mb-1">Booking ID</p><p className="font-mono font-medium text-xs">{selectedBooking.displayId}</p></div>
@@ -274,26 +338,62 @@ export default function AdminBookings() {
                   <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Status</p><StatusBadge status={selectedBooking.status} /></div>
                 </div>
 
+                {/* Collection Details */}
+                <div className="space-y-3 border-t border-border pt-4">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">Contact Details</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Name</p><p className="font-medium text-xs">{selectedBooking.collectionDetails?.name || selectedBooking.user}</p></div>
+                    <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Phone</p><p className="font-medium text-xs">{selectedBooking.collectionDetails?.phone || "N/A"}</p></div>
+                    <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2"><p className="text-muted-foreground text-xs mb-1">Email</p><p className="font-medium text-xs">{selectedBooking.collectionDetails?.email || "N/A"}</p></div>
+                  </div>
+                </div>
+
                 {/* Selected Tests Breakdown */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold flex items-center gap-2"><Beaker className="h-4 w-4" /> Selected Tests</h4>
-                  <div className="rounded-lg border border-border overflow-hidden">
-                    <Table>
-                      <TableHeader className="bg-muted/50">
-                        <TableRow>
-                          <TableHead className="py-2 h-auto text-xs">Test Name</TableHead>
-                          <TableHead className="py-2 h-auto text-xs text-right">Price</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {selectedBooking.selectedTests.map((t: any, i: number) => (
-                          <TableRow key={i}>
-                            <TableCell className="py-2 text-sm">{t.testName}</TableCell>
-                            <TableCell className="py-2 text-sm text-right font-medium">₹{t.price?.toLocaleString() || 0}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                <div className="space-y-3 border-t border-border pt-4">
+                  <h4 className="text-sm font-semibold flex items-center gap-2"><Beaker className="h-4 w-4" /> Booking Items & Samples</h4>
+                  <div className="space-y-3">
+                    {selectedBooking.rawItems.map((item: any, i: number) => (
+                      <div key={i} className="rounded-lg border border-border overflow-hidden">
+                        <div className="bg-muted/50 px-3 py-2 flex justify-between items-center border-b border-border">
+                           <span className="font-semibold text-sm">Item {i+1}: {item.itemType}</span>
+                           <span className="font-medium text-sm">₹{item.price?.toLocaleString() || 0}</span>
+                        </div>
+                        <div className="p-3 bg-card space-y-3">
+                           {item.samples?.map((sample: any, j: number) => (
+                             <div key={j} className="text-sm space-y-3 border-b border-border pb-3 last:border-0 last:pb-0">
+                               <div>
+                                 <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block mb-1">Product Info</span>
+                                 <p className="font-medium text-base text-foreground">{sample.productName || "Unknown Product"}</p>
+                                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-muted-foreground">
+                                   {sample.quantity && <span>Qty: <span className="font-medium text-slate-700">{sample.quantity}</span></span>}
+                                   {sample.batchNumber && <span>Batch: <span className="font-medium text-slate-700">{sample.batchNumber}</span></span>}
+                                   {sample.sku && <span>SKU: <span className="font-medium text-slate-700">{sample.sku}</span></span>}
+                                 </div>
+                               </div>
+                               {sample.selectedParameters && sample.selectedParameters.length > 0 && (
+                                 <div>
+                                   <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block mb-1.5">Parameters to Test</span>
+                                   <div className="flex flex-wrap gap-1.5 mt-1">
+                                     {sample.selectedParameters.map((p: string, k: number) => (
+                                       <Badge key={k} variant="outline" className="font-normal text-xs bg-background text-foreground shadow-sm">{p}</Badge>
+                                     ))}
+                                   </div>
+                                 </div>
+                               )}
+                               {sample.specifics && (
+                                 <div>
+                                    <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block mb-1">Specifics</span>
+                                    <p className="text-xs mt-0.5 bg-muted/30 p-2 rounded-md">{sample.specifics}</p>
+                                 </div>
+                               )}
+                             </div>
+                           ))}
+                           {(!item.samples || item.samples.length === 0) && (
+                              <p className="text-sm font-medium">{item.packageId?.name || item.testId?.name || "Service Item"}</p>
+                           )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -314,31 +414,62 @@ export default function AdminBookings() {
                 </div>
 
                 {/* Admin Actions */}
-                {selectedBooking.status === "Pending" && (
-                  <div className="space-y-3 border-t border-border pt-4">
+                {selectedBooking.status?.toLowerCase() === "pending" && (
+                  <div className="space-y-4 border-t border-border pt-4">
                     <h4 className="text-sm font-semibold">Admin Actions</h4>
-                    <div className="space-y-2">
-                      <label className="text-sm text-muted-foreground">Reason (for rejection)</label>
-                      <Textarea placeholder="Enter reason if rejecting..." className="bg-background/50" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm text-muted-foreground">Reassign Lab</label>
-                      <Select>
-                        <SelectTrigger className="bg-background/50"><SelectValue placeholder="Select alternative lab..." /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="lab1">Central Food Testing Lab</SelectItem>
-                          <SelectItem value="lab2">Quality Analytical Lab</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex gap-2 pt-2">
-                      <Button className="flex-1 bg-litmus-emerald hover:bg-emerald-600 text-white shadow-sm">Approve Booking</Button>
-                      <Button variant="destructive" className="flex-1 shadow-sm">Reject</Button>
-                    </div>
+                    
+                    {isRejecting ? (
+                      <div className="space-y-3 bg-red-50/50 p-3 rounded-lg border border-red-100 dark:bg-red-950/20 dark:border-red-900">
+                        <label className="text-sm font-medium text-red-800 dark:text-red-300">Reason for Rejection</label>
+                        <Textarea 
+                          placeholder="Please provide a reason to the user..." 
+                          className="bg-background/50 border-red-200 focus-visible:ring-red-500" 
+                          value={rejectReason}
+                          onChange={(e) => setRejectReason(e.target.value)}
+                        />
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="destructive" 
+                            className="flex-1" 
+                            onClick={() => rejectBookingMutation.mutate({ id: selectedBooking.id, reason: rejectReason })}
+                            disabled={!rejectReason.trim() || rejectBookingMutation.isPending}
+                          >
+                            {rejectBookingMutation.isPending ? "Rejecting..." : "Submit Rejection"}
+                          </Button>
+                          <Button variant="outline" onClick={() => { setIsRejecting(false); setRejectReason(""); }}>Cancel</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground">Assign Laboratory</label>
+                          <Select value={selectedLabId} onValueChange={setSelectedLabId}>
+                            <SelectTrigger className="bg-background/50">
+                              <SelectValue placeholder="Select lab to forward to..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {labs.map((lab: any) => (
+                                <SelectItem key={lab._id} value={lab._id}>{lab.labName}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex gap-2 pt-2">
+                          <Button 
+                            className="flex-1 bg-litmus-emerald hover:bg-emerald-600 text-white shadow-sm"
+                            disabled={!selectedLabId || assignLabMutation.isPending}
+                            onClick={() => assignLabMutation.mutate({ id: selectedBooking.id, labId: selectedLabId })}
+                          >
+                            {assignLabMutation.isPending ? "Assigning..." : "Approve & Assign Lab"}
+                          </Button>
+                          <Button variant="outline" className="flex-1 shadow-sm border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => setIsRejecting(true)}>Reject Booking</Button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
                 
-                {selectedBooking.status === "Completed" && !selectedBooking.isReportApprovedByAdmin && (
+                {selectedBooking.status?.toLowerCase() === "completed" && !selectedBooking.isReportApprovedByAdmin && (
                    <div className="space-y-3 border-t border-border pt-4">
                       <h4 className="text-sm font-semibold text-emerald-600">Report Ready for Review</h4>
                       <Button className="w-full bg-primary hover:bg-primary-deep shadow-sm">Approve Report & Release</Button>

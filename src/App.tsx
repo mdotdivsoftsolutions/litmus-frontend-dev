@@ -47,6 +47,7 @@ import UserManagement from "./pages/admin/UserManagement.tsx";
 import LabManagement from "./pages/admin/LabManagement.tsx";
 import LabFormPage from "./pages/admin/LabFormPage.tsx";
 import AdminBookings from "./pages/admin/AdminBookings.tsx";
+import AdminBookingDetails from "./pages/admin/AdminBookingDetails.tsx";
 import CategoryManagement from "./pages/admin/CategoryManagement.tsx";
 import ProductManagement from "./pages/admin/ProductManagement.tsx";
 import ProductFormPage from "./pages/admin/ProductFormPage.tsx";
@@ -145,6 +146,7 @@ const App = () => (
               <Route path="laboratories/:id" element={<LaboratoryDetailPage />} />
               <Route path="laboratories/:id/edit" element={<LabFormPage />} />
               <Route path="bookings" element={<AdminBookings />} />
+              <Route path="bookings/:id" element={<AdminBookingDetails />} />
               <Route path="categories" element={<CategoryManagement />} />
               <Route path="categories/new" element={<CategoryFormPage />} />
               <Route path="categories/:id/edit" element={<CategoryFormPage />} />
