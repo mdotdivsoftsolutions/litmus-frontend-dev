@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ChevronLeft, Beaker, FileText, CheckCircle2, XCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function AdminBookingDetails() {
   const { id } = useParams();
@@ -20,6 +21,11 @@ export default function AdminBookingDetails() {
   const [selectedLabId, setSelectedLabId] = useState("");
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  
+  const [editingCollection, setEditingCollection] = useState(false);
+  const [collectionStatus, setCollectionStatus] = useState("");
+  const [collectorName, setCollectorName] = useState("");
+  const [collectorContact, setCollectorContact] = useState("");
 
   const { data: response, isLoading } = useQuery({
     queryKey: ["adminBookings"],
@@ -56,6 +62,16 @@ export default function AdminBookingDetails() {
     onError: (err: any) => toast.error(err.response?.data?.message || "Failed to reject booking")
   });
 
+  const updateCollectionMutation = useMutation({
+    mutationFn: ({ bookingId, data }: { bookingId: string, data: any }) => adminApi.updateCollectionDetails(bookingId, data),
+    onSuccess: () => {
+      toast.success("Collection details updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["adminBookings"] });
+      setEditingCollection(false);
+    },
+    onError: (err: any) => toast.error(err.response?.data?.message || "Failed to update collection details")
+  });
+
   if (isLoading) {
     return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading booking details...</div>;
   }
@@ -78,7 +94,9 @@ export default function AdminBookingDetails() {
   const paymentStatus = b.paymentStatus || "PENDING";
   const date = format(new Date(b.createdAt || new Date()), "MMM d, yyyy");
   const rawItems = b.items || [];
-  const collectionDetails = b.collectionDetails || {};
+  const collectionDetails = b.metadata?.collectionDetails || {};
+  const pickupDate = collectionDetails.pickupDate ? format(new Date(collectionDetails.pickupDate), "MMM d, yyyy") : "Not specified";
+  const pickupTime = collectionDetails.pickupTime || "Not specified";
 
   const timelineSteps = [
     { label: "Booking Placed", done: true },
@@ -154,12 +172,117 @@ export default function AdminBookingDetails() {
           </Card>
 
           <Card className="p-6 border border-border shadow-sm">
+            <h3 className="text-lg font-semibold mb-4">Sample Collection Arrangement</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div>
+                  <p className="text-xs text-muted-foreground mb-1 uppercase font-semibold tracking-wider">Preferred Date</p>
+                  <p className="font-medium">{pickupDate}</p>
+               </div>
+               <div>
+                  <p className="text-xs text-muted-foreground mb-1 uppercase font-semibold tracking-wider">Preferred Time</p>
+                  <p className="font-medium">{pickupTime}</p>
+               </div>
+            </div>
+            <div className="mt-6 pt-6 border-t border-border">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider">Collection Tracking</p>
+                {!editingCollection && (
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setCollectionStatus(b.collectionStatus || "PENDING");
+                    setCollectorName(b.assignedCollector?.name || "");
+                    setCollectorContact(b.assignedCollector?.contact || "");
+                    setEditingCollection(true);
+                  }}>
+                    Update Status
+                  </Button>
+                )}
+              </div>
+              
+              {editingCollection ? (
+                <div className="space-y-4 bg-muted/20 p-4 rounded-lg border border-border">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Collection Status</label>
+                      <Select value={collectionStatus} onValueChange={setCollectionStatus}>
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder="Select status..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="NOT_REQUIRED">Not Required</SelectItem>
+                          <SelectItem value="PENDING">Pending</SelectItem>
+                          <SelectItem value="ASSIGNED">Collector Assigned</SelectItem>
+                          <SelectItem value="REACHED">Collector Reached</SelectItem>
+                          <SelectItem value="COLLECTED">Sample Collected</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Collector Name</label>
+                      <Input 
+                        placeholder="e.g. Ramesh Kumar" 
+                        value={collectorName}
+                        onChange={(e) => setCollectorName(e.target.value)}
+                        className="bg-background"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Collector Contact</label>
+                      <Input 
+                        placeholder="e.g. +91 9876543210" 
+                        value={collectorContact}
+                        onChange={(e) => setCollectorContact(e.target.value)}
+                        className="bg-background"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end pt-2">
+                    <Button variant="outline" onClick={() => setEditingCollection(false)}>Cancel</Button>
+                    <Button 
+                      onClick={() => updateCollectionMutation.mutate({ 
+                        bookingId: id as string, 
+                        data: { status: collectionStatus, collectorName, collectorContact } 
+                      })}
+                      disabled={updateCollectionMutation.isPending}
+                    >
+                      Save Changes
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 uppercase font-semibold tracking-wider">Current Status</p>
+                    <Badge variant={
+                      b.collectionStatus === "COLLECTED" ? "default" :
+                      b.collectionStatus === "ASSIGNED" || b.collectionStatus === "REACHED" ? "secondary" : 
+                      "outline"
+                    }>
+                      {b.collectionStatus?.replace(/_/g, ' ') || "PENDING"}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 uppercase font-semibold tracking-wider">Assigned To</p>
+                    {b.assignedCollector?.name ? (
+                      <div>
+                        <p className="font-medium text-sm">{b.assignedCollector.name}</p>
+                        <p className="text-xs text-muted-foreground">{b.assignedCollector.contact}</p>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground italic text-sm">Not assigned yet</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          <Card className="p-6 border border-border shadow-sm">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><Beaker className="h-5 w-5 text-primary" /> Booking Items & Samples</h3>
             <div className="space-y-4">
               {rawItems.map((item: any, i: number) => (
                 <div key={i} className="rounded-lg border border-border overflow-hidden bg-muted/10">
                   <div className="bg-muted px-4 py-3 flex justify-between items-center border-b border-border">
-                      <span className="font-semibold text-sm">Item {i+1}: {item.itemType}</span>
+                      <span className="font-semibold text-sm">Item {i+1}: {item.itemType} - {item.packageId?.name || item.testId?.testName || item.testId?.name || "Custom"}</span>
                       <span className="font-medium text-sm">₹{item.price?.toLocaleString() || 0}</span>
                   </div>
                   <div className="p-4 space-y-4 bg-card">
@@ -174,12 +297,16 @@ export default function AdminBookingDetails() {
                               {sample.sku && <span>SKU: <span className="font-medium text-slate-700">{sample.sku}</span></span>}
                             </div>
                           </div>
-                          {sample.selectedParameters && sample.selectedParameters.length > 0 && (
-                            <div>
-                              <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block mb-2">Parameters to Test</span>
-                              <div className="flex flex-wrap gap-2 mt-1">
-                                {sample.selectedParameters.map((p: string, k: number) => (
-                                  <Badge key={k} variant="outline" className="font-normal text-xs bg-background text-foreground shadow-sm px-2.5 py-0.5">{p}</Badge>
+                          {((sample.selectedParameters && sample.selectedParameters.length > 0) || (sample.selectedTests && sample.selectedTests.length > 0)) && (
+                            <div className="mb-2">
+                              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">
+                                {item.itemType === 'PACKAGE' ? 'Tests Included' : 'Parameters'}
+                              </span>
+                              <div className="flex flex-wrap gap-1">
+                                {((item.itemType === 'PACKAGE' && sample.selectedTests?.length > 0) ? sample.selectedTests : sample.selectedParameters).map((p: string, k: number) => (
+                                  <Badge key={k} variant="secondary" className="font-normal text-[10px] px-1.5 py-0">
+                                    {p.startsWith("pkg-feat-") ? p.replace("pkg-feat-", "") : p}
+                                  </Badge>
                                 ))}
                               </div>
                             </div>

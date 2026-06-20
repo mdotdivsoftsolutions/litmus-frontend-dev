@@ -44,8 +44,23 @@ export default function TestsListingPage() {
     }
   });
 
-  const categoriesData = catRes?.data || [];
-  const selectedCategoryId = selectedCategory !== "All" ? categoriesData.find((c: any) => c.name === selectedCategory)?._id : undefined;
+  const rawData = catRes?.data?.data || catRes?.data || catRes || [];
+  const categoriesData = Array.isArray(rawData) ? rawData : [];
+
+  let selectedCategoryId = undefined;
+  let activeCategoryName = selectedCategory;
+
+  if (selectedCategory !== "All") {
+    const isId = /^[0-9a-fA-F]{24}$/.test(selectedCategory);
+    const matchedCategory = categoriesData.find((c: any) => isId ? c._id === selectedCategory : c.name === selectedCategory);
+    
+    if (matchedCategory) {
+      selectedCategoryId = matchedCategory._id;
+      activeCategoryName = matchedCategory.name;
+    } else if (isId) {
+      selectedCategoryId = selectedCategory; // Fallback to use the ID directly if category data hasn't loaded yet
+    }
+  }
   const debouncedSearch = useDebounce(search, 300);
 
   const { data: testsRes, isLoading: testsLoading } = useQuery({
@@ -107,7 +122,7 @@ export default function TestsListingPage() {
 
       {/* 3. CATEGORY STRIP — always at top for filtering */}
       <CategoryStrip
-        selectedCategory={selectedCategory}
+        selectedCategory={activeCategoryName}
         setSelectedCategory={handleCategoryChange}
         categories={categoriesData}
         isLoading={catLoading}
@@ -125,7 +140,7 @@ export default function TestsListingPage() {
         <MostBookedTests
           tests={formattedTests}
           discountPct={discountPct}
-          selectedCategory={selectedCategory}
+          selectedCategory={activeCategoryName}
           setSelectedCategory={handleCategoryChange}
           categories={categoriesData}
           iconMap={iconMap}

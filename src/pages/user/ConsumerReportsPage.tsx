@@ -22,7 +22,7 @@ export default function ConsumerReportsPage() {
     .flatMap((b: any) => {
       return b.items?.map((item: any) => ({
         id: item._id || Math.random().toString(),
-        testName: item.testId?.testName || item.packageId?.name || "Custom Testing",
+        testName: item.testId?.testName || item.packageId?.name || item.samples?.[0]?.productName || "Custom Testing",
         lab: b.labId?.labName || "Litmus Partner Lab",
         date: new Date(b.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
         status: b.status === "Completed" ? "Verified" : "Pending",

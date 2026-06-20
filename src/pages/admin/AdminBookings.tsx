@@ -76,9 +76,11 @@ export default function AdminBookings() {
 
   // Map API data to our table format. Prioritize API data only.
   const mappedBookings = rawBookings.map((b: any) => {
-    const productNames = b.items?.map((i: any) => i.samples?.[0]?.productName || i.packageId?.name || i.testId?.name).filter(Boolean);
+    const productNames = b.items?.map((i: any) => i.samples?.[0]?.productName || i.packageId?.name || i.testId?.testName || i.testId?.name).filter(Boolean);
     const product = productNames?.length > 0 ? productNames.join(", ") : "Unknown Product";
-    const testsCount = b.items?.reduce((count: number, i: any) => count + (i.samples?.[0]?.selectedParameters?.length || 1), 0) || 0;
+    const testsCount = b.items?.reduce((count: number, i: any) => count + (i.samples?.reduce((sc: number, s: any) => sc + (s.selectedParameters?.length || 1), 0) || 1), 0) || 0;
+    const totalSamples = b.items?.reduce((count: number, i: any) => count + (i.samples?.length || 0), 0) || 0;
+    const itemTypes = Array.from(new Set(b.items?.map((i: any) => i.itemType))).filter(Boolean);
     
     return {
       id: b._id,
@@ -94,7 +96,11 @@ export default function AdminBookings() {
       rawDate: new Date(b.createdAt || new Date()),
       isReportApprovedByAdmin: b.isReportApprovedByAdmin,
       rawItems: b.items || [],
-      collectionDetails: b.collectionDetails || {}
+      userEmail: b.userId?.email,
+      userPhone: b.userId?.phone,
+      collectionDetails: b.metadata?.collectionDetails || b.collectionDetails || {},
+      totalSamples,
+      itemTypes
     };
   });
 
@@ -332,7 +338,18 @@ export default function AdminBookings() {
                   <div className="rounded-lg border border-border bg-muted/20 p-3 break-all"><p className="text-muted-foreground text-xs mb-1">Booking ID</p><p className="font-mono font-medium text-xs">{selectedBooking.displayId}</p></div>
                   <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Date</p><p className="font-medium text-xs">{selectedBooking.date}</p></div>
                   <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2"><p className="text-muted-foreground text-xs mb-1">User</p><p className="font-medium text-sm">{selectedBooking.user}</p></div>
-                  <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2"><p className="text-muted-foreground text-xs mb-1">Product</p><p className="font-medium text-sm">{selectedBooking.product}</p></div>
+                  <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2">
+                    <div className="flex justify-between items-start mb-1">
+                      <p className="text-muted-foreground text-xs">Product</p>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {selectedBooking.itemTypes?.map((t: string) => (
+                          <Badge key={t} className="text-[9px] uppercase tracking-wider px-1.5 py-0 bg-primary/10 text-primary border-primary/20">{t}</Badge>
+                        ))}
+                        {selectedBooking.totalSamples > 0 && <Badge className="text-[9px] uppercase tracking-wider px-1.5 py-0 bg-slate-200 text-slate-700 border-0">{selectedBooking.totalSamples} Samples</Badge>}
+                      </div>
+                    </div>
+                    <p className="font-medium text-sm">{selectedBooking.product}</p>
+                  </div>
                   <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2"><p className="text-muted-foreground text-xs mb-1">Laboratory</p><p className="font-medium text-sm">{selectedBooking.lab}</p></div>
                   <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Payment</p><StatusBadge status={selectedBooking.paymentStatus} /></div>
                   <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Status</p><StatusBadge status={selectedBooking.status} /></div>
@@ -343,8 +360,8 @@ export default function AdminBookings() {
                   <h4 className="text-sm font-semibold flex items-center gap-2">Contact Details</h4>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Name</p><p className="font-medium text-xs">{selectedBooking.collectionDetails?.name || selectedBooking.user}</p></div>
-                    <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Phone</p><p className="font-medium text-xs">{selectedBooking.collectionDetails?.phone || "N/A"}</p></div>
-                    <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2"><p className="text-muted-foreground text-xs mb-1">Email</p><p className="font-medium text-xs">{selectedBooking.collectionDetails?.email || "N/A"}</p></div>
+                    <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Phone</p><p className="font-medium text-xs">{selectedBooking.collectionDetails?.phone || selectedBooking.userPhone || "N/A"}</p></div>
+                    <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2"><p className="text-muted-foreground text-xs mb-1">Email</p><p className="font-medium text-xs">{selectedBooking.collectionDetails?.email || selectedBooking.userEmail || "N/A"}</p></div>
                   </div>
                 </div>
 
@@ -355,7 +372,7 @@ export default function AdminBookings() {
                     {selectedBooking.rawItems.map((item: any, i: number) => (
                       <div key={i} className="rounded-lg border border-border overflow-hidden">
                         <div className="bg-muted/50 px-3 py-2 flex justify-between items-center border-b border-border">
-                           <span className="font-semibold text-sm">Item {i+1}: {item.itemType}</span>
+                           <span className="font-semibold text-sm">Item {i+1}: {item.itemType} - {item.packageId?.name || item.testId?.testName || item.testId?.name || "Custom"}</span>
                            <span className="font-medium text-sm">₹{item.price?.toLocaleString() || 0}</span>
                         </div>
                         <div className="p-3 bg-card space-y-3">
@@ -370,15 +387,19 @@ export default function AdminBookings() {
                                    {sample.sku && <span>SKU: <span className="font-medium text-slate-700">{sample.sku}</span></span>}
                                  </div>
                                </div>
-                               {sample.selectedParameters && sample.selectedParameters.length > 0 && (
-                                 <div>
-                                   <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block mb-1.5">Parameters to Test</span>
-                                   <div className="flex flex-wrap gap-1.5 mt-1">
-                                     {sample.selectedParameters.map((p: string, k: number) => (
-                                       <Badge key={k} variant="outline" className="font-normal text-xs bg-background text-foreground shadow-sm">{p}</Badge>
-                                     ))}
-                                   </div>
+                               {((sample.selectedParameters && sample.selectedParameters.length > 0) || (sample.selectedTests && sample.selectedTests.length > 0)) && (
+                               <div>
+                                 <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block mb-1.5">
+                                   {item.itemType === 'PACKAGE' ? 'Tests Included' : 'Parameters to Test'}
+                                 </span>
+                                 <div className="flex flex-wrap gap-1.5 mt-1">
+                                   {((item.itemType === 'PACKAGE' && sample.selectedTests?.length > 0) ? sample.selectedTests : sample.selectedParameters).map((p: string, k: number) => (
+                                     <Badge key={k} variant="outline" className="font-normal text-xs bg-background text-foreground shadow-sm">
+                                       {p.startsWith("pkg-feat-") ? p.replace("pkg-feat-", "") : p}
+                                     </Badge>
+                                   ))}
                                  </div>
+                               </div>
                                )}
                                {sample.specifics && (
                                  <div>

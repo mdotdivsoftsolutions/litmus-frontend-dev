@@ -218,9 +218,9 @@ export default function NewBookingPage() {
 
     if (packageId && packageResponse?.data) {
       const pkg = packageResponse.data;
-      const pkgTests = pkg.tests?.map((t: any) => `pkg-feat-${t.testName}`);
-      const pkgFeats = pkg.features?.map((f: string) => `pkg-feat-${f}`);
-      const testIds = (pkgTests?.length ? pkgTests : pkgFeats) || ["pkg-feat-General Evaluation"];
+      const pkgTests = pkg.tests?.map((t: any) => t.testName);
+      const pkgFeats = pkg.features?.map((f: string) => f);
+      const testIds = (pkgTests?.length ? pkgTests : pkgFeats) || ["General Evaluation"];
       const availableParameters = testIds.map((tid: string) => ({ name: tid, price: 0 }));
 
       const initialSample: SampleDetail = {
@@ -257,15 +257,15 @@ export default function NewBookingPage() {
         let basePrice = cartItem.price;
 
         if (isTest && cartItem.parameters?.length) {
-          testIds = cartItem.parameters.map((p: string) => `pkg-feat-${p}`);
+          testIds = cartItem.parameters;
           basePrice = Math.round(cartItem.price / (cartItem.parameters.length || 1));
         } else if (isPkg) {
-          const pkgTests = cartItem.packageId?.tests?.map((t: any) => `pkg-feat-${t.testName}`);
-          const pkgFeats = cartItem.packageId?.features?.map((f: string) => `pkg-feat-${f}`);
-          testIds = (pkgTests?.length ? pkgTests : pkgFeats) || ["pkg-feat-General Evaluation"];
+          const pkgTests = cartItem.packageId?.tests?.map((t: any) => t.testName);
+          const pkgFeats = cartItem.packageId?.features?.map((f: string) => f);
+          testIds = (pkgTests?.length ? pkgTests : pkgFeats) || ["General Evaluation"];
           basePrice = Math.round(cartItem.price / (testIds.length || 1));
         } else {
-          testIds = ["pkg-feat-General"];
+          testIds = ["General"];
         }
 
         const availableParameters = isTest 
@@ -379,6 +379,9 @@ export default function NewBookingPage() {
       });
       return totalBase;
     }
+    if (item.testObj && item.testObj.mrp) {
+      return item.testObj.mrp * item.samples.length;
+    }
     return (item.fixedPrice ?? 0) * 1.75 * item.samples.length;
   };
 
@@ -474,8 +477,8 @@ export default function NewBookingPage() {
         labId: selectedLab,
         items: items.map(item => ({
           itemType: item.category === 'Test Panel' ? 'TEST' : 'PACKAGE',
-          testId: item.category === 'Test Panel' ? item.id : undefined,
-          packageId: item.category === 'Package' ? item.id : undefined,
+          testId: item.category === 'Test Panel' ? (item.testObj?._id || item.id) : undefined,
+          packageId: item.category !== 'Test Panel' ? (item.testObj?._id || item.id) : undefined,
           price: calculateItemPrice(item),
           mrp: calculateItemMrp(item),
           samples: item.samples.map(s => ({
@@ -484,7 +487,8 @@ export default function NewBookingPage() {
             batchNumber: s.batchNumber,
             sku: s.sku,
             specifics: s.specifics,
-            selectedParameters: s.selectedParameters
+            selectedParameters: item.category === 'Test Panel' ? s.selectedParameters : undefined,
+            selectedTests: item.category !== 'Test Panel' ? s.selectedParameters : undefined
           }))
         })),
         bookingDate: new Date(),
@@ -680,7 +684,9 @@ export default function NewBookingPage() {
                                 PRODUCT {index + 1}
                               </Badge>
                               
-                              <p className="text-sm font-bold text-slate-700 mb-3 mt-1">Select parameters for this product:</p>
+                              <p className="text-sm font-bold text-slate-700 mb-3 mt-1">
+                                {item.category === 'Test Panel' ? 'Select parameters for this product:' : 'Tests included for this product:'}
+                              </p>
                               
                               {/* Standard Tests Grid */}
                               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -697,7 +703,7 @@ export default function NewBookingPage() {
                                   >
                                     <Checkbox checked={sample.selectedParameters.includes(param.name)} className="h-4 w-4" />
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-xs font-bold text-slate-900 truncate">{param.name.startsWith("pkg-feat-") ? param.name.replace("pkg-feat-", "") : param.name}</p>
+                                      <p className="text-xs font-bold text-slate-900 truncate">{param.name}</p>
                                       <p className="text-[9px] text-slate-400 uppercase font-bold">
                                         {item.category === 'Test Panel' ? `₹${param.price}` : 'Included'}
                                       </p>
@@ -903,6 +909,9 @@ export default function NewBookingPage() {
                         <h4 className="font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2 text-sm uppercase tracking-wide">
                           <CalendarIcon className="h-4 w-4 text-primary" /> Preferred Schedule
                         </h4>
+                        <p className="text-xs text-slate-600 font-medium bg-blue-50/50 p-3 rounded border border-blue-100">
+                          <span className="font-bold text-blue-700">Note:</span> This is your preferred collection time. Our collection agent will try their best to meet this, but the actual time may vary slightly depending on agent availability.
+                        </p>
                         <div className="grid sm:grid-cols-2 gap-4">
                           <div className="space-y-1.5">
                             <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pickup Date</Label>
@@ -967,10 +976,10 @@ export default function NewBookingPage() {
               <div className="animate-in fade-in zoom-in-95 duration-1000 space-y-8 py-4">
                  <div className="text-center space-y-4">
                     <div className="inline-flex items-center justify-center h-20 w-20 rounded-lg bg-litmus-mint/30 text-litmus-teal mb-2 relative"><div className="absolute inset-0 rounded-lg animate-ping bg-litmus-teal/20"></div><CheckCircle2Icon className="h-10 w-10 relative z-10" /></div>
-                    <div className="space-y-1"><h1 className="text-2xl font-bold text-slate-900">Booking Confirmed!</h1><p className="text-slate-500 font-medium max-w-lg mx-auto text-sm">Thank you for choosing Litmus Food Analytics. Your order <span className="text-slate-900 font-bold">{orderId}</span> has been received.</p></div>
+                    <div className="space-y-1"><h1 className="text-2xl font-bold text-slate-900">Booking Confirmed!</h1><p className="text-slate-500 font-medium max-w-lg mx-auto text-sm">Thank you for choosing Litmus Food Analytics. Your order <span className="text-slate-900 font-bold font-mono">#{orderId.substring(orderId.length - 8).toUpperCase()}</span> has been received.</p></div>
                  </div>
                  <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-                    <Card className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden"><div className="bg-slate-900 p-4 text-white flex justify-between items-center"><span className="font-bold text-[10px] uppercase tracking-widest opacity-80">Order Details</span><Badge className="bg-white/20 text-white border-0 font-bold text-[10px]">Confirmed</Badge></div><CardContent className="p-5 space-y-5"><div className="grid grid-cols-2 gap-6"><div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order ID</p><p className="font-bold text-slate-900 text-base">{orderId}</p></div><div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Timestamp</p><p className="font-bold text-slate-900 text-sm">{new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p></div></div><div className="pt-4 border-t border-slate-100"><h4 className="font-bold text-slate-900 flex items-center gap-2 mb-3 text-sm uppercase tracking-wide"><BuildingIcon className="h-4 w-4 text-primary" /> Fulfilment Partner</h4><div className="bg-slate-50 rounded-lg p-4 border border-slate-100">{selectedLab === "admin" ? <div className="space-y-1"><p className="font-bold text-slate-900 text-sm">Litmus Smart Allocation</p><p className="text-[11px] text-slate-600 font-medium leading-relaxed">Our team will assign the best lab within 2 hours.</p></div> : <div className="space-y-1"><p className="font-bold text-slate-900 text-sm">{eligibleLabs?.find((l: any) => l._id === selectedLab)?.labName || 'Selected Laboratory'}</p><p className="text-[11px] text-slate-600 font-medium">Lab has been notified.</p></div>}</div></div></CardContent></Card>
+                    <Card className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden"><div className="bg-slate-900 p-4 text-white flex justify-between items-center"><span className="font-bold text-[10px] uppercase tracking-widest opacity-80">Order Details</span><Badge className="bg-white/20 text-white border-0 font-bold text-[10px]">Confirmed</Badge></div><CardContent className="p-5 space-y-5"><div className="grid grid-cols-1 sm:grid-cols-2 gap-6"><div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order ID</p><p className="font-bold text-slate-900 text-base font-mono">BKG-{orderId.substring(orderId.length - 8).toUpperCase()}</p></div><div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Timestamp</p><p className="font-bold text-slate-900 text-sm">{new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p></div></div><div className="pt-4 border-t border-slate-100"><h4 className="font-bold text-slate-900 flex items-center gap-2 mb-3 text-sm uppercase tracking-wide"><BuildingIcon className="h-4 w-4 text-primary" /> Fulfilment Partner</h4><div className="bg-slate-50 rounded-lg p-4 border border-slate-100">{selectedLab === "admin" ? <div className="space-y-1"><p className="font-bold text-slate-900 text-sm">Litmus Smart Allocation</p><p className="text-[11px] text-slate-600 font-medium leading-relaxed">Our team will assign the best lab within 2 hours.</p></div> : <div className="space-y-1"><p className="font-bold text-slate-900 text-sm">{eligibleLabs?.find((l: any) => l._id === selectedLab)?.labName || 'Selected Laboratory'}</p><p className="text-[11px] text-slate-600 font-medium">Lab has been notified.</p></div>}</div></div></CardContent></Card>
                     <Card className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden h-fit"><div className="bg-slate-50 border-b border-slate-200 p-4"><h4 className="font-bold text-slate-900 text-sm uppercase tracking-wide">Final Billing</h4></div><CardContent className="p-0"><div className="divide-y divide-slate-100 p-5 space-y-3">{items.map((item) => (<div key={item.id} className="flex justify-between items-start"><div><p className="font-bold text-slate-900 text-sm">{item.product} Panel</p><p className="text-[10px] font-bold text-slate-400 uppercase">{item.samples.reduce((acc, s) => acc + s.selectedParameters.length, 0)} Tests</p></div><p className="font-bold text-slate-900 text-sm">₹{calculateItemPrice(item).toLocaleString()}</p></div>))}</div><div className="p-5 bg-slate-50 border-t border-slate-200 space-y-2"><div className="flex justify-between text-xs font-medium"><span className="text-slate-500">Subtotal</span><span className="text-slate-900">₹{subtotal.toLocaleString()}</span></div><div className="flex justify-between text-xs font-medium"><span className="text-slate-500">GST (18%)</span><span className="text-slate-900">₹{gst.toLocaleString()}</span></div><div className="flex justify-between border-t border-slate-200 pt-3 mt-1"><span className="font-bold text-slate-900">Total Paid</span><span className="font-bold text-primary text-xl tracking-tight">₹{total.toLocaleString()}</span></div></div></CardContent></Card>
                  </div>
                  <div className="flex flex-col sm:flex-row items-center gap-4 justify-center py-6">

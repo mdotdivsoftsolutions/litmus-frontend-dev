@@ -45,10 +45,12 @@ export default function OrderDetailPage() {
   let totalSamples = 0;
   const products = new Set<string>();
   apiBooking.items?.forEach((item: any) => {
-    totalSamples += item.samples?.length || 0;
     if (item.testId?.testName) products.add(item.testId.testName);
-    if (item.packageId?.name) products.add(item.packageId.name);
+    else if (item.packageId?.name) products.add(item.packageId.name);
+    else if (item.samples?.[0]?.productName) products.add(item.samples[0].productName);
+    totalSamples += item.samples?.length || 0;
   });
+
   const productNames = Array.from(products);
   const mainProduct = productNames.length > 0 ? productNames[0] + (productNames.length > 1 ? ` + ${productNames.length - 1} more` : '') : 'Custom Testing';
 

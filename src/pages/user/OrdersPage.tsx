@@ -28,7 +28,8 @@ export default function OrdersPage() {
     
     b.items?.forEach((item: any) => {
       if (item.testId?.testName) products.add(item.testId.testName);
-      if (item.packageId?.name) products.add(item.packageId.name);
+      else if (item.packageId?.name) products.add(item.packageId.name);
+      else if (item.samples?.[0]?.productName) products.add(item.samples[0].productName);
       totalSamples += item.samples?.length || 0;
     });
 
