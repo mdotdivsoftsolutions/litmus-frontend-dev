@@ -58,6 +58,8 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics.tsx";
 import AdminReports from "./pages/admin/AdminReports.tsx";
 import ReviewManagement from "./pages/admin/ReviewManagement.tsx";
 import ReviewFormPage from "./pages/admin/ReviewFormPage.tsx";
+
+// Lab
 import PackageManagement from "./pages/admin/PackageManagement.tsx";
 import PackageFormPage from "./pages/admin/PackageFormPage.tsx";
 import AdminSettings from "./pages/admin/AdminSettings.tsx";
@@ -72,6 +74,7 @@ import LabSchedulePage from "./pages/lab/LabSchedulePage.tsx";
 import LabProfilePage from "./pages/lab/LabProfilePage.tsx";
 import CategoryFormPage from "./pages/admin/CategoryFormPage.tsx";
 import LaboratoryDetailPage from "./pages/admin/LaboratoryDetailPage.tsx";
+import LabBookingDetails from "./pages/lab/LabBookingDetails.tsx";
 
 const queryClient = new QueryClient();
 
@@ -176,6 +179,7 @@ const App = () => (
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<LabDashboard />} />
               <Route path="bookings" element={<LabBookings />} />
+              <Route path="bookings/:id" element={<LabBookingDetails />} />
               <Route path="bookings/:id/upload" element={<UploadResultsPage />} />
               <Route path="upload" element={<UploadResultsPage />} />
               <Route path="pricing" element={<LabPricingPage />} />

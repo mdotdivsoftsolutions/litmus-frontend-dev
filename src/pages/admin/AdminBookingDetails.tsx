@@ -303,20 +303,51 @@ export default function AdminBookingDetails() {
                               {sample.sku && <span>SKU: <span className="font-medium text-slate-700">{sample.sku}</span></span>}
                             </div>
                           </div>
-                          {((sample.selectedParameters && sample.selectedParameters.length > 0) || (sample.selectedTests && sample.selectedTests.length > 0)) && (
-                            <div className="mb-2">
-                              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">
-                                {item.itemType === 'PACKAGE' ? 'Tests Included' : 'Parameters'}
-                              </span>
-                              <div className="flex flex-wrap gap-1">
-                                {((item.itemType === 'PACKAGE' && sample.selectedTests?.length > 0) ? sample.selectedTests : sample.selectedParameters).map((p: string, k: number) => (
-                                  <Badge key={k} variant="secondary" className="font-normal text-[10px] px-1.5 py-0">
-                                    {p.startsWith("pkg-feat-") ? p.replace("pkg-feat-", "") : p}
-                                  </Badge>
-                                ))}
+                          {(() => {
+                            let tags: string[] = [];
+                            let label = "Testing Requirements";
+                            
+                            if (item.itemType === 'PACKAGE') {
+                              label = "Tests Included in Package";
+                              if (sample.selectedTests && sample.selectedTests.length > 0) {
+                                tags = sample.selectedTests;
+                              } else if (item.packageId?.tests?.length > 0) {
+                                tags = item.packageId.tests.map((t: any) => {
+                                  const params = t.metadata?.parameters?.map((p: any) => p.name).filter(Boolean);
+                                  if (params && params.length > 0) {
+                                    return `${t.testName} (${params.join(', ')})`;
+                                  }
+                                  return t.testName || "Unknown Test";
+                                });
+                              } else if (item.packageId?.features?.length > 0) {
+                                tags = item.packageId.features;
+                              }
+                            } else {
+                              label = "Parameters to Test";
+                              if (sample.selectedParameters && sample.selectedParameters.length > 0) {
+                                tags = sample.selectedParameters;
+                              } else if (item.testId?.parameters?.length > 0) {
+                                tags = item.testId.parameters;
+                              }
+                            }
+
+                            if (tags.length === 0) return null;
+
+                            return (
+                              <div className="mb-2">
+                                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">
+                                  {label}
+                                </span>
+                                <div className="flex flex-wrap gap-1">
+                                  {tags.map((p: string, k: number) => (
+                                    <Badge key={k} variant="secondary" className="font-normal text-[10px] px-1.5 py-0 whitespace-normal text-left">
+                                      {p.startsWith("pkg-feat-") ? p.replace("pkg-feat-", "") : p}
+                                    </Badge>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            );
+                          })()}
                           {sample.specifics && (
                             <div>
                               <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block mb-1">Specifics</span>
@@ -333,6 +364,26 @@ export default function AdminBookingDetails() {
               ))}
             </div>
           </Card>
+          
+          {/* Uploaded Reports */}
+          {rawBooking?.reportFiles && rawBooking?.reportFiles.length > 0 && (
+            <Card className="p-6 border border-border shadow-sm">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /> Uploaded Reports</h3>
+              <div className="space-y-3">
+                {rawBooking?.reportFiles.map((url: string, idx: number) => (
+                  <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all bg-card shadow-sm">
+                    <div className="bg-primary/10 p-3 rounded-md">
+                      <FileText className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-base font-semibold text-foreground hover:underline">Test Report Document {idx + 1}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">Click to view or download in new tab</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
 
         {/* Right Column: Actions & Timeline */}

@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Eye, Upload, Loader2, Beaker } from "lucide-react";
+import { Eye, Upload, Loader2, Beaker, Search, FileText } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { labApi } from "@/lib/api/lab";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -91,13 +92,7 @@ export default function LabBookings() {
     return "Custom Order";
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -123,7 +118,19 @@ export default function LabBookings() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredBookings.length === 0 ? (
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-8 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
+                    <TableCell><div className="flex gap-1"><Skeleton className="h-8 w-16 rounded-md" /><Skeleton className="h-8 w-20 rounded-md" /></div></TableCell>
+                  </TableRow>
+                ))
+              ) : filteredBookings.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No bookings found.
@@ -323,6 +330,26 @@ export default function LabBookings() {
                   </div>
                 </div>
 
+                {/* Uploaded Reports */}
+                {selectedBooking.reportFiles && selectedBooking.reportFiles.length > 0 && (
+                  <div className="border-t border-border pt-4">
+                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2"><FileText className="h-4 w-4" /> Uploaded Reports</h4>
+                    <div className="space-y-2">
+                      {selectedBooking.reportFiles.map((url: string, idx: number) => (
+                        <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all bg-card shadow-sm">
+                          <div className="bg-primary/10 p-2 rounded-md">
+                            <FileText className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground hover:underline">Test Report Document {idx + 1}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Click to view in new tab</p>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Status Update */}
                 <div className="border-t border-border pt-4">
                   <h4 className="text-sm font-semibold mb-3">Update Status</h4>
@@ -347,9 +374,14 @@ export default function LabBookings() {
                   </Button>
                 </div>
 
-                <Button className="w-full gap-2" variant="outline" asChild>
-                  <Link to={`/lab/bookings/${selectedBooking._id}/upload`}><Upload className="h-4 w-4" />Upload Results</Link>
-                </Button>
+                <div className="flex gap-2">
+                  <Button className="w-full gap-2" variant="outline" asChild>
+                    <Link to={`/lab/bookings/${selectedBooking._id}`}><Eye className="h-4 w-4" />Detailed View</Link>
+                  </Button>
+                  <Button className="w-full gap-2" variant="outline" asChild>
+                    <Link to={`/lab/bookings/${selectedBooking._id}/upload`}><Upload className="h-4 w-4" />Upload Results</Link>
+                  </Button>
+                </div>
               </div>
             </>
           )}

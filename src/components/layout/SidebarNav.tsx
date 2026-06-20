@@ -46,7 +46,6 @@ const adminNav = [
 const labNav = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/lab/dashboard" },
   { label: "Bookings", icon: ClipboardList, href: "/lab/bookings" },
-  { label: "Upload Results", icon: Upload, href: "/lab/upload" },
   { label: "Pricing", icon: DollarSign, href: "/lab/pricing" },
   { label: "Packages", icon: Package, href: "/lab/packages" },
   { label: "Schedule", icon: CalendarDays, href: "/lab/schedule" },

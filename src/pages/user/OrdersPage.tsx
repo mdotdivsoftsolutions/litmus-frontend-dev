@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Input } from "@/components/ui/input";
 import { MapPin, Download, Search, FlaskConical, ChevronRight, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { bookingApi } from "@/lib/api/booking";
@@ -100,10 +101,30 @@ export default function OrdersPage() {
       {/* Compact Order List */}
       <div className="grid gap-3">
          {isLoading ? (
-            <div className="text-center py-16 bg-slate-50/50 rounded-xl border border-border">
-               <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-               <p className="text-muted-foreground text-sm">Loading your orders...</p>
-            </div>
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="block bg-card rounded-xl border border-border shadow-sm p-4 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                <div className="flex-1 min-w-0 w-full flex flex-col md:flex-row gap-4 md:items-center">
+                   <div className="shrink-0 space-y-2 w-24">
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-3 w-20" />
+                   </div>
+                   <div className="flex-1 min-w-0 space-y-2">
+                      <Skeleton className="h-5 w-48" />
+                      <div className="flex items-center gap-3">
+                         <Skeleton className="h-3 w-16" />
+                         <Skeleton className="h-3 w-32" />
+                      </div>
+                   </div>
+                   <div className="shrink-0 w-32">
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                   </div>
+                </div>
+                <div className="shrink-0 flex items-center justify-between w-full md:w-auto md:gap-6 border-t md:border-t-0 border-border pt-3 md:pt-0">
+                   <Skeleton className="h-6 w-16" />
+                   <Skeleton className="h-5 w-5 rounded-md hidden md:block" />
+                </div>
+              </div>
+            ))
          ) : (
            <>
              {filtered.map((b: any) => (
