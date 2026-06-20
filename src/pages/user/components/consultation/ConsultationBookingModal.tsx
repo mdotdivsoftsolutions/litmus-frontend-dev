@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, Clock, User, Mail, Phone, Building2, CheckCircle2, X, Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar, Clock, User, Mail, Phone, Building2, CheckCircle2, X, Loader2, MessageSquare } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { consultationApi } from "@/lib/api/consultation";
 import { toast } from "sonner";
@@ -25,7 +26,8 @@ export function ConsultationBookingModal({ children, serviceName = "Advisory Con
     email: "",
     phone: "",
     date: "",
-    time: ""
+    time: "",
+    message: ""
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,7 +42,7 @@ export function ConsultationBookingModal({ children, serviceName = "Advisory Con
         setIsOpen(false);
         setTimeout(() => {
           setIsSubmitted(false);
-          setFormData({ name: "", business: "", email: "", phone: "", date: "", time: "" }); // Reset
+          setFormData({ name: "", business: "", email: "", phone: "", date: "", time: "", message: "" }); // Reset
         }, 500); 
       }, 3000);
     },
@@ -172,6 +174,14 @@ export function ConsultationBookingModal({ children, serviceName = "Advisory Con
                            <option value="05:00 PM">05:00 PM</option>
                          </select>
                       </div>
+                    </div>
+                 </div>
+
+                 <div className="space-y-1.5 pt-2">
+                    <Label className="text-xs font-semibold text-muted-foreground">Additional Notes (Optional)</Label>
+                    <div className="relative">
+                       <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                       <Textarea name="message" value={formData.message} onChange={(e: any) => handleChange(e)} placeholder="How can we help you?" className="pl-9 min-h-[80px] rounded-lg bg-card resize-none" />
                     </div>
                  </div>
 

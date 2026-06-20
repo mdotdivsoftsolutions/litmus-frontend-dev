@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, Building2, ClipboardList, DollarSign, Clock, TrendingUp, TrendingDown, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { Users, Building2, ClipboardList, DollarSign, Clock, TrendingUp, TrendingDown } from "lucide-react";
 
 export default function AdminDashboard() {
   const { data: statsData, isLoading: statsLoading } = useQuery({ queryKey: ["adminStats"], queryFn: adminApi.getStats });
@@ -17,7 +18,81 @@ export default function AdminDashboard() {
   const isLoading = statsLoading || bookingsLoading || analyticsLoading || labsLoading;
 
   if (isLoading) {
-    return <div className="flex h-[400px] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <Skeleton className="h-8 w-48 bg-muted/60" />
+        
+        {/* KPIs Skeleton */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+            <Card key={i} className="border border-border shadow-sm relative overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-muted/40" />
+              <CardContent className="p-4 pl-5">
+                <div className="flex items-center justify-between mb-2">
+                  <Skeleton className="h-9 w-9 rounded-full bg-muted/60" />
+                  <Skeleton className="h-4 w-12 bg-muted/60" />
+                </div>
+                <Skeleton className="h-8 w-24 mb-2 bg-muted/60" />
+                <Skeleton className="h-3 w-20 bg-muted/60" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Charts Skeleton */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card className="border border-border shadow-sm">
+            <CardHeader className="pb-2">
+              <Skeleton className="h-5 w-48 bg-muted/60" />
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-center h-[260px]">
+                <Skeleton className="h-[200px] w-[200px] rounded-full bg-muted/60" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border border-border shadow-sm">
+            <CardHeader className="pb-2">
+              <Skeleton className="h-5 w-48 bg-muted/60" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-[260px] w-full rounded-md bg-muted/60" />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Pending Approvals Skeleton */}
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="flex-row items-center justify-between pb-2">
+            <Skeleton className="h-5 w-40 bg-muted/60" />
+            <Skeleton className="h-8 w-20 bg-muted/60" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 pt-2">
+              <Skeleton className="h-10 w-full bg-muted/60" />
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-14 w-full bg-muted/40" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Lab Performance Skeleton */}
+        <Card className="border border-border shadow-sm">
+          <CardHeader className="pb-2">
+            <Skeleton className="h-5 w-40 bg-muted/60" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 pt-2">
+              <Skeleton className="h-10 w-full bg-muted/60" />
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-14 w-full bg-muted/40" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const stats = statsData?.data || { totalUsers: 0, totalLabs: 0, totalBookings: 0, totalRevenue: 0 };

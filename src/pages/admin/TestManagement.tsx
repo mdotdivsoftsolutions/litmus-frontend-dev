@@ -126,14 +126,14 @@ export default function TestManagement() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-8 rounded-full" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto rounded-md" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32 bg-muted/60" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-20 rounded-full bg-muted/60" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24 bg-muted/60" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-20 rounded-full bg-muted/60" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-8 rounded-full bg-muted/60" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16 bg-muted/60" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16 bg-muted/60" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto rounded-md bg-muted/60" /></TableCell>
                   </TableRow>
                 ))
               ) : filtered.length === 0 ? (
