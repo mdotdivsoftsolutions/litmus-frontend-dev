@@ -34,6 +34,7 @@ interface LabFormData {
   isNablAccredited: boolean;
   isFssaiApproved: boolean;
   isTrusted: boolean;
+  isAutoBooking: boolean;
   location: {
     address: string;
     city: string;
@@ -97,6 +98,7 @@ export default function LabFormPage() {
     isNablAccredited: false,
     isFssaiApproved: false,
     isTrusted: false,
+    isAutoBooking: false,
     location: {
       address: "",
       city: "",
@@ -165,6 +167,7 @@ export default function LabFormPage() {
         isNablAccredited: lab.isNablAccredited || false,
         isFssaiApproved: lab.isFssaiApproved || false,
         isTrusted: lab.isTrusted || false,
+        isAutoBooking: lab.isAutoBooking || false,
         location: {
           address: lab.location?.address || "",
           city: lab.location?.city || "",
@@ -549,13 +552,20 @@ export default function LabFormPage() {
                   <Switch checked={formData.isFssaiApproved} onCheckedChange={(c) => handleSwitchChange("isFssaiApproved", c)} />
                 </div>
               </div>
-              <div className="grid md:grid-cols-1 pt-4 border-t border-border/50">
+              <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
                 <div className="flex items-center justify-between rounded-lg border border-border p-4 bg-primary/5 hover:bg-primary/10 transition-colors">
                   <div>
                     <Label className="text-base font-medium text-primary">Trusted Partner</Label>
-                    <p className="text-sm text-muted-foreground mt-1">Mark this laboratory as a trusted partner. Trusted partners will be displayed on the home page.</p>
+                    <p className="text-sm text-muted-foreground mt-1">Mark this laboratory as a trusted partner.</p>
                   </div>
                   <Switch checked={formData.isTrusted} onCheckedChange={(c) => handleSwitchChange("isTrusted", c)} />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-border p-4 bg-background/30 hover:bg-muted/20 transition-colors">
+                  <div>
+                    <Label className="text-base font-medium">Auto Booking</Label>
+                    <p className="text-sm text-muted-foreground mt-1">Automatically approve user bookings for this lab.</p>
+                  </div>
+                  <Switch checked={formData.isAutoBooking} onCheckedChange={(c) => handleSwitchChange("isAutoBooking", c)} />
                 </div>
               </div>
             </div>

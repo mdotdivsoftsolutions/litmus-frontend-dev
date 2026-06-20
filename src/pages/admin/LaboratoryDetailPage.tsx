@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { adminApi } from "@/lib/api/admin";
-import { ArrowLeft, Building2, MapPin, Phone, Mail, FileText, CheckCircle2, ShieldCheck, Banknote, CreditCard, Activity, Briefcase } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Phone, Mail, FileText, CheckCircle2, ShieldCheck, Banknote, CreditCard, Activity, Briefcase, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +47,7 @@ export default function LaboratoryDetailPage() {
   }
 
   const allBookings = bookingsData?.data || [];
-  const labBookings = allBookings.filter((b: any) => b.laboratory?._id === id || b.laboratory === id);
+  const labBookings = allBookings.filter((b: any) => b.labId?._id === id || b.labId === id || b.laboratory?._id === id || b.laboratory === id);
 
   const rating = lab.reviews && lab.reviews.length > 0 
     ? (lab.reviews.reduce((acc: number, rev: any) => acc + rev.rating, 0) / lab.reviews.length).toFixed(1) 
@@ -70,6 +70,7 @@ export default function LaboratoryDetailPage() {
               {lab.isTrusted && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200"><ShieldCheck className="h-3 w-3 mr-1" />Trusted</Badge>}
               {lab.isNablAccredited && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200"><CheckCircle2 className="h-3 w-3 mr-1" />NABL</Badge>}
               {lab.isFssaiApproved && <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200"><CheckCircle2 className="h-3 w-3 mr-1" />FSSAI</Badge>}
+              {lab.isAutoBooking && <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200"><Zap className="h-3 w-3 mr-1" />Auto Booking</Badge>}
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api/admin";
@@ -40,6 +40,12 @@ export default function AdminBookingDetails() {
 
   const rawBookings = response?.data || [];
   const rawBooking = rawBookings.find((b: any) => b._id === id);
+
+  useEffect(() => {
+    if (rawBooking?.labId?._id && !selectedLabId) {
+      setSelectedLabId(rawBooking.labId._id);
+    }
+  }, [rawBooking, selectedLabId]);
 
   const assignLabMutation = useMutation({
     mutationFn: ({ bookingId, labId }: { bookingId: string, labId: string }) => adminApi.assignLab(bookingId, labId),

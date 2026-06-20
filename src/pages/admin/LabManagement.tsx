@@ -55,7 +55,13 @@ export default function LabManagement() {
     queryFn: adminApi.getLabs,
   });
 
+  const { data: bookingsData } = useQuery({
+    queryKey: ["adminBookings"],
+    queryFn: adminApi.getBookings,
+  });
+
   const labs = labsData?.data || [];
+  const allBookings = bookingsData?.data || [];
   const filtered = labs.filter((l: any) => !search || l.labName?.toLowerCase().includes(search.toLowerCase()));
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
@@ -130,7 +136,11 @@ export default function LabManagement() {
               ))
             ) : filtered.length === 0 ? (
               <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">No laboratories found.</TableCell></TableRow>
-            ) : paginatedLabs.map((lab: any) => (
+            ) : paginatedLabs.map((lab: any) => {
+              const labBookings = allBookings.filter((b: any) => b.labId?._id === lab._id || b.labId === lab._id || b.laboratory?._id === lab._id || b.laboratory === lab._id);
+              const totalRevenue = labBookings.reduce((sum: number, b: any) => sum + (b.totalAmount || 0), 0);
+              
+              return (
               <TableRow key={lab._id} className="hover:bg-muted/30">
                 <TableCell className="font-medium">{lab.labName}</TableCell>
                 <TableCell>{lab.location?.city || "—"}</TableCell>
@@ -141,8 +151,8 @@ export default function LabManagement() {
                   </div>
                 </TableCell>
                 <TableCell>{lab.tests?.length || "—"}</TableCell>
-                <TableCell>{"—"}</TableCell>
-                <TableCell>{"—"}</TableCell>
+                <TableCell>{labBookings.length > 0 ? labBookings.length : "—"}</TableCell>
+                <TableCell>{totalRevenue > 0 ? `₹${totalRevenue.toLocaleString('en-IN')}` : "—"}</TableCell>
                 <TableCell>
                   <Switch 
                     checked={lab.isActive} 
@@ -180,7 +190,7 @@ export default function LabManagement() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            )})}
           </TableBody>
         </Table>
       </Card>
