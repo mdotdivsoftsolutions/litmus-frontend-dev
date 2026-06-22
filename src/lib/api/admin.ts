@@ -112,5 +112,26 @@ export const adminApi = {
   deleteLab: async (id: string) => {
     const response = await apiClient.delete(`/admin/lab/${id}`);
     return response.data;
+  },
+
+  getPendingApprovals: async () => {
+    const response = await apiClient.get('/admin/pending-approvals');
+    return response.data;
+  },
+  approveTest: async (id: string) => {
+    const response = await apiClient.patch(`/admin/test/${id}/approve`);
+    return response.data;
+  },
+  rejectTest: async (id: string, reason: string) => {
+    const response = await apiClient.patch(`/admin/test/${id}/reject`, { reason });
+    return response.data;
+  },
+  approvePackage: async (id: string) => {
+    const response = await apiClient.patch(`/admin/package/${id}/approve`);
+    return response.data;
+  },
+  rejectPackage: async (id: string, reason: string) => {
+    const response = await apiClient.patch(`/admin/package/${id}/reject`, { reason });
+    return response.data;
   }
 };

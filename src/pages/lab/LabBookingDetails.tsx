@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { labApi } from "@/lib/api/lab";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LabBookingDetails() {
   const { id } = useParams();
@@ -30,7 +31,95 @@ export default function LabBookingDetails() {
   const booking = rawBookings.find((b: any) => b._id === id);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-[60vh]"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    return (
+      <div className="max-w-7xl mx-auto pb-10 space-y-6 pt-6 px-4 md:px-0 animate-pulse">
+        {/* Header Actions Skeleton */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-md" />
+            <div>
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Skeleton className="h-10 w-36" />
+            <Skeleton className="h-10 w-36" />
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {/* Order Info Skeleton */}
+          <div className="flex justify-between items-start border-b border-border py-6">
+            <div>
+              <Skeleton className="h-8 w-64 mb-3" />
+              <Skeleton className="h-5 w-80" />
+            </div>
+            <div className="text-right">
+              <Skeleton className="h-6 w-24 mb-2 ml-auto" />
+              <Skeleton className="h-4 w-32 mb-1 ml-auto" />
+              <Skeleton className="h-4 w-32 ml-auto" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="shadow-sm">
+              <CardHeader className="pb-3 border-b border-border">
+                <Skeleton className="h-6 w-40" />
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm">
+              <CardHeader className="pb-3 border-b border-border">
+                <Skeleton className="h-6 w-48" />
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3">
+                <Skeleton className="h-6 w-24 mb-2" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3 border-b border-border">
+              <Skeleton className="h-6 w-64" />
+            </CardHeader>
+            <CardContent className="pt-4 p-0 md:p-6 space-y-6">
+              <div className="border border-border rounded-lg overflow-hidden">
+                <div className="bg-slate-50 border-b border-border p-4">
+                  <Skeleton className="h-5 w-24 mb-2" />
+                  <Skeleton className="h-6 w-64" />
+                </div>
+                <div className="p-4 space-y-4">
+                  <div className="bg-white rounded-md border border-slate-100 p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <Skeleton className="h-4 w-32 mb-2" />
+                        <Skeleton className="h-6 w-48" />
+                      </div>
+                      <Skeleton className="h-6 w-24" />
+                    </div>
+                    <Skeleton className="h-4 w-32 mb-4" />
+                    <Skeleton className="h-4 w-40 mb-2" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-6 w-20" />
+                      <Skeleton className="h-6 w-24" />
+                      <Skeleton className="h-6 w-32" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   if (!booking) {

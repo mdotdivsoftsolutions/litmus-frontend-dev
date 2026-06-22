@@ -58,6 +58,7 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics.tsx";
 import AdminReports from "./pages/admin/AdminReports.tsx";
 import ReviewManagement from "./pages/admin/ReviewManagement.tsx";
 import ReviewFormPage from "./pages/admin/ReviewFormPage.tsx";
+import AdminApprovals from "./pages/admin/AdminApprovals.tsx";
 
 // Lab
 import PackageManagement from "./pages/admin/PackageManagement.tsx";
@@ -69,12 +70,15 @@ import AdminConsultations from "./pages/admin/AdminConsultations.tsx";
 import LabDashboard from "./pages/lab/LabDashboard.tsx";
 import LabBookings from "./pages/lab/LabBookings.tsx";
 import UploadResultsPage from "./pages/lab/UploadResultsPage.tsx";
-import LabPricingPage from "./pages/lab/LabPricingPage.tsx";
+import LabTestsPage from "./pages/lab/LabTestsPage.tsx";
+import LabPackagesPage from "./pages/lab/LabPackagesPage.tsx";
 import LabSchedulePage from "./pages/lab/LabSchedulePage.tsx";
 import LabProfilePage from "./pages/lab/LabProfilePage.tsx";
 import CategoryFormPage from "./pages/admin/CategoryFormPage.tsx";
 import LaboratoryDetailPage from "./pages/admin/LaboratoryDetailPage.tsx";
 import LabBookingDetails from "./pages/lab/LabBookingDetails.tsx";
+import LabTestFormPage from "./pages/lab/LabTestFormPage.tsx";
+import LabPackageFormPage from "./pages/lab/LabPackageFormPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -168,6 +172,7 @@ const App = () => (
               <Route path="reviews/:id/edit" element={<ReviewFormPage />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="reports" element={<AdminReports />} />
+              <Route path="approvals" element={<AdminApprovals />} />
               <Route path="consultations" element={<AdminConsultations />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
@@ -182,10 +187,12 @@ const App = () => (
               <Route path="bookings/:id" element={<LabBookingDetails />} />
               <Route path="bookings/:id/upload" element={<UploadResultsPage />} />
               <Route path="upload" element={<UploadResultsPage />} />
-              <Route path="pricing" element={<LabPricingPage />} />
-              <Route path="packages" element={<PackageManagement />} />
-              <Route path="packages/new" element={<PackageFormPage />} />
-              <Route path="packages/:id/edit" element={<PackageFormPage />} />
+              <Route path="tests" element={<LabTestsPage />} />
+              <Route path="tests/new" element={<LabTestFormPage />} />
+              <Route path="tests/edit/:id" element={<LabTestFormPage />} />
+              <Route path="packages" element={<LabPackagesPage />} />
+              <Route path="packages/new" element={<LabPackageFormPage />} />
+              <Route path="packages/edit/:id" element={<LabPackageFormPage />} />
               <Route path="schedule" element={<LabSchedulePage />} />
               <Route path="profile" element={<LabProfilePage />} />
             </Route>

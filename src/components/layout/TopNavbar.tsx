@@ -9,9 +9,10 @@ interface TopNavbarProps {
   onMenuClick: () => void;
   user?: any;
   onLogoutClick?: () => void;
+  portal?: string;
 }
 
-export function TopNavbar({ onMenuClick, user, onLogoutClick }: TopNavbarProps) {
+export function TopNavbar({ onMenuClick, user, onLogoutClick, portal }: TopNavbarProps) {
   const location = useLocation();
   const pathParts = location.pathname.split("/").filter(Boolean);
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -75,8 +76,7 @@ export function TopNavbar({ onMenuClick, user, onLogoutClick }: TopNavbarProps) 
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild><Link to="/dashboard/profile"><User className="mr-2 h-4 w-4" />Profile</Link></DropdownMenuItem>
-            <DropdownMenuItem><Settings className="mr-2 h-4 w-4" />Settings</DropdownMenuItem>
+            <DropdownMenuItem asChild><Link to={portal ? `/${portal}/profile` : "/dashboard/profile"}><User className="mr-2 h-4 w-4" />Profile</Link></DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onLogoutClick} className="cursor-pointer">
               <LogOut className="mr-2 h-4 w-4" />Logout

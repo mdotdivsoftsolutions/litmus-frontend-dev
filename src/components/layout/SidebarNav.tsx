@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, Package, FlaskConical, BookOpen, CreditCard, FileText, FolderOpen, UserCircle,
   Users, Building2, ClipboardList, Grid3X3, ShoppingBag, TestTubes, BarChart3, FileCheck,
-  Upload, DollarSign, CalendarDays, X, Flame, ChevronLeft, ChevronRight, MessageSquareQuote
+  Upload, DollarSign, CalendarDays, X, Flame, ChevronLeft, ChevronRight, MessageSquareQuote, CheckSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -41,12 +41,13 @@ const adminNav = [
   // { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
   { label: "Reports", icon: FileCheck, href: "/admin/reports" },
   { label: "Settings", icon: Flame, href: "/admin/settings" },
+  { label: "Approvals", icon: CheckSquare, href: "/admin/approvals" },
 ];
 
 const labNav = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/lab/dashboard" },
   { label: "Bookings", icon: ClipboardList, href: "/lab/bookings" },
-  { label: "Pricing", icon: DollarSign, href: "/lab/pricing" },
+  { label: "Tests", icon: TestTubes, href: "/lab/tests" },
   { label: "Packages", icon: Package, href: "/lab/packages" },
   { label: "Schedule", icon: CalendarDays, href: "/lab/schedule" },
   { label: "Profile", icon: UserCircle, href: "/lab/profile" },

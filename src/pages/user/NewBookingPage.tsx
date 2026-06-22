@@ -345,6 +345,64 @@ export default function NewBookingPage() {
   }, [userResponse]);
   const navigate = useNavigate();
 
+  const selectedLabProfile = useMemo(() => {
+    if (selectedLab === 'admin' || !selectedLab) return null;
+    return eligibleLabs?.find((l: any) => l._id === selectedLab);
+  }, [selectedLab, eligibleLabs]);
+
+  const { data: availabilityResponse, isLoading: isAvailabilityLoading } = useQuery({
+    queryKey: ['labAvailability', selectedLab, formData.pickupDate],
+    queryFn: () => labApi.getLabAvailability(selectedLab!, formData.pickupDate),
+    enabled: !!selectedLab && selectedLab !== 'admin' && !!formData.pickupDate,
+    retry: false,
+  });
+
+  const dateError = useMemo(() => {
+    if (!formData.pickupDate || !selectedLabProfile) return null;
+    const dateObj = new Date(formData.pickupDate);
+    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+    
+    const availability = selectedLabProfile.availability;
+    if (availability) {
+      if (availability.workingDays && !availability.workingDays.includes(dayName)) {
+        return `This lab is closed on ${dayName}s. Please select another day.`;
+      }
+      if (availability.blockedDates) {
+        const blocked = availability.blockedDates.find((b: any) => b.date === formData.pickupDate);
+        if (blocked) {
+          return `This lab is closed on this date (${blocked.name}). Please select another date.`;
+        }
+      }
+    }
+    
+    if (availabilityResponse?.data && !availabilityResponse.data.isAvailable) {
+      return `This lab is fully booked on this date. Please select another date.`;
+    }
+
+    return null;
+  }, [formData.pickupDate, selectedLabProfile, availabilityResponse]);
+
+  const timeError = useMemo(() => {
+    if (!formData.pickupTime || !selectedLabProfile || !selectedLabProfile.availability?.startTime || !selectedLabProfile.availability?.endTime) return null;
+    
+    const [time, period] = formData.pickupTime.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    if (period === 'PM' && hours < 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    
+    const selectedTimeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    const startTime = selectedLabProfile.availability.startTime;
+    const endTime = selectedLabProfile.availability.endTime;
+    
+    if (selectedTimeStr < startTime || selectedTimeStr > endTime) {
+      return `Please select a time within the lab's working hours (${startTime} - ${endTime}).`;
+    }
+    
+    return null;
+  }, [formData.pickupTime, selectedLabProfile]);
+
+  const isStep3Valid = formData.name && formData.phone && formData.address && formData.city && formData.pincode && formData.pickupDate && formData.pickupTime && !dateError && !timeError && !isAvailabilityLoading;
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [step]);
@@ -915,7 +973,9 @@ export default function NewBookingPage() {
                         <div className="grid sm:grid-cols-2 gap-4">
                           <div className="space-y-1.5">
                             <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pickup Date</Label>
-                            <Input name="pickupDate" min={minDateString} type="date" value={formData.pickupDate} onChange={handleInputChange} className="h-10 bg-slate-50 border-slate-200 rounded-lg text-sm" />
+                            <Input name="pickupDate" min={minDateString} type="date" value={formData.pickupDate} onChange={handleInputChange} className={cn("h-10 bg-slate-50 border-slate-200 rounded-lg text-sm", dateError ? "border-red-500 focus-visible:ring-red-500" : "")} />
+                            {isAvailabilityLoading && <p className="text-xs text-primary animate-pulse mt-1">Checking lab availability...</p>}
+                            {dateError && <p className="text-xs text-red-500 font-bold mt-1">{dateError}</p>}
                           </div>
                           <div className="space-y-1.5">
                             <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pickup Time</Label>
@@ -923,7 +983,7 @@ export default function NewBookingPage() {
                               name="pickupTime" 
                               value={formData.pickupTime} 
                               onChange={handleInputChange as any} 
-                              className="flex h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                              className={cn("flex h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50", timeError ? "border-red-500 focus-visible:ring-red-500" : "")}
                             >
                               <option value="" disabled>Select Time</option>
                               <option value="09:00 AM">09:00 AM</option>
@@ -937,6 +997,7 @@ export default function NewBookingPage() {
                               <option value="05:00 PM">05:00 PM</option>
                               <option value="06:00 PM">06:00 PM</option>
                             </select>
+                            {timeError && <p className="text-xs text-red-500 font-bold mt-1">{timeError}</p>}
                           </div>
                         </div>
                       </div>
@@ -1044,8 +1105,9 @@ export default function NewBookingPage() {
                        )}
                        {step === 3 && (
                          <Button
+                           disabled={!isStep3Valid}
                            onClick={handleNext}
-                           className="w-full bg-primary hover:bg-primary-deep text-white rounded-lg h-14 font-bold text-base group transition-all"
+                           className="w-full bg-primary hover:bg-primary-deep text-white rounded-lg h-14 font-bold text-base group transition-all disabled:opacity-50"
                          >
                            Proceed to payment{" "}
                            <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
