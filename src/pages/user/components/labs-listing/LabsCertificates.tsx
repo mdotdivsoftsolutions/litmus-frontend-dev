@@ -5,27 +5,35 @@ import { ConsultationBookingModal } from "../consultation/ConsultationBookingMod
 const mockCertificates = [
   {
     id: 1,
-    title: "EEG Test",
-    subtitle: "Starting @ ₹3400 ₹1260",
-    description: "An EEG test or electroencephalogram is a painless and non-invasive diagnostic test that is performed to evaluate the electrical activity of the brain. The brain functions on electrical ...",
-    image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&q=80&w=400",
-    features: ["100% non-invasive", "Quick procedure with same day reports"]
+    title: "Food Label Review",
+    subtitle: "Starting @ ₹1000",
+    description: "Ensure your product labels comply with the latest food regulations and industry standards. Our experts review every aspect of your label to help you avoid non-compliance and build consumer trust.",
+    image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&q=80&w=400",
+    features: ["FSSAI label compliance review", "Claims and declaration verification", "Regulatory gap assessment & recommendations"]
   },
   {
     id: 2,
-    title: "Echo Test",
-    subtitle: "Starting @ ₹4000 ₹1350",
-    description: "An echocardiogram (ECHO) is a type of ultrasound scan that is conducted to evaluate the heart and the nearby blood vessels. This test aims to monitor and assess the functioning of the heart a...",
+    title: "FSSAI Licensing & Documentation Support",
+    subtitle: "Starting @ ₹1500 (Excl. Govt charges)",
+    description: "Simplify the licensing process with expert guidance for obtaining, renewing, or modifying FSSAI registrations and License",
     image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=400",
-    features: ["High-resolution image quality for accurate diagnosis", "100% non-invasive"]
+    features: ["New license and renewal support", "Documentation preparation", "Regulatory liaison and guidance"]
   },
   {
     id: 3,
-    title: "TMT Test",
-    subtitle: "Starting @ ₹3500 ₹1109",
-    description: "A TMT test, also known as the treadmill test is an important health test conducted to evaluate heart function and assess your risk of developing heart disease. It does that by evaluating how your hear...",
+    title: "Food Safety Audits & Gap Assessments",
+    subtitle: "Starting @ ₹3000",
+    description: "Evaluate your facility, processes, and food safety systems to identify risks and improve compliance before regulatory or customer audits.",
     image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&q=80&w=400",
-    features: ["High-performance treadmill machines", "Read-to-assist support staff"]
+    features: ["GMP, GHP & HACCP assessments", "Compliance gap analysis", "Corrective action recommendations"]
+  },
+  {
+    id: 4,
+    title: "HACCP, GMP & FOSTAC Training",
+    subtitle: "Customized Pricing",
+    description: "Equip your team with practical food safety knowledge through customized training programs designed for manufacturing, processing, and hospitality businesses.",
+    image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=400",
+    features: ["Employee and management training", "Practical food safety workshops", "Training certificates and assessment"]
   }
 ];
 
@@ -33,7 +41,7 @@ export function LabsCertificates() {
   return (
     <div className="max-w-7xl mx-auto px-6 pt-20 pb-10">
       <div className="relative px-2 sm:px-12">
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {mockCertificates.map((cert) => (
             <ConsultationBookingModal key={cert.id} serviceName={cert.title}>
               <div className="bg-white rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden flex flex-col hover:shadow-lg hover:border-[#D32F2F]/20 hover:scale-[1.01] transition-all cursor-pointer">
@@ -43,10 +51,10 @@ export function LabsCertificates() {
                 </div>
                 
                 {/* Text Section */}
-                <div className="p-6 pb-12 text-center relative z-10 flex-1 flex flex-col justify-center">
-                  <h3 className="text-lg font-bold text-slate-800">{cert.title}</h3>
+                <div className="p-6 pb-12 text-center relative z-10 flex-1 flex flex-col justify-start text-start">
+                  <h3 className="text-lg font-bold text-slate-800 leading-tight">{cert.title}</h3>
                   <p className="text-[#10b981] font-bold text-sm mt-1.5">{cert.subtitle}</p>
-                  <p className="text-sm text-slate-500 mt-4 leading-relaxed px-2 text-justify">
+                  <p className="text-sm text-slate-500 mt-4 leading-relaxed ">
                     {cert.description.length > 100 ? cert.description.slice(0, 100) + "..." : cert.description}
                   </p>
                 </div>

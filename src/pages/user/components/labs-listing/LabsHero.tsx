@@ -70,11 +70,11 @@ export function LabsHero({ search, setSearch, selectedCity, setSelectedCity, lab
             <Microscope className="h-4 w-4" /> Accredited Facilities
           </div>
           <h1 className="text-2xl sm:text-4xl font-semibold text-slate-800 tracking-tight leading-tight">
-             Discover Your Trusted <br />
-             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Diagnostic Partner.</span>
+             Discover our Trusted <br />
+             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Laboratory Partner</span>
           </h1>
           <p className="text-slate-500 text-base font-medium max-w-xl leading-relaxed opacity-80">
-             Direct access to NABL-accredited laboratories specialized in food safety, beverage analysis, and regulatory quality control.
+             Discover our network of trusted laboratory partners certified to national and international standards, including NABL, FSSAI, ISO/IEC 17025, BIS, APEDA, EIC, and other industry-specific accreditations.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 max-w-2xl">

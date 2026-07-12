@@ -22,10 +22,10 @@ export function SupportHero() {
                     <Headset className="h-4 w-4" /> 24/7 Clinical Helpdesk
                   </div>
                   <h1 className="text-2xl sm:text-4xl font-semibold text-slate-800 tracking-tight leading-tight">
-                     Premium Diagnostic <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Support.</span>
+                     Need Assistance?  <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]"> Our Support Team Is Ready to Help</span>
                   </h1>
-                  <p className="text-slate-500 text-lg md:text-xl font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed opacity-80">
-                     How can we assist your clinical journey today? Search our comprehensive knowledge base or connect with a support specialist.
+                  <p className="text-slate-500 text-base font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed opacity-80">
+                     From placing your first order to understanding your test reports, our dedicated support team is available to answer your questions and resolve issues quickly. We believe great service extends beyond testing, ensuring you have the support you need at every stage.
                   </p>
                 </div>
 

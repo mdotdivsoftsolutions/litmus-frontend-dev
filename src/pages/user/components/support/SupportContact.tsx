@@ -14,8 +14,14 @@ export function SupportContact() {
                <div className="space-y-8">
                   <div className="space-y-4">
                     <div className="inline-flex items-center gap-2 text-white/40 text-[9px] font-black uppercase tracking-[0.4em]">Connect Directly</div>
-                    <h2 className="text-3xl lg:text-4xl font-semibold text-white tracking-tight leading-tight">Need immediate <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Clinical Assistance?</span></h2>
-                    <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-md opacity-80">Our support specialists are standing by 24/7 to help you navigate your diagnostic processes and regulatory compliance.</p>
+                    <h1 className="text-2xl sm:text-4xl font-semibold text-white tracking-tight leading-tight">
+                     How Can We Help <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">You Today?</span>
+                  </h1>
+                  <p className="text-slate-400 text-base font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed opacity-80">
+                     Questions? Need help with your order? Looking for technical guidance? Our experienced support team is here to ensure your testing process is smooth, transparent, and efficient.
+                     <br/><br/>
+                     Fast responses. Expert guidance. Reliable support.
+                  </p>
                   </div>
                   
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">

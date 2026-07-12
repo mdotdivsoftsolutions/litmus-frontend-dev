@@ -128,16 +128,16 @@ export function ConsultationHero() {
       <div className="relative z-10 max-w-7xl mx-auto px-6 grid lg:grid-cols-2 items-center w-full gap-20 pointer-events-none">
         {/* Left side text content */}
         <div className="space-y-12 animate-slide-up pointer-events-auto">
-          <div className="space-y-8">
+          <div className="space-y-6">
             <div className="inline-flex items-center gap-3 px-4 py-2 rounded-2xl bg-slate-50 border border-slate-100 text-[#D32F2F] text-[10px] font-semibold uppercase tracking-[0.4em] shadow-sm">
               <Star className="h-4 w-4 fill-current" /> Expert Advisory
             </div>
-            <h1 className="text-2xl sm:text-4xl font-semibold text-slate-800 tracking-tight leading-[50px]">
-              Institutional <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Clinical Strategy</span> <br />
-              for Enterprise Brands.
+            <h1 className="text-2xl sm:text-4xl font-semibold text-slate-800 tracking-tight leading-[50px] ">
+              More Than Testing. <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Your Food Compliance Partner</span>
+              
             </h1>
             <p className="text-slate-500 text-lg font-medium max-w-xl leading-relaxed opacity-80">
-              Partner with our elite team of scientists to optimize your diagnostic roadmap and global safety certifications.
+              Food testing is just one part of building a safe and compliant food business. we offer end-to-end technical guidance and consulting to help businesses meet regulatory requirements, improve quality systems, and bring products to market with confidence.
             </p>
           </div>
 

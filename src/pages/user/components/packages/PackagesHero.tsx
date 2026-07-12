@@ -75,11 +75,11 @@ export function PackagesHero({ categories, selectedCategory, setSelectedCategory
 
             <div className="space-y-4">
               <h1 className="text-2xl sm:text-4xl font-semibold text-slate-800 tracking-tight leading-tight animate-slide-up">
-                Precision {" "}
-                 <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Clinical Packages.</span>
+                Recommended. {" "}
+                 <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#feba50]">Food Testing Packages</span>
               </h1>
               <p className="text-slate-500 text-base lg:text-lg font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
-                Direct access to NABL-accredited diagnostic panels designed for end-to-end food safety, quality verification, and export compliance.
+                Simplify your testing journey with ready-to-book packages developed by food safety experts. Whether you're launching a new product, meeting regulatory requirements, or conducting routine quality checks, we've got the right testing panel for you.
               </p>
             </div>
 

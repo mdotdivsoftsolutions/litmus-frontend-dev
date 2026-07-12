@@ -8,28 +8,28 @@ import { cn } from "@/lib/utils";
 const trustCarouselSlides = [
   {
     heading: "Why Litmus?",
-    subheading: "Fast, Safe and Accurate",
+    subheading: "Controlled Sample Collection",
     highlightLine1: "100% on time",
     highlightLine2: "sample collection",
-    body: "Each sample collected undergoes rigorous temperature mapping and real-time monitoring to ensure 100% clinical accuracy.",
+    body: "From collection to analysis, every sample is monitored under controlled temperature conditions to maintain quality, traceability, and testing accuracy",
     packagesEyebrow: "Curated bundles",
     packagesCaption: "NABL-aligned food safety panels tailored to manufacturers, retailers, and cloud kitchens.",
   },
   {
     heading: "Why Litmus?",
-    subheading: "NABL & FSSAI You Can Trust",
+    subheading: "Seamless Process",
     highlightLine1: "Accredited labs",
     highlightLine2: "Pan-India coverage",
-    body: "Book tests through vetted laboratories with standardized sampling kits, sealed chain of custody, and audit-ready reporting.",
+    body: "From sample collection to final report, every step is standardized, traceable, and managed through certified laboratories for complete compliance confidence.",
     packagesEyebrow: "Structured programmes",
     packagesCaption: "Choose from compliance packs covering microbiology, adulteration, label validation, and shelf-life studies.",
   },
   {
     heading: "Why Litmus?",
-    subheading: "Actionable Insights",
+    subheading: "Digital Transparency",
     highlightLine1: "Compliance-ready",
     highlightLine2: "reports & tracking",
-    body: "Get clear timelines, WhatsApp updates, and digital reports formatted for regulators so you spend less time on paperwork.",
+    body: "Track every stage of your testing journey with real-time updates, clear turnaround timelines, and instantly accessible digital reports.",
     packagesEyebrow: "Operational clarity",
     packagesCaption: "Compare bundles by parameters and turnaround, then route straight into booking.",
   },
@@ -92,7 +92,7 @@ export const TrustAndOrdering = () => {
               className="relative z-10 flex h-full min-h-[400px] md:min-h-[460px] flex-col justify-between p-8 md:p-10 md:px-20 pb-28 md:pb-28 animate-in fade-in slide-in-from-right-2 duration-500"
             >
               <div>
-                <h2 className="text-2xl md:text-[1.85rem] font-bold tracking-tight text-[#feba50]">{slide.heading}</h2>
+                <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[#feba50]">{slide.heading}</h2>
                 <p className="mt-2 text-xl md:text-2xl font-bold text-white leading-snug">{slide.subheading}</p>
 
                 <div className="mt-7 md:mt-8 flex max-w-md flex-col gap-3 rounded-2xl border border-white/12 bg-black/20 p-4 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:gap-6">
@@ -162,15 +162,15 @@ export const TrustAndOrdering = () => {
 
                 <div className="space-y-5">
                   {[
-                    { step: "Select tests" },
-                    { step: "Add your details" },
-                    { step: "Book your slot" },
+                    { step: "SELECT TEST AND PRODUCT" },
+                    { step: "ADD YOUR DETAILS" },
+                    { step: "BOOK YOUR SAMPLE COLLECTION" },
                   ].map((item, idx) => (
                     <div key={idx} className="flex items-center gap-4 md:gap-5">
                       <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-[#10B981] flex items-center justify-center text-white p-0.5 shrink-0 shadow-md">
                         <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6" />
                       </div>
-                      <span className="text-slate-700 font-bold text-xl ">{item.step}</span>
+                      <span className="text-slate-700 font-bold text-sm md:text-base tracking-wide">{item.step}</span>
                     </div>
                   ))}
                 </div>
