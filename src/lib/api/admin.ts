@@ -41,7 +41,7 @@ export const adminApi = {
     return response.data;
   },
 
-  updateCollectionDetails: async (id: string, data: { status?: string; collectorName?: string; collectorContact?: string }) => {
+  updateCollectionDetails: async (id: string, data: { status?: string; collectorName?: string; collectorContact?: string; notifyDelay?: boolean }) => {
     const response = await apiClient.patch(`/admin/booking/${id}/collection`, data);
     return response.data;
   },

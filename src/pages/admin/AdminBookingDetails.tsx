@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { ChevronLeft, Beaker, FileText, CheckCircle2, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function AdminBookingDetails() {
   const { id } = useParams();
@@ -26,6 +27,7 @@ export default function AdminBookingDetails() {
   const [collectionStatus, setCollectionStatus] = useState("");
   const [collectorName, setCollectorName] = useState("");
   const [collectorContact, setCollectorContact] = useState("");
+  const [notifyDelay, setNotifyDelay] = useState(false);
 
   const { data: response, isLoading } = useQuery({
     queryKey: ["adminBookings"],
@@ -197,6 +199,7 @@ export default function AdminBookingDetails() {
                     setCollectionStatus(b.collectionStatus || "PENDING");
                     setCollectorName(b.assignedCollector?.name || "");
                     setCollectorContact(b.assignedCollector?.contact || "");
+                    setNotifyDelay(false);
                     setEditingCollection(true);
                   }}>
                     Update Status
@@ -241,16 +244,22 @@ export default function AdminBookingDetails() {
                       />
                     </div>
                   </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="notifyDelayAdmin" checked={notifyDelay} onCheckedChange={(c) => setNotifyDelay(!!c)} />
+                    <label htmlFor="notifyDelayAdmin" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      Notify user of delay via email
+                    </label>
+                  </div>
                   <div className="flex gap-2 justify-end pt-2">
                     <Button variant="outline" onClick={() => setEditingCollection(false)}>Cancel</Button>
                     <Button 
                       onClick={() => updateCollectionMutation.mutate({ 
                         bookingId: id as string, 
-                        data: { status: collectionStatus, collectorName, collectorContact } 
+                        data: { status: collectionStatus, collectorName, collectorContact, notifyDelay } 
                       })}
                       disabled={updateCollectionMutation.isPending}
                     >
-                      Save Changes
+                      {updateCollectionMutation.isPending ? "Updating..." : "Save Details"}
                     </Button>
                   </div>
                 </div>

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Eye, Upload, Loader2, Beaker, Search, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { labApi } from "@/lib/api/lab";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -23,6 +24,7 @@ export default function LabBookings() {
   const [collectionStatus, setCollectionStatus] = useState<string>("");
   const [collectorName, setCollectorName] = useState<string>("");
   const [collectorContact, setCollectorContact] = useState<string>("");
+  const [notifyDelay, setNotifyDelay] = useState<boolean>(false);
   const queryClient = useQueryClient();
 
   const { data: response, isLoading } = useQuery({
@@ -69,7 +71,7 @@ export default function LabBookings() {
     if (selectedBooking) {
       updateCollectionMutation.mutate({ 
         id: selectedBooking._id, 
-        data: { status: collectionStatus, collectorName, collectorContact }
+        data: { status: collectionStatus, collectorName, collectorContact, notifyDelay }
       });
     }
   };
@@ -153,6 +155,7 @@ export default function LabBookings() {
                           setCollectionStatus(b.collectionStatus || "PENDING");
                           setCollectorName(b.assignedCollector?.name || "");
                           setCollectorContact(b.assignedCollector?.contact || "");
+                          setNotifyDelay(false);
                         }}>
                           <Eye className="h-3.5 w-3.5" />View
                         </Button>
@@ -268,11 +271,17 @@ export default function LabBookings() {
                         />
                       </div>
                     </div>
+                    <div className="flex items-center space-x-2 pb-1">
+                      <Checkbox id="notifyDelayLab" checked={notifyDelay} onCheckedChange={(c) => setNotifyDelay(!!c)} />
+                      <label htmlFor="notifyDelayLab" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Notify user of delay via email
+                      </label>
+                    </div>
                     <Button 
                       size="sm"
                       className="w-full bg-slate-900 hover:bg-slate-800 text-white mt-1" 
                       onClick={handleUpdateCollection}
-                      disabled={updateCollectionMutation.isPending || (collectionStatus === (selectedBooking.collectionStatus || "PENDING") && collectorName === (selectedBooking.assignedCollector?.name || "") && collectorContact === (selectedBooking.assignedCollector?.contact || ""))}
+                      disabled={updateCollectionMutation.isPending}
                     >
                       {updateCollectionMutation.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
                       Save Collection Details
