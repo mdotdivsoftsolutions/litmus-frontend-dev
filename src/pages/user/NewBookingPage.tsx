@@ -386,7 +386,9 @@ export default function NewBookingPage() {
     if (!formData.pickupTime || !selectedLabProfile || !selectedLabProfile.availability?.startTime || !selectedLabProfile.availability?.endTime) return null;
     
     const [time, period] = formData.pickupTime.split(' ');
-    let [hours, minutes] = time.split(':').map(Number);
+    const timeParts = time.split(':').map(Number);
+    let hours = timeParts[0];
+    const minutes = timeParts[1];
     if (period === 'PM' && hours < 12) hours += 12;
     if (period === 'AM' && hours === 12) hours = 0;
     

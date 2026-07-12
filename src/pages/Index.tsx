@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Flame, Shield, Building2, CreditCard, MapPin, FileText, MessageSquare, ArrowRight, Star, CheckCircle2 } from "lucide-react";
+import { Flame, Shield, Building2, CreditCard, MapPin, FileText, MessageSquare, Star, CheckCircle2 } from "lucide-react";
 import { LoginSection } from "@/components/auth/LoginSection";
 
 
