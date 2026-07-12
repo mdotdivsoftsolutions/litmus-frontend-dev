@@ -78,7 +78,7 @@ export function SpecialityCarousel() {
               </span>
             </>
           }
-          subtitle="Architected for precision. Explore our expansive catalogue of specialized diagnostic tests across every food industry vertical."
+          subtitle="Our intelligent product categorization helps identify the most relevant testing requirements based on your product type and intended market."
           action={{
             label: "Explore Full Catalogue",
             href: "/tests",

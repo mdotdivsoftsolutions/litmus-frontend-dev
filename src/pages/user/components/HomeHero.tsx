@@ -30,12 +30,15 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                   <span className="h-2 w-2 rounded-full bg-[#E53935] animate-pulse" />
                   <span className="text-xs font-medium text-slate-700">NABL & FSSAI Accredited Labs</span>
                 </div>
-                <h1 className="text-2xl sm:text-[44px] font-bold text-slate-800 mb-6 tracking-tight leading-[50px]">
-                  Advanced Food Safety  <br /> <span className="text-gradient-brand"> Food Solutions</span>
+                <h1 className="text-2xl sm:text-[36px] font-bold text-slate-800 mb-6 tracking-tight leading-[45px]">
+                  Certified Laboratory Testing <br /> <span className="text-gradient-brand"> at Your Fingertips</span>
                 </h1>
                 <p className="text-slate-500 text-lg mb-8 max-w-md leading-relaxed">
-                  Safe, Smart and Compliant Food Solutions. India's leading platform for certified food analysis and label validation.
+                  Select your product, choose the required parameters, submit samples, and receive accredited laboratory reports without the hassle of contacting multiple labs.
                 </p>
+                <div className="inline-block bg-brand-primary/10 border border-brand-primary/20 rounded-lg px-3 py-1 mb-6 w-fit">
+                    <p className="text-xs font-bold text-brand-primary uppercase tracking-wider">GET OFFERS UPTO 15% ON YOUR FIRST BOOKING</p>
+                </div>
               </div>
 
               <div className="lg:w-1/2 relative bg-gradient-to-br from-red-50/50 to-orange-50/50 p-8 flex items-center justify-center border-l border-white/40">

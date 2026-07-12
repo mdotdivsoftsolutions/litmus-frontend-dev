@@ -76,9 +76,9 @@ const actions = [
 
 export const PromoBanner = ({ className }: { className?: string }) => {
    const banner = {
-      title: <>Can&apos;t Find <span className="text-[#F06C00]">What You&apos;re</span> <br/> Looking For</>,
+      title: <>Can&apos;t Find <span >what you&apos;re</span> <span className="text-gradient-brand">Looking For</span></>,
       subtitle: "NABL Accredited Tests",
-      desc: "Adulteration | Fat Content | SNF Analysis",
+      desc: "Unsure whether you need microbiological, chemical, nutritional, heavy metal, pesticide residue, shelf-life, or contaminant testing?",
       color: "#004D62",
       img: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=1000&auto=format&fit=crop"
    };

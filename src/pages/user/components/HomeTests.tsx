@@ -188,10 +188,10 @@ export const HomeTests = ({ activeTab, setActiveTab, cartItems, addToCart, remov
           <SectionHeader
             title={
               <>
-                Popular Packages <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Near You</span>
+                Popular Food Testing <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D32F2F] to-[#F06C00]">Packages</span>
               </>
             }
-            subtitle="Discover the most frequently booked food safety and quality analysis packages in your region."
+            subtitle="Our curated packages simplify food testing with pre-designed testing packages tailored to different product categories and help you save time, reduce costs, and ensure that critical parameters are not overlooked."
             action={{
               label: "View All Packages",
               href: "/packages",

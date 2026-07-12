@@ -28,7 +28,7 @@ export function PartnerLabs() {
               </span>
             </>
           }
-          subtitle="We collaborate with India's leading NABL-accredited and FSSAI-notified facilities to ensure your samples are tested using state-of-the-art analytical instrumentation."
+          subtitle="We collaborate with a network of accredited and certified laboratories across India to provide comprehensive testing solutions for food businesses of all sizes."
         />
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mt-12">

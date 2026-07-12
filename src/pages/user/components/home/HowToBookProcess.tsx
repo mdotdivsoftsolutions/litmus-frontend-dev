@@ -16,33 +16,33 @@ const processSteps = [
     },
     {
         number: "03",
+        title: "Book and Pay",
+        subtitle: "Securely pay for your selected tests",
+        icon: FileCheck, // Or a payment icon if available, but FileCheck works
+    },
+    {
+        number: "04",
         title: "Schedule Pickup",
         subtitle: "Book your preferred collection time and location",
         icon: CalendarCheck,
     },
     {
-        number: "04",
+        number: "05",
         title: "Sample Collection",
         subtitle: "Safe and secure sample collection at your doorstep",
         icon: Truck,
     },
     {
-        number: "05",
+        number: "06",
         title: "Lab Analysis",
         subtitle: "Advanced testing in NABL accredited laboratories",
         icon: FlaskConical,
     },
     {
-        number: "06",
+        number: "07",
         title: "Get Reports",
         subtitle: "Download FSSAI-verified reports to your profile",
         icon: FileCheck,
-    },
-    {
-        number: "07",
-        title: "Doctor Consultation",
-        subtitle: "Get insights and recommendations from experts",
-        icon: Stethoscope,
     },
 ] as const;
 
@@ -59,7 +59,7 @@ export function HowToBookProcess({ className }: { className?: string }) {
                             How We <span className="text-gradient-brand">Work</span>
                         </>
                     }
-                    subtitle="Your complete journey from registration to receiving certified food safety test reports"
+                    subtitle="Our platform guides you through every step, from selecting the appropriate testing parameters to receiving accredited laboratory reports."
                     className="mb-16 md:mb-20 justify-start"
                 />
 
