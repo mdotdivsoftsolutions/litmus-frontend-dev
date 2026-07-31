@@ -69,7 +69,7 @@ const actions = [
     cardBg: "bg-slate-50",
     border: "border-slate-200",
     hoverShadow: "hover:shadow-md hover:bg-white hover:border-slate-300",
-    href: "https://wa.me/919876543210",
+    href: WHATSAPP_URL,
     target: "_blank",
   },
 ];

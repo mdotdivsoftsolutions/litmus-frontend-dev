@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
 import { SectionHeader } from "./SectionHeader";
 import { cn } from "@/lib/utils";
+import { WHATSAPP_URL } from "@/lib/constants";
 
 const faqs = [
   {
@@ -143,7 +144,7 @@ export function FAQ() {
                 typically respond within 2 hours.
               </p>
               <a
-                href="https://wa.me/919999999999"
+                href={WHATSAPP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[#f06c00] to-[#ff9a3c] px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-200 hover:shadow-lg hover:shadow-orange-300 transition-all duration-200 hover:-translate-y-0.5"
