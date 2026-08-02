@@ -8,7 +8,7 @@ const mockCertificates = [
     title: "Food Label Review",
     subtitle: "Starting @ ₹1000",
     description: "Ensure your product labels comply with the latest food regulations and industry standards. Our experts review every aspect of your label to help you avoid non-compliance and build consumer trust.",
-    image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&q=80&w=400",
+    image: "/stock_image/WebApp Stock Images/pexels-chokniti-khongchum-1197604-2280547.jpg",
     features: ["FSSAI label compliance review", "Claims and declaration verification", "Regulatory gap assessment & recommendations"]
   },
   {
@@ -16,7 +16,7 @@ const mockCertificates = [
     title: "FSSAI Licensing & Documentation Support",
     subtitle: "Starting @ ₹1500 (Excl. Govt charges)",
     description: "Simplify the licensing process with expert guidance for obtaining, renewing, or modifying FSSAI registrations and License",
-    image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=400",
+    image: "/stock_image/WebApp Stock Images/pexels-edward-jenner-4033023.jpg",
     features: ["New license and renewal support", "Documentation preparation", "Regulatory liaison and guidance"]
   },
   {
@@ -24,7 +24,7 @@ const mockCertificates = [
     title: "Food Safety Audits & Gap Assessments",
     subtitle: "Starting @ ₹3000",
     description: "Evaluate your facility, processes, and food safety systems to identify risks and improve compliance before regulatory or customer audits.",
-    image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&q=80&w=400",
+    image: "/stock_image/WebApp Stock Images/pexels-chokniti-khongchum-1197604-2280547.jpg",
     features: ["GMP, GHP & HACCP assessments", "Compliance gap analysis", "Corrective action recommendations"]
   },
   {
@@ -32,7 +32,7 @@ const mockCertificates = [
     title: "HACCP, GMP & FOSTAC Training",
     subtitle: "Customized Pricing",
     description: "Equip your team with practical food safety knowledge through customized training programs designed for manufacturing, processing, and hospitality businesses.",
-    image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=400",
+    image: "/stock_image/WebApp Stock Images/pexels-edward-jenner-4033023.jpg",
     features: ["Employee and management training", "Practical food safety workshops", "Training certificates and assessment"]
   }
 ];

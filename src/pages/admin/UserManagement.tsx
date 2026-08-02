@@ -13,8 +13,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Eye, Loader2, UserCheck, UserX, MoreVertical, PowerOff, Power, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Eye, Loader2, UserCheck, UserX, MoreVertical, PowerOff, Power, ChevronLeft, ChevronRight, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { CreateUserModal } from "./CreateUserModal";
+import { UserDetailsSheet } from "./UserDetailsSheet";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -25,6 +27,7 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [userToToggle, setUserToToggle] = useState<{id: string, isActive: boolean} | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const { data: response, isLoading } = useQuery({
     queryKey: ["adminUsers"],
@@ -105,6 +108,11 @@ export default function UserManagement() {
             <SelectItem value="inactive">Inactive</SelectItem>
           </SelectContent>
         </Select>
+
+        <Button onClick={() => setIsCreateModalOpen(true)} className="bg-brand-primary hover:bg-brand-primary/90 text-white">
+          <UserPlus className="h-4 w-4 mr-2" />
+          Create User
+        </Button>
       </div>
 
       <Card className="border-0 shadow-sm overflow-auto">
@@ -179,7 +187,7 @@ export default function UserManagement() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setSelectedUser(u)}>
+                          <DropdownMenuItem onClick={() => setSelectedUser(u._id)}>
                             <Eye className="mr-2 h-4 w-4" />
                             <span>View Details</span>
                           </DropdownMenuItem>
@@ -231,75 +239,16 @@ export default function UserManagement() {
         </div>
       )}
 
-      <Sheet open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
-        <SheetContent className="overflow-y-auto">
-          {selectedUser && (
-            <>
-              <SheetHeader>
-                <SheetTitle>{selectedUser.firstName} {selectedUser.lastName}</SheetTitle>
-              </SheetHeader>
-              <div className="mt-6 space-y-4">
-                <div className="text-sm space-y-2">
-                  <p><span className="text-muted-foreground">Email:</span> {selectedUser.email}</p>
-                  <p><span className="text-muted-foreground">Business:</span> {selectedUser.metadata?.businessName || "—"}</p>
-                  <p><span className="text-muted-foreground">FSSAI:</span> {selectedUser.fssaiNumber || "—"}</p>
-                  <p><span className="text-muted-foreground">Mobile:</span> {selectedUser.phone}</p>
-                  <p>
-                    <span className="text-muted-foreground">Status:</span>{" "}
-                    {selectedUser.isActive ? (
-                      <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">Active</Badge>
-                    ) : (
-                      <Badge variant="secondary" className="bg-red-100 text-red-700 hover:bg-red-100">Inactive</Badge>
-                    )}
-                  </p>
-                  <p><span className="text-muted-foreground">Joined:</span> {selectedUser.createdAt ? format(new Date(selectedUser.createdAt), "yyyy-MM-dd") : "N/A"}</p>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <h4 className="font-medium mb-2">Documents</h4>
-                  {!selectedUser.documents || selectedUser.documents.length === 0 ? (
-                    <p className="text-sm text-muted-foreground italic">No documents uploaded</p>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between rounded-lg border p-3">
-                        <span className="text-sm">FSSAI Certificate</span>
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="outline" className="h-7 text-green-600 border-green-200">
-                            <UserCheck className="h-3 w-3 mr-1" />Approve
-                          </Button>
-                          <Button size="sm" variant="outline" className="h-7 text-red-600 border-red-200">
-                            <UserX className="h-3 w-3 mr-1" />Reject
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="border-t pt-4">
-                  <h4 className="font-medium mb-2">Booking History</h4>
-                  <p className="text-sm text-muted-foreground">0 bookings · 0 completed · ₹0 total</p>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline">Verify User</Button>
-                  <Button 
-                    size="sm" 
-                    variant={selectedUser.isActive ? "destructive" : "default"}
-                    onClick={() => handleStatusToggle(selectedUser._id, selectedUser.isActive)}
-                    disabled={statusMutation.isPending}
-                  >
-                    {statusMutation.isPending ? (
-                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                    ) : null}
-                    {selectedUser.isActive ? "Deactivate" : "Activate"}
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      <UserDetailsSheet 
+        userId={selectedUser} 
+        open={!!selectedUser} 
+        onOpenChange={(open) => !open && setSelectedUser(null)} 
+      />
+
+      <CreateUserModal 
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+      />
 
       <ConfirmDialog 
         open={!!userToToggle}
