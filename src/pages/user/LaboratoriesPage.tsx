@@ -76,7 +76,7 @@ export default function LaboratoriesPage() {
             <TableHead>Accreditation</TableHead>
             <TableHead>Rating</TableHead>
             <TableHead>Price From</TableHead>
-            <TableHead></TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -166,7 +166,7 @@ export default function LaboratoriesPage() {
                 <TableHead>Accreditation</TableHead>
                 <TableHead>Rating</TableHead>
                 <TableHead>Price From</TableHead>
-                <TableHead></TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

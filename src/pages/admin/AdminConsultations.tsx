@@ -61,7 +61,7 @@ export default function AdminConsultations() {
               <TableHead>Service</TableHead>
               <TableHead>Source</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

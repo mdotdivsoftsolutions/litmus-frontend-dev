@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api/admin";
@@ -9,22 +10,20 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Eye, Loader2, UserCheck, UserX, MoreVertical, PowerOff, Power, ChevronLeft, ChevronRight, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CreateUserModal } from "./CreateUserModal";
-import { UserDetailsSheet } from "./UserDetailsSheet";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function UserManagement() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [userToToggle, setUserToToggle] = useState<{id: string, isActive: boolean} | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -123,7 +122,7 @@ export default function UserManagement() {
               <TableHead className="hidden sm:table-cell">Mobile</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Joined</TableHead>
-              <TableHead></TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -187,7 +186,7 @@ export default function UserManagement() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setSelectedUser(u._id)}>
+                          <DropdownMenuItem onClick={() => navigate(`/admin/users/${u._id}`)}>
                             <Eye className="mr-2 h-4 w-4" />
                             <span>View Details</span>
                           </DropdownMenuItem>
@@ -238,12 +237,6 @@ export default function UserManagement() {
           </div>
         </div>
       )}
-
-      <UserDetailsSheet 
-        userId={selectedUser} 
-        open={!!selectedUser} 
-        onOpenChange={(open) => !open && setSelectedUser(null)} 
-      />
 
       <CreateUserModal 
         open={isCreateModalOpen}

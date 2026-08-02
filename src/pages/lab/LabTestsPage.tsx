@@ -47,7 +47,7 @@ export default function LabTestsPage() {
                 <TableHead>Price (₹)</TableHead>
                 <TableHead>Offer Price (₹)</TableHead>
                 <TableHead>Rejection Reason</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -157,7 +157,7 @@ export default function AdminBookings() {
             <TableHead className="hidden md:table-cell">Lab</TableHead>
             <TableHead>Payment</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead></TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -234,7 +234,7 @@ export default function AdminBookings() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 max-w-7xl mx-auto">
+    <div className="space-y-6 animate-fade-in pb-20 mx-auto">
       <h1 className="text-2xl font-bold text-foreground">Booking Management</h1>
 
       <div className="flex gap-2">

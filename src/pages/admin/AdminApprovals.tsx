@@ -79,7 +79,7 @@ export default function AdminApprovals() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 max-w-7xl mx-auto">
+    <div className="space-y-6 animate-fade-in pb-20 mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Pending Approvals</h1>
       </div>
@@ -104,7 +104,7 @@ export default function AdminApprovals() {
                     <TableHead>Lab</TableHead>
                     <TableHead>Price (₹)</TableHead>
                     <TableHead>Offer Price (₹)</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -166,7 +166,7 @@ export default function AdminApprovals() {
                     <TableHead>Category</TableHead>
                     <TableHead>Original (₹)</TableHead>
                     <TableHead>Price (₹)</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

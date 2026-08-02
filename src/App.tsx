@@ -44,6 +44,7 @@ import BlogDetailPage from "./pages/user/BlogDetailPage.tsx";
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
 import UserManagement from "./pages/admin/UserManagement.tsx";
+import UserDetailsPage from "./pages/admin/UserDetailsPage.tsx";
 import LabManagement from "./pages/admin/LabManagement.tsx";
 import LabFormPage from "./pages/admin/LabFormPage.tsx";
 import AdminBookings from "./pages/admin/AdminBookings.tsx";
@@ -148,6 +149,7 @@ const App = () => (
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="users" element={<UserManagement />} />
+              <Route path="users/:id" element={<UserDetailsPage />} />
               <Route path="laboratories" element={<LabManagement />} />
               <Route path="laboratories/new" element={<LabFormPage />} />
               <Route path="laboratories/:id" element={<LaboratoryDetailPage />} />

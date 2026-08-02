@@ -93,7 +93,7 @@ export default function AdminPayments() {
             <TableHead className="hidden md:table-cell">Gateway</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Date</TableHead>
-            <TableHead></TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -163,7 +163,7 @@ export default function AdminPayments() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-20">
+    <div className="space-y-6 animate-fade-in mx-auto pb-20">
       <h1 className="text-2xl font-bold text-foreground">Payment & Settlement</h1>
 
       <div className="grid gap-4 sm:grid-cols-3">

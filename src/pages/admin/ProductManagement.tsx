@@ -140,7 +140,7 @@ export default function ProductManagement() {
                 <TableHead>Category</TableHead>
                 <TableHead>Tests</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -329,7 +329,7 @@ export default function ProductManagement() {
                 <input type="checkbox" defaultChecked={testsProduct?.availableTests?.some((pt: any) => pt._id === t._id || pt === t._id)} className="rounded accent-primary" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.method} · {t.typeId?.name || t.type}</p>
+                  <p className="text-xs text-muted-foreground">{t.method} Â· {t.typeId?.name || t.type}</p>
                 </div>
               </label>
             ))}

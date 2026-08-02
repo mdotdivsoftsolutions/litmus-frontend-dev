@@ -53,7 +53,7 @@ export default function PackageManagement() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 max-w-7xl mx-auto">
+    <div className="space-y-6 animate-fade-in pb-20 mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <PackageIcon className="h-6 w-6 text-primary" /> Package Management
@@ -89,7 +89,7 @@ export default function PackageManagement() {
                 <TableHead>TAT</TableHead>
                 <TableHead>Original Price</TableHead>
                 <TableHead>Litmus Price</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -20,7 +20,7 @@ export default function UserDashboard() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Good morning, Rajesh 👋</h1>
+          <h1 className="text-2xl font-bold text-foreground">Good morning, Rajesh ðŸ‘‹</h1>
           <p className="text-muted-foreground">Here's what's happening with your tests today.</p>
         </div>
         <Button asChild className="gap-2 bg-primary hover:bg-primary-deep"><Link to="/dashboard/bookings/new"><Plus className="h-4 w-4" />New Booking</Link></Button>
@@ -52,7 +52,7 @@ export default function UserDashboard() {
           </CardHeader>
           <CardContent>
             <Table>
-              <TableHeader><TableRow className="bg-muted/50"><TableHead>Booking ID</TableHead><TableHead>Product</TableHead><TableHead className="hidden sm:table-cell">Lab</TableHead><TableHead>Status</TableHead><TableHead></TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow className="bg-muted/50"><TableHead>Booking ID</TableHead><TableHead>Product</TableHead><TableHead className="hidden sm:table-cell">Lab</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
               <TableBody>
                 {userBookings.map((b) => (
                   <TableRow key={b.id} className="hover:bg-muted/30">

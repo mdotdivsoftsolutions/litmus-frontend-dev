@@ -148,7 +148,7 @@ export default function AdminSettings() {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in pb-10 max-w-7xl mx-auto">
+    <div className="space-y-6 animate-fade-in pb-10 mx-auto">
       <div className="flex items-center gap-3 mb-6 border-b pb-4">
         <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
           <Settings2 className="h-5 w-5 text-primary" />

@@ -57,7 +57,7 @@ export default function TestManagement() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 max-w-7xl mx-auto">
+    <div className="space-y-6 animate-fade-in pb-20 mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Test Management</h1>
         <Button className="gap-2 bg-primary hover:bg-primary-deep shadow-md shadow-primary/20" asChild>
@@ -119,7 +119,7 @@ export default function TestManagement() {
                 <TableHead>Parameters</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Offer Price</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -117,7 +117,7 @@ export default function LabManagement() {
               <TableHead>Bookings</TableHead>
               <TableHead>Revenue</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead></TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -251,7 +251,7 @@ export default function LabManagement() {
                       {selectedLab.reviews && selectedLab.reviews.length > 0 
                         ? (selectedLab.reviews.reduce((acc: number, rev: any) => acc + rev.rating, 0) / selectedLab.reviews.length).toFixed(1) 
                         : "New"} 
-                      <span className="text-yellow-500 ml-1">★</span>
+                      <span className="text-yellow-500 ml-1">â˜…</span>
                     </p>
                   </div>
                   <div className="rounded-lg border border-border p-4 bg-background shadow-sm">

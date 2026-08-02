@@ -56,7 +56,7 @@ export default function BookingHistoryPage() {
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Amount</TableHead>
-              <TableHead></TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

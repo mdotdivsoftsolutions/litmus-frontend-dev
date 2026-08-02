@@ -46,7 +46,7 @@ export default function LabPackagesPage() {
                 <TableHead>Original (₹)</TableHead>
                 <TableHead>Litmus Price (₹)</TableHead>
                 <TableHead>Rejection Reason</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

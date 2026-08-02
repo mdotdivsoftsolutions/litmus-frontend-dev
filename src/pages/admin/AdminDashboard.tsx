@@ -199,7 +199,7 @@ export default function AdminDashboard() {
         </CardHeader>
         <CardContent>
           <Table>
-            <TableHeader><TableRow className="bg-muted/50"><TableHead>Booking ID</TableHead><TableHead>User</TableHead><TableHead>Product</TableHead><TableHead>Amount</TableHead><TableHead>Status</TableHead><TableHead></TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow className="bg-muted/50"><TableHead>Booking ID</TableHead><TableHead>User</TableHead><TableHead>Product</TableHead><TableHead>Amount</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
             <TableBody>
               {pendingBookings.map((b: any) => (
                 <TableRow key={b._id} className="hover:bg-muted/30">

@@ -760,7 +760,7 @@ export default function LabFormPage() {
                     {formData.expertiseArea.map((exp, i) => (
                       <Badge key={i} variant="secondary" className="px-3 py-1 text-sm flex items-center gap-2">
                         {exp}
-                        <button type="button" onClick={() => setFormData(prev => ({ ...prev, expertiseArea: prev.expertiseArea.filter((_, idx) => idx !== i) }))} className="hover:text-destructive">×</button>
+                        <button type="button" onClick={() => setFormData(prev => ({ ...prev, expertiseArea: prev.expertiseArea.filter((_, idx) => idx !== i) }))} className="hover:text-destructive">Ã—</button>
                       </Badge>
                     ))}
                     {formData.expertiseArea.length === 0 && <span className="text-sm text-muted-foreground italic">No expertise areas added.</span>}
@@ -845,7 +845,7 @@ export default function LabFormPage() {
                       <TableHead>Role</TableHead>
                       <TableHead>Rating</TableHead>
                       <TableHead>Verified</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

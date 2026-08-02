@@ -113,7 +113,7 @@ export default function AdminReports() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-20">
+    <div className="space-y-6 animate-fade-in mx-auto pb-20">
       <h1 className="text-2xl font-bold text-foreground">Report Verification</h1>
 
       {/* Summary cards */}
@@ -185,7 +185,7 @@ export default function AdminReports() {
               <TableHead>Lab</TableHead>
               <TableHead>Upload Date</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead></TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
