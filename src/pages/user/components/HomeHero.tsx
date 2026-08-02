@@ -116,9 +116,9 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
             <CarouselContent>
               {slides.map((slide) => (
                 <CarouselItem key={slide.id}>
-                  <div className="bg-white/60 backdrop-blur-xl border border-white rounded-[2rem] shadow-sm overflow-hidden">
+                  <div className="bg-white/60 backdrop-blur-xl border border-white rounded-[2rem] shadow-sm overflow-hidden relative pb-10 lg:pb-0">
                     <div className="flex flex-col lg:flex-row">
-                      <div className="lg:w-1/2 p-10 lg:p-16 flex flex-col justify-center">
+                      <div className="lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
                         <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-slate-100 mb-6 w-max">
                           <span className="h-2 w-2 rounded-full bg-[#E53935] animate-pulse" />
                           <span className="text-xs font-medium text-slate-700">{slide.badge}</span>
@@ -131,20 +131,6 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                         </p>
                         <div className="inline-block bg-brand-primary/10 border border-brand-primary/20 rounded-lg px-3 py-1 mb-6 w-fit">
                           <p className="text-xs font-bold text-brand-primary uppercase tracking-wider">{slide.offer}</p>
-                        </div>
-                        
-                        {/* Navigation Dots */}
-                        <div className="flex items-center gap-2 mt-4 lg:mt-8">
-                          {slides.map((_, index) => (
-                            <button
-                              key={index}
-                              className={`h-2.5 rounded-full transition-all duration-300 ${
-                                current === index ? "bg-[#0369a1] w-8" : "bg-slate-200 hover:bg-slate-300 w-2.5"
-                              }`}
-                              onClick={() => api?.scrollTo(index)}
-                              aria-label={`Go to slide ${index + 1}`}
-                            />
-                          ))}
                         </div>
                       </div>
 
@@ -170,6 +156,19 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                           );
                         })}
                       </div>
+                    </div>
+                    {/* Centered Navigation Dots */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-30">
+                      {slides.map((_, index) => (
+                        <button
+                          key={index}
+                          className={`h-2.5 rounded-full transition-all duration-300 ${
+                            current === index ? "bg-[#0369a1] w-8" : "bg-slate-300/80 hover:bg-slate-400 w-2.5"
+                          }`}
+                          onClick={() => api?.scrollTo(index)}
+                          aria-label={`Go to slide ${index + 1}`}
+                        />
+                      ))}
                     </div>
                   </div>
                 </CarouselItem>
