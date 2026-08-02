@@ -99,7 +99,7 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
 
   return (
     <>
-      <section className="relative pt-2 pb-12 md:pt-6 md:pb-20 overflow-hidden bg-slate-50">
+      <section className="relative pt-6 pb-12 md:pt-12 md:pb-20 overflow-hidden bg-[#F6FBFF]">
         <div className="absolute top-0 right-0 w-[500px] h-full md:h-[600px] bg-[#E53935]/10 rounded-full blur-[100px] -translate-y-1/3 translate-x-1/4 pointer-events-none" />
         <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
@@ -123,10 +123,10 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                           <span className="h-2 w-2 rounded-full bg-[#E53935] animate-pulse" />
                           <span className="text-xs font-medium text-slate-700">{slide.badge}</span>
                         </div>
-                        <h1 className="text-2xl sm:text-[36px] font-bold text-slate-800 mb-6 tracking-tight leading-[45px]">
+                        <h1 className="text-2xl sm:text-[36px] font-bold text-slate-800 mb-6 tracking-tight leading-[45px] animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
                           {slide.title}
                         </h1>
-                        <p className="text-slate-500 text-lg mb-8 max-w-md leading-relaxed">
+                        <p className="text-slate-500 text-base font-inter mb-8 max-w-md leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
                           {slide.description}
                         </p>
                         <div className="inline-block bg-brand-primary/10 border border-brand-primary/20 rounded-lg px-3 py-1 mb-6 w-fit">
@@ -204,7 +204,7 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
             <div className="flex shrink-0 w-full sm:w-auto overflow-x-auto gap-2 pb-1 sm:pb-0 scrollbar-hide">
               <Link
                 to="/tests"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#f97316] px-5 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-[#ea580c] whitespace-nowrap"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full bg-white border-2 border-[#f06c00] px-5 py-3 text-xs font-bold text-[#f06c00] shadow-sm transition hover:bg-orange-50 whitespace-nowrap"
               >
                 Book test
                 <Microscope className="h-4 w-4" />
@@ -220,7 +220,7 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
               </ConsultationBookingModal>
               <Link
                 to="/packages"
-                className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#f97316] px-5 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-[#ea580c] whitespace-nowrap"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full bg-white border-2 border-[#f06c00] px-5 py-3 text-xs font-bold text-[#f06c00] shadow-sm transition hover:bg-orange-50 whitespace-nowrap"
               >
                 book a package
                 <Package className="h-4 w-4" />

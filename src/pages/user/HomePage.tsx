@@ -32,7 +32,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen overflow-x-hidden">
+    <div className="bg-[#F6FBFF] min-h-screen overflow-x-hidden">
 
       {/* ═══════════ HERO & METRICS ═══════════ */}
       <HomeHero
@@ -56,7 +56,7 @@ export default function HomePage() {
       <SpecialityCarousel />
 
       {/* ═══════════ HOW WE WORK (flow chart with icons) ═══════════ */}
-      <HowToBookProcess className="bg-slate-50" />
+      <HowToBookProcess className="bg-[#F6FBFF]" />
 
       {/* ═══════════ TRUSTED PARTNER LABORATORIES ═══════════ */}
       <PartnerLabs />
