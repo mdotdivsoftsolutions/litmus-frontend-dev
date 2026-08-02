@@ -16,7 +16,7 @@ export function PartnerLabs() {
   const labs = response?.data || [];
 
   return (
-    <section className="py-12 md:py-20 bg-white relative overflow-hidden">
+    <section className="py-8 md:py-12 bg-white relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         <SectionHeader
           badge="Network of Trust"

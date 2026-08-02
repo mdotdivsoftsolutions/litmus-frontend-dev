@@ -45,7 +45,7 @@ export function CustomerReviews() {
    const marqueeItems = [...reviews, ...reviews];
 
    return (
-      <section className="py-12 md:py-20 bg-slate-50 relative overflow-hidden min-h-full flex flex-col justify-center">
+      <section className="py-8 md:py-12 bg-slate-50 relative overflow-hidden min-h-full flex flex-col justify-center">
          <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#F06C00]/5 rounded-full blur-[100px] pointer-events-none -translate-x-1/2 translate-y-1/2" />
 
          <div className="max-w-7xl mx-auto px-4 relative z-10 w-full">

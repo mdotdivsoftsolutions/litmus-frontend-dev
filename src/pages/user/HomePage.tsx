@@ -50,7 +50,7 @@ export default function HomePage() {
       />
 
       {/* ═══════════ POPULAR PACKAGES — "Popular Packages Near You" ═══════════ */}
-      <PromoBanner className="pb-20" />
+      <PromoBanner className="pb-12 md:pb-16" />
 
       {/* ═══════════ TESTS BY FOOD CATEGORY (2 rows, 8 cards) ═══════════ */}
       <SpecialityCarousel />

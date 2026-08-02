@@ -28,7 +28,6 @@ interface HeaderProps {
   setShowSearch: (show: boolean) => void;
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
-  showAnnouncement: boolean;
   onLoginClick: () => void;
   onLogoutClick?: () => void;
   user?: any;
@@ -36,7 +35,7 @@ interface HeaderProps {
 
 export function Header({ 
   scrolled, city, setCity, cartCount, showSearch, setShowSearch, 
-  mobileMenuOpen, setMobileMenuOpen, showAnnouncement, onLoginClick, onLogoutClick, user
+  mobileMenuOpen, setMobileMenuOpen, onLoginClick, onLogoutClick, user
 }: HeaderProps) {
   const location = useLocation();
 
@@ -51,13 +50,6 @@ export function Header({
         "sticky top-0 z-50 bg-card border-b border-border transition-shadow duration-200",
         scrolled && "shadow-md"
       )}>
-        {/* Announcement Bar */}
-        {showAnnouncement && (
-          <div className="bg-gradient-brand text-white text-xs py-2 px-4 text-center tracking-wide font-medium">
-            Book a Food Safety Test Now and Get Up to 20% Off your first order!
-          </div>
-        )}
-
         <div className="max-w-7xl mx-auto flex items-center h-16 px-4 gap-3">
           {/* Logo */}
           <Link to="/home" className="flex items-center shrink-0">

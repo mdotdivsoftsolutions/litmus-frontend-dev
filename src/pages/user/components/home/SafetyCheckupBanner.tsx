@@ -50,7 +50,7 @@ export function SafetyCheckupBanner() {
    const next = () => setCurrent(p => (p + 1) % slides.length);
 
    return (
-      <section className="py-12 md:py-20 bg-white">
+      <section className="py-8 md:py-12 bg-white">
          <div className="max-w-6xl mx-auto px-4 relative flex flex-col items-center">
             
             {/* Arrows Outside */}

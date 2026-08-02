@@ -64,7 +64,7 @@ export function SpecialityCarousel() {
   const categories = response?.data?.data || [];
 
   return (
-    <section className="relative flex min-h-full flex-col justify-center overflow-hidden bg-white py-12 md:py-20">
+    <section className="relative flex min-h-full flex-col justify-center overflow-hidden bg-white py-8 md:py-12">
       <div className="pointer-events-none absolute right-0 top-0 h-[600px] w-[600px] translate-x-1/2 -translate-y-1/2 rounded-full bg-red-50/30 blur-[120px]" />
 
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4">

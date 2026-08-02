@@ -112,7 +112,7 @@ export function FAQ() {
   const toggle = (id: number) => setOpenId((prev) => (prev === id ? null : id));
 
   return (
-    <section className="relative overflow-hidden bg-slate-50 py-16 md:py-24">
+    <section className="relative overflow-hidden bg-slate-50 py-10 md:py-16">
       {/* Background blobs */}
       <div className="pointer-events-none absolute left-0 top-0 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-50/60 blur-[120px]" />
       <div className="pointer-events-none absolute right-0 bottom-0 h-[400px] w-[400px] translate-x-1/3 translate-y-1/3 rounded-full bg-amber-50/60 blur-[100px]" />

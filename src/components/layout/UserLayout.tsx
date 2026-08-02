@@ -19,7 +19,6 @@ export function UserLayout() {
   const [scrolled, setScrolled] = useState(false);
   const [city, setCity] = useState("Chennai");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showAnnouncement] = useState(true);
   const [showSearch, setShowSearch] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
@@ -102,7 +101,6 @@ export function UserLayout() {
           setShowSearch={setShowSearch}
           mobileMenuOpen={mobileMenuOpen}
           setMobileMenuOpen={setMobileMenuOpen}
-          showAnnouncement={showAnnouncement}
           onLoginClick={() => setIsAuthModalOpen(true)}
           onLogoutClick={handleLogout}
           user={user}
