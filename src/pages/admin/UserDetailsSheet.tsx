@@ -164,6 +164,7 @@ export function UserDetailsSheet({ userId, open, onOpenChange }: { userId: strin
                             <TableHead>Item</TableHead>
                             <TableHead>Type</TableHead>
                             <TableHead>Price</TableHead>
+                            <TableHead>Added On</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -176,6 +177,9 @@ export function UserDetailsSheet({ userId, open, onOpenChange }: { userId: strin
                                 <Badge variant="outline">{item.itemType}</Badge>
                               </TableCell>
                               <TableCell>{formatCurrency(item.price)}</TableCell>
+                              <TableCell>
+                                {item.createdAt ? format(new Date(item.createdAt), "MMM d, yyyy HH:mm") : "N/A"}
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
