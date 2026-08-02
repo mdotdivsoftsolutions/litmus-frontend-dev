@@ -183,7 +183,7 @@ export const HomeTests = ({ activeTab, setActiveTab, cartItems, addToCart, remov
 
   return (
     <>
-      <section className="pt-16 pb-10  relative overflow-hidden bg-slate-50">
+      <section className="pt-8 lg:pt-16 pb-10 relative overflow-hidden bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 relative z-10 w-full">
           <SectionHeader
             title={

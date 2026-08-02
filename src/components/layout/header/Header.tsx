@@ -148,7 +148,7 @@ export function Header({
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-9 w-9 hidden sm:flex hover:bg-transparent">
                     <Avatar className="h-7 w-7">
-                      <AvatarFallback className="bg-gradient-brand text-primary-foreground text-xs font-bold">{getInitials()}</AvatarFallback>
+                      <AvatarFallback className="bg-transparent text-slate-800 border border-slate-200 text-xs font-bold">{getInitials()}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
@@ -265,8 +265,8 @@ export function Header({
         ) : (
           <div className="px-4 py-5 border-t border-border mb-14 space-y-4">
             <div className="flex items-center gap-3 px-2">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-gradient-brand text-primary-foreground font-bold">{getInitials()}</AvatarFallback>
+              <Avatar className="h-10 w-10 ring-2 ring-slate-100 shadow-sm">
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold">{getInitials()}</AvatarFallback>
               </Avatar>
               <div className="overflow-hidden">
                 <p className="text-sm font-bold text-foreground truncate">{user.firstName} {user.lastName}</p>

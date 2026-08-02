@@ -116,41 +116,41 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
             <CarouselContent>
               {slides.map((slide) => (
                 <CarouselItem key={slide.id}>
-                  <div className="bg-white/60 backdrop-blur-xl border border-white rounded-[2rem] shadow-sm overflow-hidden relative pb-10 lg:pb-0">
-                    <div className="flex flex-col lg:flex-row">
-                      <div className="lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
-                        <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-slate-100 mb-6 w-max">
+                  <div className="bg-white/60 backdrop-blur-xl border border-white rounded-[2rem] shadow-sm overflow-hidden relative pb-8 lg:pb-0 h-full flex flex-col">
+                    <div className="flex flex-col lg:flex-row flex-1">
+                      <div className="lg:w-1/2 px-5 pt-6 pb-2 lg:p-12 flex flex-col justify-center">
+                        <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-slate-100 mb-3 lg:mb-6 w-max">
                           <span className="h-2 w-2 rounded-full bg-[#E53935] animate-pulse" />
                           <span className="text-xs font-medium text-slate-700">{slide.badge}</span>
                         </div>
-                        <h1 className="text-2xl sm:text-[36px] font-bold text-slate-800 mb-6 tracking-tight leading-[45px] animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+                        <h1 className="text-3xl sm:text-[36px] font-bold text-slate-800 mb-3 lg:mb-6 tracking-tight leading-[1.2] lg:leading-[45px] animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
                           {slide.title}
                         </h1>
-                        <p className="text-slate-500 text-base font-inter mb-8 max-w-md leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                        <p className="text-slate-500 text-sm sm:text-base font-inter mb-4 lg:mb-8 max-w-md leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
                           {slide.description}
                         </p>
-                        <div className="inline-block bg-brand-primary/10 border border-brand-primary/20 rounded-lg px-3 py-1 mb-6 w-fit">
+                        <div className="inline-block bg-brand-primary/10 border border-brand-primary/20 rounded-lg px-3 py-1 mb-2 lg:mb-6 w-fit">
                           <p className="text-xs font-bold text-brand-primary uppercase tracking-wider">{slide.offer}</p>
                         </div>
                       </div>
 
-                      <div className="lg:w-1/2 relative bg-gradient-to-br from-red-50/50 to-orange-50/50 p-8 flex items-center justify-center border-l border-white/40">
+                      <div className="lg:w-1/2 relative bg-gradient-to-br from-red-50/50 to-orange-50/50 p-4 lg:p-8 flex flex-1 items-center justify-center border-t lg:border-t-0 lg:border-l border-white/40">
                         <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px]" />
                         <img
                           src={slide.image}
                           alt={slide.imageAlt}
-                          className="relative z-10 w-full max-w-[500px] aspect-[4/3] object-cover rounded-[2rem] shadow-lg border-[6px] border-white hover:scale-105 transition-transform duration-700"
+                          className="relative z-10 w-full max-w-[500px] aspect-[4/3] object-cover rounded-[1.5rem] lg:rounded-[2rem] shadow-lg border-[4px] lg:border-[6px] border-white hover:scale-105 transition-transform duration-700"
                         />
                         {slide.floatingBadges.map((badge, idx) => {
                           const Icon = badge.icon;
                           return (
-                            <div key={idx} className={`absolute ${badge.position} bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-white flex items-center gap-3 z-20 ${badge.animation}`}>
-                              <div className={`h-10 w-10 ${badge.iconBg} rounded-xl flex items-center justify-center`}>
-                                <Icon className={`h-5 w-5 ${badge.iconColor}`} />
+                            <div key={idx} className={`absolute ${badge.position} bg-white/90 backdrop-blur-md p-3 lg:p-4 rounded-xl lg:rounded-2xl shadow-sm border border-white flex items-center gap-2 lg:gap-3 z-20 ${badge.animation}`}>
+                              <div className={`h-8 w-8 lg:h-10 lg:w-10 ${badge.iconBg} rounded-lg lg:rounded-xl flex items-center justify-center`}>
+                                <Icon className={`h-4 w-4 lg:h-5 lg:w-5 ${badge.iconColor}`} />
                               </div>
                               <div>
-                                <p className="text-xs font-medium text-slate-800">{badge.title}</p>
-                                <p className="text-[10px] text-slate-500">{badge.subtitle}</p>
+                                <p className="text-[10px] lg:text-xs font-medium text-slate-800">{badge.title}</p>
+                                <p className="text-[8px] lg:text-[10px] text-slate-500">{badge.subtitle}</p>
                               </div>
                             </div>
                           );
@@ -178,9 +178,9 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
         </div>
       </section>
 
-      <section className="relative z-20 max-w-5xl mx-auto px-4 -mt-10 sm:-mt-10 mb-12">
-        <div className="bg-white rounded-full p-2.5 sm:p-3 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100">
-          <div className="flex flex-col sm:flex-row items-center gap-3">
+      <section className="relative z-20 max-w-5xl mx-auto px-4 -mt-10 sm:-mt-10 mb-6 lg:mb-12">
+        <div className="bg-white rounded-3xl sm:rounded-full p-4 sm:p-3 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-3">
             <form 
               className="relative min-w-0 flex-1 flex w-full"
               onSubmit={(e) => {

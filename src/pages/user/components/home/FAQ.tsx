@@ -166,7 +166,7 @@ export function FAQ() {
               ].map((stat) => (
                 <div
                   key={stat.label}
-                  className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-3 text-center"
+                  className="rounded-xl border border-slate-100 bg-white shadow-sm px-3 py-3 text-center transition-shadow hover:shadow-md"
                 >
                   <p className="text-base font-black text-gradient-brand">
                     {stat.value}
