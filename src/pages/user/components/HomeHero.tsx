@@ -116,17 +116,20 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
             <CarouselContent>
               {slides.map((slide) => (
                 <CarouselItem key={slide.id}>
-                  <div className="bg-white/60 backdrop-blur-xl border border-white rounded-[2rem] shadow-sm overflow-hidden relative pb-8 lg:pb-0 h-full flex flex-col">
-                    <div className="flex flex-col lg:flex-row flex-1">
+                  <div 
+                    className="border border-white/80 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative pb-8 lg:pb-0 h-full flex flex-col bg-cover bg-center"
+                    style={{ backgroundImage: `linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.85) 100%), url(${slide.image})` }}
+                  >
+                    <div className="flex flex-col lg:flex-row flex-1 relative z-10 backdrop-blur-[4px]">
                       <div className="lg:w-1/2 px-5 pt-6 pb-2 lg:p-12 flex flex-col justify-center">
-                        <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-slate-100 mb-3 lg:mb-6 w-max">
+                        <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-slate-100/50 mb-3 lg:mb-6 w-max">
                           <span className="h-2 w-2 rounded-full bg-[#E53935] animate-pulse" />
                           <span className="text-xs font-medium text-slate-700">{slide.badge}</span>
                         </div>
                         <h1 className="text-3xl sm:text-[36px] font-bold text-slate-800 mb-3 lg:mb-6 tracking-tight leading-[1.2] lg:leading-[45px] animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
                           {slide.title}
                         </h1>
-                        <p className="text-slate-500 text-sm sm:text-base font-inter mb-4 lg:mb-8 max-w-md leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                        <p className="text-slate-600 font-medium text-sm sm:text-base font-inter mb-4 lg:mb-8 max-w-md leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
                           {slide.description}
                         </p>
                         <div className="inline-block bg-brand-primary/10 border border-brand-primary/20 rounded-lg px-3 py-1 mb-2 lg:mb-6 w-fit">
@@ -134,8 +137,7 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
                         </div>
                       </div>
 
-                      <div className="lg:w-1/2 relative bg-gradient-to-br from-red-50/50 to-orange-50/50 p-4 lg:p-8 flex flex-1 items-center justify-center border-t lg:border-t-0 lg:border-l border-white/40">
-                        <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px]" />
+                      <div className="lg:w-1/2 relative p-4 lg:p-8 flex flex-1 items-center justify-center border-t lg:border-t-0 lg:border-l border-white/40">
                         <img
                           src={slide.image}
                           alt={slide.imageAlt}
