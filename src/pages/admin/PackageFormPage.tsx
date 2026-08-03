@@ -1,4 +1,4 @@
-import { useEffect } from"react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate, useParams } from"react-router-dom";
 import { useForm, useFieldArray } from"react-hook-form";
 import { zodResolver } from"@hookform/resolvers/zod";
@@ -11,12 +11,13 @@ import { Textarea } from"@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from"@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from"@/components/ui/select";
 import { Checkbox } from"@/components/ui/checkbox";
-import { ArrowLeft, Save, Loader2, Plus, Trash2, Package as PackageIcon } from"lucide-react";
-import { toast } from"sonner";
-import { packageApi } from"@/lib/api/package";
-import { categoryApi } from"@/lib/api/category";
-import { testApi } from"@/lib/api/test";
-import { tagApi } from"@/lib/api/tag";
+import { ArrowLeft, Save, Loader2, Plus, Trash2, Package as PackageIcon, Upload, ImageIcon } from "lucide-react";
+import { toast } from "sonner";
+import { packageApi } from "@/lib/api/package";
+import { categoryApi } from "@/lib/api/category";
+import { testApi } from "@/lib/api/test";
+import { tagApi } from "@/lib/api/tag";
+import { uploadApi } from "@/lib/api/uploadApi";
 
 const packageSchema = z.object({
  name: z.string().min(3,"Name must be at least 3 characters"),
@@ -34,6 +35,7 @@ const packageSchema = z.object({
  features: z.array(z.object({
  value: z.string().min(1,"Feature cannot be empty")
  })).optional(),
+ image: z.string().optional(),
 });
 
 type PackageFormValues = z.infer<typeof packageSchema>;
@@ -42,6 +44,8 @@ export default function PackageFormPage() {
  const { id } = useParams();
  const navigate = useNavigate();
  const queryClient = useQueryClient();
+ const fileInputRef = useRef<HTMLInputElement>(null);
+ const [isUploading, setIsUploading] = useState(false);
  const isEditing = !!id;
 
  const form = useForm<PackageFormValues>({
@@ -60,6 +64,7 @@ export default function PackageFormPage() {
  tat:"",
  tag:"",
  features: [],
+ image: "",
  },
  });
 
@@ -111,6 +116,7 @@ export default function PackageFormPage() {
  features: p.features && p.features.length > 0 
  ? p.features.map((f: string) => ({ value: f })) 
  : [],
+ image: p.image || p.imageUrl || "",
  });
  }
  }, [packageData, form]);
@@ -118,6 +124,35 @@ export default function PackageFormPage() {
  const selectedTests = form.watch("tests");
  const discountType = form.watch("discountType");
  const discountValue = form.watch("discountValue");
+
+ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const res = await uploadApi.uploadFile(file);
+      if (res?.data?.url) {
+        form.setValue("image", res.data.url, { shouldValidate: true });
+        toast.success("Image uploaded successfully");
+      } else if (res?.url) {
+        form.setValue("image", res.url, { shouldValidate: true });
+        toast.success("Image uploaded successfully");
+      }
+    } catch (error) {
+      toast.error("Failed to upload image");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
  // Auto-calculate MRP and Test Count
  useEffect(() => {
@@ -302,6 +337,71 @@ export default function PackageFormPage() {
  </FormItem>
  )}
  />
+
+ <FormField
+            control={form.control}
+            name="image"
+            render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Package Image</FormLabel>
+                <FormControl>
+                  <div className="flex flex-col sm:flex-row gap-6 items-start mt-2">
+                    <div className="h-40 w-40 shrink-0 rounded-xl border border-dashed border-border bg-muted/50 flex flex-col items-center justify-center overflow-hidden relative">
+                      {field.value ? (
+                        <img src={field.value} alt="Package Preview" className="h-full w-full object-cover" />
+                      ) : (
+                        <>
+                          <ImageIcon className="h-8 w-8 text-muted-foreground mb-2 opacity-50" />
+                          <span className="text-xs text-muted-foreground font-medium">No image</span>
+                        </>
+                      )}
+                      {isUploading && (
+                        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+                          <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="space-y-3 flex-1">
+                      <p className="text-sm text-muted-foreground">
+                        Upload an image that visually represents this package.
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                      />
+                      <div className="flex gap-2">
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading}
+                          className="gap-2"
+                        >
+                          <Upload className="h-4 w-4" />
+                          {isUploading ? "Uploading..." : field.value ? "Change Image" : "Upload Image"}
+                        </Button>
+                        {field.value && (
+                          <Button 
+                            type="button"
+                            variant="ghost" 
+                            onClick={() => form.setValue("image", "", { shouldValidate: true })} 
+                            className="text-destructive hover:text-destructive"
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
  {selectedCategoryId && testsData?.data && (
  <FormField
