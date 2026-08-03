@@ -214,7 +214,7 @@ export function HomeHero({ searchQuery, setSearchQuery }: HomeHeroProps) {
               <ConsultationBookingModal serviceName="General Consultation" source="Home Hero">
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#0369a1] px-5 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-[#075985] whitespace-nowrap"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-action px-5 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-brand-action-hover whitespace-nowrap"
                 >
                   Book free consultation
                   <Ticket className="h-4 w-4" />

@@ -88,6 +88,8 @@ export default {
           "card-from": "var(--brand-card-from)",
           "card-to": "var(--brand-card-to)",
           "card-deep": "var(--brand-card-deep)",
+          action: "var(--brand-action)",
+          "action-hover": "var(--brand-action-hover)",
         },
         status: {
           pending: "hsl(var(--status-pending))",

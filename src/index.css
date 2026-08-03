@@ -101,6 +101,8 @@
     /* RGB tuples for shadows (space-separated) */
     --brand-primary-rgb: 240 108 0;
     --brand-card-rgb: 0 78 100;
+    --brand-action: #0369a1;
+    --brand-action-hover: #075985;
   }
 
   .dark {
@@ -142,6 +144,8 @@
     --brand-card-deep: #003d52;
     --brand-primary-rgb: 240 108 0;
     --brand-card-rgb: 0 78 100;
+    --brand-action: #0369a1;
+    --brand-action-hover: #075985;
   }
 }
 

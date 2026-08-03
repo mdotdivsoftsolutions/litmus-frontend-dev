@@ -31,9 +31,9 @@ export const TestCard = ({ p, t, className }: TestCardProps) => {
     if (!mrp || mrp <= price) return 0;
     return Math.round(((mrp - price) / mrp) * 100);
   };
-  
+
   const id = t?._id || p?.id || "unknown";
-  
+
   // Determine if this is a package or a test
   const isPackage = t && (t.name !== undefined || t.category !== undefined);
   const isTest = t && t.testName !== undefined;
@@ -41,34 +41,34 @@ export const TestCard = ({ p, t, className }: TestCardProps) => {
 
   const name = t?.testName || t?.name || p?.name || "Food Safety Test";
   const parametersCount = t?.metadata?.parameters?.length || t?.testCount || p?.testCount || 0;
-  
+
   // For tests offerPrice is the selling price, price is MRP. For packages, price is selling price, mrp is MRP.
   const price = t?.offerPrice ? t.offerPrice : (t?.price || (p?.testCount ? p.testCount * 150 + 999 : 999));
   const mrp = isTest ? t?.price : (t?.mrp || (p?.testCount ? p.testCount * 260 + 1500 : 1500));
-  
+
   const discount = discountPct(price, mrp);
   const turnAroundTime = t?.turnAroundTime || t?.tat || "2-3 Days";
-  
+
   const topBadgeLeft = t?.category || "COMPLIANCE";
   const topBadgeRight = t?.isPopular ? "MOST POPULAR" : (t?.tag || (p as any)?.badge);
-  
+
   const description = t?.description || "Essential testing parameters for small-scale food manufacturers and businesses.";
-  const features = t?.metadata?.parameters?.slice(0, 4) || t?.features?.slice(0,4) || [
+  const features = t?.metadata?.parameters?.slice(0, 4) || t?.features?.slice(0, 4) || [
     "Microbial Load Analysis",
     "Moisture & Ash Content",
     "Heavy Metal Screening",
     "Shelf Life Prediction"
   ];
-  
+
   // Support for custom icons/images
-  const iconUrl = t?.imageUrl || t?.icon;
+  const iconUrl = t?.image || t?.imageUrl || t?.icon;
 
   const { data: cartResponse } = useQuery({ queryKey: ['cart'], queryFn: cartApi.getCart });
   const cartItems = cartResponse?.data?.items || [];
-  
+
   // Determine if this item is in the cart
-  const isInCart = cartItems.some((item: any) => 
-    (item.itemType === 'TEST' && item.testId?._id === id) || 
+  const isInCart = cartItems.some((item: any) =>
+    (item.itemType === 'TEST' && item.testId?._id === id) ||
     (item.itemType === 'PACKAGE' && item.packageId?._id === id)
   );
 
@@ -191,7 +191,7 @@ export const TestCard = ({ p, t, className }: TestCardProps) => {
             )}
           </div>
         </div>
-        
+
         <button
           type="button"
           onClick={handleAddToCart}
@@ -200,7 +200,7 @@ export const TestCard = ({ p, t, className }: TestCardProps) => {
             "inline-flex items-center justify-center h-10 px-5 rounded-lg text-white font-bold text-xs shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all gap-1.5",
             isInCart
               ? "bg-[#e8f6fa] text-brand-card-from border border-brand-card-to/25 cursor-not-allowed shadow-none hover:shadow-none hover:translate-y-0 text-brand-card-to"
-              : "bg-gradient-to-r from-brand-card-from to-brand-card-to"
+              : "bg-brand-action hover:bg-brand-action-hover"
           )}
         >
           {addMutation.isPending && <Loader2 className="h-3 w-3 animate-spin" />}
