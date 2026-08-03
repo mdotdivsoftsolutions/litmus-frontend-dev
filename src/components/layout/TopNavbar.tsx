@@ -3,8 +3,10 @@ import { Bell, ChevronRight, Menu, LogOut, User, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { notifications } from "@/lib/placeholder-data";
-
+// Mock notifications for now
+const notifications = [
+  { id: 1, title: "New Booking", message: "A new booking has been placed.", time: "2m ago", read: false },
+];
 interface TopNavbarProps {
   onMenuClick: () => void;
   user?: any;
