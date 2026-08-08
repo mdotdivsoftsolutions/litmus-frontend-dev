@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from"@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from"@/components/ui/select";
 import { Checkbox } from"@/components/ui/checkbox";
 import { ArrowLeft, Save, Loader2, Plus, Trash2, Package as PackageIcon, Upload, ImageIcon } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { packageApi } from "@/lib/api/package";
 import { categoryApi } from "@/lib/api/category";
@@ -218,8 +219,15 @@ export default function PackageFormPage() {
 
  if (isEditing && isLoadingPackage) {
  return (
- <div className="flex items-center justify-center h-64">
- <Loader2 className="h-8 w-8 animate-spin text-primary"/>
+ <div className="space-y-6 pb-20 mx-auto">
+ <div className="flex items-center gap-4">
+ <Skeleton className="h-10 w-10 rounded-full" />
+ <div className="space-y-2">
+ <Skeleton className="h-8 w-48" />
+ <Skeleton className="h-4 w-64" />
+ </div>
+ </div>
+ <Skeleton className="h-[600px] w-full rounded-xl" />
  </div>
  );
  }

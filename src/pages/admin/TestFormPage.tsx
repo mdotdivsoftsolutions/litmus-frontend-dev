@@ -9,6 +9,7 @@ import { Textarea } from"@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from"@/components/ui/select";
 import { Switch } from"@/components/ui/switch";
 import { ArrowLeft, CheckCircle2, Beaker, FileText, Plus, Trash2 } from"lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from"sonner";
 import { cn } from"@/lib/utils";
 import { testApi } from"@/lib/api/test";
@@ -207,7 +208,22 @@ export default function TestFormPage() {
  };
 
  if (isLoading) {
- return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading test details...</div>;
+ return (
+ <div className="space-y-6 pb-20 mx-auto">
+ <div className="flex items-center gap-4">
+ <Skeleton className="h-10 w-10 rounded-full" />
+ <div className="space-y-2">
+ <Skeleton className="h-8 w-48" />
+ <Skeleton className="h-4 w-64" />
+ </div>
+ </div>
+ <div className="flex w-full mb-8 border-b border-border gap-4">
+ <Skeleton className="h-10 w-32" />
+ <Skeleton className="h-10 w-48" />
+ </div>
+ <Skeleton className="h-[400px] w-full rounded-xl" />
+ </div>
+ );
  }
 
  return (

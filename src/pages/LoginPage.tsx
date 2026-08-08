@@ -23,16 +23,14 @@ export default function LoginPage({ role }: LoginPageProps) {
 
     try {
       const response = await authApi.login({ email, password });
-      toast.success("Login successful");
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-      
       const userRole = response.data?.user?.role;
       if (userRole === "ADMIN") {
+        toast.success("Login successful");
+        queryClient.invalidateQueries({ queryKey: ["userProfile"] });
         navigate("/admin/dashboard");
-      } else if (userRole === "LAB") {
-        navigate("/lab/dashboard");
       } else {
-        navigate("/");
+        toast.error("Unauthorized access: This portal is for administrators only.");
+        // Log them out from backend if necessary, or just don't navigate
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Invalid credentials");

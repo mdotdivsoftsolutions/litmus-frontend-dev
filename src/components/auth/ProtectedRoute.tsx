@@ -45,7 +45,11 @@ export const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Send them to their appropriate dashboard/home
     if (user.role === "ADMIN") return <Navigate to="/admin/dashboard" replace />;
-    if (user.role === "LAB") return <Navigate to="/lab/dashboard" replace />;
+    if (user.role === "LAB" || user.role === "USER") {
+      // Clear local storage/session if needed, or just redirect to login
+      // Since this is the admin frontend, we should redirect to admin login
+      return <Navigate to="/admin/login" replace />;
+    }
     return <Navigate to="/" replace />;
   }
 
