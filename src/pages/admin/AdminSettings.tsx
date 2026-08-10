@@ -7,13 +7,14 @@ import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, Plus, Trash2, Tag as TagIcon, Settings2, FlaskConical, Truck, Microscope } from "lucide-react";
+import { Loader2, Plus, Trash2, Tag as TagIcon, Settings2, FlaskConical, Truck, Microscope, Briefcase, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 import { tagApi } from "@/lib/api/tag";
 import { testTypeApi } from "@/lib/api/testType";
 import { logisticsApi } from "@/lib/api/logistics";
 import { infrastructureApi } from "@/lib/api/infrastructure";
 import { activityStatusApi } from "@/lib/api/activityStatus";
+import { apiClient } from "@/lib/api/axios";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -40,12 +41,16 @@ export default function AdminSettings() {
   const { data: logisticsData, isLoading: isLoadingLogistics } = useQuery({ queryKey: ["adminLogistics"], queryFn: () => logisticsApi.getLogisticsOptions() });
   const { data: infrastructureData, isLoading: isLoadingInfrastructure } = useQuery({ queryKey: ["adminInfrastructure"], queryFn: () => infrastructureApi.getInfrastructureOptions() });
   const { data: activityStatusData, isLoading: isLoadingActivityStatus } = useQuery({ queryKey: ["adminActivityStatus"], queryFn: () => activityStatusApi.getActivityStatuses() });
+  const { data: departmentsData, isLoading: isLoadingDepartments } = useQuery({ queryKey: ["adminDepartments"], queryFn: () => apiClient.get('/options?category=DEPARTMENT').then(res => res.data) });
+  const { data: designationsData, isLoading: isLoadingDesignations } = useQuery({ queryKey: ["adminDesignations"], queryFn: () => apiClient.get('/options?category=DESIGNATION').then(res => res.data) });
 
   const tagForm = useForm<z.infer<typeof baseSchema>>({ resolver: zodResolver(baseSchema), defaultValues: { name: "" } });
   const testTypeForm = useForm<z.infer<typeof baseSchema>>({ resolver: zodResolver(baseSchema), defaultValues: { name: "" } });
   const logisticsForm = useForm<z.infer<typeof baseSchema>>({ resolver: zodResolver(baseSchema), defaultValues: { name: "" } });
   const activityStatusForm = useForm<z.infer<typeof baseSchema>>({ resolver: zodResolver(baseSchema), defaultValues: { name: "" } });
   const infrastructureForm = useForm<z.infer<typeof infraSchema>>({ resolver: zodResolver(infraSchema), defaultValues: { title: "", description: "", icon: "microscope" } });
+  const departmentForm = useForm<z.infer<typeof baseSchema>>({ resolver: zodResolver(baseSchema), defaultValues: { name: "" } });
+  const designationForm = useForm<z.infer<typeof baseSchema>>({ resolver: zodResolver(baseSchema), defaultValues: { name: "" } });
 
   // Mutations
   const createTagMutation = useMutation({
@@ -133,11 +138,46 @@ export default function AdminSettings() {
     onError: (error: any) => toast.error(error.response?.data?.message || "Failed to delete activity status")
   });
 
+  const createDepartmentMutation = useMutation({
+    mutationFn: (data: { name: string }) => apiClient.post('/options', { category: 'DEPARTMENT', value: data.name }),
+    onSuccess: () => {
+      toast.success("Department created successfully");
+      queryClient.invalidateQueries({ queryKey: ["adminDepartments"] });
+      departmentForm.reset();
+      setIsSheetOpen(false);
+    },
+    onError: (error: any) => toast.error(error.response?.data?.message || "Failed to create department")
+  });
+
+  const deleteOptionMutation = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/options/${id}`),
+    onSuccess: (_, variables, context: any) => { 
+      toast.success("Option deleted successfully"); 
+      queryClient.invalidateQueries({ queryKey: ["adminDepartments"] }); 
+      queryClient.invalidateQueries({ queryKey: ["adminDesignations"] });
+      setDeleteTarget(null); 
+    },
+    onError: (error: any) => toast.error(error.response?.data?.message || "Failed to delete option")
+  });
+
+  const createDesignationMutation = useMutation({
+    mutationFn: (data: { name: string }) => apiClient.post('/options', { category: 'DESIGNATION', value: data.name }),
+    onSuccess: () => {
+      toast.success("Designation created successfully");
+      queryClient.invalidateQueries({ queryKey: ["adminDesignations"] });
+      designationForm.reset();
+      setIsSheetOpen(false);
+    },
+    onError: (error: any) => toast.error(error.response?.data?.message || "Failed to create designation")
+  });
+
   const tags = tagsData?.data || [];
   const testTypes = testTypesData?.data || [];
   const logisticsOptions = logisticsData?.data || [];
   const infrastructureOptions = infrastructureData?.data || [];
   const activityStatuses = activityStatusData?.data || [];
+  const departments = departmentsData?.data || [];
+  const designations = designationsData?.data || [];
 
   const sidebarItems = [
     { id: "test-types", label: "Test Types", icon: FlaskConical, desc: "Manage analysis types" },
@@ -145,6 +185,8 @@ export default function AdminSettings() {
     { id: "logistics", label: "Service Logistics", icon: Truck, desc: "Available lab services" },
     { id: "infrastructure", label: "Infrastructure", icon: Microscope, desc: "Standard equipment" },
     { id: "activity-status", label: "Activity Status", icon: Settings2, desc: "Operational states" },
+    { id: "departments", label: "Departments", icon: Briefcase, desc: "Employee departments" },
+    { id: "designations", label: "Designations", icon: BadgeCheck, desc: "Employee roles" },
   ];
 
   return (
@@ -160,7 +202,7 @@ export default function AdminSettings() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div className="md:col-span-1 space-y-2">
+        <div className="md:col-span-1 space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto pr-2 custom-scrollbar">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
@@ -189,6 +231,8 @@ export default function AdminSettings() {
                   {activeTab === "logistics" && "Manage Service Logistics"}
                   {activeTab === "infrastructure" && "Manage Infrastructure Templates"}
                   {activeTab === "activity-status" && "Manage Activity Statuses"}
+                  {activeTab === "departments" && "Manage Departments"}
+                  {activeTab === "designations" && "Manage Designations"}
                 </CardTitle>
                 <CardDescription className="mt-1">
                   {activeTab === "test-types" && "Create types of tests to assign to test protocols."}
@@ -196,6 +240,8 @@ export default function AdminSettings() {
                   {activeTab === "logistics" && "Create dynamic logistics services that laboratories can select."}
                   {activeTab === "infrastructure" && "Define standard laboratory equipment templates."}
                   {activeTab === "activity-status" && "Define standard operating statuses for laboratories."}
+                  {activeTab === "departments" && "Define employee departments for the organization."}
+                  {activeTab === "designations" && "Define employee job designations and titles."}
                 </CardDescription>
               </div>
 
@@ -213,6 +259,8 @@ export default function AdminSettings() {
                       {activeTab === "logistics" && "Add Logistics Service"}
                       {activeTab === "infrastructure" && "Add Infrastructure"}
                       {activeTab === "activity-status" && "Add Activity Status"}
+                      {activeTab === "departments" && "Add Department"}
+                      {activeTab === "designations" && "Add Designation"}
                     </SheetTitle>
                     <SheetDescription>
                       Fill out the details below to add a new entry.
@@ -241,6 +289,32 @@ export default function AdminSettings() {
                           )} />
                           <Button type="submit" className="w-full" disabled={createTagMutation.isPending}>
                             {createTagMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save Tag
+                          </Button>
+                        </form>
+                      </Form>
+                    )}
+
+                    {activeTab === "departments" && (
+                      <Form {...departmentForm}>
+                        <form onSubmit={departmentForm.handleSubmit((d) => createDepartmentMutation.mutate(d as { name: string }))} className="space-y-4">
+                          <FormField control={departmentForm.control} name="name" render={({ field }) => (
+                            <FormItem><FormLabel>Department Name</FormLabel><FormControl><Input placeholder="e.g. Operations" {...field} /></FormControl><FormMessage /></FormItem>
+                          )} />
+                          <Button type="submit" className="w-full" disabled={createDepartmentMutation.isPending}>
+                            {createDepartmentMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save Department
+                          </Button>
+                        </form>
+                      </Form>
+                    )}
+
+                    {activeTab === "designations" && (
+                      <Form {...designationForm}>
+                        <form onSubmit={designationForm.handleSubmit((d) => createDesignationMutation.mutate(d as { name: string }))} className="space-y-4">
+                          <FormField control={designationForm.control} name="name" render={({ field }) => (
+                            <FormItem><FormLabel>Designation Name</FormLabel><FormControl><Input placeholder="e.g. Lab Technician" {...field} /></FormControl><FormMessage /></FormItem>
+                          )} />
+                          <Button type="submit" className="w-full" disabled={createDesignationMutation.isPending}>
+                            {createDesignationMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save Designation
                           </Button>
                         </form>
                       </Form>
@@ -429,6 +503,54 @@ export default function AdminSettings() {
                   )}
                 </div>
               )}
+
+              {activeTab === "departments" && (
+                <div className="relative w-full overflow-y-auto max-h-[calc(100vh-280px)] min-h-[400px]">
+                  {isLoadingDepartments ? <div className="p-8 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div> : (
+                    <Table>
+                      <TableHeader><TableRow><TableHead>Department Name</TableHead><TableHead className="w-[100px] text-right">Actions</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {departments.length === 0 ? (
+                          <TableRow><TableCell colSpan={2} className="text-center py-8 text-muted-foreground">No departments found.</TableCell></TableRow>
+                        ) : departments.map((item: any) => (
+                          <TableRow key={item._id}>
+                            <TableCell className="font-medium flex items-center gap-2"><Briefcase className="h-4 w-4 text-primary" /> {item.value}</TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget({ id: item._id, type: "departments", name: item.value })}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </div>
+              )}
+
+              {activeTab === "designations" && (
+                <div className="relative w-full overflow-y-auto max-h-[calc(100vh-280px)] min-h-[400px]">
+                  {isLoadingDesignations ? <div className="p-8 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div> : (
+                    <Table>
+                      <TableHeader><TableRow><TableHead>Designation Name</TableHead><TableHead className="w-[100px] text-right">Actions</TableHead></TableRow></TableHeader>
+                      <TableBody>
+                        {designations.length === 0 ? (
+                          <TableRow><TableCell colSpan={2} className="text-center py-8 text-muted-foreground">No designations found.</TableCell></TableRow>
+                        ) : designations.map((item: any) => (
+                          <TableRow key={item._id}>
+                            <TableCell className="font-medium flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-primary" /> {item.value}</TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget({ id: item._id, type: "designations", name: item.value })}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -448,6 +570,7 @@ export default function AdminSettings() {
           else if (deleteTarget.type === "logistics") deleteLogisticsMutation.mutate(deleteTarget.id);
           else if (deleteTarget.type === "infrastructure") deleteInfrastructureMutation.mutate(deleteTarget.id);
           else if (deleteTarget.type === "activity-status") deleteActivityStatusMutation.mutate(deleteTarget.id);
+          else if (deleteTarget.type === "departments" || deleteTarget.type === "designations") deleteOptionMutation.mutate(deleteTarget.id);
         }}
       />
     </div>
