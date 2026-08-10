@@ -28,10 +28,11 @@ const userNav = [
 
 const adminNav = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/admin/dashboard" },
-  { label: "Consultations", icon: FileText, href: "/admin/consultations" },
-  { label: "Users", icon: Users, href: "/admin/users" },
-  { label: "Laboratories", icon: Building2, href: "/admin/laboratories" },
-  { label: "Bookings", icon: ClipboardList, href: "/admin/bookings" },
+  { label: "Employees", icon: UserCircle, href: "/admin/employees", permission: "MANAGE_EMPLOYEES" },
+  { label: "Consultations", icon: FileText, href: "/admin/consultations", permission: "VIEW_LEADS" },
+  { label: "Users", icon: Users, href: "/admin/users", permission: "MANAGE_USERS" },
+  { label: "Laboratories", icon: Building2, href: "/admin/laboratories", permission: "MANAGE_LABS" },
+  { label: "Bookings", icon: ClipboardList, href: "/admin/bookings", permission: "VIEW_BOOKINGS" },
   { label: "Categories", icon: Grid3X3, href: "/admin/categories" },
   { label: "Products", icon: ShoppingBag, href: "/admin/products" },
   { label: "Tests", icon: TestTubes, href: "/admin/tests" },
@@ -58,7 +59,33 @@ const subtitleMap = { user: "FOOD TESTING", admin: "ADMIN PANEL", lab: "LAB PORT
 
 export function SidebarNav({ portal, open, onClose, user }: SidebarNavProps) {
   const location = useLocation();
-  const navItems = navMap[portal];
+  
+  // Filter nav items based on user permissions
+  const navItems = navMap[portal].filter((item: any) => {
+    if (portal !== "admin") return true;
+    if (user?.role === "ADMIN") return true; // Super admin sees all
+    
+    // Employee logic
+    if (user?.role === "EMPLOYEE") {
+      // If "VIEW_LEADS" is the ONLY permission, they should probably only see Leads
+      // The user requested: "that relatresd section only show in the side bar"
+      // If the item has a permission, check it.
+      if (item.permission) {
+        return user.permissions?.includes(item.permission);
+      }
+      
+      // If the item doesn't have a specific permission but they have ONLY VIEW_LEADS, hide others
+      // For now, let's say if they have specific permissions, they see items requiring those permissions,
+      // and items with no permission are visible unless we want to hide everything else for 'VIEW_LEADS' only.
+      // Let's implement strict filtering: if an item has NO permission defined, we show it, UNLESS they only have VIEW_LEADS.
+      const hasOnlyLeads = user.permissions?.length === 1 && user.permissions[0] === "VIEW_LEADS";
+      if (hasOnlyLeads && !item.permission && item.label !== "Dashboard") return false;
+
+      return true;
+    }
+    return true;
+  });
+
   const [collapsed, setCollapsed] = useState(false);
 
   const getInitials = () => {
@@ -107,7 +134,7 @@ export function SidebarNav({ portal, open, onClose, user }: SidebarNavProps) {
         </div>
 
         {/* Nav links — contained scroll within sidebar only */}
-        <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-3 space-y-0.5">
+        <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-3 space-y-0.5 scrollbar-hide">
           {navItems.map((item) => {
             const isActive = location.pathname === item.href || 
               (item.href !== "/dashboard" && item.href !== "/admin/dashboard" && item.href !== "/lab/dashboard" && location.pathname.startsWith(item.href));

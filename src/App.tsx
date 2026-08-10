@@ -12,6 +12,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
+import EmployeeManagement from "./pages/admin/EmployeeManagement.tsx";
 import UserManagement from "./pages/admin/UserManagement.tsx";
 import UserDetailsPage from "./pages/admin/UserDetailsPage.tsx";
 import LabManagement from "./pages/admin/LabManagement.tsx";
@@ -63,10 +64,11 @@ const App = () => (
           <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
 
           {/* Admin Portal */}
-          <Route path="/admin" element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={["ADMIN", "EMPLOYEE"]} />}>
             <Route element={<PortalLayout portal="admin" />}>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="employees" element={<EmployeeManagement />} />
               <Route path="users" element={<UserManagement />} />
               <Route path="users/:id" element={<UserDetailsPage />} />
               <Route path="laboratories" element={<LabManagement />} />

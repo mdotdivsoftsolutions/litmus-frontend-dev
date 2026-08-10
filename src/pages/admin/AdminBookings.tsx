@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api/admin";
+import { authApi } from "@/lib/api/auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,13 @@ export default function AdminBookings() {
     queryKey: ["adminBookings"],
     queryFn: adminApi.getBookings,
   });
+
+  const { data: userResponse } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: authApi.getMe,
+  });
+  const user = userResponse?.data;
+  const canViewPricing = user?.role === "ADMIN" || (user?.role === "EMPLOYEE" && user?.permissions?.includes("VIEW_PRICING"));
 
   const { data: labsResponse } = useQuery({
     queryKey: ["adminLabs"],
@@ -155,6 +163,7 @@ export default function AdminBookings() {
             <TableHead>Product</TableHead>
             <TableHead className="hidden md:table-cell">Tests</TableHead>
             <TableHead className="hidden md:table-cell">Lab</TableHead>
+            {canViewPricing && <TableHead>Amount</TableHead>}
             <TableHead>Payment</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
@@ -169,6 +178,7 @@ export default function AdminBookings() {
                 <TableCell><Skeleton className="h-4 w-28" /></TableCell>
                 <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-8 rounded-full" /></TableCell>
                 <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-32" /></TableCell>
+                {canViewPricing && <TableCell><Skeleton className="h-5 w-16" /></TableCell>}
                 <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
                 <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
                 <TableCell><Skeleton className="h-8 w-16 ml-auto rounded-md" /></TableCell>
@@ -192,6 +202,7 @@ export default function AdminBookings() {
                   <TableCell>{b.product}</TableCell>
                   <TableCell className="hidden md:table-cell"><Badge variant="secondary">{b.testsCount}</Badge></TableCell>
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{b.lab}</TableCell>
+                  {canViewPricing && <TableCell className="font-medium">₹{b.amount?.toLocaleString()}</TableCell>}
                   <TableCell><StatusBadge status={b.paymentStatus === "Paid" ? "Approved" : b.paymentStatus === "Refunded" ? "Rejected" : "Pending"} /></TableCell>
                   <TableCell><StatusBadge status={b.status} /></TableCell>
                   <TableCell>
@@ -373,7 +384,7 @@ export default function AdminBookings() {
                       <div key={i} className="rounded-lg border border-border overflow-hidden">
                         <div className="bg-muted/50 px-3 py-2 flex justify-between items-center border-b border-border">
                            <span className="font-semibold text-sm">Item {i+1}: {item.itemType} - {item.packageId?.name || item.testId?.testName || item.testId?.name || "Custom"}</span>
-                           <span className="font-medium text-sm">₹{item.price?.toLocaleString() || 0}</span>
+                           {canViewPricing && <span className="font-medium text-sm">₹{item.price?.toLocaleString() || 0}</span>}
                         </div>
                         <div className="p-3 bg-card space-y-3">
                            {item.samples?.map((sample: any, j: number) => (
