@@ -20,7 +20,12 @@ import {
   BadgeCheck, 
   MapPin, 
   Search,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles,
+  Layers,
+  Building2,
+  Sliders,
+  ChevronRight
 } from "lucide-react";
 import { toast } from "sonner";
 import { tagApi } from "@/lib/api/tag";
@@ -29,10 +34,8 @@ import { logisticsApi } from "@/lib/api/logistics";
 import { infrastructureApi } from "@/lib/api/infrastructure";
 import { activityStatusApi } from "@/lib/api/activityStatus";
 import { apiClient } from "@/lib/api/axios";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { PickupCoverageSettings } from "./PickupCoverageSettings";
@@ -176,7 +179,7 @@ export default function AdminSettings() {
     onSuccess: () => { 
       toast.success("Option deleted successfully"); 
       queryClient.invalidateQueries({ queryKey: ["adminDepartments"] }); 
-      queryClient.invalidateQueries({ queryKey: ["adminDesignations"] });
+      queryClient.invalidateQueries({ queryKey: ["adminDesignations"] }); 
       setDeleteTarget(null); 
     },
     onError: (error: any) => toast.error(error.response?.data?.message || "Failed to delete option")
@@ -201,16 +204,34 @@ export default function AdminSettings() {
   const departments = (departmentsData?.data || []).filter((t: any) => !searchQuery || (t.value && t.value.toLowerCase().includes(searchQuery.toLowerCase())));
   const designations = (designationsData?.data || []).filter((t: any) => !searchQuery || (t.value && t.value.toLowerCase().includes(searchQuery.toLowerCase())));
 
-  const settingsTabs = [
-    { id: "test-types", label: "Test Types", icon: FlaskConical, count: (testTypesData?.data || []).length },
-    { id: "tags", label: "Package Tags", icon: TagIcon, count: (tagsData?.data || []).length },
-    { id: "logistics", label: "Logistics Services", icon: Truck, count: (logisticsData?.data || []).length },
-    { id: "infrastructure", label: "Lab Equipment", icon: Microscope, count: (infrastructureData?.data || []).length },
-    { id: "activity-status", label: "Operational Status", icon: Settings2, count: (activityStatusData?.data || []).length },
-    { id: "departments", label: "Departments", icon: Briefcase, count: (departmentsData?.data || []).length },
-    { id: "designations", label: "Designations", icon: BadgeCheck, count: (designationsData?.data || []).length },
-    { id: "pickup", label: "Pickup Cities", icon: MapPin, count: null },
+  // Navigation menu grouped by domain
+  const settingsSections = [
+    {
+      group: "Catalog & Classifications",
+      items: [
+        { id: "test-types", label: "Test Classifications", icon: FlaskConical, count: (testTypesData?.data || []).length, desc: "Sample & diagnostic test categories" },
+        { id: "tags", label: "Package Tags", icon: TagIcon, count: (tagsData?.data || []).length, desc: "Highlight badges for packages" },
+      ]
+    },
+    {
+      group: "Logistics & Facilities",
+      items: [
+        { id: "logistics", label: "Logistics & Pickup", icon: Truck, count: (logisticsData?.data || []).length, desc: "Sample transport methods" },
+        { id: "infrastructure", label: "Lab Equipment", icon: Microscope, count: (infrastructureData?.data || []).length, desc: "Accredited equipment templates" },
+        { id: "activity-status", label: "Operational Status", icon: Settings2, count: (activityStatusData?.data || []).length, desc: "Workflow states & labels" },
+        { id: "pickup", label: "Pickup Cities", icon: MapPin, count: null, desc: "Direct doorstep pickup zones" },
+      ]
+    },
+    {
+      group: "Organization & Staff",
+      items: [
+        { id: "departments", label: "Departments", icon: Briefcase, count: (departmentsData?.data || []).length, desc: "Internal organizational divisions" },
+        { id: "designations", label: "Staff Designations", icon: BadgeCheck, count: (designationsData?.data || []).length, desc: "Job roles and positions" },
+      ]
+    }
   ];
+
+  const currentTabMeta = settingsSections.flatMap(s => s.items).find(i => i.id === activeTab);
 
   const handleConfirmDelete = () => {
     if (!deleteTarget) return;
@@ -224,7 +245,7 @@ export default function AdminSettings() {
 
   return (
     <div className="w-full space-y-6 animate-fade-in pb-20">
-      {/* Title Bar */}
+      {/* Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Platform Settings</h1>
@@ -234,431 +255,523 @@ export default function AdminSettings() {
         </div>
       </div>
 
-      {/* Tabs Container */}
-      <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setSearchQuery(""); }} className="space-y-4">
-        {/* Full-width Responsive Tabs Bar */}
-        <div className="bg-white p-1.5 rounded-xl border border-slate-200/80 shadow-2xs">
-          <TabsList className="bg-slate-100/80 p-1 rounded-lg flex flex-wrap gap-1 h-auto w-full border-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            {settingsTabs.map((tab) => (
-              <TabsTrigger 
-                key={tab.id} 
-                value={tab.id} 
-                className="gap-2 text-xs py-2 px-3.5 rounded-md font-medium data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-xs transition-all"
-              >
-                <tab.icon className="h-3.5 w-3.5" />
-                <span>{tab.label}</span>
-                {tab.count !== null && (
-                  <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-200/80 text-slate-700 font-bold">
-                    {tab.count}
-                  </span>
-                )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+      {/* 2-Column High-End Settings Architecture */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        
+        {/* Left Navigation Sidebar */}
+        <div className="lg:col-span-4 xl:col-span-3 space-y-4">
+          <Card className="bg-white border border-slate-200/80 shadow-xs rounded-xl overflow-hidden p-2">
+            <div className="space-y-4">
+              {settingsSections.map((section, sIdx) => (
+                <div key={section.group} className={sIdx > 0 ? "pt-3 border-t border-slate-100" : ""}>
+                  <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    {section.group}
+                  </p>
+                  <div className="space-y-0.5 mt-1">
+                    {section.items.map((tab) => {
+                      const isActive = activeTab === tab.id;
+                      const Icon = tab.icon;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            setActiveTab(tab.id);
+                            setSearchQuery("");
+                          }}
+                          className={cn(
+                            "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all group text-left",
+                            isActive 
+                              ? "bg-primary text-white shadow-xs font-semibold" 
+                              : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                          )}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-white" : "text-slate-400 group-hover:text-primary")} />
+                            <span className="truncate">{tab.label}</span>
+                          </div>
+                          {tab.count !== null && (
+                            <span className={cn(
+                              "ml-2 px-1.5 py-0.5 rounded-full text-[10px] font-bold shrink-0",
+                              isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600 group-hover:bg-slate-200"
+                            )}>
+                              {tab.count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
         </div>
 
-        {/* Content Card */}
-        <Card className="bg-white border border-border/80 rounded-xl shadow-2xs overflow-hidden">
-          <CardHeader className="p-4 sm:p-5 pb-3 border-b border-slate-100 bg-slate-50/40">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <CardTitle className="text-base font-bold text-foreground">
-                  {activeTab === "test-types" && "Test Classifications"}
-                  {activeTab === "tags" && "Package Tags"}
-                  {activeTab === "logistics" && "Logistics & Collection Services"}
-                  {activeTab === "infrastructure" && "Laboratory Equipment Templates"}
-                  {activeTab === "activity-status" && "Operational Activity Statuses"}
-                  {activeTab === "departments" && "Company Departments"}
-                  {activeTab === "designations" && "Employee Designations"}
-                  {activeTab === "pickup" && "Pickup Service Coverage"}
-                </CardTitle>
-                <CardDescription className="text-xs mt-0.5">
-                  {activeTab === "test-types" && "Configure diagnostic test categories available for protocols."}
-                  {activeTab === "tags" && "Promotional and filter tags displayed on test packages."}
-                  {activeTab === "logistics" && "Collection logistics options selectable by accredited labs."}
-                  {activeTab === "infrastructure" && "Standard laboratory diagnostic instruments and hardware."}
-                  {activeTab === "activity-status" && "Testing status options available for laboratory profiles."}
-                  {activeTab === "departments" && "Internal organizational departments for team members."}
-                  {activeTab === "designations" && "Official staff job titles and operational roles."}
-                  {activeTab === "pickup" && "Designated cities where Litmus provides doorstep sample collection."}
-                </CardDescription>
-              </div>
-
-              {activeTab !== "pickup" && (
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="h-3.5 w-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
-                    <Input
-                      placeholder="Filter..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-8 text-xs pl-8 w-36 sm:w-48 bg-white"
-                    />
-                  </div>
-
-                  <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                    <SheetTrigger asChild>
-                      <Button size="sm" className="gap-1.5 h-8 text-xs bg-primary hover:bg-primary/90 text-white rounded shadow-2xs font-medium">
-                        <Plus className="h-3.5 w-3.5" /> Add New
-                      </Button>
-                    </SheetTrigger>
-                    <SheetContent className="sm:max-w-md">
-                      <SheetHeader>
-                        <SheetTitle className="text-base font-bold">
-                          {activeTab === "test-types" && "Add Test Classification"}
-                          {activeTab === "tags" && "Add Package Tag"}
-                          {activeTab === "logistics" && "Add Logistics Service"}
-                          {activeTab === "infrastructure" && "Add Lab Equipment"}
-                          {activeTab === "activity-status" && "Add Activity Status"}
-                          {activeTab === "departments" && "Add Department"}
-                          {activeTab === "designations" && "Add Designation"}
-                        </SheetTitle>
-                        <SheetDescription className="text-xs">
-                          Enter details to add a new lookup record.
-                        </SheetDescription>
-                      </SheetHeader>
-
-                      <div className="mt-6">
-                        {activeTab === "test-types" && (
-                          <Form {...testTypeForm}>
-                            <form onSubmit={testTypeForm.handleSubmit((d) => createTestTypeMutation.mutate({ name: d.name }))} className="space-y-4">
-                              <FormField control={testTypeForm.control} name="name" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Type Name</FormLabel><FormControl><Input placeholder="e.g. Chemical Analysis" {...field} className="h-9 text-xs" /></FormControl><FormMessage /></FormItem>
-                              )} />
-                              <Button type="submit" className="w-full h-9 text-xs bg-primary text-white" disabled={createTestTypeMutation.isPending}>
-                                {createTestTypeMutation.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />} Save Test Type
-                              </Button>
-                            </form>
-                          </Form>
-                        )}
-
-                        {activeTab === "tags" && (
-                          <Form {...tagForm}>
-                            <form onSubmit={tagForm.handleSubmit((d) => createTagMutation.mutate({ name: d.name }))} className="space-y-4">
-                              <FormField control={tagForm.control} name="name" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Tag Label</FormLabel><FormControl><Input placeholder="e.g. Best Value" {...field} className="h-9 text-xs" /></FormControl><FormMessage /></FormItem>
-                              )} />
-                              <Button type="submit" className="w-full h-9 text-xs bg-primary text-white" disabled={createTagMutation.isPending}>
-                                {createTagMutation.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />} Save Tag
-                              </Button>
-                            </form>
-                          </Form>
-                        )}
-
-                        {activeTab === "departments" && (
-                          <Form {...departmentForm}>
-                            <form onSubmit={departmentForm.handleSubmit((d) => createDepartmentMutation.mutate({ name: d.name }))} className="space-y-4">
-                              <FormField control={departmentForm.control} name="name" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Department Name</FormLabel><FormControl><Input placeholder="e.g. Quality Assurance" {...field} className="h-9 text-xs" /></FormControl><FormMessage /></FormItem>
-                              )} />
-                              <Button type="submit" className="w-full h-9 text-xs bg-primary text-white" disabled={createDepartmentMutation.isPending}>
-                                {createDepartmentMutation.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />} Save Department
-                              </Button>
-                            </form>
-                          </Form>
-                        )}
-
-                        {activeTab === "designations" && (
-                          <Form {...designationForm}>
-                            <form onSubmit={designationForm.handleSubmit((d) => createDesignationMutation.mutate({ name: d.name }))} className="space-y-4">
-                              <FormField control={designationForm.control} name="name" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Designation Title</FormLabel><FormControl><Input placeholder="e.g. Senior Microbiologist" {...field} className="h-9 text-xs" /></FormControl><FormMessage /></FormItem>
-                              )} />
-                              <Button type="submit" className="w-full h-9 text-xs bg-primary text-white" disabled={createDesignationMutation.isPending}>
-                                {createDesignationMutation.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />} Save Designation
-                              </Button>
-                            </form>
-                          </Form>
-                        )}
-
-                        {activeTab === "logistics" && (
-                          <Form {...logisticsForm}>
-                            <form onSubmit={logisticsForm.handleSubmit((d) => createLogisticsMutation.mutate({ name: d.name }))} className="space-y-4">
-                              <FormField control={logisticsForm.control} name="name" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Service Name</FormLabel><FormControl><Input placeholder="e.g. Cold-Chain Transport" {...field} className="h-9 text-xs" /></FormControl><FormMessage /></FormItem>
-                              )} />
-                              <Button type="submit" className="w-full h-9 text-xs bg-primary text-white" disabled={createLogisticsMutation.isPending}>
-                                {createLogisticsMutation.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />} Save Service
-                              </Button>
-                            </form>
-                          </Form>
-                        )}
-
-                        {activeTab === "activity-status" && (
-                          <Form {...activityStatusForm}>
-                            <form onSubmit={activityStatusForm.handleSubmit((d) => createActivityStatusMutation.mutate({ name: d.name }))} className="space-y-4">
-                              <FormField control={activityStatusForm.control} name="name" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Status Name</FormLabel><FormControl><Input placeholder="e.g. Operating Normally" {...field} className="h-9 text-xs" /></FormControl><FormMessage /></FormItem>
-                              )} />
-                              <Button type="submit" className="w-full h-9 text-xs bg-primary text-white" disabled={createActivityStatusMutation.isPending}>
-                                {createActivityStatusMutation.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />} Save Status
-                              </Button>
-                            </form>
-                          </Form>
-                        )}
-
-                        {activeTab === "infrastructure" && (
-                          <Form {...infrastructureForm}>
-                            <form onSubmit={infrastructureForm.handleSubmit((d) => createInfrastructureMutation.mutate({ title: d.title, description: d.description, icon: d.icon }))} className="space-y-4">
-                              <FormField control={infrastructureForm.control} name="title" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Equipment Title</FormLabel><FormControl><Input placeholder="e.g. Gas Chromatography (GC-MS)" {...field} className="h-9 text-xs" /></FormControl><FormMessage /></FormItem>
-                              )} />
-                              <FormField control={infrastructureForm.control} name="description" render={({ field }) => (
-                                <FormItem><FormLabel className="text-xs">Description</FormLabel><FormControl><Input placeholder="Brief functional summary..." {...field} className="h-9 text-xs" /></FormControl><FormMessage /></FormItem>
-                              )} />
-                              <Button type="submit" className="w-full h-9 text-xs bg-primary text-white" disabled={createInfrastructureMutation.isPending}>
-                                {createInfrastructureMutation.isPending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />} Save Equipment
-                              </Button>
-                            </form>
-                          </Form>
-                        )}
+        {/* Right Content Panel */}
+        <div className="lg:col-span-8 xl:col-span-9 space-y-4">
+          <Card className="bg-white border border-slate-200/80 shadow-xs rounded-xl overflow-hidden min-h-[460px]">
+            
+            {/* Header with Search and Action */}
+            <CardHeader className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    {currentTabMeta?.icon && (
+                      <div className="h-7 w-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                        <currentTabMeta.icon className="h-4 w-4" />
                       </div>
-                    </SheetContent>
-                  </Sheet>
+                    )}
+                    <CardTitle className="text-base font-bold text-slate-900">
+                      {currentTabMeta?.label || "Settings"}
+                    </CardTitle>
+                  </div>
+                  <CardDescription className="text-xs text-muted-foreground">
+                    {currentTabMeta?.desc || "Manage lookup configuration for this category."}
+                  </CardDescription>
                 </div>
-              )}
-            </div>
-          </CardHeader>
 
-          <CardContent className="p-0 min-h-[380px]">
-            {/* 1. Test Types */}
-            {activeTab === "test-types" && (
-              <div className="divide-y divide-slate-100">
-                {isLoadingTestTypes ? (
-                  <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" /></div>
-                ) : testTypes.length === 0 ? (
-                  <div className="py-10 text-center text-xs text-muted-foreground">No test classifications found.</div>
-                ) : (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 p-4">
-                    {testTypes.map((item: any) => (
-                      <div key={item._id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                        <div className="flex items-center gap-2.5">
-                          <div className="h-7 w-7 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center">
-                            <FlaskConical className="h-3.5 w-3.5" />
-                          </div>
-                          <span className="text-xs font-semibold text-slate-800">{item.name}</span>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-7 w-7 text-slate-400 hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => setDeleteTarget({ id: item._id, type: "test-types", name: item.name })}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    ))}
+                {activeTab !== "pickup" && (
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-44 sm:w-56">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        placeholder={`Filter items...`}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="h-8 pl-8 text-xs bg-white border-slate-200 shadow-xs rounded-lg"
+                      />
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => setIsSheetOpen(true)} 
+                      className="h-8 text-xs bg-primary hover:bg-primary/90 text-white rounded-lg shadow-xs shrink-0 gap-1"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Add New
+                    </Button>
                   </div>
                 )}
               </div>
-            )}
+            </CardHeader>
 
-            {/* 2. Package Tags */}
-            {activeTab === "tags" && (
-              <div className="divide-y divide-slate-100">
-                {isLoadingTags ? (
-                  <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" /></div>
-                ) : tags.length === 0 ? (
-                  <div className="py-10 text-center text-xs text-muted-foreground">No package tags found.</div>
-                ) : (
-                  <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-4">
-                    {tags.map((item: any) => (
-                      <div key={item._id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                        <div className="flex items-center gap-2">
-                          <TagIcon className="h-3.5 w-3.5 text-primary" />
-                          <span className="text-xs font-medium text-slate-800">{item.name}</span>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6 text-slate-400 hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => setDeleteTarget({ id: item._id, type: "tags", name: item.name })}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* 3. Logistics Services */}
-            {activeTab === "logistics" && (
-              <div>
-                {isLoadingLogistics ? (
-                  <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" /></div>
-                ) : logisticsOptions.length === 0 ? (
-                  <div className="py-10 text-center text-xs text-muted-foreground">No logistics services configured.</div>
-                ) : (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 p-4">
-                    {logisticsOptions.map((item: any) => (
-                      <div key={item._id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                        <div className="flex items-center gap-2.5">
-                          <div className="h-7 w-7 rounded-md bg-sky-50 text-sky-700 border border-sky-100 flex items-center justify-center">
-                            <Truck className="h-3.5 w-3.5" />
-                          </div>
-                          <span className="text-xs font-semibold text-slate-800">{item.name}</span>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-7 w-7 text-slate-400 hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => setDeleteTarget({ id: item._id, type: "logistics", name: item.name })}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* 4. Infrastructure Templates */}
-            {activeTab === "infrastructure" && (
-              <div>
-                {isLoadingInfrastructure ? (
-                  <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" /></div>
-                ) : infrastructureOptions.length === 0 ? (
-                  <div className="py-10 text-center text-xs text-muted-foreground">No equipment templates configured.</div>
-                ) : (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 p-4">
-                    {infrastructureOptions.map((item: any) => (
-                      <div key={item._id} className="p-3.5 rounded-lg border border-slate-200/80 bg-slate-50/40 space-y-1.5 relative">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="h-7 w-7 rounded-md bg-primary/10 text-primary flex items-center justify-center">
-                              <Microscope className="h-3.5 w-3.5" />
+            <CardContent className="p-4 sm:p-5">
+              
+              {/* 1. Test Classifications */}
+              {activeTab === "test-types" && (
+                <div>
+                  {isLoadingTestTypes ? (
+                    <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                  ) : testTypes.length === 0 ? (
+                    <div className="py-16 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-2">
+                      <FlaskConical className="h-8 w-8 text-slate-300" />
+                      <p className="font-semibold text-slate-800">No test classifications found</p>
+                      <p className="text-[11px]">Click "Add New" above to create your first diagnostic classification.</p>
+                    </div>
+                  ) : (
+                    <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                      {testTypes.map((item: any) => (
+                        <div key={item._id} className="p-3.5 rounded-xl border border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center justify-between group">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
+                              <FlaskConical className="h-4 w-4" />
                             </div>
-                            <h4 className="text-xs font-bold text-foreground">{item.title}</h4>
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold text-slate-900 truncate" title={item.name}>{item.name}</p>
+                              <p className="text-[10px] text-muted-foreground">Standard Test Category</p>
+                            </div>
                           </div>
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-6 w-6 text-slate-400 hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => setDeleteTarget({ id: item._id, type: "infrastructure", name: item.title })}
+                            className="h-7 w-7 text-slate-400 hover:text-destructive hover:bg-rose-50 transition-colors shrink-0"
+                            onClick={() => setDeleteTarget({ id: item._id, type: "test-types", name: item.name })}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
-                        <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">{item.description}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 2. Package Tags */}
+              {activeTab === "tags" && (
+                <div>
+                  {isLoadingTags ? (
+                    <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                  ) : tags.length === 0 ? (
+                    <div className="py-16 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-2">
+                      <TagIcon className="h-8 w-8 text-slate-300" />
+                      <p className="font-semibold text-slate-800">No package tags found</p>
+                      <p className="text-[11px]">Create highlight badges like "Popular", "Comprehensive", or "NABL Verified".</p>
+                    </div>
+                  ) : (
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5">
+                      {tags.map((item: any) => (
+                        <div key={item._id} className="p-2.5 rounded-lg border border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center justify-between group">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <TagIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                            <span className="text-xs font-semibold text-slate-800 truncate" title={item.name}>{item.name}</span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 text-slate-400 hover:text-destructive hover:bg-rose-50 transition-colors shrink-0"
+                            onClick={() => setDeleteTarget({ id: item._id, type: "tags", name: item.name })}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 3. Logistics Services */}
+              {activeTab === "logistics" && (
+                <div>
+                  {isLoadingLogistics ? (
+                    <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                  ) : logisticsOptions.length === 0 ? (
+                    <div className="py-16 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-2">
+                      <Truck className="h-8 w-8 text-slate-300" />
+                      <p className="font-semibold text-slate-800">No logistics options configured</p>
+                      <p className="text-[11px]">Add sample pickup options such as "Home Collection" or "Courier Pickup".</p>
+                    </div>
+                  ) : (
+                    <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                      {logisticsOptions.map((item: any) => (
+                        <div key={item._id} className="p-3 rounded-xl border border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center justify-between group">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-8 w-8 rounded-lg bg-sky-50 text-sky-700 border border-sky-100 flex items-center justify-center shrink-0">
+                              <Truck className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold text-slate-900 truncate" title={item.name}>{item.name}</p>
+                              <p className="text-[10px] text-muted-foreground">Logistics Service</p>
+                            </div>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7 text-slate-400 hover:text-destructive hover:bg-rose-50 transition-colors shrink-0"
+                            onClick={() => setDeleteTarget({ id: item._id, type: "logistics", name: item.name })}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 4. Lab Equipment */}
+              {activeTab === "infrastructure" && (
+                <div>
+                  {isLoadingInfrastructure ? (
+                    <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                  ) : infrastructureOptions.length === 0 ? (
+                    <div className="py-16 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-2">
+                      <Microscope className="h-8 w-8 text-slate-300" />
+                      <p className="font-semibold text-slate-800">No equipment templates configured</p>
+                    </div>
+                  ) : (
+                    <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
+                      {infrastructureOptions.map((item: any) => (
+                        <div key={item._id} className="p-4 rounded-xl border border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs transition-all space-y-2 relative">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                <Microscope className="h-4 w-4" />
+                              </div>
+                              <h4 className="text-xs font-bold text-slate-900 truncate" title={item.title}>{item.title}</h4>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6 text-slate-400 hover:text-destructive hover:bg-rose-50 transition-colors shrink-0"
+                              onClick={() => setDeleteTarget({ id: item._id, type: "infrastructure", name: item.title })}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">{item.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 5. Operational Status */}
+              {activeTab === "activity-status" && (
+                <div>
+                  {isLoadingActivityStatus ? (
+                    <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                  ) : activityStatuses.length === 0 ? (
+                    <div className="py-16 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-2">
+                      <Settings2 className="h-8 w-8 text-slate-300" />
+                      <p className="font-semibold text-slate-800">No operational statuses found</p>
+                    </div>
+                  ) : (
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {activityStatuses.map((item: any) => (
+                        <div key={item._id} className="p-3 rounded-lg border border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center justify-between group">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                            <span className="text-xs font-semibold text-slate-900 truncate">{item.name}</span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 text-slate-400 hover:text-destructive hover:bg-rose-50 transition-colors shrink-0"
+                            onClick={() => setDeleteTarget({ id: item._id, type: "activity-status", name: item.name })}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 6. Departments */}
+              {activeTab === "departments" && (
+                <div>
+                  {isLoadingDepartments ? (
+                    <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                  ) : departments.length === 0 ? (
+                    <div className="py-16 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-2">
+                      <Briefcase className="h-8 w-8 text-slate-300" />
+                      <p className="font-semibold text-slate-800">No departments configured</p>
+                    </div>
+                  ) : (
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {departments.map((item: any) => (
+                        <div key={item._id} className="p-3 rounded-lg border border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center justify-between group">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Briefcase className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                            <span className="text-xs font-semibold text-slate-800 truncate">{item.value}</span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 text-slate-400 hover:text-destructive hover:bg-rose-50 transition-colors shrink-0"
+                            onClick={() => setDeleteTarget({ id: item._id, type: "departments", name: item.value })}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 7. Designations */}
+              {activeTab === "designations" && (
+                <div>
+                  {isLoadingDesignations ? (
+                    <div className="p-12 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                  ) : designations.length === 0 ? (
+                    <div className="py-16 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-2">
+                      <BadgeCheck className="h-8 w-8 text-slate-300" />
+                      <p className="font-semibold text-slate-800">No designations configured</p>
+                    </div>
+                  ) : (
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {designations.map((item: any) => (
+                        <div key={item._id} className="p-3 rounded-lg border border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center justify-between group">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <BadgeCheck className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                            <span className="text-xs font-semibold text-slate-800 truncate">{item.value}</span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 text-slate-400 hover:text-destructive hover:bg-rose-50 transition-colors shrink-0"
+                            onClick={() => setDeleteTarget({ id: item._id, type: "designations", name: item.value })}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 8. Pickup Cities */}
+              {activeTab === "pickup" && (
+                <div className="-m-4 sm:-m-5">
+                  <PickupCoverageSettings />
+                </div>
+              )}
+
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Slide-over Sheet for Creation */}
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent className="sm:max-w-md bg-white">
+          <SheetHeader className="pb-4 border-b border-slate-100">
+            <SheetTitle className="text-base font-bold">
+              Add New {currentTabMeta?.label}
+            </SheetTitle>
+            <SheetDescription className="text-xs text-muted-foreground">
+              Define a new system lookup entry for {currentTabMeta?.label.toLowerCase()}.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="py-5">
+            {activeTab === "test-types" && (
+              <Form {...testTypeForm}>
+                <form onSubmit={testTypeForm.handleSubmit((d) => createTestTypeMutation.mutate({ name: d.name }))} className="space-y-4">
+                  <FormField control={testTypeForm.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Classification Name</FormLabel>
+                      <FormControl><Input placeholder="e.g. Microbiological Analysis" {...field} className="text-xs h-9" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <Button type="submit" disabled={createTestTypeMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
+                    {createTestTypeMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Classification
+                  </Button>
+                </form>
+              </Form>
             )}
 
-            {/* 5. Activity Status */}
+            {activeTab === "tags" && (
+              <Form {...tagForm}>
+                <form onSubmit={tagForm.handleSubmit((d) => createTagMutation.mutate({ name: d.name }))} className="space-y-4">
+                  <FormField control={tagForm.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Tag Name</FormLabel>
+                      <FormControl><Input placeholder="e.g. Popular, Advanced Safety" {...field} className="text-xs h-9" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <Button type="submit" disabled={createTagMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
+                    {createTagMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Tag
+                  </Button>
+                </form>
+              </Form>
+            )}
+
+            {activeTab === "logistics" && (
+              <Form {...logisticsForm}>
+                <form onSubmit={logisticsForm.handleSubmit((d) => createLogisticsMutation.mutate({ name: d.name }))} className="space-y-4">
+                  <FormField control={logisticsForm.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Logistics Service Name</FormLabel>
+                      <FormControl><Input placeholder="e.g. Cold-Chain Express" {...field} className="text-xs h-9" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <Button type="submit" disabled={createLogisticsMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
+                    {createLogisticsMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Logistics Service
+                  </Button>
+                </form>
+              </Form>
+            )}
+
+            {activeTab === "infrastructure" && (
+              <Form {...infrastructureForm}>
+                <form onSubmit={infrastructureForm.handleSubmit((d) => createInfrastructureMutation.mutate({
+                  title: d.title || "",
+                  description: d.description || "",
+                  icon: d.icon || "microscope"
+                }))} className="space-y-4">
+                  <FormField control={infrastructureForm.control} name="title" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Equipment Title</FormLabel>
+                      <FormControl><Input placeholder="e.g. HPLC Spectrometer" {...field} className="text-xs h-9" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={infrastructureForm.control} name="description" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Description</FormLabel>
+                      <FormControl><Input placeholder="High precision analytical equipment" {...field} className="text-xs h-9" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <Button type="submit" disabled={createInfrastructureMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
+                    {createInfrastructureMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Equipment Template
+                  </Button>
+                </form>
+              </Form>
+            )}
+
             {activeTab === "activity-status" && (
-              <div>
-                {isLoadingActivityStatus ? (
-                  <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" /></div>
-                ) : activityStatuses.length === 0 ? (
-                  <div className="py-10 text-center text-xs text-muted-foreground">No activity statuses found.</div>
-                ) : (
-                  <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-4">
-                    {activityStatuses.map((item: any) => (
-                      <div key={item._id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                        <div className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                          <span className="text-xs font-semibold text-slate-800">{item.name}</span>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6 text-slate-400 hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => setDeleteTarget({ id: item._id, type: "activity-status", name: item.name })}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Form {...activityStatusForm}>
+                <form onSubmit={activityStatusForm.handleSubmit((d) => createActivityStatusMutation.mutate({ name: d.name }))} className="space-y-4">
+                  <FormField control={activityStatusForm.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Status Label</FormLabel>
+                      <FormControl><Input placeholder="e.g. Sample Processing" {...field} className="text-xs h-9" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <Button type="submit" disabled={createActivityStatusMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
+                    {createActivityStatusMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Status
+                  </Button>
+                </form>
+              </Form>
             )}
 
-            {/* 6. Departments */}
             {activeTab === "departments" && (
-              <div>
-                {isLoadingDepartments ? (
-                  <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" /></div>
-                ) : departments.length === 0 ? (
-                  <div className="py-10 text-center text-xs text-muted-foreground">No departments configured.</div>
-                ) : (
-                  <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-4">
-                    {departments.map((item: any) => (
-                      <div key={item._id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                        <div className="flex items-center gap-2">
-                          <Briefcase className="h-3.5 w-3.5 text-slate-500" />
-                          <span className="text-xs font-medium text-slate-800">{item.value}</span>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6 text-slate-400 hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => setDeleteTarget({ id: item._id, type: "departments", name: item.value })}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Form {...departmentForm}>
+                <form onSubmit={departmentForm.handleSubmit((d) => createDepartmentMutation.mutate({ name: d.name }))} className="space-y-4">
+                  <FormField control={departmentForm.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Department Name</FormLabel>
+                      <FormControl><Input placeholder="e.g. Microbiology Dept" {...field} className="text-xs h-9" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <Button type="submit" disabled={createDepartmentMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
+                    {createDepartmentMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Department
+                  </Button>
+                </form>
+              </Form>
             )}
 
-            {/* 7. Designations */}
             {activeTab === "designations" && (
-              <div>
-                {isLoadingDesignations ? (
-                  <div className="p-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" /></div>
-                ) : designations.length === 0 ? (
-                  <div className="py-10 text-center text-xs text-muted-foreground">No designations configured.</div>
-                ) : (
-                  <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-4">
-                    {designations.map((item: any) => (
-                      <div key={item._id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                        <div className="flex items-center gap-2">
-                          <BadgeCheck className="h-3.5 w-3.5 text-slate-500" />
-                          <span className="text-xs font-medium text-slate-800">{item.value}</span>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6 text-slate-400 hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => setDeleteTarget({ id: item._id, type: "designations", name: item.value })}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Form {...designationForm}>
+                <form onSubmit={designationForm.handleSubmit((d) => createDesignationMutation.mutate({ name: d.name }))} className="space-y-4">
+                  <FormField control={designationForm.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Designation Title</FormLabel>
+                      <FormControl><Input placeholder="e.g. Lead Microbiologist" {...field} className="text-xs h-9" /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <Button type="submit" disabled={createDesignationMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
+                    {createDesignationMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Designation
+                  </Button>
+                </form>
+              </Form>
             )}
 
-            {/* 8. Pickup Coverage */}
-            {activeTab === "pickup" && (
-              <div className="p-4">
-                <PickupCoverageSettings />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </Tabs>
+          </div>
+        </SheetContent>
+      </Sheet>
 
-      {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog 
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-        title="Confirm Deletion"
-        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        title="Delete Lookup Entry"
+        description={`Are you sure you want to delete "${deleteTarget?.name}"? This change will remove it from system dropdowns.`}
+        onConfirm={handleConfirmDelete}
         confirmText="Delete"
         variant="destructive"
-        onConfirm={handleConfirmDelete}
       />
     </div>
   );
