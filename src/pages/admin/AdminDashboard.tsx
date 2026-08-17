@@ -310,49 +310,6 @@ export default function AdminDashboard() {
     });
   }, [rawPayments]);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6 animate-fade-in pb-16">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="space-y-1">
-            <Skeleton className="h-7 w-44 bg-muted/70" />
-            <Skeleton className="h-4 w-72 bg-muted/50" />
-          </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-9 w-24 bg-muted/60" />
-            <Skeleton className="h-9 w-32 bg-muted/60" />
-          </div>
-        </div>
-        
-        {/* KPI Skeleton Grid */}
-        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-5">
-          {[...Array(5)].map((_, i) => (
-            <Card key={i} className="border border-border/80 shadow-xs p-4 bg-white rounded-lg">
-              <div className="flex items-center justify-between mb-2.5">
-                <Skeleton className="h-8 w-8 rounded-md bg-muted/60" />
-                <Skeleton className="h-4 w-12 rounded-full bg-muted/50" />
-              </div>
-              <Skeleton className="h-7 w-24 mb-1 bg-muted/60" />
-              <Skeleton className="h-3 w-16 bg-muted/40" />
-            </Card>
-          ))}
-        </div>
-
-        {/* Charts Skeleton */}
-        <div className="grid gap-5 lg:grid-cols-3">
-          <Card className="lg:col-span-2 border border-border/80 shadow-xs bg-white p-5 rounded-lg">
-            <Skeleton className="h-5 w-44 mb-4 bg-muted/60" />
-            <Skeleton className="h-[260px] w-full rounded-md bg-muted/40" />
-          </Card>
-          <Card className="border border-border/80 shadow-xs bg-white p-5 rounded-lg">
-            <Skeleton className="h-5 w-36 mb-4 bg-muted/60" />
-            <Skeleton className="h-[260px] w-full rounded-full bg-muted/40" />
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
   const kpis = [
     {
       title: "Total Customers",
@@ -393,7 +350,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-5 animate-fade-in pb-16">
-      {/* Title Bar */}
+      {/* Title Bar - Always visible */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
@@ -408,16 +365,16 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* Action Shortcut Buttons */}
+        {/* Action Shortcut Buttons - Always visible */}
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handleRefresh}
-            disabled={isRefreshing}
+            disabled={isRefreshing || isLoading}
             className="gap-1.5 h-8 text-xs bg-white hover:bg-slate-50 text-slate-700 border-border/80 rounded-md shadow-2xs"
           >
-            <RefreshCw className={cn("h-3 w-3 text-muted-foreground", isRefreshing && "animate-spin text-primary")} />
+            <RefreshCw className={cn("h-3 w-3 text-muted-foreground", (isRefreshing || isLoading) && "animate-spin text-primary")} />
             {isRefreshing ? "Syncing..." : "Sync"}
           </Button>
 
@@ -428,7 +385,7 @@ export default function AdminDashboard() {
           >
             <Link to="/admin/reports">
               <FileCheck2 className="h-3.5 w-3.5" />
-              Verify Reports ({pendingVerificationReports.length})
+              Verify Reports {!isLoading ? `(${pendingVerificationReports.length})` : ""}
             </Link>
           </Button>
 
@@ -445,6 +402,50 @@ export default function AdminDashboard() {
           </Button>
         </div>
       </div>
+
+      {isLoading ? (
+        <div className="space-y-5 animate-fade-in">
+          {/* KPI Skeleton Grid */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {[...Array(5)].map((_, i) => (
+              <Card key={i} className="border border-border/80 shadow-2xs p-4 bg-white rounded-lg">
+                <div className="flex items-center justify-between mb-2.5">
+                  <Skeleton className="h-8 w-8 rounded-md bg-muted/60" />
+                  <Skeleton className="h-4 w-12 rounded-full bg-muted/50" />
+                </div>
+                <Skeleton className="h-7 w-24 mb-1.5 bg-muted/60" />
+                <Skeleton className="h-3.5 w-32 bg-muted/40" />
+                <Skeleton className="h-3 w-20 mt-2 bg-muted/30" />
+              </Card>
+            ))}
+          </div>
+
+          {/* Charts Skeleton */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card className="lg:col-span-2 border border-border/80 shadow-2xs bg-white p-4 rounded-lg">
+              <div className="flex justify-between items-center mb-4">
+                <Skeleton className="h-5 w-44 bg-muted/60" />
+                <Skeleton className="h-7 w-36 bg-muted/40 rounded-md" />
+              </div>
+              <Skeleton className="h-[270px] w-full rounded-md bg-muted/40" />
+            </Card>
+            <Card className="border border-border/80 shadow-2xs bg-white p-4 rounded-lg">
+              <div className="flex justify-between items-center mb-4">
+                <Skeleton className="h-5 w-36 bg-muted/60" />
+                <Skeleton className="h-5 w-16 bg-muted/40 rounded" />
+              </div>
+              <Skeleton className="h-[270px] w-full rounded-md bg-muted/40" />
+            </Card>
+          </div>
+
+          {/* Operations Skeleton */}
+          <Card className="border border-border/80 shadow-2xs bg-white p-4 rounded-lg">
+            <Skeleton className="h-8 w-64 mb-4 bg-muted/60" />
+            <Skeleton className="h-48 w-full rounded-md bg-muted/30" />
+          </Card>
+        </div>
+      ) : (
+        <>
 
       {/* KPI Cards Grid - Clean, Unified, Subtle Radius */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -1046,6 +1047,8 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+      </>
+      )}
     </div>
   );
 }

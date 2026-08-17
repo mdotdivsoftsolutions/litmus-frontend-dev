@@ -606,8 +606,8 @@ export default function AdminConsultations() {
                       className={cn(
                         "h-8 text-xs font-semibold transition-all",
                         selectedConsultation.status === "Pending"
-                          ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-500 shadow-2xs"
-                          : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+                          ? "bg-primary hover:bg-primary/90 text-white border-primary shadow-2xs"
+                          : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
                       )}
                       onClick={() => updateStatusMutation.mutate({ id: selectedConsultation._id, status: "Pending" })}
                       disabled={updateStatusMutation.isPending}
@@ -621,8 +621,8 @@ export default function AdminConsultations() {
                       className={cn(
                         "h-8 text-xs font-semibold transition-all",
                         selectedConsultation.status === "Contacted"
-                          ? "bg-sky-600 hover:bg-sky-700 text-white border-sky-600 shadow-2xs"
-                          : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+                          ? "bg-primary hover:bg-primary/90 text-white border-primary shadow-2xs"
+                          : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
                       )}
                       onClick={() => updateStatusMutation.mutate({ id: selectedConsultation._id, status: "Contacted" })}
                       disabled={updateStatusMutation.isPending}
@@ -636,8 +636,8 @@ export default function AdminConsultations() {
                       className={cn(
                         "h-8 text-xs font-semibold transition-all",
                         selectedConsultation.status === "Resolved"
-                          ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-2xs"
-                          : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+                          ? "bg-primary hover:bg-primary/90 text-white border-primary shadow-2xs"
+                          : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
                       )}
                       onClick={() => updateStatusMutation.mutate({ id: selectedConsultation._id, status: "Resolved" })}
                       disabled={updateStatusMutation.isPending}

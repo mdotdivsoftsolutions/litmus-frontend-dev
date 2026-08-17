@@ -171,13 +171,22 @@ export default function AdminPayments() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-3">
         {summaryCards.map((c) => (
-          <Card key={c.label} className="border border-border shadow-sm relative overflow-hidden bg-white">
-            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
-            <CardContent className="flex items-center gap-4 p-5 pl-5">
-              <div className="h-10 w-10 rounded-full bg-flame-red-tint flex items-center justify-center"><c.icon className="h-5 w-5 text-primary" /></div>
-              <div><p className="text-sm text-muted-foreground">{c.label}</p><p className="text-2xl font-semibold">{c.value}</p></div>
+          <Card key={c.label} className="bg-white border border-border/80 rounded-lg shadow-2xs hover:shadow-xs transition-shadow duration-150 relative">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="h-8 w-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-700">
+                  <c.icon className="h-4 w-4" />
+                </div>
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200/80">
+                  Live
+                </span>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{c.value}</p>
+                <p className="text-xs font-medium text-slate-600">{c.label}</p>
+              </div>
             </CardContent>
           </Card>
         ))}

@@ -115,14 +115,14 @@ export default function LaboratoryDetailPage() {
             variant="outline" 
             size="icon" 
             onClick={() => navigate("/admin/laboratories")}
-            className="h-10 w-10 rounded-xl bg-white border border-slate-200 shadow-sm shrink-0 hover:bg-slate-50"
+            className="h-11 w-11 rounded-lg bg-white border border-border/80 shadow-2xs shrink-0 hover:bg-slate-50 text-slate-700"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
 
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary-deep text-white font-bold flex items-center justify-center text-lg shadow-sm shrink-0">
-              <Building2 className="h-6 w-6" />
+            <div className="h-11 w-11 rounded-lg bg-primary text-white font-bold flex items-center justify-center text-lg shadow-2xs shrink-0">
+              <Building2 className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -132,25 +132,25 @@ export default function LaboratoryDetailPage() {
                 <Badge 
                   variant="outline" 
                   className={lab.isActive 
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold" 
-                    : "bg-rose-50 text-rose-700 border-rose-200 font-semibold"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-medium text-xs" 
+                    : "bg-rose-50 text-rose-700 border-rose-200 font-medium text-xs"
                   }
                 >
                   <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${lab.isActive ? "bg-emerald-500" : "bg-rose-500"}`} />
                   {lab.isActive ? "Operational" : "Inactive"}
                 </Badge>
                 {lab.isNablAccredited && (
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-medium">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-medium text-xs">
                     <CheckCircle2 className="h-3 w-3 mr-1" /> NABL Accredited
                   </Badge>
                 )}
                 {lab.isFssaiApproved && (
-                  <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200 font-medium">
+                  <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200 font-medium text-xs">
                     <CheckCircle2 className="h-3 w-3 mr-1" /> FSSAI Approved
                   </Badge>
                 )}
                 {lab.isAutoBooking && (
-                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 font-medium">
+                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 font-medium text-xs">
                     <Zap className="h-3 w-3 mr-1" /> Auto Dispatch
                   </Badge>
                 )}
@@ -169,7 +169,7 @@ export default function LaboratoryDetailPage() {
           <Button 
             variant="outline" 
             asChild 
-            className="bg-white border border-slate-200 shadow-sm text-xs h-9 gap-1.5"
+            className="bg-white hover:bg-slate-50 text-slate-700 border border-border/80 shadow-2xs text-xs h-8 rounded-md gap-1.5"
           >
             <Link to={`/admin/laboratories/${lab._id}/edit`}>
               <Edit className="h-3.5 w-3.5" /> Edit Lab
@@ -177,7 +177,7 @@ export default function LaboratoryDetailPage() {
           </Button>
           <Button 
             asChild 
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm text-xs h-9 gap-1.5"
+            className="bg-primary hover:bg-primary/90 text-white shadow-2xs text-xs h-8 rounded-md gap-1.5"
           >
             <Link to={`/labs/${lab._id}`} target="_blank">
               <ExternalLink className="h-3.5 w-3.5" /> View Consumer Profile
@@ -187,96 +187,98 @@ export default function LaboratoryDetailPage() {
       </div>
 
       {/* KPI Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden relative">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
-          <CardContent className="p-5 pl-5">
-            <div className="flex items-center justify-between text-muted-foreground mb-1">
-              <span className="text-xs font-semibold uppercase tracking-wider">Total Bookings</span>
-              <Briefcase className="h-4 w-4 text-primary" />
-            </div>
-            <div className="text-2xl font-bold text-slate-900">{labBookings.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">{activeBookingsCount} active in testing</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden relative">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />
-          <CardContent className="p-5 pl-5">
-            <div className="flex items-center justify-between text-muted-foreground mb-1">
-              <span className="text-xs font-semibold uppercase tracking-wider">Gross Volume</span>
-              <DollarSign className="h-4 w-4 text-emerald-600" />
-            </div>
-            <div className="text-2xl font-bold text-slate-900">{formatCurrency(totalRevenue)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Est. Payout: {formatCurrency(labPayout)}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden relative">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
-          <CardContent className="p-5 pl-5">
-            <div className="flex items-center justify-between text-muted-foreground mb-1">
-              <span className="text-xs font-semibold uppercase tracking-wider">Configured Tests</span>
-              <FileText className="h-4 w-4 text-blue-600" />
-            </div>
-            <div className="text-2xl font-bold text-slate-900">{lab.tests?.length || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Diagnostic catalog items</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden relative">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />
-          <CardContent className="p-5 pl-5">
-            <div className="flex items-center justify-between text-muted-foreground mb-1">
-              <span className="text-xs font-semibold uppercase tracking-wider">Quality Score</span>
-              <Activity className="h-4 w-4 text-amber-600" />
-            </div>
-            <div className="text-2xl font-bold text-amber-600 flex items-center gap-1">
-              {rating} <span className="text-amber-400 text-lg">★</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">{lab.reviews?.length || 0} customer reviews</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          {
+            title: "Total Bookings",
+            value: labBookings.length.toLocaleString(),
+            subtitle: `${activeBookingsCount} active in testing`,
+            icon: Briefcase,
+            badgeText: "Bookings",
+          },
+          {
+            title: "Gross Volume",
+            value: formatCurrency(totalRevenue),
+            subtitle: `Est. Payout: ${formatCurrency(labPayout)}`,
+            icon: DollarSign,
+            badgeText: "Revenue",
+          },
+          {
+            title: "Configured Tests",
+            value: (lab.tests?.length || 0).toLocaleString(),
+            subtitle: "Diagnostic catalog items",
+            icon: FileText,
+            badgeText: "Catalog",
+          },
+          {
+            title: "Quality Score",
+            value: `${rating} ★`,
+            subtitle: `${lab.reviews?.length || 0} customer reviews`,
+            icon: Activity,
+            badgeText: "Rating",
+          },
+        ].map((kpi) => (
+          <Card 
+            key={kpi.title} 
+            className="bg-white border border-border/80 rounded-lg shadow-2xs hover:shadow-xs transition-shadow duration-150 relative"
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="h-8 w-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-700">
+                  <kpi.icon className="h-4 w-4" />
+                </div>
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200/80">
+                  {kpi.badgeText}
+                </span>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{kpi.value}</p>
+                <p className="text-xs font-medium text-slate-600">{kpi.title}</p>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1.5 truncate">{kpi.subtitle}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Main Tabbed Sections */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="bg-white border border-slate-200 shadow-sm p-1 inline-flex w-full sm:w-auto h-auto flex-wrap gap-1">
-          <TabsTrigger value="overview" className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium rounded-md transition-all">
+        <TabsList className="bg-white border border-border/80 shadow-2xs p-1 rounded-lg inline-flex w-full sm:w-auto h-auto flex-wrap gap-1">
+          <TabsTrigger value="overview" className="text-xs px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all">
             Overview & Details
           </TabsTrigger>
-          <TabsTrigger value="tests" className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium rounded-md transition-all">
+          <TabsTrigger value="tests" className="text-xs px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all">
             Available Tests ({lab.tests?.length || 0})
           </TabsTrigger>
-          <TabsTrigger value="bookings" className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium rounded-md transition-all">
+          <TabsTrigger value="bookings" className="text-xs px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all">
             Routed Bookings ({labBookings.length})
           </TabsTrigger>
-          <TabsTrigger value="financials" className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium rounded-md transition-all">
+          <TabsTrigger value="financials" className="text-xs px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all">
             Settlement & Financials
           </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6 mt-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <TabsContent value="overview" className="space-y-4 mt-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Location & Contact */}
-            <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/80 border-b border-slate-100 py-3.5">
-                <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-800">
-                  <MapPin className="h-4 w-4 text-primary" /> Location & Contact Information
+            <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/40 border-b border-slate-100 py-3 px-4">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider flex items-center gap-2 text-slate-700">
+                  <MapPin className="h-4 w-4 text-slate-600" /> Location & Contact Information
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-5 space-y-4 text-sm">
+              <CardContent className="p-4 space-y-3.5 text-sm">
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Full Facility Address</p>
-                  <p className="font-semibold text-slate-900">{lab.location?.address || "Address not provided"}</p>
+                  <p className="font-semibold text-xs text-slate-900">{lab.location?.address || "Address not provided"}</p>
                   <p className="text-xs text-slate-600">
                     {lab.location?.city || "N/A"}, {lab.location?.state || "N/A"} - <span className="font-mono">{lab.location?.pincode || "N/A"}</span>
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
-                  <div className="p-2.5 rounded-lg bg-slate-50/70 border border-slate-100">
+                <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-slate-100">
+                  <div className="p-2.5 rounded-md bg-slate-50/60 border border-slate-100">
                     <div className="flex items-center justify-between">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                         <Mail className="h-3 w-3" /> Email
@@ -292,7 +294,7 @@ export default function LaboratoryDetailPage() {
                     </p>
                   </div>
 
-                  <div className="p-2.5 rounded-lg bg-slate-50/70 border border-slate-100">
+                  <div className="p-2.5 rounded-md bg-slate-50/60 border border-slate-100">
                     <div className="flex items-center justify-between">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                         <Phone className="h-3 w-3" /> Phone
@@ -312,30 +314,30 @@ export default function LaboratoryDetailPage() {
             </Card>
 
             {/* Compliance & Business Details */}
-            <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/80 border-b border-slate-100 py-3.5">
-                <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-800">
-                  <ShieldCheck className="h-4 w-4 text-primary" /> Compliance & Legal Registration
+            <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/40 border-b border-slate-100 py-3 px-4">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider flex items-center gap-2 text-slate-700">
+                  <ShieldCheck className="h-4 w-4 text-slate-600" /> Compliance & Legal Registration
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-5 space-y-3.5 text-sm">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-2.5 rounded-lg bg-slate-50/70 border border-slate-100">
+              <CardContent className="p-4 space-y-2.5 text-sm">
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="p-2.5 rounded-md bg-slate-50/60 border border-slate-100">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">GSTIN Number</p>
                     <p className="text-xs font-mono font-medium text-slate-900 mt-0.5">{lab.businessDetails?.gstNumber || "Not Provided"}</p>
                   </div>
-                  <div className="p-2.5 rounded-lg bg-slate-50/70 border border-slate-100">
+                  <div className="p-2.5 rounded-md bg-slate-50/60 border border-slate-100">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">PAN Number</p>
                     <p className="text-xs font-mono font-medium text-slate-900 mt-0.5">{lab.businessDetails?.panNumber || "Not Provided"}</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-2.5 rounded-lg bg-slate-50/70 border border-slate-100">
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="p-2.5 rounded-md bg-slate-50/60 border border-slate-100">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">NABL Certificate</p>
                     <p className="text-xs font-mono font-medium text-slate-900 mt-0.5">{lab.licenses?.nablNumber || "Not Provided"}</p>
                   </div>
-                  <div className="p-2.5 rounded-lg bg-slate-50/70 border border-slate-100">
+                  <div className="p-2.5 rounded-md bg-slate-50/60 border border-slate-100">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">FSSAI License</p>
                     <p className="text-xs font-mono font-medium text-slate-900 mt-0.5">{lab.licenses?.fssaiNumber || "Not Provided"}</p>
                   </div>
@@ -344,25 +346,25 @@ export default function LaboratoryDetailPage() {
             </Card>
 
             {/* Banking & Settlement Card */}
-            <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden md:col-span-2">
-              <CardHeader className="bg-slate-50/80 border-b border-slate-100 py-3.5">
-                <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-800">
-                  <Banknote className="h-4 w-4 text-primary" /> Banking & Payout Account
+            <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden md:col-span-2">
+              <CardHeader className="bg-slate-50/40 border-b border-slate-100 py-3 px-4">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider flex items-center gap-2 text-slate-700">
+                  <Banknote className="h-4 w-4 text-slate-600" /> Banking & Payout Account
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-5">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-3 rounded-lg bg-slate-50/70 border border-slate-100">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-2.5 rounded-md bg-slate-50/60 border border-slate-100">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Beneficiary Bank</p>
-                    <p className="text-sm font-semibold text-slate-900 mt-1">{lab.bankDetails?.bankName || "Not Provided"}</p>
+                    <p className="text-xs font-semibold text-slate-900 mt-1">{lab.bankDetails?.bankName || "Not Provided"}</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-slate-50/70 border border-slate-100">
+                  <div className="p-2.5 rounded-md bg-slate-50/60 border border-slate-100">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Account Number</p>
-                    <p className="text-sm font-mono font-semibold text-slate-900 mt-1">{lab.bankDetails?.accountNumber || "Not Provided"}</p>
+                    <p className="text-xs font-mono font-semibold text-slate-900 mt-1">{lab.bankDetails?.accountNumber || "Not Provided"}</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-slate-50/70 border border-slate-100">
+                  <div className="p-2.5 rounded-md bg-slate-50/60 border border-slate-100">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">IFSC Code</p>
-                    <p className="text-sm font-mono font-semibold text-slate-900 mt-1">{lab.bankDetails?.ifscCode || "Not Provided"}</p>
+                    <p className="text-xs font-mono font-semibold text-slate-900 mt-1">{lab.bankDetails?.ifscCode || "Not Provided"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -371,19 +373,19 @@ export default function LaboratoryDetailPage() {
         </TabsContent>
 
         {/* Tests Tab */}
-        <TabsContent value="tests" className="space-y-4 mt-3">
-          <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
-            <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <TabsContent value="tests" className="space-y-3 mt-3">
+          <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
+            <div className="p-3.5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input 
                   placeholder="Search available tests in this lab..." 
-                  className="pl-9 bg-white border border-slate-200 shadow-sm h-9 text-xs" 
+                  className="pl-9 bg-white border border-border/80 shadow-2xs h-8 text-xs rounded-md" 
                   value={testSearch}
                   onChange={(e) => setTestSearch(e.target.value)}
                 />
               </div>
-              <Button asChild className="bg-primary hover:bg-primary/90 text-white text-xs h-9 shadow-sm self-start sm:self-auto">
+              <Button asChild className="bg-primary hover:bg-primary/90 text-white text-xs h-8 rounded-md shadow-2xs self-start sm:self-auto">
                 <Link to={`/admin/laboratories/${lab._id}/edit`}>
                   <Edit className="h-3.5 w-3.5 mr-1" /> Configure Test Prices
                 </Link>
@@ -432,7 +434,7 @@ export default function LaboratoryDetailPage() {
                           </TableCell>
                           <TableCell className="text-xs">
                             {customPrice !== undefined ? (
-                              <span className="font-bold text-emerald-600">{formatCurrency(customPrice)}</span>
+                              <span className="font-semibold text-slate-900">{formatCurrency(customPrice)}</span>
                             ) : (
                               <span className="text-slate-400">Default ({formatCurrency(standardPrice)})</span>
                             )}
@@ -453,8 +455,8 @@ export default function LaboratoryDetailPage() {
         </TabsContent>
 
         {/* Bookings Tab */}
-        <TabsContent value="bookings" className="space-y-4 mt-3">
-          <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
+        <TabsContent value="bookings" className="space-y-3 mt-3">
+          <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -517,13 +519,13 @@ export default function LaboratoryDetailPage() {
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              className="h-8 gap-1 text-xs"
+                              className="h-7 text-xs"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(`/admin/bookings/${b._id}`);
                               }}
                             >
-                              <Eye className="h-3.5 w-3.5" /> Details
+                              <Eye className="h-3.5 w-3.5 mr-1" /> Details
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -537,24 +539,24 @@ export default function LaboratoryDetailPage() {
         </TabsContent>
 
         {/* Financials Tab */}
-        <TabsContent value="financials" className="space-y-4 mt-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border border-slate-200 shadow-sm bg-white p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Bookings Volume</p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalRevenue)}</p>
-              <p className="text-xs text-muted-foreground mt-2">Cumulative value of all tests routed</p>
+        <TabsContent value="financials" className="space-y-3 mt-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Card className="border border-border/80 rounded-lg shadow-2xs bg-white p-4">
+              <p className="text-xs font-medium text-slate-600">Total Bookings Volume</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight mt-1">{formatCurrency(totalRevenue)}</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Cumulative value of all tests routed</p>
             </Card>
 
-            <Card className="border border-slate-200 shadow-sm bg-white p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Litmus Platform Share (15%)</p>
-              <p className="text-2xl font-bold text-primary mt-1">{formatCurrency(platformFee)}</p>
-              <p className="text-xs text-muted-foreground mt-2">Platform curation & logistics commission</p>
+            <Card className="border border-border/80 rounded-lg shadow-2xs bg-white p-4">
+              <p className="text-xs font-medium text-slate-600">Litmus Platform Share (15%)</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight mt-1">{formatCurrency(platformFee)}</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Platform curation & logistics commission</p>
             </Card>
 
-            <Card className="border border-slate-200 shadow-sm bg-white p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Net Laboratory Payout (85%)</p>
-              <p className="text-2xl font-bold text-emerald-600 mt-1">{formatCurrency(labPayout)}</p>
-              <p className="text-xs text-muted-foreground mt-2">Estimated payable to diagnostic partner</p>
+            <Card className="border border-border/80 rounded-lg shadow-2xs bg-white p-4">
+              <p className="text-xs font-medium text-slate-600">Net Laboratory Payout (85%)</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight mt-1">{formatCurrency(labPayout)}</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Estimated payable to diagnostic partner</p>
             </Card>
           </div>
         </TabsContent>
