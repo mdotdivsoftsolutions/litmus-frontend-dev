@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, Plus, Trash2, Tag as TagIcon, Settings2, FlaskConical, Truck, Microscope, Briefcase, BadgeCheck } from "lucide-react";
+import { Loader2, Plus, Trash2, Tag as TagIcon, Settings2, FlaskConical, Truck, Microscope, Briefcase, BadgeCheck, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { tagApi } from "@/lib/api/tag";
 import { testTypeApi } from "@/lib/api/testType";
@@ -19,6 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
+import { PickupCoverageSettings } from "./PickupCoverageSettings";
 
 const baseSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -187,6 +188,7 @@ export default function AdminSettings() {
     { id: "activity-status", label: "Activity Status", icon: Settings2, desc: "Operational states" },
     { id: "departments", label: "Departments", icon: Briefcase, desc: "Employee departments" },
     { id: "designations", label: "Designations", icon: BadgeCheck, desc: "Employee roles" },
+    { id: "pickup", label: "Pickup Coverage", icon: MapPin, desc: "Cities for Litmus pickup" },
   ];
 
   return (
@@ -233,6 +235,7 @@ export default function AdminSettings() {
                   {activeTab === "activity-status" && "Manage Activity Statuses"}
                   {activeTab === "departments" && "Manage Departments"}
                   {activeTab === "designations" && "Manage Designations"}
+                  {activeTab === "pickup" && "Pickup Service Cities"}
                 </CardTitle>
                 <CardDescription className="mt-1">
                   {activeTab === "test-types" && "Create types of tests to assign to test protocols."}
@@ -242,9 +245,11 @@ export default function AdminSettings() {
                   {activeTab === "activity-status" && "Define standard operating statuses for laboratories."}
                   {activeTab === "departments" && "Define employee departments for the organization."}
                   {activeTab === "designations" && "Define employee job designations and titles."}
+                  {activeTab === "pickup" && "Control where Litmus agents collect samples in person."}
                 </CardDescription>
               </div>
 
+              {activeTab !== "pickup" && (
               <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetTrigger asChild>
                   <Button className="bg-primary hover:bg-primary-deep shadow-md">
@@ -378,6 +383,7 @@ export default function AdminSettings() {
                   </div>
                 </SheetContent>
               </Sheet>
+              )}
             </CardHeader>
 
             <CardContent className="p-0">
@@ -551,6 +557,8 @@ export default function AdminSettings() {
                   )}
                 </div>
               )}
+
+              {activeTab === "pickup" && <PickupCoverageSettings />}
             </CardContent>
           </Card>
         </div>

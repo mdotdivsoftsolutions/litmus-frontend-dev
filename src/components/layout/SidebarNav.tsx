@@ -9,24 +9,13 @@ import {
 import { Button } from "@/components/ui/button";
 
 interface SidebarNavProps {
-  portal: "user" | "admin" | "lab";
+  portal: "admin";
   open: boolean;
   onClose: () => void;
   user?: any;
 }
 
-const userNav = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-  { label: "Products & Tests", icon: Package, href: "/dashboard/products" },
-  { label: "Laboratories", icon: FlaskConical, href: "/dashboard/laboratories" },
-  { label: "My Bookings", icon: BookOpen, href: "/dashboard/bookings" },
-  { label: "Payments", icon: CreditCard, href: "/dashboard/payments" },
-  { label: "Reports", icon: FileText, href: "/dashboard/reports" },
-  { label: "Documents", icon: FolderOpen, href: "/dashboard/documents" },
-  { label: "Profile", icon: UserCircle, href: "/dashboard/profile" },
-];
-
-const adminNav = [
+const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/admin/dashboard" },
   { label: "Employees", icon: UserCircle, href: "/admin/employees", permission: "MANAGE_EMPLOYEES" },
   { label: "Consultations", icon: FileText, href: "/admin/consultations", permission: "VIEW_LEADS" },
@@ -39,57 +28,32 @@ const adminNav = [
   { label: "Packages", icon: Package, href: "/admin/packages" },
   { label: "Payments", icon: DollarSign, href: "/admin/payments" },
   { label: "Reviews", icon: MessageSquareQuote, href: "/admin/reviews" },
-  // { label: "Analytics", icon: BarChart3, href: "/admin/analytics" },
   { label: "Reports", icon: FileCheck, href: "/admin/reports" },
   { label: "Settings", icon: Flame, href: "/admin/settings" },
   { label: "Approvals", icon: CheckSquare, href: "/admin/approvals" },
 ];
 
-const labNav = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/lab/dashboard" },
-  { label: "Bookings", icon: ClipboardList, href: "/lab/bookings" },
-  { label: "Tests", icon: TestTubes, href: "/lab/tests" },
-  { label: "Packages", icon: Package, href: "/lab/packages" },
-  { label: "Schedule", icon: CalendarDays, href: "/lab/schedule" },
-  { label: "Profile", icon: UserCircle, href: "/lab/profile" },
-];
-
-const navMap = { user: userNav, admin: adminNav, lab: labNav };
-const subtitleMap = { user: "FOOD TESTING", admin: "ADMIN PANEL", lab: "LAB PORTAL" };
-
 export function SidebarNav({ portal, open, onClose, user }: SidebarNavProps) {
   const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
   
   // Filter nav items based on user permissions
-  const navItems = navMap[portal].filter((item: any) => {
-    if (portal !== "admin") return true;
-    if (user?.role === "ADMIN") return true; // Super admin sees all
+  const filteredNavItems = navItems.filter((item: any) => {
+    if (user?.role === "ADMIN") return true; 
     
-    // Employee logic
     if (user?.role === "EMPLOYEE") {
-      // If "VIEW_LEADS" is the ONLY permission, they should probably only see Leads
-      // The user requested: "that relatresd section only show in the side bar"
-      // If the item has a permission, check it.
       if (item.permission) {
         return user.permissions?.includes(item.permission);
       }
-      
-      // If the item doesn't have a specific permission but they have ONLY VIEW_LEADS, hide others
-      // For now, let's say if they have specific permissions, they see items requiring those permissions,
-      // and items with no permission are visible unless we want to hide everything else for 'VIEW_LEADS' only.
-      // Let's implement strict filtering: if an item has NO permission defined, we show it, UNLESS they only have VIEW_LEADS.
       const hasOnlyLeads = user.permissions?.length === 1 && user.permissions[0] === "VIEW_LEADS";
       if (hasOnlyLeads && !item.permission && item.label !== "Dashboard") return false;
-
       return true;
     }
     return true;
   });
 
-  const [collapsed, setCollapsed] = useState(false);
-
   const getInitials = () => {
-    if (!user) return portal === "user" ? "RK" : portal === "admin" ? "A" : "CL";
+    if (!user) return "A";
     return `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() || "U";
   };
 
@@ -119,7 +83,7 @@ export function SidebarNav({ portal, open, onClose, user }: SidebarNavProps) {
             <Link to="/" className="flex flex-col items-start">
               <img src="/logo.png" alt="Litmus Logo" className="h-8 object-contain" />
               <div className="leading-none mt-1">
-                <span className="block text-[9px] tracking-wider text-slate-500 font-semibold">{subtitleMap[portal]}</span>
+                <span className="block text-[9px] tracking-wider text-slate-500 font-semibold">ADMIN PANEL</span>
               </div>
             </Link>
           )}
@@ -135,9 +99,9 @@ export function SidebarNav({ portal, open, onClose, user }: SidebarNavProps) {
 
         {/* Nav links — contained scroll within sidebar only */}
         <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-3 space-y-0.5 scrollbar-hide">
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const isActive = location.pathname === item.href || 
-              (item.href !== "/dashboard" && item.href !== "/admin/dashboard" && item.href !== "/lab/dashboard" && location.pathname.startsWith(item.href));
+              (item.href !== "/admin/dashboard" && location.pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}
@@ -168,10 +132,10 @@ export function SidebarNav({ portal, open, onClose, user }: SidebarNavProps) {
               </div>
               <div className="leading-none overflow-hidden">
                 <p className="text-xs font-semibold text-slate-900 truncate">
-                  {user ? `${user.firstName} ${user.lastName}` : (portal === "user" ? "Rajesh Kumar" : portal === "admin" ? "Admin" : "Chennai Lab")}
+                  {user ? [user.firstName, user.lastName].filter(Boolean).join(" ") || "User" : "Admin"}
                 </p>
                 <p className="text-[10px] text-slate-500 capitalize truncate mt-0.5">
-                  {user ? (user.role || "").toLowerCase() : (portal === "user" ? "Business User" : portal === "admin" ? "Administrator" : "Laboratory")}
+                  {user ? (user.role || "").toLowerCase().replace("_", " ") : "Administrator"}
                 </p>
               </div>
             </div>
