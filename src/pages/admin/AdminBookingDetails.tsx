@@ -213,16 +213,16 @@ export default function AdminBookingDetails() {
   if (isLoading) {
     return (
       <div className="space-y-6 max-w-7xl mx-auto pb-20 pt-2 animate-pulse">
-        <div className="h-20 bg-slate-100 rounded-2xl" />
+        <div className="h-20 bg-slate-100 rounded-lg" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="h-28 bg-slate-100 rounded-xl" />
-          <div className="h-28 bg-slate-100 rounded-xl" />
-          <div className="h-28 bg-slate-100 rounded-xl" />
-          <div className="h-28 bg-slate-100 rounded-xl" />
+          <div className="h-28 bg-slate-100 rounded-lg" />
+          <div className="h-28 bg-slate-100 rounded-lg" />
+          <div className="h-28 bg-slate-100 rounded-lg" />
+          <div className="h-28 bg-slate-100 rounded-lg" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 h-96 bg-slate-100 rounded-2xl" />
-          <div className="h-96 bg-slate-100 rounded-2xl" />
+          <div className="lg:col-span-2 h-96 bg-slate-100 rounded-lg" />
+          <div className="h-96 bg-slate-100 rounded-lg" />
         </div>
       </div>
     );
@@ -230,7 +230,7 @@ export default function AdminBookingDetails() {
 
   if (!rawBooking) {
     return (
-      <div className="p-12 text-center space-y-4 max-w-md mx-auto bg-white border border-slate-200 rounded-2xl shadow-xs mt-10">
+      <div className="p-12 text-center space-y-4 max-w-md mx-auto bg-white border border-slate-200 rounded-lg shadow-xs mt-10">
         <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
           <Beaker className="h-6 w-6" />
         </div>
@@ -340,7 +340,7 @@ export default function AdminBookingDetails() {
       </nav>
 
       {/* Top Hero Banner */}
-      <div className="bg-white border border-slate-200/90 shadow-2xs rounded-2xl p-5 sm:p-6 transition-all">
+      <div className="bg-white border border-slate-200/90 shadow-2xs rounded-lg p-5 sm:p-6 transition-all">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           
           {/* Left Title & Status */}
@@ -349,7 +349,7 @@ export default function AdminBookingDetails() {
               variant="outline" 
               size="icon" 
               onClick={() => navigate("/admin/bookings")}
-              className="h-10 w-10 shrink-0 rounded-xl bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-2xs"
+              className="h-10 w-10 shrink-0 rounded-lg bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-2xs"
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
@@ -406,7 +406,7 @@ export default function AdminBookingDetails() {
             <Button 
               variant="outline"
               onClick={() => setIsInvoiceOpen(true)}
-              className="h-10 px-4 rounded-xl border-emerald-200 text-emerald-800 bg-emerald-50/50 hover:bg-emerald-100 hover:text-emerald-900 gap-2 font-bold text-xs shadow-2xs transition-all"
+              className="h-10 px-4 rounded-lg border-emerald-200 text-emerald-800 bg-emerald-50/50 hover:bg-emerald-100 hover:text-emerald-900 gap-2 font-bold text-xs shadow-2xs transition-all"
             >
               <Receipt className="h-4 w-4 text-emerald-600" />
               Tax Invoice
@@ -414,7 +414,7 @@ export default function AdminBookingDetails() {
 
             <Button 
               onClick={() => setIsReportDrawerOpen(true)}
-              className="h-10 px-4 rounded-xl bg-primary hover:bg-primary/90 text-white gap-2 font-bold text-xs shadow-xs transition-all"
+              className="h-10 px-4 rounded-lg bg-primary hover:bg-primary/90 text-white gap-2 font-bold text-xs shadow-xs transition-all"
             >
               <FileText className="h-4 w-4" />
               Report & Clinical Remarks
@@ -437,7 +437,7 @@ export default function AdminBookingDetails() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         
         {/* Card 1: Status */}
-        <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-xl p-4 flex flex-col justify-between">
+        <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-lg p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
             <span>Lifecycle Status</span>
             <Activity className="h-4 w-4 text-primary" />
@@ -451,7 +451,7 @@ export default function AdminBookingDetails() {
         </Card>
 
         {/* Card 2: Payment */}
-        <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-xl p-4 flex flex-col justify-between">
+        <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-lg p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
             <span>Payment Status</span>
             <CreditCard className="h-4 w-4 text-emerald-600" />
@@ -472,7 +472,7 @@ export default function AdminBookingDetails() {
         </Card>
 
         {/* Card 3: Total Amount */}
-        <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-xl p-4 flex flex-col justify-between">
+        <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-lg p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
             <span>Order Value</span>
             <Receipt className="h-4 w-4 text-slate-600" />
@@ -488,7 +488,7 @@ export default function AdminBookingDetails() {
         </Card>
 
         {/* Card 4: Assigned Facility */}
-        <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-xl p-4 flex flex-col justify-between">
+        <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-lg p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
             <span>Assigned Laboratory</span>
             <Building2 className="h-4 w-4 text-indigo-600" />
@@ -511,7 +511,7 @@ export default function AdminBookingDetails() {
         <div className="lg:col-span-8 space-y-5">
           
           {/* Customer & Billing Profile */}
-          <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-2xl overflow-hidden">
+          <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-lg overflow-hidden">
             <CardHeader className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50 flex flex-row items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="h-8 w-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
@@ -525,14 +525,14 @@ export default function AdminBookingDetails() {
             </CardHeader>
             <CardContent className="p-5 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-100">
+                <div className="bg-slate-50/70 p-3 rounded-lg border border-slate-100">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Customer Name</span>
                   <p className="text-xs font-bold text-slate-900">{userFullName}</p>
                   {b.userId?.companyName && (
                     <p className="text-[11px] text-slate-600 font-medium">{b.userId.companyName}</p>
                   )}
                 </div>
-                <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-100">
+                <div className="bg-slate-50/70 p-3 rounded-lg border border-slate-100">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Phone Contact</span>
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold text-slate-900 font-mono">
@@ -545,7 +545,7 @@ export default function AdminBookingDetails() {
                     )}
                   </div>
                 </div>
-                <div className="bg-slate-50/70 p-3 rounded-xl border border-slate-100">
+                <div className="bg-slate-50/70 p-3 rounded-lg border border-slate-100">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Email Address</span>
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-semibold text-slate-900 truncate" title={collectionDetails?.email || b.userId?.email}>
@@ -562,7 +562,7 @@ export default function AdminBookingDetails() {
 
               {/* Address Box */}
               {collectionDetails?.address && (
-                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 flex items-start justify-between gap-3">
+                <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200/80 flex items-start justify-between gap-3">
                   <div className="flex items-start gap-2.5">
                     <MapPin className="h-4 w-4 text-emerald-700 shrink-0 mt-0.5" />
                     <div>
@@ -588,7 +588,7 @@ export default function AdminBookingDetails() {
           </Card>
 
           {/* Sample Courier Dispatch & Logistics */}
-          <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-2xl overflow-hidden">
+          <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-lg overflow-hidden">
             <CardHeader className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50 flex flex-row items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className={`h-8 w-8 rounded-lg flex items-center justify-center font-bold text-xs ${
@@ -621,7 +621,7 @@ export default function AdminBookingDetails() {
             <CardContent className="p-5 space-y-4">
               {isCourierMethod ? (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-blue-800 block mb-1">
                         Tracking / AWB Number
@@ -654,7 +654,7 @@ export default function AdminBookingDetails() {
                   </div>
 
                   {courierInfo.notes && (
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Customer Dispatch Notes</span>
                       <p className="text-slate-800 italic">"{courierInfo.notes}"</p>
                     </div>
@@ -682,7 +682,7 @@ export default function AdminBookingDetails() {
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-amber-50/40 p-4 rounded-xl border border-amber-100">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-amber-50/40 p-4 rounded-lg border border-amber-100">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 block mb-1">Preferred Date</span>
                     <p className="text-xs font-bold text-amber-950">{pickupDate}</p>
@@ -707,7 +707,7 @@ export default function AdminBookingDetails() {
 
               {/* Editing Form */}
               {editingCollection && (
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-3 space-y-4">
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mt-3 space-y-4">
                   <p className="text-xs font-bold uppercase tracking-wider text-primary">
                     {isCourierMethod ? "Update Courier Tracking" : "Update Doorstep Collector & Status"}
                   </p>
@@ -804,7 +804,7 @@ export default function AdminBookingDetails() {
           </Card>
 
           {/* Ordered Diagnostic Items & Sample Breakdown */}
-          <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-2xl overflow-hidden">
+          <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-lg overflow-hidden">
             <CardHeader className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50 flex flex-row items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="h-8 w-8 rounded-lg bg-indigo-100 text-indigo-800 flex items-center justify-center font-bold text-xs">
@@ -824,7 +824,7 @@ export default function AdminBookingDetails() {
               {rawItems.map((item: any, i: number) => {
                 const itemTitle = item.packageId?.name || item.testId?.testName || item.testId?.name || "Diagnostic Service Item";
                 return (
-                  <div key={i} className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-2xs">
+                  <div key={i} className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-2xs">
                     <div className="bg-slate-50/90 px-4 py-3 flex justify-between items-center border-b border-slate-200">
                       <div className="flex items-center gap-2">
                         <span className="h-5 w-5 rounded-full bg-slate-200 text-slate-700 font-bold text-[10px] flex items-center justify-center">
@@ -840,7 +840,7 @@ export default function AdminBookingDetails() {
 
                     <div className="p-4 space-y-3">
                       {item.samples?.map((sample: any, j: number) => (
-                        <div key={j} className="p-3.5 bg-slate-50/60 rounded-xl border border-slate-100 space-y-2">
+                        <div key={j} className="p-3.5 bg-slate-50/60 rounded-lg border border-slate-100 space-y-2">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                             <span className="font-bold text-xs text-slate-900">{sample.productName || "Standard Sample"}</span>
                             <div className="flex flex-wrap gap-2 text-[11px] text-slate-600 font-medium font-mono">
@@ -899,7 +899,7 @@ export default function AdminBookingDetails() {
         <div className="lg:col-span-4 space-y-5">
           
           {/* Stepper Timeline */}
-          <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-2xl overflow-hidden p-5">
+          <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-lg overflow-hidden p-5">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <Clock className="h-4 w-4 text-emerald-700" />
@@ -977,7 +977,7 @@ export default function AdminBookingDetails() {
           </Card>
 
           {/* Workflow & Process Command Center */}
-          <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-2xl overflow-hidden p-5 space-y-4">
+          <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-lg overflow-hidden p-5 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <Activity className="h-4 w-4 text-primary" />
@@ -986,7 +986,7 @@ export default function AdminBookingDetails() {
             </div>
 
             {isRejecting ? (
-              <div className="space-y-3 bg-rose-50/50 p-4 rounded-xl border border-rose-200">
+              <div className="space-y-3 bg-rose-50/50 p-4 rounded-lg border border-rose-200">
                 <label className="text-xs font-bold text-rose-900 block">Reason for Rejection</label>
                 <Textarea
                   placeholder="Explain why this booking is rejected to notify customer..."
@@ -1127,7 +1127,7 @@ export default function AdminBookingDetails() {
                 {reportFiles.map((url: string, idx: number) => (
                   <div 
                     key={idx} 
-                    className="flex items-center justify-between p-3.5 border border-slate-200 rounded-xl bg-white hover:bg-slate-50/60 transition-colors shadow-2xs"
+                    className="flex items-center justify-between p-3.5 border border-slate-200 rounded-lg bg-white hover:bg-slate-50/60 transition-colors shadow-2xs"
                   >
                     <div className="flex items-center gap-3 overflow-hidden">
                       <div className="bg-primary/10 p-2.5 rounded-lg shrink-0">
@@ -1163,7 +1163,7 @@ export default function AdminBookingDetails() {
                 ))}
               </div>
             ) : (
-              <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center bg-slate-50/50">
+              <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center bg-slate-50/50">
                 <FileText className="h-8 w-8 text-slate-300 mx-auto mb-2" />
                 <p className="text-xs font-bold text-slate-800">No test reports attached yet</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">Upload certified PDF reports provided by the analytical lab</p>
@@ -1182,7 +1182,7 @@ export default function AdminBookingDetails() {
               />
               <label 
                 htmlFor="drawer-report-file-input"
-                className={`inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer shadow-2xs transition-colors ${
+                className={`inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-lg border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer shadow-2xs transition-colors ${
                   isUploading ? "opacity-50 pointer-events-none" : ""
                 }`}
               >
