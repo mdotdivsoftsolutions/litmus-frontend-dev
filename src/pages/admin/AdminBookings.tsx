@@ -41,9 +41,20 @@ export default function AdminBookings() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  // Query params sent to backend
+  const queryParams = {
+    status: statusFilter === "all" ? undefined : statusFilter.toUpperCase(),
+    paymentStatus: paymentStatusFilter === "all" ? undefined : paymentStatusFilter.toUpperCase(),
+    search: search.trim() || undefined,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+  };
+
   const { data: response, isLoading } = useQuery({
-    queryKey: ["adminBookings"],
-    queryFn: () => adminApi.getBookings(),
+    queryKey: ["adminBookings", queryParams],
+    queryFn: () => adminApi.getBookings(queryParams),
   });
 
   const { data: userResponse } = useQuery({
@@ -120,37 +131,17 @@ export default function AdminBookings() {
       totalSamples,
       itemTypes
     };
-  }).sort((a: any, b: any) => b.rawDate.getTime() - a.rawDate.getTime());
-
-  const normStatus = (s: string) => String(s || '').toLowerCase().replace(/\s+/g, '_');
-
-  const filtered = mappedBookings.filter((b: any) => {
-    const matchesSearch = !search ||
-      b.displayId.toLowerCase().includes(search.toLowerCase()) ||
-      b.user.toLowerCase().includes(search.toLowerCase());
-
-    const matchesStatus = statusFilter === "all" || normStatus(b.status) === normStatus(statusFilter);
-    const matchesPayment = paymentStatusFilter === "all" || b.paymentStatus.toLowerCase() === paymentStatusFilter.toLowerCase();
-
-    let matchesDate = true;
-    if (startDate) {
-      matchesDate = matchesDate && !isBefore(b.rawDate, startOfDay(new Date(startDate)));
-    }
-    if (endDate) {
-      matchesDate = matchesDate && !isAfter(b.rawDate, endOfDay(new Date(endDate)));
-    }
-
-    return matchesSearch && matchesStatus && matchesPayment && matchesDate;
   });
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginatedBookings = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const totalBookings = response?.total ?? (response?.count ?? rawBookings.length);
+  const totalPages = response?.totalPages ?? Math.max(1, Math.ceil(totalBookings / ITEMS_PER_PAGE));
 
   const clearFilters = () => {
     setStatusFilter("all");
     setPaymentStatusFilter("all");
     setStartDate("");
     setEndDate("");
+    setSearch("");
     setShowFilters(false);
     setCurrentPage(1);
   };
@@ -208,8 +199,7 @@ export default function AdminBookings() {
             <TableHead>Booking ID</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>User</TableHead>
-            <TableHead>Product</TableHead>
-            <TableHead className="hidden md:table-cell">Tests</TableHead>
+            <TableHead>Product & Tests</TableHead>
             <TableHead className="hidden md:table-cell">Lab</TableHead>
             {canViewPricing && <TableHead>Amount</TableHead>}
             <TableHead>Payment</TableHead>
@@ -224,8 +214,7 @@ export default function AdminBookings() {
                 <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                <TableCell className="hidden md:table-cell"><Skeleton className="h-5 w-8 rounded-full" /></TableCell>
+                <TableCell><Skeleton className="h-6 w-40" /></TableCell>
                 <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-32" /></TableCell>
                 {canViewPricing && <TableCell><Skeleton className="h-5 w-16" /></TableCell>}
                 <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
@@ -235,7 +224,7 @@ export default function AdminBookings() {
             ))
           ) : items.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={10} className="text-center py-10 text-muted-foreground">
+              <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
                 <div className="flex flex-col items-center justify-center gap-2">
                   <AlertTriangle className="h-8 w-8 text-muted-foreground/50" />
                   <span className="font-medium">No bookings found matching your criteria.</span>
@@ -249,8 +238,23 @@ export default function AdminBookings() {
                   <TableCell className="font-medium font-mono text-sm">{b.displayId}</TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap font-medium">{b.date}</TableCell>
                   <TableCell>{b.user}</TableCell>
-                  <TableCell>{b.product}</TableCell>
-                  <TableCell className="hidden md:table-cell"><Badge variant="secondary">{b.testsCount}</Badge></TableCell>
+                  <TableCell className="max-w-[260px]">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-semibold text-xs text-slate-900 line-clamp-1" title={b.product}>
+                        {b.product}
+                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                          {b.testsCount} {b.testsCount === 1 ? 'Test' : 'Tests'}
+                        </Badge>
+                        {b.totalSamples > 0 && (
+                          <span className="text-[10px] text-slate-500 font-medium">
+                            {b.totalSamples} {b.totalSamples === 1 ? 'Sample' : 'Samples'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{b.lab}</TableCell>
                   {canViewPricing && <TableCell className="font-medium">₹{b.amount?.toLocaleString()}</TableCell>}
                   <TableCell><StatusBadge status={b.paymentStatus} /></TableCell>
@@ -277,17 +281,29 @@ export default function AdminBookings() {
               ))}
               {!isLoading && items.length > 0 && (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={10} className="p-0">
+                  <TableCell colSpan={9} className="p-0">
                     <div className="flex items-center justify-between border-t border-border px-4 py-3 bg-muted/20">
                       <p className="text-sm text-muted-foreground">
-                        Showing <span className="font-medium text-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}</span> of <span className="font-medium text-foreground">{filtered.length}</span> bookings
+                        Showing <span className="font-medium text-foreground">{totalBookings === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, totalBookings)}</span> of <span className="font-medium text-foreground">{totalBookings}</span> bookings
                       </p>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" className="h-8 w-8 bg-white border border-slate-200 shadow-sm" onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(1, p - 1)); }} disabled={currentPage === 1}>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8 bg-white border border-slate-200 shadow-sm" 
+                          onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(1, p - 1)); }} 
+                          disabled={currentPage <= 1 || isLoading}
+                        >
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
                         <div className="text-sm font-medium px-2">Page {currentPage} of {Math.max(1, totalPages)}</div>
-                        <Button variant="outline" size="icon" className="h-8 w-8 bg-white border border-slate-200 shadow-sm" onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(Math.max(1, totalPages), p + 1)); }} disabled={currentPage >= totalPages}>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8 bg-white border border-slate-200 shadow-sm" 
+                          onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(Math.max(1, totalPages), p + 1)); }} 
+                          disabled={currentPage >= totalPages || isLoading}
+                        >
                           <ChevronRight className="h-4 w-4" />
                         </Button>
                       </div>
@@ -311,7 +327,7 @@ export default function AdminBookings() {
         </p>
       </div>
 
-      <Tabs defaultValue="all" value={statusFilter === "all" ? "all" : normStatus(statusFilter)} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
+      <Tabs defaultValue="all" value={statusFilter === "all" ? "all" : statusFilter.toLowerCase()} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <TabsList className="bg-white border border-slate-200 shadow-sm p-1 self-start lg:self-auto">
             <TabsTrigger value="all">All</TabsTrigger>
@@ -392,7 +408,7 @@ export default function AdminBookings() {
         </div>
 
         <div className="mt-4">
-          {renderTable(paginatedBookings)}
+          {renderTable(mappedBookings)}
         </div>
       </Tabs>
 
