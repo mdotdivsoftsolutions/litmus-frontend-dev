@@ -35,11 +35,11 @@ export function PortalLayout({ portal }: PortalLayoutProps) {
   };
 
   return (
-    <div className="flex min-h-screen w-full">
-      <SidebarNav portal={portal} open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
-      <div className="flex flex-1 flex-col min-w-0">
+    <div className="flex h-screen w-full overflow-hidden bg-background">
+      <SidebarNav portal={portal} open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} onLogoutClick={handleLogout} />
+      <div className="flex flex-1 flex-col min-w-0 h-screen overflow-hidden">
         <TopNavbar onMenuClick={() => setSidebarOpen(true)} user={user} onLogoutClick={handleLogout} portal={portal} />
-        <main className="flex-1 p-4 lg:p-6">
+        <main className="flex-1 overflow-y-auto min-w-0 p-4 lg:p-6">
           <Outlet />
         </main>
       </div>
