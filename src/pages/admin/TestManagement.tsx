@@ -42,7 +42,7 @@ export default function TestManagement() {
     }
   });
 
-  const tests = testsData?.data || [];
+  const tests = (testsData?.data || []).slice().sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
   
   const filtered = tests.filter((t: any) => {
     const matchesSearch = !search || t.testName?.toLowerCase().includes(search.toLowerCase());
@@ -58,60 +58,76 @@ export default function TestManagement() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 mx-auto">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Test Management</h1>
-        <Button className="gap-2 bg-primary hover:bg-primary-deep shadow-md shadow-primary/20" asChild>
-          <Link to="/admin/tests/new"><Plus className="h-4 w-4" />Add Test</Link>
+      {/* Title Header with Subtitle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Test Management</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Manage master diagnostic test catalog, methodologies, standard pricing, and parameter specifications.
+          </p>
+        </div>
+      </div>
+
+      {/* Single-Line Controls: Search + Filters + Add Test Button */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          {/* Search Bar */}
+          <div className="relative flex-1 sm:min-w-[260px] max-w-md">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input 
+              placeholder="Search tests by name, method..." 
+              className="pl-9 bg-white border border-slate-200 shadow-sm h-10 text-xs sm:text-sm" 
+              value={search} 
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }} 
+            />
+          </div>
+
+          {/* Filters Sheet */}
+          <Sheet open={showFilters} onOpenChange={setShowFilters}>
+            <Button variant="outline" className="gap-2 bg-white border border-slate-200 shadow-sm h-10 shrink-0 text-xs" onClick={() => setShowFilters(true)}>
+              <Filter className="h-4 w-4" />Filters
+              {typeFilter !== 'all' && <span className="ml-1 flex h-2 w-2 rounded-full bg-primary" />}
+            </Button>
+            <SheetContent>
+              <SheetHeader><SheetTitle>Filter Tests</SheetTitle></SheetHeader>
+              <div className="mt-6 space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Test Type</label>
+                  <Select value={typeFilter} onValueChange={setTypeFilter}>
+                    <SelectTrigger className="bg-white border border-slate-200 shadow-sm"><SelectValue placeholder="All Types" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="physical">Physical</SelectItem>
+                      <SelectItem value="chemical">Chemical</SelectItem>
+                      <SelectItem value="microbiological">Microbiological</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button className="flex-1 bg-primary hover:bg-primary/90 text-white" onClick={() => setShowFilters(false)}>Apply</Button>
+                  <Button variant="outline" className="flex-1" onClick={() => { setTypeFilter("all"); setShowFilters(false); }}>Clear</Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Primary Styled Add Test Button */}
+        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2 self-start lg:self-auto">
+          <Link to="/admin/tests/new">
+            <Plus className="h-4 w-4" /> Add Test
+          </Link>
         </Button>
       </div>
 
-      <div className="flex gap-2">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input 
-            placeholder="Search tests..." 
-            className="pl-9 bg-background/50" 
-            value={search} 
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }} 
-          />
-        </div>
-        <Sheet open={showFilters} onOpenChange={setShowFilters}>
-          <Button variant="outline" className="gap-2 bg-background/50" onClick={() => setShowFilters(true)}>
-            <Filter className="h-4 w-4" />Filters
-            {typeFilter !== 'all' && <span className="ml-1 flex h-2 w-2 rounded-full bg-primary" />}
-          </Button>
-          <SheetContent>
-            <SheetHeader><SheetTitle>Filter Tests</SheetTitle></SheetHeader>
-            <div className="mt-6 space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Test Type</label>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger><SelectValue placeholder="All Types" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="physical">Physical</SelectItem>
-                    <SelectItem value="chemical">Chemical</SelectItem>
-                    <SelectItem value="microbiological">Microbiological</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-2 pt-4">
-                <Button className="flex-1 bg-primary hover:bg-primary-deep" onClick={() => setShowFilters(false)}>Apply</Button>
-                <Button variant="outline" className="flex-1" onClick={() => { setTypeFilter('all'); setShowFilters(false); }}>Clear</Button>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-
-      <Card className="border border-border shadow-sm overflow-hidden">
+      <Card className="border border-border shadow-sm overflow-hidden bg-white">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
+              <TableRow className="bg-slate-50">
                 <TableHead>Test Name</TableHead>
                 <TableHead>Creator</TableHead>
                 <TableHead>Method</TableHead>

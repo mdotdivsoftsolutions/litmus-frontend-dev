@@ -13,6 +13,7 @@ import { Search, MoreVertical, PowerOff, Power, UserPlus, Pencil } from "lucide-
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api/axios";
 import { CreateEmployeeDrawer } from "./CreateEmployeeDrawer";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Local API calls for employee management
 const employeeApi = {
@@ -20,8 +21,8 @@ const employeeApi = {
     const response = await apiClient.get('/employees');
     return response.data;
   },
-  updateEmployee: async (data: { id: string, isActive?: boolean, permissions?: string[] }) => {
-    const response = await apiClient.put(`/employees/${data.id}`, data);
+  updateEmployee: async ({ id, ...data }: { id: string; [key: string]: any }) => {
+    const response = await apiClient.put(`/employees/${id}`, data);
     return response.data;
   }
 };
@@ -29,6 +30,7 @@ const employeeApi = {
 export default function EmployeeManagement() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [employeeToToggle, setEmployeeToToggle] = useState<{id: string, isActive: boolean} | null>(null);
   const [employeeToEdit, setEmployeeToEdit] = useState<any>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -49,14 +51,21 @@ export default function EmployeeManagement() {
     }
   });
 
-  const employees = response?.data || [];
+  const employees = (response?.data || []).slice().sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
   const filtered = employees.filter((u: any) => {
     const fullName = `${u.firstName} ${u.lastName || ""}`.toLowerCase();
-    return !search || 
+    const matchesSearch = !search || 
       fullName.includes(search.toLowerCase()) || 
       (u.email && u.email.toLowerCase().includes(search.toLowerCase())) || 
       (u.phone && u.phone.includes(search));
+
+    const matchesStatus = 
+      statusFilter === "all" ||
+      (statusFilter === "active" && u.isActive !== false) ||
+      (statusFilter === "inactive" && u.isActive === false);
+
+    return matchesSearch && matchesStatus;
   });
 
   const handleStatusToggle = (id: string, currentStatus: boolean) => {
@@ -71,29 +80,60 @@ export default function EmployeeManagement() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <h1 className="text-2xl font-bold text-foreground">Employee Management</h1>
-
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input 
-            placeholder="Search employees..." 
-            className="pl-9" 
-            value={search} 
-            onChange={(e) => setSearch(e.target.value)} 
-          />
+    <div className="space-y-6 animate-fade-in pb-20">
+      {/* Title Header with Subtitle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Employee Management</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Manage staff members, roles, access permissions, and account statuses.
+          </p>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)} className="bg-primary hover:bg-primary/90 text-white">
-          <UserPlus className="h-4 w-4 mr-2" />
-          Add Employee
+      </div>
+
+      {/* Single-Line Controls: Search + Status Filter + Add Employee Button */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          {/* Search Input */}
+          <div className="relative flex-1 sm:min-w-[260px] max-w-md">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input 
+              placeholder="Search by name, email, or phone..." 
+              className="pl-9 bg-white border border-slate-200 shadow-sm h-10 text-xs sm:text-sm" 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)} 
+            />
+          </div>
+
+          {/* Status Filter */}
+          <Select
+            value={statusFilter}
+            onValueChange={(val) => setStatusFilter(val)}
+          >
+            <SelectTrigger className="w-[140px] bg-white border border-slate-200 shadow-sm h-10 text-xs font-medium">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Primary Styled Add Employee Button */}
+        <Button 
+          onClick={() => setIsCreateModalOpen(true)} 
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2 self-start lg:self-auto"
+        >
+          <UserPlus className="h-4 w-4" /> Add Employee
         </Button>
       </div>
 
-      <Card className="border-0 shadow-sm overflow-auto">
+      <Card className="border border-border shadow-sm overflow-auto bg-white">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-slate-50">
               <TableHead>Employee</TableHead>
               <TableHead>Permissions</TableHead>
               <TableHead>Status</TableHead>

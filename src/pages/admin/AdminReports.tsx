@@ -106,7 +106,7 @@ export default function AdminReports() {
     uploadDate: format(new Date(b.updatedAt || b.createdAt), "MMM d, yyyy"),
     rawDate: new Date(b.updatedAt || b.createdAt),
     rawBooking: b,
-  }));
+  })).sort((a: any, b: any) => b.rawDate.getTime() - a.rawDate.getTime());
 
   // Sync edit state when a report is selected
   useEffect(() => {
@@ -182,23 +182,20 @@ export default function AdminReports() {
   const createReportMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => adminApi.updateBookingReport(id, data),
     onSuccess: () => {
-      toast.success("Report uploaded and saved successfully");
+      toast.success("New report successfully attached to booking!");
       queryClient.invalidateQueries({ queryKey: ["adminReports"] });
       setIsUploadModalOpen(false);
-      resetNewReportForm();
+      // Reset form
+      setTargetBookingId("");
+      setNewUploadedFileUrl("");
+      setNewSummary("");
+      setNewRecs("");
+      setNewTips("");
+      setNewNotes("");
+      setAutoApprove(true);
     },
-    onError: () => toast.error("Failed to upload report for booking")
+    onError: () => toast.error("Failed to upload report")
   });
-
-  const resetNewReportForm = () => {
-    setTargetBookingId("");
-    setNewUploadedFileUrl("");
-    setNewSummary("");
-    setNewRecs("");
-    setNewTips("");
-    setNewNotes("");
-    setAutoApprove(true);
-  };
 
   // File Upload in Edit/Review Dialog
   const handleEditFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,22 +239,14 @@ export default function AdminReports() {
     }
   };
 
-  const handleSaveAndApprove = () => {
+  // Action Handlers
+  const handleReject = () => {
     if (!selectedReport) return;
-    if (editFiles.length === 0) {
-      toast.error("Please ensure a report document is uploaded");
+    if (!rejectionReason.trim()) {
+      toast.error("Please provide a reason for rejection");
       return;
     }
-    approveMutation.mutate({
-      id: selectedReport.id,
-      data: {
-        reportFiles: editFiles,
-        summary: editSummary.trim(),
-        recommendations: editRecs.trim(),
-        tips: editTips.trim(),
-        additionalNotes: editNotes.trim(),
-      },
-    });
+    rejectMutation.mutate({ id: selectedReport.id, reason: rejectionReason.trim() });
   };
 
   const handleSaveRemarksOnly = () => {
@@ -266,41 +255,46 @@ export default function AdminReports() {
       id: selectedReport.id,
       data: {
         reportFiles: editFiles,
-        summary: editSummary.trim(),
-        recommendations: editRecs.trim(),
-        tips: editTips.trim(),
-        additionalNotes: editNotes.trim(),
-        isReportApprovedByAdmin: selectedReport.isReportApprovedByAdmin,
+        summary: editSummary,
+        recommendations: editRecs,
+        tips: editTips,
+        additionalNotes: editNotes,
       },
     });
   };
 
-  const handleReject = () => {
+  const handleSaveAndApprove = () => {
     if (!selectedReport) return;
-    if (!rejectionReason.trim()) {
-      toast.error("Please enter a rejection reason");
-      return;
-    }
-    rejectMutation.mutate({ id: selectedReport.id, reason: rejectionReason.trim() });
+    approveMutation.mutate({
+      id: selectedReport.id,
+      data: {
+        reportFiles: editFiles,
+        summary: editSummary,
+        recommendations: editRecs,
+        tips: editTips,
+        additionalNotes: editNotes,
+      },
+    });
   };
 
   const handleCreateReportSubmit = () => {
     if (!targetBookingId) {
-      toast.error("Please select a booking to upload the report for");
+      toast.error("Please select a target booking");
       return;
     }
     if (!newUploadedFileUrl) {
-      toast.error("Please upload a report document (PDF or Image)");
+      toast.error("Please upload a report document");
       return;
     }
+
     createReportMutation.mutate({
       id: targetBookingId,
       data: {
         reportFiles: [newUploadedFileUrl],
-        summary: newSummary.trim(),
-        recommendations: newRecs.trim(),
-        tips: newTips.trim(),
-        additionalNotes: newNotes.trim(),
+        summary: newSummary,
+        recommendations: newRecs,
+        tips: newTips,
+        additionalNotes: newNotes,
         isReportApprovedByAdmin: autoApprove,
       },
     });
@@ -315,7 +309,7 @@ export default function AdminReports() {
         </div>
         <Button 
           onClick={() => setIsUploadModalOpen(true)} 
-          className="bg-primary hover:bg-primary-deep text-white gap-2 shadow-sm"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-sm"
         >
           <PlusCircle className="h-4 w-4" /> Upload Report for Booking
         </Button>
@@ -323,67 +317,81 @@ export default function AdminReports() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4">
-        <Card className="border border-border shadow-sm"><CardContent className="p-4 text-center"><p className="text-2xl font-semibold text-primary">{mappedReports.filter((r: any) => r.status === "Pending Verification").length}</p><p className="text-xs text-muted-foreground">Pending Review</p></CardContent></Card>
-        <Card className="border border-border shadow-sm"><CardContent className="p-4 text-center"><p className="text-2xl font-semibold text-litmus-emerald">{mappedReports.filter((r: any) => r.status === "Verified").length}</p><p className="text-xs text-muted-foreground">Verified & Published</p></CardContent></Card>
-        <Card className="border border-border shadow-sm"><CardContent className="p-4 text-center"><p className="text-2xl font-semibold text-foreground">{mappedReports.length}</p><p className="text-xs text-muted-foreground">Total Reports</p></CardContent></Card>
+        <Card className="border border-border shadow-sm bg-white"><CardContent className="p-4 text-center"><p className="text-2xl font-semibold text-primary">{mappedReports.filter((r: any) => r.status === "Pending Verification").length}</p><p className="text-xs text-muted-foreground">Pending Review</p></CardContent></Card>
+        <Card className="border border-border shadow-sm bg-white"><CardContent className="p-4 text-center"><p className="text-2xl font-semibold text-litmus-emerald">{mappedReports.filter((r: any) => r.status === "Verified").length}</p><p className="text-xs text-muted-foreground">Verified & Published</p></CardContent></Card>
+        <Card className="border border-border shadow-sm bg-white"><CardContent className="p-4 text-center"><p className="text-2xl font-semibold text-foreground">{mappedReports.length}</p><p className="text-xs text-muted-foreground">Total Reports</p></CardContent></Card>
       </div>
 
-      <div className="flex gap-2">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input 
-            placeholder="Search by ID, User, Lab, Product..." 
-            className="pl-9 bg-background/50" 
-            value={search} 
-            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} 
-          />
-        </div>
-        <Sheet open={showFilters} onOpenChange={setShowFilters}>
-          <Button variant="outline" className="gap-2 bg-background/50" onClick={() => setShowFilters(true)}>
-            <Filter className="h-4 w-4" />Filters
-            {(statusFilter !== 'all' || startDate || endDate) && <span className="ml-1 flex h-2 w-2 rounded-full bg-primary" />}
-          </Button>
-          <SheetContent className="overflow-y-auto">
-            <SheetHeader><SheetTitle>Filter Reports</SheetTitle></SheetHeader>
-            <div className="mt-6 space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Verification Status</label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger><SelectValue placeholder="All Statuses" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="pending verification">Pending Verification</SelectItem>
-                    <SelectItem value="verified">Verified</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2"><CalendarIcon className="h-4 w-4" /> Upload Date</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">From</span>
-                    <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">To</span>
-                    <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          <div className="relative flex-1 sm:w-80">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input 
+              placeholder="Search by ID, User, Lab, Product..." 
+              className="pl-9 bg-white border border-slate-200 shadow-sm h-10 text-xs sm:text-sm" 
+              value={search} 
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} 
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
+            <SelectTrigger className="w-44 h-10 bg-white border border-slate-200 shadow-sm text-xs sm:text-sm">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="pending verification">Pending Verification</SelectItem>
+              <SelectItem value="verified">Verified</SelectItem>
+            </SelectContent>
+          </Select>
+          <Sheet open={showFilters} onOpenChange={setShowFilters}>
+            <Button variant="outline" className="gap-2 bg-white border border-slate-200 shadow-sm h-10 shrink-0 text-xs" onClick={() => setShowFilters(true)}>
+              <Filter className="h-4 w-4" />Filters
+              {(statusFilter !== 'all' || startDate || endDate) && <span className="ml-1 flex h-2 w-2 rounded-full bg-primary" />}
+            </Button>
+            <SheetContent className="overflow-y-auto">
+              <SheetHeader><SheetTitle>Filter Reports</SheetTitle></SheetHeader>
+              <div className="mt-6 space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Verification Status</label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="bg-white border border-slate-200 shadow-sm">
+                      <SelectValue placeholder="All Statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="pending verification">Pending Verification</SelectItem>
+                      <SelectItem value="verified">Verified</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2"><CalendarIcon className="h-4 w-4" /> Upload Date</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <span className="text-xs text-muted-foreground">From</span>
+                      <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-white border border-slate-200 shadow-sm text-xs" />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-xs text-muted-foreground">To</span>
+                      <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-white border border-slate-200 shadow-sm text-xs" />
+                    </div>
                   </div>
                 </div>
+                
+                <div className="flex gap-2 pt-4">
+                  <Button className="flex-1 bg-primary hover:bg-primary-deep" onClick={() => { setShowFilters(false); setCurrentPage(1); }}>Apply Filters</Button>
+                  <Button variant="outline" className="flex-1" onClick={clearFilters}>Clear</Button>
+                </div>
               </div>
-              
-              <div className="flex gap-2 pt-4">
-                <Button className="flex-1 bg-primary hover:bg-primary-deep" onClick={() => { setShowFilters(false); setCurrentPage(1); }}>Apply Filters</Button>
-                <Button variant="outline" className="flex-1" onClick={clearFilters}>Clear</Button>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
-      <Card className="border border-border shadow-sm overflow-hidden">
+      <Card className="border border-border shadow-sm overflow-hidden bg-white">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50">
+            <TableRow className="bg-slate-50">
               <TableHead>Booking ID</TableHead>
               <TableHead>User</TableHead>
               <TableHead>Product</TableHead>

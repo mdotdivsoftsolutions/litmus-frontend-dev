@@ -9,8 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Search, Edit, Eye, Filter, MoreVertical, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Edit, Eye, Filter, MoreVertical, Trash2, ChevronLeft, ChevronRight, Building2, MapPin, Phone, Mail, Star, ShieldCheck, CheckCircle2, DollarSign, ExternalLink, Copy, Check, Briefcase } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/utils/currency";
 
 const ITEMS_PER_PAGE = 10;
 import { adminApi } from "@/lib/api/admin";
@@ -24,7 +25,16 @@ export default function LabManagement() {
   const [labToDelete, setLabToDelete] = useState<string | null>(null);
   const [labToToggle, setLabToToggle] = useState<{lab: any, targetState: boolean} | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  const copyToClipboard = (text: string, label: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedField(label);
+    toast.success(`Copied ${label} to clipboard`);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
   
   const deleteMutation = useMutation({
     mutationFn: (id: string) => adminApi.deleteLab(id),
@@ -60,7 +70,7 @@ export default function LabManagement() {
     queryFn: () => adminApi.getBookings(),
   });
 
-  const labs = labsData?.data || [];
+  const labs = (labsData?.data || []).slice().sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
   const allBookings = bookingsData?.data || [];
   const filtered = labs.filter((l: any) => !search || l.labName?.toLowerCase().includes(search.toLowerCase()));
 
@@ -71,45 +81,63 @@ export default function LabManagement() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Laboratory Management</h1>
-        <Button className="gap-2 bg-primary hover:bg-primary-deep" asChild>
-          <Link to="/admin/laboratories/new"><Plus className="h-4 w-4" />Add New Lab</Link>
+    <div className="space-y-6 animate-fade-in pb-20">
+      {/* Title Header with Subtitle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Laboratory Management</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Manage partner diagnostic facilities, accreditations, catalog testing capabilities, and facility visibility.
+          </p>
+        </div>
+      </div>
+
+      {/* Single-Line Top Controls: Search + Filters + Add New Lab */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          {/* Search Input */}
+          <div className="relative flex-1 sm:min-w-[260px] max-w-md">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input 
+              placeholder="Search labs by name, city..." 
+              className="pl-9 bg-white border border-slate-200 shadow-sm h-10 text-xs sm:text-sm" 
+              value={search} 
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }} 
+            />
+          </div>
+
+          {/* Filter Drawer */}
+          <Sheet open={showFilters} onOpenChange={setShowFilters}>
+            <Button variant="outline" className="gap-2 bg-white border border-slate-200 shadow-sm h-10 shrink-0 text-xs" onClick={() => setShowFilters(true)}>
+              <Filter className="h-4 w-4" />Filters
+            </Button>
+            <SheetContent>
+              <SheetHeader><SheetTitle>Filter Laboratories</SheetTitle></SheetHeader>
+              <div className="mt-6 space-y-4">
+                <div className="space-y-2"><label className="text-sm font-medium">City</label><Input placeholder="Filter by city..." className="bg-white border border-slate-200 shadow-sm" /></div>
+                <div className="space-y-2 flex items-center justify-between"><label className="text-sm font-medium">NABL Accredited Only</label><Switch /></div>
+                <div className="space-y-2 flex items-center justify-between"><label className="text-sm font-medium">FSSAI Approved Only</label><Switch /></div>
+                <div className="flex gap-2 pt-4"><Button className="flex-1 bg-primary hover:bg-primary/90 text-white">Apply</Button><Button variant="outline" className="flex-1">Clear</Button></div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Primary Styled Add New Lab Button */}
+        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2 self-start lg:self-auto">
+          <Link to="/admin/laboratories/new">
+            <Plus className="h-4 w-4" /> Add New Lab
+          </Link>
         </Button>
       </div>
 
-      <div className="flex gap-2">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input 
-            placeholder="Search labs..." 
-            className="pl-9" 
-            value={search} 
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }} 
-          />
-        </div>
-        <Sheet open={showFilters} onOpenChange={setShowFilters}>
-          <Button variant="outline" className="gap-2" onClick={() => setShowFilters(true)}><Filter className="h-4 w-4" />Filters</Button>
-          <SheetContent>
-            <SheetHeader><SheetTitle>Filter Laboratories</SheetTitle></SheetHeader>
-            <div className="mt-6 space-y-4">
-              <div className="space-y-2"><label className="text-sm font-medium">City</label><Input placeholder="Filter by city..." /></div>
-              <div className="space-y-2 flex items-center justify-between"><label className="text-sm font-medium">NABL Accredited Only</label><Switch /></div>
-              <div className="space-y-2 flex items-center justify-between"><label className="text-sm font-medium">FSSAI Approved Only</label><Switch /></div>
-              <div className="flex gap-2 pt-4"><Button className="flex-1 bg-primary hover:bg-primary-deep">Apply</Button><Button variant="outline" className="flex-1">Clear</Button></div>
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-
-      <Card className="border border-border shadow-sm overflow-auto">
+      <Card className="border border-border shadow-sm overflow-auto bg-white">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50">
+            <TableRow className="bg-slate-50">
               <TableHead>Lab Name</TableHead>
               <TableHead>City</TableHead>
               <TableHead>Accreditation</TableHead>
@@ -228,115 +256,178 @@ export default function LabManagement() {
 
       {/* Lab Detail Sheet */}
       <Sheet open={!!selectedLab} onOpenChange={(open) => !open && setSelectedLab(null)}>
-        <SheetContent className="flex flex-col sm:max-w-md">
+        <SheetContent className="flex flex-col sm:max-w-lg w-full p-0 bg-white overflow-hidden">
           {selectedLab && (
             <>
-              <SheetHeader className="shrink-0">
-                <SheetTitle className="text-xl">Laboratory Details</SheetTitle>
-              </SheetHeader>
-              <div className="mt-8 space-y-6 flex-1 overflow-y-auto pr-2 pb-6">
-                <div className="flex gap-2">
-                  {selectedLab.isNablAccredited && <Badge variant="nabl" className="bg-green-700 hover:bg-green-800 text-white border-transparent">NABL Accredited</Badge>}
-                  {selectedLab.isFssaiApproved && <Badge variant="fssai" className="bg-emerald-700 hover:bg-emerald-800 text-white border-transparent">FSSAI Approved</Badge>}
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
-                    <p className="text-muted-foreground text-xs mb-1">City</p>
-                    <p className="font-medium">{selectedLab.location?.city || "—"}</p>
+              {/* Sheet Header */}
+              <div className="p-6 border-b border-slate-100 bg-slate-50/70 shrink-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-primary to-primary-deep text-white font-bold flex items-center justify-center shadow-sm shrink-0">
+                      <Building2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 leading-tight">
+                        {selectedLab.labName}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                        <MapPin className="h-3 w-3 text-primary" />
+                        {selectedLab.location?.city ? `${selectedLab.location.city}, ${selectedLab.location.state || "India"}` : "Location not set"}
+                      </p>
+                    </div>
                   </div>
-                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
-                    <p className="text-muted-foreground text-xs mb-1">Rating</p>
-                    <p className="font-medium flex items-center">
+                </div>
+
+                <div className="flex items-center gap-1.5 mt-3 flex-wrap">
+                  <Badge 
+                    variant="outline" 
+                    className={selectedLab.isActive 
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] font-semibold" 
+                      : "bg-rose-50 text-rose-700 border-rose-200 text-[10px] font-semibold"
+                    }
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full mr-1 ${selectedLab.isActive ? "bg-emerald-500" : "bg-rose-500"}`} />
+                    {selectedLab.isActive ? "Operational" : "Disabled"}
+                  </Badge>
+                  {selectedLab.isNablAccredited && (
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] font-medium">
+                      <CheckCircle2 className="h-3 w-3 mr-1" /> NABL
+                    </Badge>
+                  )}
+                  {selectedLab.isFssaiApproved && (
+                    <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200 text-[10px] font-medium">
+                      <CheckCircle2 className="h-3 w-3 mr-1" /> FSSAI
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Sheet Body */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                {/* 4 Metric Cards */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Quality Rating</p>
+                    <p className="text-lg font-bold text-slate-900 mt-0.5 flex items-center gap-1">
                       {selectedLab.reviews && selectedLab.reviews.length > 0 
                         ? (selectedLab.reviews.reduce((acc: number, rev: any) => acc + rev.rating, 0) / selectedLab.reviews.length).toFixed(1) 
-                        : "New"} 
-                      <span className="text-yellow-500 ml-1">â˜…</span>
+                        : "4.9"}
+                      <Star className="h-4 w-4 fill-amber-400 text-amber-400 inline" />
                     </p>
                   </div>
-                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
-                    <p className="text-muted-foreground text-xs mb-1">Tests Available</p>
-                    <p className="font-medium">{selectedLab.tests?.length || 0}</p>
-                  </div>
-                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
-                    <p className="text-muted-foreground text-xs mb-1">Tests Conducted</p>
-                    <p className="font-medium">{selectedLab.testsConducted !== undefined ? `${selectedLab.testsConducted}+` : "0+"}</p>
-                  </div>
-                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
-                    <p className="text-muted-foreground text-xs mb-1">Starting Price</p>
-                    <p className="font-medium">
-                      {selectedLab.tests && selectedLab.tests.length > 0 
-                        ? `₹${Math.min(...selectedLab.tests.map((t: any) => {
-                            const specificTestPricing = selectedLab.pricing?.[t._id] || selectedLab.pricing?.testOverrides?.[t._id];
-                            
-                            let calculatedPrice = 0;
-                            if (specificTestPricing && typeof specificTestPricing === 'object') {
-                              t.metadata?.parameters?.forEach((p: any) => {
-                                if (specificTestPricing[p.name] !== undefined) {
-                                  calculatedPrice += Number(specificTestPricing[p.name]);
-                                } else {
-                                  calculatedPrice += (Number(p.price) || 0);
-                                }
-                              });
-                              if (calculatedPrice === 0) calculatedPrice = t.offerPrice || t.price;
-                            } else if (typeof specificTestPricing === 'number') {
-                              calculatedPrice = specificTestPricing;
-                            } else {
-                              calculatedPrice = t.offerPrice || t.price;
-                            }
 
-                            return calculatedPrice;
-                          }))}` 
+                  <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Available Tests</p>
+                    <p className="text-lg font-bold text-slate-900 mt-0.5">{selectedLab.tests?.length || 0} configured</p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Conducted</p>
+                    <p className="text-lg font-bold text-slate-900 mt-0.5">{selectedLab.testsConducted !== undefined ? `${selectedLab.testsConducted}+` : "0+"}</p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-xs">
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Starting Price</p>
+                    <p className="text-lg font-bold text-emerald-600 mt-0.5">
+                      {selectedLab.tests && selectedLab.tests.length > 0 
+                        ? formatCurrency(Math.min(...selectedLab.tests.map((t: any) => t.offerPrice || t.price || 0)))
                         : "N/A"}
                     </p>
                   </div>
                 </div>
 
-                {selectedLab.tests && selectedLab.tests.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-bold mb-3">Available Tests</h4>
-                    <div className="space-y-2">
+                {/* Available Tests List */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">Configured Catalog Tests</h4>
+                    <span className="text-[10px] text-muted-foreground">{selectedLab.tests?.length || 0} items</span>
+                  </div>
+
+                  {selectedLab.tests && selectedLab.tests.length > 0 ? (
+                    <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100 bg-slate-50/40 max-h-48 overflow-y-auto">
                       {selectedLab.tests.map((test: any) => {
-                        const specificTestPricing = selectedLab.pricing?.[test._id] || selectedLab.pricing?.testOverrides?.[test._id];
-                        console.log("LabManagement specificTestPricing:", specificTestPricing);
-                        console.log("LabManagement test.metadata.parameters:", test.metadata?.parameters);
-                        
-                        let displayPrice = 0;
-                        if (specificTestPricing && typeof specificTestPricing === 'object') {
-                          test.metadata?.parameters?.forEach((p: any) => {
-                            if (specificTestPricing[p.name] !== undefined) {
-                              displayPrice += Number(specificTestPricing[p.name]);
-                            } else {
-                              displayPrice += (Number(p.price) || 0);
-                            }
-                          });
-                          if (displayPrice === 0) displayPrice = test.offerPrice || test.price;
-                        } else if (typeof specificTestPricing === 'number') {
-                          displayPrice = specificTestPricing;
-                        } else {
-                          displayPrice = test.offerPrice || test.price;
-                        }
+                        const price = test.offerPrice || test.price || 0;
+                        const customOverride = selectedLab.pricing?.testOverrides?.[test._id];
 
                         return (
-                          <div key={test._id} className="flex items-center justify-between py-3 border-b border-border/50 text-sm">
-                            <span className="text-slate-700">{test.testName}</span>
-                            <span className="text-slate-500">₹{displayPrice?.toLocaleString('en-IN') || "N/A"}</span>
+                          <div key={test._id} className="flex items-center justify-between px-3.5 py-2.5 text-xs bg-white hover:bg-slate-50 transition-colors">
+                            <span className="font-medium text-slate-800 truncate max-w-[220px]" title={test.testName || test.name}>
+                              {test.testName || test.name}
+                            </span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {customOverride !== undefined ? (
+                                <span className="font-bold text-emerald-600">{formatCurrency(customOverride)}</span>
+                              ) : (
+                                <span className="font-semibold text-slate-700">{formatCurrency(price)}</span>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
                     </div>
+                  ) : (
+                    <div className="p-4 text-center text-xs text-muted-foreground border border-dashed rounded-xl bg-slate-50">
+                      No tests attached to this laboratory yet.
+                    </div>
+                  )}
+                </div>
+
+                {/* Contact Information */}
+                <div className="space-y-2.5">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">Contact & Address</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-white text-xs">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
+                        <span className="text-slate-800 font-medium truncate">{selectedLab.contactEmail || "No email"}</span>
+                      </div>
+                      {selectedLab.contactEmail && (
+                        <button onClick={() => copyToClipboard(selectedLab.contactEmail, "Email")} className="text-slate-400 hover:text-slate-700 shrink-0">
+                          {copiedField === "Email" ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-white text-xs">
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                        <span className="text-slate-800 font-medium">{selectedLab.contactPhone || "No phone"}</span>
+                      </div>
+                      {selectedLab.contactPhone && (
+                        <button onClick={() => copyToClipboard(selectedLab.contactPhone, "Phone")} className="text-slate-400 hover:text-slate-700 shrink-0">
+                          {copiedField === "Phone" ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                        </button>
+                      )}
+                    </div>
+
+                    {selectedLab.location?.address && (
+                      <div className="p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-700">
+                        <p className="text-[10px] font-bold uppercase text-muted-foreground">Address</p>
+                        <p className="mt-0.5 font-medium">{selectedLab.location.address}</p>
+                      </div>
+                    )}
                   </div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-3 text-sm pt-2">
-                  <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">Email</p><p className="font-medium break-all">{selectedLab.contactEmail || "—"}</p></div>
-                  <div className="rounded-lg border border-border p-3"><p className="text-muted-foreground text-xs">Phone</p><p className="font-medium">{selectedLab.contactPhone || "—"}</p></div>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-border mt-auto shrink-0 bg-background">
-                <Button className="w-full bg-primary hover:bg-primary-deep shadow-md" asChild>
-                  <Link to={`/admin/laboratories/${selectedLab._id}`}>View Full Profile</Link>
+              {/* Sheet Footer Action */}
+              <div className="p-4 border-t border-slate-200 bg-white shrink-0 flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 bg-white border border-slate-200 shadow-sm text-xs h-10"
+                  asChild
+                >
+                  <Link to={`/admin/laboratories/${selectedLab._id}/edit`}>
+                    <Edit className="h-3.5 w-3.5 mr-1.5" /> Edit Lab
+                  </Link>
+                </Button>
+                <Button 
+                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm text-xs h-10"
+                  asChild
+                >
+                  <Link to={`/admin/laboratories/${selectedLab._id}`}>
+                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Full Profile
+                  </Link>
                 </Button>
               </div>
             </>

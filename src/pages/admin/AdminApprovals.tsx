@@ -80,26 +80,32 @@ export default function AdminApprovals() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 mx-auto">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Pending Approvals</h1>
+      {/* Title Header with Subtitle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Pending Approvals</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Review and authorize laboratory-submitted custom tests, bundled packages, and modified pricing overrides.
+          </p>
+        </div>
       </div>
 
       <Tabs defaultValue="tests" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="tests" className="gap-2">
+        <TabsList className="bg-white border border-slate-200 shadow-sm p-1 inline-flex w-full sm:w-auto h-auto flex-wrap gap-1 mb-4">
+          <TabsTrigger value="tests" className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium rounded-md transition-all gap-2">
             <TestTubes className="h-4 w-4" /> Tests ({pendingTests.length})
           </TabsTrigger>
-          <TabsTrigger value="packages" className="gap-2">
+          <TabsTrigger value="packages" className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium rounded-md transition-all gap-2">
             <Package className="h-4 w-4" /> Packages ({pendingPackages.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="tests">
-          <Card className="border border-border shadow-sm overflow-hidden">
+          <Card className="border border-border shadow-sm overflow-hidden bg-white">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50">
+                  <TableRow className="bg-slate-50">
                     <TableHead>Test Name</TableHead>
                     <TableHead>Lab</TableHead>
                     <TableHead>Price (₹)</TableHead>
@@ -157,11 +163,11 @@ export default function AdminApprovals() {
         </TabsContent>
 
         <TabsContent value="packages">
-          <Card className="border border-border shadow-sm overflow-hidden">
+          <Card className="border border-border shadow-sm overflow-hidden bg-white">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50">
+                  <TableRow className="bg-slate-50">
                     <TableHead>Package Name</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Original (₹)</TableHead>

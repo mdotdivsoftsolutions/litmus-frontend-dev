@@ -16,6 +16,7 @@ export default function CategoryManagement() {
   const queryClient = useQueryClient();
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 8;
 
@@ -44,21 +45,42 @@ export default function CategoryManagement() {
     productCount?: number;
   }
 
-  const categories: Category[] = categoriesData?.data?.data || [];
-  const totalPages = Math.ceil(categories.length / ITEMS_PER_PAGE);
+  const rawCategories: Category[] = categoriesData?.data?.data || [];
+  const categories = rawCategories.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase()));
+  const totalPages = Math.max(1, Math.ceil(categories.length / ITEMS_PER_PAGE));
   const paginatedCategories = categories.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
   return (
-    <div className="space-y-6 animate-fade-in pb-10">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 animate-fade-in pb-20 mx-auto">
+      {/* Title Header with Subtitle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Category Management</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage product categories and imagery.</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Manage food & industrial diagnostic testing categories and imagery.
+          </p>
         </div>
-        <Button asChild className="gap-2 bg-primary hover:bg-primary-deep shadow-sm">
+      </div>
+
+      {/* Single-Line Controls: Search + Add Category Button */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="relative flex-1 sm:min-w-[260px] max-w-md">
+          <Input 
+            placeholder="Search categories..." 
+            className="bg-white border border-slate-200 shadow-sm h-10 text-xs sm:text-sm" 
+            value={search} 
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }} 
+          />
+        </div>
+
+        {/* Primary Styled Add Category Button */}
+        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2 self-start lg:self-auto">
           <Link to="/admin/categories/new">
             <Plus className="h-4 w-4" /> Add Category
           </Link>

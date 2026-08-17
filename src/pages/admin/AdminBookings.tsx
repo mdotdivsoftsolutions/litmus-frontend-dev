@@ -118,7 +118,7 @@ export default function AdminBookings() {
       totalSamples,
       itemTypes
     };
-  });
+  }).sort((a: any, b: any) => b.rawDate.getTime() - a.rawDate.getTime());
 
   const normStatus = (s: string) => String(s || '').toLowerCase().replace(/\s+/g, '_');
 
@@ -199,10 +199,10 @@ export default function AdminBookings() {
   ];
 
   const renderTable = (items: any[]) => (
-    <Card className="border border-border shadow-sm overflow-hidden">
+    <Card className="border border-border shadow-sm overflow-hidden bg-white">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50">
+          <TableRow className="bg-slate-50">
             <TableHead>Booking ID</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>User</TableHead>
@@ -258,7 +258,7 @@ export default function AdminBookings() {
                       <Button variant="ghost" size="sm" className="gap-1" onClick={(e) => { e.stopPropagation(); setSelectedBooking(b); }}>
                         <Eye className="h-3.5 w-3.5" />View
                       </Button>
-                      <Button variant="outline" size="sm" className="gap-1 h-8" onClick={(e) => { e.stopPropagation(); navigate(`/admin/bookings/${b.id}`); }}>
+                      <Button variant="outline" size="sm" className="gap-1 h-8 bg-white border border-slate-200" onClick={(e) => { e.stopPropagation(); navigate(`/admin/bookings/${b.id}`); }}>
                         Details
                       </Button>
                     </div>
@@ -273,11 +273,11 @@ export default function AdminBookings() {
                         Showing <span className="font-medium text-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}</span> of <span className="font-medium text-foreground">{filtered.length}</span> bookings
                       </p>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" className="h-8 w-8 bg-background" onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(1, p - 1)); }} disabled={currentPage === 1}>
+                        <Button variant="outline" size="icon" className="h-8 w-8 bg-white border border-slate-200 shadow-sm" onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(1, p - 1)); }} disabled={currentPage === 1}>
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
                         <div className="text-sm font-medium px-2">Page {currentPage} of {Math.max(1, totalPages)}</div>
-                        <Button variant="outline" size="icon" className="h-8 w-8 bg-background" onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(Math.max(1, totalPages), p + 1)); }} disabled={currentPage >= totalPages}>
+                        <Button variant="outline" size="icon" className="h-8 w-8 bg-white border border-slate-200 shadow-sm" onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(Math.max(1, totalPages), p + 1)); }} disabled={currentPage >= totalPages}>
                           <ChevronRight className="h-4 w-4" />
                         </Button>
                       </div>
@@ -294,11 +294,16 @@ export default function AdminBookings() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 mx-auto">
-      <h1 className="text-2xl font-bold text-foreground">Booking Management</h1>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Booking Management</h1>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Track diagnostic test orders, sample logistics, lab assignments, and live fulfillment statuses.
+        </p>
+      </div>
 
       <Tabs defaultValue="all" value={statusFilter === "all" ? "all" : normStatus(statusFilter)} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <TabsList className="bg-muted/60 p-1 self-start lg:self-auto">
+          <TabsList className="bg-white border border-slate-200 shadow-sm p-1 self-start lg:self-auto">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="approved">Approved</TabsTrigger>
@@ -312,7 +317,7 @@ export default function AdminBookings() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search by ID, User..."
-                className="pl-9 bg-background/50 h-10"
+                className="pl-9 bg-white border border-slate-200 shadow-sm h-10 text-xs sm:text-sm"
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -321,7 +326,7 @@ export default function AdminBookings() {
               />
             </div>
             <Sheet open={showFilters} onOpenChange={setShowFilters}>
-              <Button variant="outline" className="gap-2 bg-background/50 h-10 shrink-0" onClick={() => setShowFilters(true)}>
+              <Button variant="outline" className="gap-2 bg-white border border-slate-200 shadow-sm h-10 shrink-0 text-xs" onClick={() => setShowFilters(true)}>
                 <Filter className="h-4 w-4" />Filters
                 {(statusFilter !== 'all' || paymentStatusFilter !== 'all' || startDate || endDate) && <span className="ml-1 flex h-2 w-2 rounded-full bg-primary" />}
               </Button>
@@ -331,7 +336,9 @@ export default function AdminBookings() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Booking Status</label>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger><SelectValue placeholder="All Statuses" /></SelectTrigger>
+                      <SelectTrigger className="bg-white border border-slate-200 shadow-sm">
+                        <SelectValue placeholder="All Statuses" />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Statuses</SelectItem>
                         {["Pending", "Approved", "In Progress", "Completed", "Rejected"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -341,7 +348,9 @@ export default function AdminBookings() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Payment Status</label>
                     <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
-                      <SelectTrigger><SelectValue placeholder="All Payments" /></SelectTrigger>
+                      <SelectTrigger className="bg-white border border-slate-200 shadow-sm">
+                        <SelectValue placeholder="All Payments" />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Payments</SelectItem>
                         {["Paid", "Pending", "Refunded"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -353,11 +362,11 @@ export default function AdminBookings() {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <span className="text-xs text-muted-foreground">From</span>
-                        <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                        <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-white border border-slate-200 shadow-sm text-xs" />
                       </div>
                       <div className="space-y-1">
                         <span className="text-xs text-muted-foreground">To</span>
-                        <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                        <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-white border border-slate-200 shadow-sm text-xs" />
                       </div>
                     </div>
                   </div>

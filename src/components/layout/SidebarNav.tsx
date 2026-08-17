@@ -23,14 +23,13 @@ const navItems = [
   { label: "Laboratories", icon: Building2, href: "/admin/laboratories", permission: "MANAGE_LABS" },
   { label: "Bookings", icon: ClipboardList, href: "/admin/bookings", permission: "VIEW_BOOKINGS" },
   { label: "Categories", icon: Grid3X3, href: "/admin/categories" },
-  { label: "Products", icon: ShoppingBag, href: "/admin/products" },
   { label: "Tests", icon: TestTubes, href: "/admin/tests" },
   { label: "Packages", icon: Package, href: "/admin/packages" },
   { label: "Payments", icon: DollarSign, href: "/admin/payments" },
   { label: "Reviews", icon: MessageSquareQuote, href: "/admin/reviews" },
   { label: "Reports", icon: FileCheck, href: "/admin/reports" },
-  { label: "Settings", icon: Flame, href: "/admin/settings" },
   { label: "Approvals", icon: CheckSquare, href: "/admin/approvals" },
+  { label: "Settings", icon: Flame, href: "/admin/settings" },
 ];
 
 export function SidebarNav({ portal, open, onClose, user }: SidebarNavProps) {

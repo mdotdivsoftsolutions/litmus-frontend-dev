@@ -1,20 +1,25 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, MessageSquareQuote, Star } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Edit, Trash2, MessageSquareQuote, Star, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api/admin";
 import { cn } from "@/lib/utils";
-
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function ReviewManagement() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [ratingFilter, setRatingFilter] = useState("all");
+  const [visibilityFilter, setVisibilityFilter] = useState("all");
   const limit = 10;
 
   // Dialog states
@@ -31,9 +36,26 @@ export default function ReviewManagement() {
     queryFn: () => adminApi.getReviews({ page, limit })
   });
 
-  const reviews = response?.data || [];
+  const rawReviews = response?.data || [];
   const total = response?.total || 0;
-  const totalPages = Math.ceil(total / limit);
+
+  // Client-side filtering for fast interactive feedback
+  const filteredReviews = rawReviews.filter((r: any) => {
+    const textMatch = !search || 
+      (r.name && r.name.toLowerCase().includes(search.toLowerCase())) ||
+      (r.city && r.city.toLowerCase().includes(search.toLowerCase())) ||
+      (r.text && r.text.toLowerCase().includes(search.toLowerCase()));
+
+    const ratingMatch = ratingFilter === "all" || String(r.rating) === ratingFilter;
+    const visibilityMatch = visibilityFilter === "all" ||
+      (visibilityFilter === "visible" && r.isVisible !== false) ||
+      (visibilityFilter === "hidden" && r.isVisible === false);
+
+    return textMatch && ratingMatch && visibilityMatch;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredReviews.length / limit));
+  const paginatedReviews = filteredReviews.slice((page - 1) * limit, page * limit);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => adminApi.deleteReview(id),
@@ -76,135 +98,205 @@ export default function ReviewManagement() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Title Header with Subtitle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Customer Reviews</h1>
-          <p className="text-sm text-muted-foreground">Manage customer reviews that are displayed on the home page.</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Manage testimonials, ratings, customer feedback, and public home page visibility.
+          </p>
         </div>
-        <Button asChild className="bg-primary hover:bg-primary-deep shadow-md">
+      </div>
+
+      {/* Single-Line Controls: Search + Filters + Add Review Button */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          {/* Search Input */}
+          <div className="relative flex-1 sm:min-w-[260px] max-w-md">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input 
+              placeholder="Search reviews by customer, city, text..." 
+              className="pl-9 bg-white border border-slate-200 shadow-sm h-10 text-xs sm:text-sm" 
+              value={search} 
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }} 
+            />
+          </div>
+
+          {/* Rating Filter */}
+          <Select
+            value={ratingFilter}
+            onValueChange={(val) => {
+              setRatingFilter(val);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[130px] bg-white border border-slate-200 shadow-sm h-10 text-xs font-medium">
+              <SelectValue placeholder="All Ratings" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Ratings</SelectItem>
+              <SelectItem value="5">5 Stars ★</SelectItem>
+              <SelectItem value="4">4 Stars ★</SelectItem>
+              <SelectItem value="3">3 Stars ★</SelectItem>
+              <SelectItem value="2">2 Stars ★</SelectItem>
+              <SelectItem value="1">1 Star ★</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Visibility Filter */}
+          <Select
+            value={visibilityFilter}
+            onValueChange={(val) => {
+              setVisibilityFilter(val);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[140px] bg-white border border-slate-200 shadow-sm h-10 text-xs font-medium">
+              <SelectValue placeholder="All Visibility" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Visibility</SelectItem>
+              <SelectItem value="visible">Visible Only</SelectItem>
+              <SelectItem value="hidden">Hidden Only</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Primary Styled Add Review Button */}
+        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2 self-start lg:self-auto">
           <Link to="/admin/reviews/new">
-            <Plus className="mr-2 h-4 w-4" /> Add Review
+            <Plus className="h-4 w-4" /> Add Review
           </Link>
         </Button>
       </div>
 
-      <Card className="border-0 shadow-md">
-        <CardHeader className="bg-muted/30 border-b border-border/50">
-          <CardTitle className="text-xl flex items-center gap-2">
-            <MessageSquareQuote className="h-5 w-5 text-primary" /> All Reviews
-          </CardTitle>
-          <CardDescription>View, edit, delete, and control visibility of reviews.</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          {isLoading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 w-full" />
-              ))}
-            </div>
-          ) : reviews.length === 0 ? (
-            <div className="text-center py-12">
-              <MessageSquareQuote className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium">No reviews found</h3>
-              <p className="text-muted-foreground">Get started by creating your first customer review.</p>
-              <Button asChild variant="outline" className="mt-4">
-                <Link to="/admin/reviews/new">Add Review</Link>
+      {/* Table Card */}
+      <Card className="border border-border shadow-sm overflow-hidden bg-white">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50">
+                <TableHead className="py-3 px-4 text-xs">Customer</TableHead>
+                <TableHead className="py-3 px-4 text-xs">Rating</TableHead>
+                <TableHead className="py-3 px-4 text-xs">Review Feedback</TableHead>
+                <TableHead className="py-3 px-4 text-xs">Public Visibility</TableHead>
+                <TableHead className="py-3 px-4 text-xs text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-64" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-10 rounded-full" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-8 w-16 ml-auto rounded-md" /></TableCell>
+                  </TableRow>
+                ))
+              ) : paginatedReviews.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <MessageSquareQuote className="h-8 w-8 text-slate-300" />
+                      <span className="font-semibold text-slate-800">No customer reviews found</span>
+                      <span className="text-xs">Add client testimonials to highlight credibility on the homepage.</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedReviews.map((review: any) => (
+                  <TableRow key={review._id} className="hover:bg-slate-50/60 transition-colors">
+                    <TableCell className="py-3.5 px-4">
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-xs text-slate-900">{review.name}</span>
+                        <span className="text-[11px] text-muted-foreground">{review.city || "India"}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3.5 px-4">
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={cn("h-3.5 w-3.5", i < review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200")}
+                          />
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3.5 px-4 max-w-[340px]">
+                      <p className="text-xs text-slate-700 truncate" title={review.text}>
+                        "{review.text}"
+                      </p>
+                    </TableCell>
+                    <TableCell className="py-3.5 px-4">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={review.isVisible}
+                          onCheckedChange={() => handleVisibilityToggle(review._id, review.isVisible)}
+                        />
+                        <span className={cn("text-xs font-medium", review.isVisible ? "text-emerald-700" : "text-slate-400")}>
+                          {review.isVisible ? "Visible" : "Hidden"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button asChild variant="outline" size="icon" className="h-8 w-8 bg-white border border-slate-200 shadow-sm hover:bg-slate-50">
+                          <Link to={`/admin/reviews/${review._id}/edit`}>
+                            <Edit className="h-3.5 w-3.5 text-slate-600" />
+                          </Link>
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8 bg-white border border-slate-200 shadow-sm text-rose-600 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200"
+                          onClick={() => handleDelete(review._id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Pagination Section */}
+        {!isLoading && filteredReviews.length > 0 && (
+          <div className="flex items-center justify-between border-t border-border px-4 py-3 bg-slate-50/50">
+            <p className="text-xs text-muted-foreground">
+              Showing <span className="font-medium text-foreground">{(page - 1) * limit + 1}</span> to <span className="font-medium text-foreground">{Math.min(page * limit, filteredReviews.length)}</span> of <span className="font-medium text-foreground">{filteredReviews.length}</span> reviews
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 bg-white border border-slate-200 shadow-sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="text-xs font-medium px-2">
+                Page {page} of {totalPages}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 bg-white border border-slate-200 shadow-sm"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left border-collapse">
-                  <thead className="bg-muted/50 text-slate-600 font-medium border-b border-border">
-                    <tr>
-                      <th className="px-4 py-3 font-semibold">Customer</th>
-                      <th className="px-4 py-3 font-semibold">Rating</th>
-                      <th className="px-4 py-3 font-semibold">Review</th>
-                      <th className="px-4 py-3 font-semibold">Visible</th>
-                      <th className="px-4 py-3 font-semibold text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {reviews.map((review: any) => (
-                      <tr key={review._id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-4">
-                          <div className="flex flex-col">
-                            <span className="font-medium text-slate-900">{review.name}</span>
-                            <span className="text-xs text-muted-foreground">{review.city}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star
-                                key={i}
-                                className={cn("h-3.5 w-3.5", i < review.rating ? "fill-[#F06C00] text-[#F06C00]" : "text-slate-200")}
-                              />
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 max-w-[300px]">
-                          <p className="truncate text-slate-600" title={review.text}>
-                            "{review.text}"
-                          </p>
-                        </td>
-                        <td className="px-4 py-4">
-                          <Switch
-                            checked={review.isVisible}
-                            onCheckedChange={() => handleVisibilityToggle(review._id, review.isVisible)}
-                          />
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button asChild variant="outline" size="icon" className="h-8 w-8">
-                              <Link to={`/admin/reviews/${review._id}/edit`}>
-                                <Edit className="h-4 w-4 text-slate-600" />
-                              </Link>
-                            </Button>
-                            <Button 
-                              variant="destructive" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={() => handleDelete(review._id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total} reviews
-                  </p>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setPage(p => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                    >
-                      Previous
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                      disabled={page === totalPages}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
+          </div>
+        )}
       </Card>
 
       {dialogConfig && (

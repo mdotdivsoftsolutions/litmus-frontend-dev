@@ -1,19 +1,30 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { adminApi } from "@/lib/api/admin";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Mail, Phone, Calendar, Clock, ShoppingCart, CreditCard, Activity } from "lucide-react";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { 
+  ArrowLeft, Mail, Phone, Calendar, Clock, ShoppingCart, 
+  CreditCard, Activity, CheckCircle2, AlertTriangle, Eye, 
+  MapPin, ShieldCheck, UserCheck, MessageSquare, Copy, Check
+} from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function UserDetailsPage() {
   const { id: userId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showStatusConfirm, setShowStatusConfirm] = useState(false);
 
   const { data: response, isLoading } = useQuery({
     queryKey: ["adminUserDetailed", userId],
@@ -21,64 +32,48 @@ export default function UserDetailsPage() {
     enabled: !!userId,
   });
 
+  const statusMutation = useMutation({
+    mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) =>
+      adminApi.updateUserStatus(userId, isActive),
+    onSuccess: (data) => {
+      toast.success(data.message || "User status updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["adminUserDetailed", userId] });
+      queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
+      setShowStatusConfirm(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update user status");
+    },
+  });
+
+  const copyToClipboard = (text: string, fieldName: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldName);
+    toast.success(`Copied ${fieldName} to clipboard`);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-fade-in mx-auto pb-10 w-full">
+      <div className="space-y-6 animate-fade-in mx-auto pb-20 w-full">
         <div className="flex items-center gap-4">
-          <Skeleton className="h-10 w-10 rounded-md" />
+          <Skeleton className="h-10 w-10 rounded-full" />
           <div className="space-y-2">
             <Skeleton className="h-8 w-64" />
             <Skeleton className="h-4 w-40" />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Profile Card Skeleton */}
-          <Card className="md:col-span-1 shadow-sm">
-            <CardHeader className="bg-muted/30 pb-4">
-              <Skeleton className="h-6 w-32" />
-            </CardHeader>
-            <CardContent className="space-y-6 pt-6">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <Skeleton className="h-10 w-10 rounded-full shrink-0" />
-                  <div className="space-y-2 w-full">
-                    <Skeleton className="h-3 w-16" />
-                    <Skeleton className="h-4 w-full max-w-[180px]" />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-xl bg-white border border-slate-200" />
+          ))}
+        </div>
 
-          {/* Stats & Activity Skeleton */}
-          <div className="md:col-span-3 space-y-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="shadow-sm">
-                  <CardContent className="p-6 flex flex-col items-center justify-center space-y-3">
-                    <Skeleton className="h-12 w-12 rounded-full" />
-                    <Skeleton className="h-8 w-16" />
-                    <Skeleton className="h-3 w-24" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <Card className="shadow-sm border-0 ring-1 ring-border">
-              <div className="px-6 pt-4 border-b bg-muted/20 flex gap-2">
-                <Skeleton className="h-10 w-24 rounded-t-lg rounded-b-none" />
-                <Skeleton className="h-10 w-24 rounded-t-lg rounded-b-none" />
-                <Skeleton className="h-10 w-24 rounded-t-lg rounded-b-none" />
-              </div>
-              <CardContent className="p-6 space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-              </CardContent>
-            </Card>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Skeleton className="h-96 rounded-xl bg-white border border-slate-200" />
+          <Skeleton className="h-96 rounded-xl lg:col-span-2 bg-white border border-slate-200" />
         </div>
       </div>
     );
@@ -86,278 +81,520 @@ export default function UserDetailsPage() {
 
   const detailedData = response?.data;
 
-  if (!detailedData) {
+  if (!detailedData || !detailedData.user) {
     return (
-      <div className="flex flex-col h-[80vh] items-center justify-center gap-4">
-        <h2 className="text-2xl font-bold">User Not Found</h2>
-        <Button onClick={() => navigate("/admin/users")}>Back to Users</Button>
+      <div className="flex flex-col h-[70vh] items-center justify-center gap-4 text-center">
+        <AlertTriangle className="h-12 w-12 text-amber-500" />
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">User Not Found</h2>
+          <p className="text-sm text-muted-foreground mt-1">The requested user profile does not exist or has been removed.</p>
+        </div>
+        <Button onClick={() => navigate("/admin/users")} className="bg-primary hover:bg-primary/90 text-white">
+          Back to Users Directory
+        </Button>
       </div>
     );
   }
 
-  const { user, stats, bookings, payments, cart } = detailedData;
+  const { user, stats, bookings = [], payments = [], cart, consultations = [] } = detailedData;
+
+  const initials = `${(user.firstName || "").charAt(0)}${(user.lastName || "").charAt(0)}`.toUpperCase() || "U";
 
   return (
-    <div className="space-y-6 animate-fade-in mx-auto pb-10">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" onClick={() => navigate("/admin/users")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            {user.firstName} {user.lastName}
-            {user.isActive ? (
-              <Badge variant="secondary" className="bg-green-100 text-green-700 ml-2">Active</Badge>
-            ) : (
-              <Badge variant="secondary" className="bg-red-100 text-red-700 ml-2">Inactive</Badge>
-            )}
-          </h1>
-          <p className="text-sm text-muted-foreground">User Profile & Activity</p>
+    <div className="space-y-6 animate-fade-in mx-auto pb-20">
+      {/* Top Navigation Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={() => navigate("/admin/users")}
+            className="h-10 w-10 rounded-xl bg-white border border-slate-200 shadow-sm shrink-0 hover:bg-slate-50"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary-deep text-white font-bold flex items-center justify-center text-lg shadow-sm">
+              {initials}
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                  {user.firstName} {user.lastName}
+                </h1>
+                <Badge 
+                  variant="outline" 
+                  className={user.isActive 
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold" 
+                    : "bg-rose-50 text-rose-700 border-rose-200 font-semibold"
+                  }
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${user.isActive ? "bg-emerald-500" : "bg-rose-500"}`} />
+                  {user.isActive ? "Active Account" : "Suspended"}
+                </Badge>
+                <Badge variant="secondary" className="bg-slate-100 text-slate-700 text-xs">
+                  {user.role === "ADMIN" ? "Administrator" : "Customer / Client"}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+                User ID: {user._id}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Button
+            variant="outline"
+            className="bg-white border border-slate-200 shadow-sm text-xs h-9"
+            onClick={() => setShowStatusConfirm(true)}
+          >
+            {user.isActive ? "Suspend Account" : "Activate Account"}
+          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Profile Card */}
-        <Card className="md:col-span-1 h-fit shadow-sm">
-          <CardHeader className="bg-muted/30 pb-4">
-            <CardTitle className="text-lg">Contact Info</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-6">
-            <div className="flex items-center gap-3 text-sm">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <Mail className="h-4 w-4" />
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Email</p>
-                <p className="truncate font-medium">{user.email}</p>
-              </div>
+      {/* KPI Metrics Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden relative">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
+          <CardContent className="p-5 pl-5">
+            <div className="flex items-center justify-between text-muted-foreground mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wider">Total Bookings</span>
+              <Activity className="h-4 w-4 text-primary" />
             </div>
-            <div className="flex items-center gap-3 text-sm">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <Phone className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Phone</p>
-                <p className="font-medium">{user.phone || 'N/A'}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 text-sm">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <Calendar className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Joined</p>
-                <p className="font-medium">{user.createdAt ? format(new Date(user.createdAt), "MMM d, yyyy") : "N/A"}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 text-sm">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                <Clock className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Last Login</p>
-                <p className="font-medium">{user.lastLoginAt ? format(new Date(user.lastLoginAt), "MMM d, yyyy HH:mm") : "N/A"}</p>
-              </div>
-            </div>
+            <div className="text-2xl font-bold text-slate-900">{stats?.totalBookings ?? bookings.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Lifetime diagnostic orders</p>
           </CardContent>
         </Card>
 
-        {/* Stats & Activity */}
-        <div className="md:col-span-3 space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="shadow-sm">
-              <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-3">
-                <div className="p-3 bg-blue-50 text-blue-600 rounded-full">
-                  <Activity className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold">{stats.totalBookings}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-1">Total Bookings</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-sm">
-              <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-3">
-                <div className="p-3 bg-green-50 text-green-600 rounded-full">
-                  <Activity className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold text-green-700">{stats.completedBookings}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-1">Completed</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-sm">
-              <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-3">
-                <div className="p-3 bg-orange-50 text-orange-600 rounded-full">
-                  <Activity className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold text-orange-700">{stats.pendingBookings}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-1">Pending</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-sm border-brand/20 bg-brand/5">
-              <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-3">
-                <div className="p-3 bg-brand/10 text-brand rounded-full">
-                  <CreditCard className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-brand">{formatCurrency(stats.totalAmountPaid)}</p>
-                  <p className="text-[10px] text-brand/70 uppercase font-bold tracking-wider mt-1">Total Paid</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden relative">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />
+          <CardContent className="p-5 pl-5">
+            <div className="flex items-center justify-between text-muted-foreground mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wider">Completed Tests</span>
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            </div>
+            <div className="text-2xl font-bold text-emerald-600">{stats?.completedBookings ?? 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Reports generated & delivered</p>
+          </CardContent>
+        </Card>
 
-          <Card className="shadow-sm border-0 ring-1 ring-border">
-            <CardContent className="p-0">
-              <Tabs defaultValue="bookings" className="w-full">
-                <div className="px-6 pt-4 border-b bg-muted/20">
-                  <TabsList className="grid w-full max-w-md grid-cols-3 bg-transparent h-12">
-                    <TabsTrigger value="bookings" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-t-lg rounded-b-none h-full border-b-2 border-transparent data-[state=active]:border-primary">Bookings</TabsTrigger>
-                    <TabsTrigger value="payments" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-t-lg rounded-b-none h-full border-b-2 border-transparent data-[state=active]:border-primary">Payments</TabsTrigger>
-                    <TabsTrigger value="cart" className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-t-lg rounded-b-none h-full border-b-2 border-transparent data-[state=active]:border-primary">
-                      <span className="flex items-center gap-2">
-                        Cart 
-                        {cart?.items?.length > 0 && (
-                          <Badge variant="secondary" className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0 min-w-[20px]">
-                            {cart.items.length}
-                          </Badge>
-                        )}
-                      </span>
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-                
-                <div className="p-0">
-                  <TabsContent value="bookings" className="m-0">
-                    {bookings.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-                        <div className="bg-muted p-4 rounded-full mb-4">
-                          <Calendar className="h-8 w-8 opacity-50" />
-                        </div>
-                        <p className="font-medium text-foreground">No bookings found</p>
-                        <p className="text-sm mt-1">This user hasn't made any bookings yet.</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader className="bg-muted/30">
-                            <TableRow>
-                              <TableHead className="pl-6">Date</TableHead>
-                              <TableHead>Lab</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead className="text-right pr-6">Total</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {bookings.map((booking: any) => (
-                              <TableRow key={booking._id} className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate(`/admin/bookings/${booking._id}`)}>
-                                <TableCell className="font-medium pl-6">{format(new Date(booking.createdAt), "MMM d, yyyy")}</TableCell>
-                                <TableCell>{booking.labId?.labName || 'N/A'}</TableCell>
-                                <TableCell>
-                                  <Badge variant={booking.status === 'COMPLETED' ? 'default' : 'outline'} 
-                                         className={booking.status === 'COMPLETED' ? 'bg-green-100 text-green-700 hover:bg-green-100 border-green-200' : ''}>
-                                    {booking.status}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-right font-medium pr-6">{formatCurrency(booking.totalAmount)}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
-                  </TabsContent>
+        <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden relative">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500" />
+          <CardContent className="p-5 pl-5">
+            <div className="flex items-center justify-between text-muted-foreground mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wider">Pending / Active</span>
+              <Clock className="h-4 w-4 text-amber-600" />
+            </div>
+            <div className="text-2xl font-bold text-amber-600">{stats?.pendingBookings ?? 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">In transit or at lab</p>
+          </CardContent>
+        </Card>
 
-                  <TabsContent value="payments" className="m-0">
-                    {payments.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-                        <div className="bg-muted p-4 rounded-full mb-4">
-                          <CreditCard className="h-8 w-8 opacity-50" />
-                        </div>
-                        <p className="font-medium text-foreground">No payments recorded</p>
-                        <p className="text-sm mt-1">This user has no payment history.</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader className="bg-muted/30">
-                            <TableRow>
-                              <TableHead className="pl-6">Date</TableHead>
-                              <TableHead>Order ID</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead className="text-right pr-6">Amount</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {payments.map((payment: any) => (
-                              <TableRow key={payment._id}>
-                                <TableCell className="pl-6">{format(new Date(payment.createdAt), "MMM d, yyyy")}</TableCell>
-                                <TableCell className="font-mono text-xs text-muted-foreground">{payment.razorpayOrderId}</TableCell>
-                                <TableCell>
-                                  <Badge variant={payment.status === 'SUCCESS' ? 'default' : 'destructive'} 
-                                         className={payment.status === 'SUCCESS' ? 'bg-green-100 text-green-700 hover:bg-green-100 border-transparent' : ''}>
-                                    {payment.status}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-right font-medium pr-6">{formatCurrency(payment.amount)}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
-                  </TabsContent>
+        <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden relative">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600" />
+          <CardContent className="p-5 pl-5">
+            <div className="flex items-center justify-between text-muted-foreground mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wider">Total Spend</span>
+              <CreditCard className="h-4 w-4 text-blue-600" />
+            </div>
+            <div className="text-2xl font-bold text-slate-900">{formatCurrency(stats?.totalAmountPaid ?? 0)}</div>
+            <p className="text-xs text-muted-foreground mt-1">Total revenue collected</p>
+          </CardContent>
+        </Card>
+      </div>
 
-                  <TabsContent value="cart" className="m-0">
-                    {!cart || !cart.items || cart.items.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-                        <div className="bg-muted p-4 rounded-full mb-4">
-                          <ShoppingCart className="h-8 w-8 opacity-50" />
-                        </div>
-                        <p className="font-medium text-foreground">Cart is empty</p>
-                        <p className="text-sm mt-1">The user doesn't have any items in their cart.</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader className="bg-muted/30">
-                            <TableRow>
-                              <TableHead className="pl-6">Item</TableHead>
-                              <TableHead>Type</TableHead>
-                              <TableHead>Added On</TableHead>
-                              <TableHead className="text-right pr-6">Price</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {cart.items.map((item: any, idx: number) => (
-                              <TableRow key={idx}>
-                                <TableCell className="font-medium pl-6">
-                                  {item.itemType === 'TEST' ? item.testId?.name || item.testId?.testName : item.packageId?.name}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline" className="bg-background">{item.itemType}</Badge>
-                                </TableCell>
-                                <TableCell className="text-sm text-muted-foreground">
-                                  {item.createdAt ? format(new Date(item.createdAt), "MMM d, yyyy HH:mm") : "N/A"}
-                                </TableCell>
-                                <TableCell className="text-right font-medium pr-6">{formatCurrency(item.price)}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
-                  </TabsContent>
+      {/* Main Content Layout: Profile Sidebar + Activity Hub */}
+      <div className="flex flex-col xl:flex-row gap-6 items-start">
+        {/* Left Column: Contact & Profile Details */}
+        <div className="w-full xl:w-[320px] shrink-0 space-y-5">
+          <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-slate-50/80 border-b border-slate-100 py-3.5 px-4">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-800">
+                <UserCheck className="h-4 w-4 text-primary" /> Contact & Account Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-3.5 text-sm">
+              {/* Email */}
+              <div className="flex items-start justify-between gap-2 p-2.5 rounded-lg bg-slate-50/60 border border-slate-100">
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Email Address</p>
+                    <p className="font-medium text-xs text-slate-900 truncate" title={user.email}>{user.email || "No email"}</p>
+                  </div>
                 </div>
-              </Tabs>
+                {user.email && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7 shrink-0 text-slate-400 hover:text-slate-700" 
+                    onClick={() => copyToClipboard(user.email, "Email")}
+                  >
+                    {copiedField === "Email" ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                  </Button>
+                )}
+              </div>
+
+              {/* Phone */}
+              <div className="flex items-start justify-between gap-2 p-2.5 rounded-lg bg-slate-50/60 border border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <Phone className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Phone Number</p>
+                    <p className="font-medium text-xs text-slate-900">{user.phone || "Not provided"}</p>
+                  </div>
+                </div>
+                {user.phone && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7 shrink-0 text-slate-400 hover:text-slate-700" 
+                    onClick={() => copyToClipboard(user.phone, "Phone")}
+                  >
+                    {copiedField === "Phone" ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                  </Button>
+                )}
+              </div>
+
+              {/* Timestamps */}
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
+                <div className="p-2 rounded-lg bg-slate-50/60 border border-slate-100">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                    <Calendar className="h-3 w-3" /> Registered
+                  </p>
+                  <p className="font-medium text-xs text-slate-800 mt-1">
+                    {user.createdAt ? format(new Date(user.createdAt), "MMM d, yyyy") : "N/A"}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-slate-50/60 border border-slate-100">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-3 w-3" /> Last Active
+                  </p>
+                  <p className="font-medium text-xs text-slate-800 mt-1">
+                    {user.lastLoginAt ? format(new Date(user.lastLoginAt), "MMM d, HH:mm") : "Recent"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Summary Card */}
+          <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-slate-50/80 border-b border-slate-100 py-3 px-4">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-700">Account Health & Risk</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-2.5 text-xs">
+              <div className="flex justify-between items-center py-1 border-b border-slate-100">
+                <span className="text-muted-foreground">Account Verification</span>
+                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-medium text-[10px]">
+                  Verified
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-slate-100">
+                <span className="text-muted-foreground">Inquiries / Consultations</span>
+                <span className="font-semibold text-slate-900">{consultations.length}</span>
+              </div>
+              <div className="flex justify-between items-center py-1">
+                <span className="text-muted-foreground">Abandoned Cart Items</span>
+                <span className="font-semibold text-slate-900">{cart?.items?.length || 0}</span>
+              </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Right Column: Multi-Tab Detailed Activity Hub */}
+        <div className="flex-1 min-w-0 w-full space-y-4">
+          <Tabs defaultValue="bookings" className="w-full">
+            <TabsList className="bg-white border border-slate-200 shadow-sm p-1 inline-flex w-full sm:w-auto h-auto flex-wrap gap-1">
+              <TabsTrigger value="bookings" className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium rounded-md transition-all">
+                Bookings ({bookings.length})
+              </TabsTrigger>
+              <TabsTrigger value="payments" className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium rounded-md transition-all">
+                Payments ({payments.length})
+              </TabsTrigger>
+              <TabsTrigger value="cart" className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium rounded-md transition-all">
+                Cart Items ({cart?.items?.length || 0})
+              </TabsTrigger>
+              <TabsTrigger value="consultations" className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium rounded-md transition-all">
+                Consultations ({consultations.length})
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Bookings Tab */}
+            <TabsContent value="bookings" className="mt-3">
+              <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
+                {bookings.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+                    <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                      <Calendar className="h-6 w-6 text-slate-400" />
+                    </div>
+                    <p className="font-semibold text-slate-900">No bookings placed yet</p>
+                    <p className="text-xs text-muted-foreground mt-1">When this client orders lab testing or packages, they will show up here.</p>
+                  </div>
+                ) : (
+                  <div className="w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                    <Table className="w-full">
+                      <TableHeader>
+                        <TableRow className="bg-slate-50">
+                          <TableHead className="py-3 px-3 text-xs">Booking ID</TableHead>
+                          <TableHead className="py-3 px-3 text-xs">Date</TableHead>
+                          <TableHead className="py-3 px-3 text-xs">Product / Package</TableHead>
+                          <TableHead className="py-3 px-3 text-xs hidden md:table-cell">Laboratory</TableHead>
+                          <TableHead className="py-3 px-3 text-xs">Payment</TableHead>
+                          <TableHead className="py-3 px-3 text-xs">Status</TableHead>
+                          <TableHead className="py-3 px-3 text-xs text-right">Total</TableHead>
+                          <TableHead className="py-3 px-3 text-xs text-right">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {bookings.map((b: any) => {
+                          const displayId = `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`;
+                          const itemSummary = b.items?.[0]?.packageId?.name 
+                            || b.items?.[0]?.testId?.name 
+                            || b.items?.[0]?.testId?.testName 
+                            || (b.items?.length > 1 ? `${b.items.length} Test Items` : "Diagnostic Service");
+                          const isPaid = ['SUCCESS', 'PAID'].includes(String(b.paymentStatus || '').toUpperCase()) || String(b.status).toUpperCase() === 'COMPLETED';
+
+                          return (
+                            <TableRow 
+                              key={b._id} 
+                              className="hover:bg-slate-50/60 cursor-pointer transition-colors"
+                              onClick={() => navigate(`/admin/bookings/${b._id}`)}
+                            >
+                              <TableCell className="py-3 px-3 font-mono text-xs font-semibold text-slate-900">{displayId}</TableCell>
+                              <TableCell className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                                {b.createdAt ? format(new Date(b.createdAt), "MMM d, yyyy") : "N/A"}
+                              </TableCell>
+                              <TableCell className="py-3 px-3 text-xs font-medium text-slate-800 max-w-[200px] truncate" title={itemSummary}>
+                                {itemSummary}
+                              </TableCell>
+                              <TableCell className="py-3 px-3 text-xs text-muted-foreground hidden md:table-cell max-w-[140px] truncate" title={b.labId?.labName || "Litmus Smart Allocation"}>
+                                {b.labId?.labName || "Litmus Smart Allocation"}
+                              </TableCell>
+                              <TableCell className="py-3 px-3">
+                                <StatusBadge status={isPaid ? "Paid" : b.paymentStatus || "Pending"} />
+                              </TableCell>
+                              <TableCell className="py-3 px-3">
+                                <StatusBadge status={b.status || "Pending"} />
+                              </TableCell>
+                              <TableCell className="py-3 px-3 text-right text-xs font-bold text-slate-900 whitespace-nowrap">
+                                {formatCurrency(b.totalAmount || 0)}
+                              </TableCell>
+                              <TableCell className="py-3 px-3 text-right">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-7 px-2 text-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/admin/bookings/${b._id}`);
+                                  }}
+                                >
+                                  <Eye className="h-3.5 w-3.5 mr-1" /> View
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+
+            {/* Payments Tab */}
+            <TabsContent value="payments" className="mt-3">
+              <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
+                {payments.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+                    <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                      <CreditCard className="h-6 w-6 text-slate-400" />
+                    </div>
+                    <p className="font-semibold text-slate-900">No payment records found</p>
+                    <p className="text-xs text-muted-foreground mt-1">Payment transactions and gateway receipts will appear here once processed.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-slate-50">
+                          <TableHead>Transaction ID</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Linked Booking</TableHead>
+                          <TableHead>Method</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {payments.map((p: any) => {
+                          const txnId = p.transactionId || p.razorpayPaymentId || `TXN-${String(p._id).slice(-6).toUpperCase()}`;
+                          const bkgId = p.bookingId?._id 
+                            ? `BKG-${String(p.bookingId._id).slice(-6).toUpperCase()}` 
+                            : p.bookingId 
+                              ? `BKG-${String(p.bookingId).slice(-6).toUpperCase()}` 
+                              : "N/A";
+                          const isSuccess = ['SUCCESS', 'PAID'].includes(String(p.status).toUpperCase());
+
+                          return (
+                            <TableRow key={p._id} className="hover:bg-slate-50/60">
+                              <TableCell className="font-mono text-xs font-medium text-slate-900">{txnId}</TableCell>
+                              <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                                {p.createdAt ? format(new Date(p.createdAt), "MMM d, yyyy, h:mm a") : "N/A"}
+                              </TableCell>
+                              <TableCell className="font-mono text-xs text-primary font-medium">{bkgId}</TableCell>
+                              <TableCell className="text-xs text-slate-600 capitalize">{p.method || "Razorpay / Gateway"}</TableCell>
+                              <TableCell>
+                                <StatusBadge status={isSuccess ? "Paid" : p.status === "FAILED" ? "Rejected" : "Pending"} />
+                              </TableCell>
+                              <TableCell className="text-right text-xs font-bold text-slate-900">
+                                {formatCurrency(p.amount || 0)}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+
+            {/* Cart Tab */}
+            <TabsContent value="cart" className="mt-3">
+              <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
+                {!cart || !cart.items || cart.items.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+                    <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                      <ShoppingCart className="h-6 w-6 text-slate-400" />
+                    </div>
+                    <p className="font-semibold text-slate-900">Cart is empty</p>
+                    <p className="text-xs text-muted-foreground mt-1">This user does not currently have un-purchased tests in their active cart.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-slate-50">
+                          <TableHead>Test / Package Item</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead className="text-right">Price</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {cart.items.map((item: any, idx: number) => {
+                          const itemName = item.packageId?.name 
+                            || item.testId?.name 
+                            || item.testId?.testName 
+                            || "Custom Test Service";
+
+                          return (
+                            <TableRow key={idx} className="hover:bg-slate-50/60">
+                              <TableCell className="text-xs font-semibold text-slate-900">{itemName}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-[10px] bg-slate-50 uppercase font-semibold">
+                                  {item.itemType || "Test"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right text-xs font-bold text-slate-900">
+                                {formatCurrency(item.price || item.packageId?.price || item.testId?.price || 0)}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+
+            {/* Consultations Tab */}
+            <TabsContent value="consultations" className="mt-3">
+              <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
+                {consultations.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+                    <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                      <MessageSquare className="h-6 w-6 text-slate-400" />
+                    </div>
+                    <p className="font-semibold text-slate-900">No consultation requests</p>
+                    <p className="text-xs text-muted-foreground mt-1">This user hasn't submitted any advisory or outreach inquiries.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-slate-50">
+                          <TableHead>Date</TableHead>
+                          <TableHead>Source / Topic</TableHead>
+                          <TableHead>Service of Interest</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {consultations.map((c: any) => (
+                          <TableRow key={c._id} className="hover:bg-slate-50/60">
+                            <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                              {c.createdAt ? format(new Date(c.createdAt), "MMM d, yyyy") : "N/A"}
+                            </TableCell>
+                            <TableCell className="text-xs font-medium text-slate-900">{c.source || "Website Advisory"}</TableCell>
+                            <TableCell className="text-xs text-slate-600">{c.service || c.topic || "General Inquiry"}</TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant="outline" 
+                                className={c.status === "Resolved" 
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                                  : c.status === "Contacted" 
+                                    ? "bg-blue-50 text-blue-700 border-blue-200" 
+                                    : "bg-amber-50 text-amber-700 border-amber-200"
+                                }
+                              >
+                                {c.status || "Pending"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-7 text-xs bg-white border border-slate-200"
+                                onClick={() => navigate("/admin/consultations")}
+                              >
+                                View Leads
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
+
+      {/* Account Status Confirmation Dialog */}
+      <ConfirmDialog
+        open={showStatusConfirm}
+        onOpenChange={setShowStatusConfirm}
+        title={user.isActive ? "Suspend User Account" : "Re-activate User Account"}
+        description={user.isActive 
+          ? `Are you sure you want to suspend access for ${user.firstName} ${user.lastName}? They will no longer be able to place bookings or log in.`
+          : `Are you sure you want to activate ${user.firstName} ${user.lastName}'s account?`
+        }
+        confirmText={user.isActive ? "Suspend Account" : "Activate Account"}
+        variant={user.isActive ? "destructive" : "default"}
+        onConfirm={() => statusMutation.mutate({ userId: user._id, isActive: !user.isActive })}
+      />
     </div>
   );
 }

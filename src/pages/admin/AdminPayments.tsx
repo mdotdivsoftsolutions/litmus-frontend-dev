@@ -42,7 +42,7 @@ export default function AdminPayments() {
     status: p.status === "SUCCESS" ? "Paid" : p.status === "FAILED" ? "Refunded" : "Pending",
     date: format(new Date(p.createdAt || new Date()), "MMM d, yyyy, h:mm a"),
     rawDate: new Date(p.createdAt || new Date())
-  }));
+  })).sort((a: any, b: any) => b.rawDate.getTime() - a.rawDate.getTime());
 
   const totalCollected = mappedPayments.filter((p: any) => p.status === "Paid").reduce((acc: number, p: any) => acc + p.amount, 0);
   const platformRevenue = Math.round(totalCollected * 0.15); // Assume 15% platform fee
@@ -57,7 +57,7 @@ export default function AdminPayments() {
   const filtered = mappedPayments.filter((p: any) => {
     const matchesSearch = !search || 
       p.id.toLowerCase().includes(search.toLowerCase()) || 
-      p.bookingId.toLowerCase().includes(search.toLowerCase()) ||
+      p.bookingId.toLowerCase().includes(search.toLowerCase()) || 
       p.lab.toLowerCase().includes(search.toLowerCase());
       
     const matchesStatus = statusFilter === "all" || p.status.toLowerCase() === statusFilter.toLowerCase();
@@ -81,10 +81,10 @@ export default function AdminPayments() {
   };
 
   const renderPaymentTable = (items: any[]) => (
-    <Card className="border border-border shadow-sm overflow-hidden">
+    <Card className="border border-border shadow-sm overflow-hidden bg-white">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50">
+          <TableRow className="bg-slate-50">
             <TableHead>Transaction ID</TableHead>
             <TableHead>Booking</TableHead>
             <TableHead className="hidden md:table-cell">Lab</TableHead>
@@ -143,11 +143,11 @@ export default function AdminPayments() {
                         Showing <span className="font-medium text-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}</span> of <span className="font-medium text-foreground">{filtered.length}</span> payments
                       </p>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" className="h-8 w-8 bg-background" onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(1, p - 1)); }} disabled={currentPage === 1}>
+                        <Button variant="outline" size="icon" className="h-8 w-8 bg-white border border-slate-200 shadow-sm" onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(1, p - 1)); }} disabled={currentPage === 1}>
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
                         <div className="text-sm font-medium px-2">Page {currentPage} of {Math.max(1, totalPages)}</div>
-                        <Button variant="outline" size="icon" className="h-8 w-8 bg-background" onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(Math.max(1, totalPages), p + 1)); }} disabled={currentPage >= totalPages}>
+                        <Button variant="outline" size="icon" className="h-8 w-8 bg-white border border-slate-200 shadow-sm" onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(Math.max(1, totalPages), p + 1)); }} disabled={currentPage >= totalPages}>
                           <ChevronRight className="h-4 w-4" />
                         </Button>
                       </div>
@@ -164,11 +164,16 @@ export default function AdminPayments() {
 
   return (
     <div className="space-y-6 animate-fade-in mx-auto pb-20">
-      <h1 className="text-2xl font-bold text-foreground">Payment & Settlement</h1>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Payment & Settlement</h1>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Manage customer transactions, gateway payment statuses, refunds, and lab commission payouts.
+        </p>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {summaryCards.map((c) => (
-          <Card key={c.label} className="border border-border shadow-sm relative overflow-hidden">
+          <Card key={c.label} className="border border-border shadow-sm relative overflow-hidden bg-white">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
             <CardContent className="flex items-center gap-4 p-5 pl-5">
               <div className="h-10 w-10 rounded-full bg-flame-red-tint flex items-center justify-center"><c.icon className="h-5 w-5 text-primary" /></div>
@@ -178,66 +183,71 @@ export default function AdminPayments() {
         ))}
       </div>
 
-      <div className="flex gap-2">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input 
-            placeholder="Search by TXN, Booking ID..." 
-            className="pl-9 bg-background/50" 
-            value={search} 
-            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} 
-          />
-        </div>
-        <Sheet open={showFilters} onOpenChange={setShowFilters}>
-          <Button variant="outline" className="gap-2 bg-background/50" onClick={() => setShowFilters(true)}>
-            <Filter className="h-4 w-4" />Filters
-            {(statusFilter !== 'all' || startDate || endDate) && <span className="ml-1 flex h-2 w-2 rounded-full bg-primary" />}
-          </Button>
-          <SheetContent className="overflow-y-auto">
-            <SheetHeader><SheetTitle>Filter Payments</SheetTitle></SheetHeader>
-            <div className="mt-6 space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Payment Status</label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger><SelectValue placeholder="All Statuses" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="refunded">Refunded</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2"><CalendarIcon className="h-4 w-4" /> Date Range</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">From</span>
-                    <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+      <Tabs defaultValue="all" value={statusFilter === "all" ? "all" : statusFilter.toLowerCase()} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <TabsList className="bg-white border border-slate-200 shadow-sm p-1 self-start lg:self-auto">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="pending">Pending Settlement</TabsTrigger>
+            <TabsTrigger value="paid">Completed</TabsTrigger>
+            <TabsTrigger value="refunded">Refunds</TabsTrigger>
+          </TabsList>
+
+          <div className="flex items-center gap-2 w-full lg:w-auto">
+            <div className="relative flex-1 lg:w-80">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input 
+                placeholder="Search by TXN, Booking ID..." 
+                className="pl-9 bg-white border border-slate-200 shadow-sm h-10 text-xs sm:text-sm" 
+                value={search} 
+                onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} 
+              />
+            </div>
+            <Sheet open={showFilters} onOpenChange={setShowFilters}>
+              <Button variant="outline" className="gap-2 bg-white border border-slate-200 shadow-sm h-10 shrink-0 text-xs" onClick={() => setShowFilters(true)}>
+                <Filter className="h-4 w-4" />Filters
+                {(statusFilter !== 'all' || startDate || endDate) && <span className="ml-1 flex h-2 w-2 rounded-full bg-primary" />}
+              </Button>
+              <SheetContent className="overflow-y-auto">
+                <SheetHeader><SheetTitle>Filter Payments</SheetTitle></SheetHeader>
+                <div className="mt-6 space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Payment Status</label>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="bg-white border border-slate-200 shadow-sm">
+                        <SelectValue placeholder="All Statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="refunded">Refunded</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="space-y-1">
-                    <span className="text-xs text-muted-foreground">To</span>
-                    <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium flex items-center gap-2"><CalendarIcon className="h-4 w-4" /> Date Range</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">From</span>
+                        <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-white border border-slate-200 shadow-sm text-xs" />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">To</span>
+                        <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-white border border-slate-200 shadow-sm text-xs" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 pt-4">
+                    <Button className="flex-1 bg-primary hover:bg-primary-deep" onClick={() => { setShowFilters(false); setCurrentPage(1); }}>Apply Filters</Button>
+                    <Button variant="outline" className="flex-1" onClick={clearFilters}>Clear</Button>
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex gap-2 pt-4">
-                <Button className="flex-1 bg-primary hover:bg-primary-deep" onClick={() => { setShowFilters(false); setCurrentPage(1); }}>Apply Filters</Button>
-                <Button variant="outline" className="flex-1" onClick={clearFilters}>Clear</Button>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
 
-      <Tabs defaultValue="all" value={statusFilter === "all" ? "all" : statusFilter.toLowerCase()} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
-        <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="pending">Pending Settlement</TabsTrigger>
-          <TabsTrigger value="paid">Completed</TabsTrigger>
-          <TabsTrigger value="refunded">Refunds</TabsTrigger>
-        </TabsList>
         <div className="mt-4">
           {renderPaymentTable(paginatedPayments)}
         </div>

@@ -94,7 +94,7 @@ export default function UserManagement() {
     }
 
     return matchesSearch && matchesStatus && matchesDate;
-  });
+  }).sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginatedUsers = filtered.slice(
@@ -154,7 +154,7 @@ export default function UserManagement() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input 
               placeholder="Search by name, email, or phone..." 
-              className="pl-9 bg-background/50 h-10 text-xs sm:text-sm" 
+              className="pl-9 bg-white border border-slate-200 shadow-sm h-10 text-xs sm:text-sm" 
               value={search} 
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -171,7 +171,7 @@ export default function UserManagement() {
               setCurrentPage(1); 
             }}
           >
-            <SelectTrigger className="w-36 h-10 bg-background/50 text-xs sm:text-sm">
+            <SelectTrigger className="w-36 h-10 bg-white border border-slate-200 shadow-sm text-xs sm:text-sm">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
@@ -185,7 +185,7 @@ export default function UserManagement() {
           <Sheet open={showFilters} onOpenChange={setShowFilters}>
             <Button 
               variant="outline" 
-              className="gap-2 bg-background/50 h-10 shrink-0 text-xs sm:text-sm" 
+              className="gap-2 bg-white border border-slate-200 shadow-sm h-10 shrink-0 text-xs sm:text-sm" 
               onClick={() => setShowFilters(true)}
             >
               <CalendarIcon className="h-4 w-4 text-muted-foreground" /> Date Range
@@ -202,7 +202,7 @@ export default function UserManagement() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Account Status</label>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="bg-background">
+                    <SelectTrigger className="bg-white border border-slate-200 shadow-sm">
                       <SelectValue placeholder="All Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -225,7 +225,7 @@ export default function UserManagement() {
                         type="date" 
                         value={startDate} 
                         onChange={(e) => setStartDate(e.target.value)} 
-                        className="bg-background text-xs"
+                        className="bg-white border border-slate-200 shadow-sm text-xs"
                       />
                     </div>
                     <div className="space-y-1">
@@ -234,7 +234,7 @@ export default function UserManagement() {
                         type="date" 
                         value={endDate} 
                         onChange={(e) => setEndDate(e.target.value)} 
-                        className="bg-background text-xs"
+                        className="bg-white border border-slate-200 shadow-sm text-xs"
                       />
                     </div>
                   </div>
@@ -270,9 +270,9 @@ export default function UserManagement() {
       </div>
 
       {/* Users Table */}
-      <Card className="border border-border shadow-sm overflow-hidden bg-card">
+      <Card className="border border-border shadow-sm overflow-hidden bg-white">
         <Table>
-          <TableHeader className="bg-muted/40">
+          <TableHeader className="bg-slate-50">
             <TableRow>
               <TableHead>User</TableHead>
               <TableHead className="hidden sm:table-cell">Mobile</TableHead>

@@ -39,7 +39,7 @@ export default function PackageManagement() {
     }
   });
 
-  const packages = packagesData?.data || [];
+  const packages = (packagesData?.data || []).slice().sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
   const filtered = packages.filter((p: any) => {
     const matchesSearch = !search || p.name?.toLowerCase().includes(search.toLowerCase());
@@ -54,21 +54,23 @@ export default function PackageManagement() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 mx-auto">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <PackageIcon className="h-6 w-6 text-primary" /> Package Management
-        </h1>
-        <Button className="gap-2 bg-primary hover:bg-primary-deep shadow-md shadow-primary/20" asChild>
-          <Link to="/admin/packages/new"><Plus className="h-4 w-4" />Add Package</Link>
-        </Button>
+      {/* Title Header with Subtitle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Package Management</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Bundle multiple diagnostic tests into curated packages, manage turnaround times (TAT), and promotional pricing.
+          </p>
+        </div>
       </div>
 
-      <div className="flex gap-2">
-        <div className="relative flex-1 max-w-md">
+      {/* Single-Line Controls: Search + Add Package Button */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="relative flex-1 sm:min-w-[260px] max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search packages..."
-            className="pl-9 bg-background/50"
+            placeholder="Search packages by name, category..."
+            className="pl-9 bg-white border border-slate-200 shadow-sm h-10 text-xs sm:text-sm"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -76,13 +78,20 @@ export default function PackageManagement() {
             }}
           />
         </div>
+
+        {/* Primary Styled Add Package Button */}
+        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2 self-start lg:self-auto">
+          <Link to="/admin/packages/new">
+            <Plus className="h-4 w-4" /> Add Package
+          </Link>
+        </Button>
       </div>
 
-      <Card className="border border-border shadow-sm overflow-hidden">
+      <Card className="border border-border shadow-sm overflow-hidden bg-white">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
+              <TableRow className="bg-slate-50">
                 <TableHead>Package Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Tests Included</TableHead>
