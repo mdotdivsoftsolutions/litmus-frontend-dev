@@ -3,7 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Plus, Trash2, MapPin } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Loader2, Plus, Trash2, MapPin, Calendar, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { settingsApi } from "@/lib/api/settings";
 
@@ -17,8 +19,9 @@ export function PickupCoverageSettings() {
   });
 
   const cities: string[] = data?.data?.pickupCities || [];
+  const enablePickupSlotSelection: boolean = data?.data?.enablePickupSlotSelection ?? false;
 
-  const updateMutation = useMutation({
+  const updateCitiesMutation = useMutation({
     mutationFn: (pickupCities: string[]) => settingsApi.updateSettings({ pickupCities }),
     onSuccess: () => {
       toast.success("Pickup coverage updated");
@@ -26,6 +29,21 @@ export function PickupCoverageSettings() {
       setNewCity("");
     },
     onError: (error: any) => toast.error(error.response?.data?.message || "Failed to update pickup cities"),
+  });
+
+  const toggleSlotMutation = useMutation({
+    mutationFn: (enablePickupSlotSelection: boolean) =>
+      settingsApi.updateSettings({ enablePickupSlotSelection }),
+    onSuccess: (res, vars) => {
+      toast.success(
+        vars
+          ? "Date & Time slot selection enabled for pickup bookings"
+          : "Date & Time slot selection hidden (24-48 hr notice active)"
+      );
+      queryClient.invalidateQueries({ queryKey: ["adminPlatformSettings"] });
+    },
+    onError: (error: any) =>
+      toast.error(error.response?.data?.message || "Failed to update slot settings"),
   });
 
   const addCity = () => {
@@ -36,7 +54,7 @@ export function PickupCoverageSettings() {
       toast.error("City already in the list");
       return;
     }
-    updateMutation.mutate([...cities, city]);
+    updateCitiesMutation.mutate([...cities, city]);
   };
 
   const removeCity = (city: string) => {
@@ -45,11 +63,40 @@ export function PickupCoverageSettings() {
       toast.error("Keep at least one pickup city");
       return;
     }
-    updateMutation.mutate(next);
+    updateCitiesMutation.mutate(next);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Pickup Slot Selection Toggle */}
+      <div className="mx-6 mt-4 p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3">
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-primary" />
+              <Label htmlFor="slot-toggle" className="text-sm font-bold text-slate-900 cursor-pointer">
+                Pickup Date & Time Slot Selection
+              </Label>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              When disabled, users will not be asked to pick a date & time slot. Instead, they are informed that samples will be collected within 24 - 48 hours.
+            </p>
+          </div>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <span className="text-xs font-semibold text-slate-700">
+              {enablePickupSlotSelection ? "Enabled" : "Hidden (24-48h)"}
+            </span>
+            <Switch
+              id="slot-toggle"
+              checked={enablePickupSlotSelection}
+              disabled={toggleSlotMutation.isPending || isLoading}
+              onCheckedChange={(checked) => toggleSlotMutation.mutate(checked)}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-slate-100" />
       <p className="text-sm text-muted-foreground px-6 pt-4">
         Litmus pickup is offered only in these cities. Users outside this list must use courier.
       </p>
@@ -60,8 +107,8 @@ export function PickupCoverageSettings() {
           placeholder="e.g. Chennai"
           onKeyDown={(e) => e.key === "Enter" && addCity()}
         />
-        <Button onClick={addCity} disabled={updateMutation.isPending || !newCity.trim()} className="bg-primary hover:bg-primary-deep shrink-0">
-          {updateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+        <Button onClick={addCity} disabled={updateCitiesMutation.isPending || !newCity.trim()} className="bg-primary hover:bg-primary-deep shrink-0">
+          {updateCitiesMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
           Add city
         </Button>
       </div>
@@ -97,7 +144,7 @@ export function PickupCoverageSettings() {
                         size="icon"
                         className="text-destructive hover:bg-destructive/10"
                         onClick={() => removeCity(city)}
-                        disabled={updateMutation.isPending}
+                        disabled={updateCitiesMutation.isPending}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

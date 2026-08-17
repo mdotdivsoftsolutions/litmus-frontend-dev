@@ -197,8 +197,7 @@ export default function AdminBookings() {
         <TableHeader>
           <TableRow className="bg-slate-50">
             <TableHead>Booking ID</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>User</TableHead>
+            <TableHead>User & Date</TableHead>
             <TableHead>Product & Tests</TableHead>
             <TableHead className="hidden md:table-cell">Lab</TableHead>
             {canViewPricing && <TableHead>Amount</TableHead>}
@@ -212,8 +211,12 @@ export default function AdminBookings() {
             Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
                 <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                <TableCell>
+                  <div className="space-y-1">
+                    <Skeleton className="h-3.5 w-28" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                </TableCell>
                 <TableCell><Skeleton className="h-6 w-40" /></TableCell>
                 <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-32" /></TableCell>
                 {canViewPricing && <TableCell><Skeleton className="h-5 w-16" /></TableCell>}
@@ -224,7 +227,7 @@ export default function AdminBookings() {
             ))
           ) : items.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
+              <TableCell colSpan={canViewPricing ? 8 : 7} className="text-center py-10 text-muted-foreground">
                 <div className="flex flex-col items-center justify-center gap-2">
                   <AlertTriangle className="h-8 w-8 text-muted-foreground/50" />
                   <span className="font-medium">No bookings found matching your criteria.</span>
@@ -236,8 +239,12 @@ export default function AdminBookings() {
               {items.map((b) => (
                 <TableRow key={b.id} className="hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => setSelectedBooking(b)}>
                   <TableCell className="font-medium font-mono text-sm">{b.displayId}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap font-medium">{b.date}</TableCell>
-                  <TableCell>{b.user}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-semibold text-xs text-slate-900 leading-snug">{b.user}</span>
+                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">{b.date}</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="max-w-[260px]">
                     <div className="flex flex-col gap-0.5">
                       <span className="font-semibold text-xs text-slate-900 line-clamp-1" title={b.product}>
@@ -281,7 +288,7 @@ export default function AdminBookings() {
               ))}
               {!isLoading && items.length > 0 && (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={9} className="p-0">
+                  <TableCell colSpan={canViewPricing ? 8 : 7} className="p-0">
                     <div className="flex items-center justify-between border-t border-border px-4 py-3 bg-muted/20">
                       <p className="text-sm text-muted-foreground">
                         Showing <span className="font-medium text-foreground">{totalBookings === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, totalBookings)}</span> of <span className="font-medium text-foreground">{totalBookings}</span> bookings
