@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, Package, FileText, UserCircle,
@@ -10,6 +11,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { adminApi } from "@/lib/api/admin";
 
 interface SidebarNavProps {
   portal: "admin" | "user" | "lab";
@@ -41,6 +43,77 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
   const [collapsed, setCollapsed] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // Live sidebar metrics
+  const { data: statsResponse } = useQuery({
+    queryKey: ["adminStats"],
+    queryFn: adminApi.getStats,
+    refetchInterval: 30000,
+  });
+  const stats = statsResponse?.data || {};
+
+  const getItemBadge = (label: string) => {
+    if (!statsResponse?.data) return null;
+    switch (label) {
+      case "Users":
+        return {
+          count: stats.activeUsers ?? stats.totalUsers ?? 0,
+          isAlert: false
+        };
+      case "Employees":
+        return {
+          count: stats.activeEmployees ?? stats.totalEmployees ?? 0,
+          isAlert: false
+        };
+      case "Consultations":
+        return {
+          count: stats.pendingConsultations > 0 ? stats.pendingConsultations : (stats.totalConsultations ?? 0),
+          isAlert: stats.pendingConsultations > 0
+        };
+      case "Laboratories":
+        return {
+          count: stats.activeLabs ?? stats.totalLabs ?? 0,
+          isAlert: false
+        };
+      case "Bookings":
+        return {
+          count: stats.pendingBookings > 0 ? stats.pendingBookings : (stats.totalBookings ?? 0),
+          isAlert: stats.pendingBookings > 0
+        };
+      case "Categories":
+        return {
+          count: stats.totalCategories ?? 0,
+          isAlert: false
+        };
+      case "Tests":
+        return {
+          count: stats.totalTests ?? 0,
+          isAlert: false
+        };
+      case "Packages":
+        return {
+          count: stats.totalPackages ?? 0,
+          isAlert: false
+        };
+      case "Reviews":
+        return {
+          count: stats.totalReviews ?? 0,
+          isAlert: false
+        };
+      case "Reports":
+        return {
+          count: stats.pendingReports ?? 0,
+          isAlert: (stats.pendingReports ?? 0) > 0
+        };
+      case "Approvals":
+        return {
+          count: stats.pendingApprovals ?? 0,
+          isAlert: (stats.pendingApprovals ?? 0) > 0
+        };
+      default:
+        return null;
+    }
+  };
   
   // Filter nav items based on user permissions
   const filteredNavItems = navItems.filter((item: any) => {
@@ -130,22 +203,44 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
           {filteredNavItems.map((item) => {
             const isActive = location.pathname === item.href || 
               (item.href !== "/admin/dashboard" && location.pathname.startsWith(item.href));
+            const badge = getItemBadge(item.label);
+
             return (
               <Link
                 key={item.href}
                 to={item.href}
                 onClick={onClose}
-                title={collapsed ? item.label : undefined}
+                title={collapsed ? `${item.label}${badge && badge.count !== undefined ? ` (${badge.count})` : ''}` : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0 select-none",
+                  "flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0 select-none group relative",
                   collapsed && "justify-center px-2",
                   isActive 
                     ? "bg-primary/10 text-primary font-semibold" 
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 )}
               >
-                <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-slate-400")} />
-                {!collapsed && <span>{item.label}</span>}
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="relative shrink-0 flex items-center justify-center">
+                    <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-slate-400 group-hover:text-slate-600")} />
+                    {collapsed && badge && badge.count > 0 && badge.isAlert && (
+                      <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-white" />
+                    )}
+                  </div>
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                </div>
+
+                {!collapsed && badge && badge.count !== undefined && (
+                  <span className={cn(
+                    "min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full text-[10px] font-bold transition-colors shrink-0 ml-1.5 tabular-nums",
+                    badge.isAlert
+                      ? "bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs"
+                      : isActive
+                        ? "bg-primary text-white shadow-2xs"
+                        : "bg-slate-100 text-slate-600 group-hover:bg-slate-200 group-hover:text-slate-800"
+                  )}>
+                    {badge.count}
+                  </span>
+                )}
               </Link>
             );
           })}

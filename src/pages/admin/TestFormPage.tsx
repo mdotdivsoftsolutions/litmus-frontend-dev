@@ -1,52 +1,57 @@
-import { useState, useEffect } from"react";
-import { useParams, useNavigate, Link } from"react-router-dom";
-import { useQuery, useMutation, useQueryClient } from"@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from"@/components/ui/card";
-import { Button } from"@/components/ui/button";
-import { Input } from"@/components/ui/input";
-import { Label } from"@/components/ui/label";
-import { Textarea } from"@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from"@/components/ui/select";
-import { Switch } from"@/components/ui/switch";
-import { ArrowLeft, CheckCircle2, Beaker, FileText, Plus, Trash2 } from"lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, CheckCircle2, Beaker, FileText, Plus, Trash2, Upload, ImageIcon, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from"sonner";
-import { cn } from"@/lib/utils";
-import { testApi } from"@/lib/api/test";
-import { categoryApi } from"@/lib/api/category";
-import { testTypeApi } from"@/lib/api/testType";
-import { adminApi } from"@/lib/api/admin";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { testApi } from "@/lib/api/test";
+import { categoryApi } from "@/lib/api/category";
+import { testTypeApi } from "@/lib/api/testType";
+import { adminApi } from "@/lib/api/admin";
 
-const stepLabels = ["Basic Details","Parameters & Pricing"];
+const stepLabels = ["Basic Details", "Parameters & Pricing"];
 
 export default function TestFormPage() {
- const { id } = useParams<{ id: string }>();
- const navigate = useNavigate();
- const queryClient = useQueryClient();
- const isEditing = !!id;
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const isEditing = !!id;
 
- const [step, setStep] = useState(0);
- const [tatValue, setTatValue] = useState("");
- const [tatUnit, setTatUnit] = useState("hours");
- const [formData, setFormData] = useState<any>({
- testName:"",
- description:"",
- price:"",
- offerPrice:"",
- discountType:"NONE",
- discountValue:"",
- turnAroundTime:"",
- isPopular: false,
- isApplicableToAll: true,
- creatorType:"ADMIN",
- labId:"",
- applicableCategories: [],
- metadata: {
- method:"",
- type:"",
- parameters: [{ name:"", unit:"", minLimit:"", maxLimit:"", price:""}]
- }
- });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const [step, setStep] = useState(0);
+  const [tatValue, setTatValue] = useState("");
+  const [tatUnit, setTatUnit] = useState("hours");
+  const [formData, setFormData] = useState<any>({
+    testName: "",
+    description: "",
+    imageUrl: "",
+    icon: "",
+    price: "",
+    offerPrice: "",
+    discountType: "NONE",
+    discountValue: "",
+    turnAroundTime: "",
+    isPopular: false,
+    isApplicableToAll: true,
+    creatorType: "ADMIN",
+    labId: "",
+    applicableCategories: [],
+    metadata: {
+      method: "",
+      type: "",
+      parameters: [{ name: "", unit: "", minLimit: "", maxLimit: "", price: "" }]
+    }
+  });
 
  const { data: testData, isLoading } = useQuery({
  queryKey: ["test", id],
@@ -101,27 +106,67 @@ export default function TestFormPage() {
  setTatValue(tValue);
  setTatUnit(tUnit);
 
- setFormData({
- testName: test.testName ||"",
- description: test.description ||"",
- price: test.price?.toString() ||"",
- offerPrice: test.offerPrice?.toString() ||"",
- discountType: test.discountType ||"NONE",
- discountValue: test.discountValue?.toString() ||"",
- turnAroundTime: tat,
- isPopular: test.isPopular || false,
- isApplicableToAll: test.isApplicableToAll !== undefined ? test.isApplicableToAll : true,
- creatorType: test.creatorType ||"ADMIN",
- labId: test.labId?._id || test.labId ||"",
- applicableCategories: test.applicableCategories?.map((c: any) => typeof c === 'string' ? c : c._id) || [],
- metadata: {
- method: test.metadata?.method ||"",
- type: test.metadata?.type ||"",
- parameters: test.metadata?.parameters?.length > 0 ? test.metadata.parameters : [{ name:"", unit:"", minLimit:"", maxLimit:"", price:""}]
- }
- });
- }
- }, [testData]);
+    setFormData({
+      testName: test.testName || "",
+      description: test.description || "",
+      imageUrl: test.imageUrl || test.icon || "",
+      icon: test.icon || test.imageUrl || "",
+      price: test.price?.toString() || "",
+      offerPrice: test.offerPrice?.toString() || "",
+      discountType: test.discountType || "NONE",
+      discountValue: test.discountValue?.toString() || "",
+      turnAroundTime: tat,
+      isPopular: test.isPopular || false,
+      isApplicableToAll: test.isApplicableToAll !== undefined ? test.isApplicableToAll : true,
+      creatorType: test.creatorType || "ADMIN",
+      labId: test.labId?._id || test.labId || "",
+      applicableCategories: test.applicableCategories?.map((c: any) => typeof c === 'string' ? c : c._id) || [],
+      metadata: {
+        method: test.metadata?.method || "",
+        type: test.metadata?.type || "",
+        parameters: test.metadata?.parameters?.length > 0 ? test.metadata.parameters : [{ name: "", unit: "", minLimit: "", maxLimit: "", price: "" }]
+      }
+    });
+    }
+  }, [testData]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const res = await adminApi.uploadFile(file);
+      if (res.data?.url) {
+        setFormData((prev: any) => ({
+          ...prev,
+          imageUrl: res.data.url,
+          icon: res.data.url,
+        }));
+        toast.success("Test icon uploaded successfully");
+      }
+    } catch (error) {
+      toast.error("Failed to upload test icon");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData((prev: any) => ({
+      ...prev,
+      imageUrl: "",
+      icon: "",
+    }));
+  };
 
  const saveMutation = useMutation({
  mutationFn: (data: any) => isEditing ? testApi.updateTest(id!, data) : testApi.createTest(data),
@@ -279,6 +324,78 @@ export default function TestFormPage() {
  <Input name="testName"value={formData.testName} onChange={handleChange} placeholder="e.g. Fat Content Analysis"className="bg-background/50"/>
  </div>
  
+              {/* Test Icon / Image Upload */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Test Icon / Image</Label>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-lg border border-border bg-background/50">
+                  <div className="relative h-20 w-20 rounded-lg border-2 border-dashed border-border bg-muted/30 flex items-center justify-center overflow-hidden shrink-0 group">
+                    {formData.imageUrl ? (
+                      <>
+                        <img
+                          src={formData.imageUrl}
+                          alt="Test Icon"
+                          className="h-full w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remove icon"
+                        >
+                          <Trash2 className="h-5 w-5 text-rose-300" />
+                        </button>
+                      </>
+                    ) : (
+                      <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-1.5">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="gap-1.5 text-xs font-semibold"
+                      >
+                        {isUploading ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-3.5 w-3.5" /> Upload Test Icon
+                          </>
+                        )}
+                      </Button>
+                      {formData.imageUrl && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveImage}
+                          className="text-destructive hover:bg-destructive/10 text-xs"
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      PNG, JPG, WEBP or SVG (recommended square icon).
+                    </p>
+                  </div>
+                </div>
+              </div>
+
  <div className="grid md:grid-cols-2 gap-6">
  <div className="space-y-2">
  <Label className="text-sm font-medium">FSSAI Reference Method</Label>
@@ -532,8 +649,8 @@ export default function TestFormPage() {
  Next Step
  </Button>
  ) : (
- <Button onClick={handleSave} disabled={saveMutation.isPending} className="w-40 bg-litmus-emerald hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20">
- {saveMutation.isPending ?"Saving...": (isEditing ?"Save Changes":"Create Protocol")}
+ <Button onClick={handleSave} disabled={saveMutation.isPending} className="w-40 bg-primary hover:bg-primary-deep text-white shadow-md shadow-primary/20 font-bold">
+ {saveMutation.isPending ? "Saving..." : (isEditing ? "Save Changes" : "Create Protocol")}
  </Button>
  )}
  </div>

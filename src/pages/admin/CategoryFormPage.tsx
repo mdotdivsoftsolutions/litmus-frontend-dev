@@ -11,18 +11,18 @@ import { Skeleton } from"@/components/ui/skeleton";
 import { toast } from"sonner";
 import { categoryApi } from"@/lib/api/category";
 
+interface CategoryFormData {
+ name: string;
+ description: string;
+ imageUrl: string;
+}
+
 export default function CategoryFormPage() {
  const { id } = useParams<{ id: string }>();
  const navigate = useNavigate();
  const queryClient = useQueryClient();
  const fileInputRef = useRef<HTMLInputElement>(null);
  const isEditing = !!id;
-
-interface CategoryFormData {
- name: string;
- description: string;
- imageUrl: string;
-}
 
  const [formData, setFormData] = useState<CategoryFormData>({
  name:"",
@@ -49,7 +49,7 @@ interface CategoryFormData {
  }, [categoryData]);
 
  const saveMutation = useMutation({
- mutationFn: (data: CategoryFormData) => isEditing ? categoryApi.updateCategory(id!, data as Record<string, unknown>) : categoryApi.createCategory(data as Record<string, unknown>),
+ mutationFn: (data: CategoryFormData) => isEditing ? categoryApi.updateCategory(id!, data) : categoryApi.createCategory(data),
  onSuccess: () => {
  toast.success(isEditing ?"Category updated successfully!":"Category created successfully!");
  queryClient.invalidateQueries({ queryKey: ["adminCategories"] });
@@ -204,7 +204,7 @@ interface CategoryFormData {
  </Card>
 
  <div className="flex justify-end items-center mt-6">
- <Button onClick={handleSave} disabled={saveMutation.isPending || isUploading} className="w-40 bg-litmus-emerald hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20">
+ <Button onClick={handleSave} disabled={saveMutation.isPending || isUploading} className="w-40 bg-primary hover:bg-primary-deep text-white shadow-md shadow-primary/20 font-bold">
  {saveMutation.isPending ?"Saving...": (isEditing ?"Save Changes":"Create Category")}
  </Button>
  </div>

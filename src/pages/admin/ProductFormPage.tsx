@@ -268,7 +268,7 @@ export default function ProductFormPage() {
  </Card>
 
  <div className="flex justify-end items-center mt-6">
- <Button onClick={handleSave} disabled={saveMutation.isPending || isUploading} className="w-40 bg-litmus-emerald hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20">
+ <Button onClick={handleSave} disabled={saveMutation.isPending || isUploading} className="w-40 bg-primary hover:bg-primary-deep text-white shadow-md shadow-primary/20 font-bold">
  {saveMutation.isPending ?"Saving...": (isEditing ?"Save Changes":"Create Product")}
  </Button>
  </div>

@@ -163,7 +163,24 @@ export default function TestManagement() {
                 </TableRow>
               ) : paginatedTests.map((t: any) => (
                 <TableRow key={t._id} className="hover:bg-muted/30 transition-colors">
-                  <TableCell className="font-medium max-w-[200px] truncate" title={t.testName}>{t.testName}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      {t.imageUrl || t.icon ? (
+                        <img
+                          src={t.imageUrl || t.icon}
+                          alt={t.testName}
+                          className="h-10 w-10 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-50"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shrink-0">
+                          <Beaker className="h-5 w-5" />
+                        </div>
+                      )}
+                      <span className="font-medium max-w-[200px] truncate text-slate-900" title={t.testName}>
+                        {t.testName}
+                      </span>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       <Badge variant={t.creatorType === 'LAB' ? "secondary" : "default"} className="w-fit text-[10px]">
@@ -266,9 +283,22 @@ export default function TestManagement() {
           {selectedTest && (
             <>
               <SheetHeader className="shrink-0">
-                <SheetTitle className="text-xl flex items-center gap-2">
-                  <Beaker className="h-5 w-5 text-primary" /> {selectedTest.testName}
-                </SheetTitle>
+                <div className="flex items-center gap-3">
+                  {selectedTest.imageUrl || selectedTest.icon ? (
+                    <img
+                      src={selectedTest.imageUrl || selectedTest.icon}
+                      alt={selectedTest.testName}
+                      className="h-12 w-12 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-50"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shrink-0">
+                      <Beaker className="h-6 w-6" />
+                    </div>
+                  )}
+                  <SheetTitle className="text-xl flex items-center gap-2">
+                    {selectedTest.testName}
+                  </SheetTitle>
+                </div>
               </SheetHeader>
               <div className="mt-6 space-y-6 flex-1 overflow-y-auto pr-2 pb-6">
                 <div className="flex gap-2 flex-wrap">
