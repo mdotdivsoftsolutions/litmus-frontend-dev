@@ -52,64 +52,31 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
   });
   const stats = statsResponse?.data || {};
 
-  const getItemBadge = (label: string) => {
+  const getItemBadge = (label: string): number | null => {
     if (!statsResponse?.data) return null;
     switch (label) {
       case "Users":
-        return {
-          count: stats.activeUsers ?? stats.totalUsers ?? 0,
-          isAlert: false
-        };
+        return stats.activeUsers ?? stats.totalUsers ?? 0;
       case "Employees":
-        return {
-          count: stats.activeEmployees ?? stats.totalEmployees ?? 0,
-          isAlert: false
-        };
+        return stats.activeEmployees ?? stats.totalEmployees ?? 0;
       case "Consultations":
-        return {
-          count: stats.pendingConsultations > 0 ? stats.pendingConsultations : (stats.totalConsultations ?? 0),
-          isAlert: stats.pendingConsultations > 0
-        };
+        return stats.pendingConsultations > 0 ? stats.pendingConsultations : (stats.totalConsultations ?? 0);
       case "Laboratories":
-        return {
-          count: stats.activeLabs ?? stats.totalLabs ?? 0,
-          isAlert: false
-        };
+        return stats.activeLabs ?? stats.totalLabs ?? 0;
       case "Bookings":
-        return {
-          count: stats.pendingBookings > 0 ? stats.pendingBookings : (stats.totalBookings ?? 0),
-          isAlert: stats.pendingBookings > 0
-        };
+        return stats.pendingBookings > 0 ? stats.pendingBookings : (stats.totalBookings ?? 0);
       case "Categories":
-        return {
-          count: stats.totalCategories ?? 0,
-          isAlert: false
-        };
+        return stats.totalCategories ?? 0;
       case "Tests":
-        return {
-          count: stats.totalTests ?? 0,
-          isAlert: false
-        };
+        return stats.totalTests ?? 0;
       case "Packages":
-        return {
-          count: stats.totalPackages ?? 0,
-          isAlert: false
-        };
+        return stats.totalPackages ?? 0;
       case "Reviews":
-        return {
-          count: stats.totalReviews ?? 0,
-          isAlert: false
-        };
+        return stats.totalReviews ?? 0;
       case "Reports":
-        return {
-          count: stats.pendingReports ?? 0,
-          isAlert: (stats.pendingReports ?? 0) > 0
-        };
+        return stats.pendingReports ?? 0;
       case "Approvals":
-        return {
-          count: stats.pendingApprovals ?? 0,
-          isAlert: (stats.pendingApprovals ?? 0) > 0
-        };
+        return stats.pendingApprovals ?? 0;
       default:
         return null;
     }
@@ -203,14 +170,14 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
           {filteredNavItems.map((item) => {
             const isActive = location.pathname === item.href || 
               (item.href !== "/admin/dashboard" && location.pathname.startsWith(item.href));
-            const badge = getItemBadge(item.label);
+            const badgeCount = getItemBadge(item.label);
 
             return (
               <Link
                 key={item.href}
                 to={item.href}
                 onClick={onClose}
-                title={collapsed ? `${item.label}${badge && badge.count !== undefined ? ` (${badge.count})` : ''}` : undefined}
+                title={collapsed ? `${item.label}${badgeCount !== null && badgeCount !== undefined ? ` (${badgeCount})` : ''}` : undefined}
                 className={cn(
                   "flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ring-0 border-0 select-none group relative",
                   collapsed && "justify-center px-2",
@@ -222,23 +189,18 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="relative shrink-0 flex items-center justify-center">
                     <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-slate-400 group-hover:text-slate-600")} />
-                    {collapsed && badge && badge.count > 0 && badge.isAlert && (
-                      <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-white" />
-                    )}
                   </div>
                   {!collapsed && <span className="truncate">{item.label}</span>}
                 </div>
 
-                {!collapsed && badge && badge.count !== undefined && (
+                {!collapsed && badgeCount !== null && badgeCount !== undefined && (
                   <span className={cn(
                     "min-w-5 h-5 px-1.5 flex items-center justify-center rounded-full text-[10px] font-bold transition-colors shrink-0 ml-1.5 tabular-nums",
-                    badge.isAlert
-                      ? "bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs"
-                      : isActive
-                        ? "bg-primary text-white shadow-2xs"
-                        : "bg-slate-100 text-slate-600 group-hover:bg-slate-200 group-hover:text-slate-800"
+                    isActive
+                      ? "bg-primary text-white shadow-2xs"
+                      : "bg-slate-100 text-slate-600 group-hover:bg-slate-200 group-hover:text-slate-800"
                   )}>
-                    {badge.count}
+                    {badgeCount}
                   </span>
                 )}
               </Link>
