@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
 import { Plus, Edit, Trash2, MoreVertical, Package, ImageIcon, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { categoryApi } from "@/lib/api/category";
 import { toast } from "sonner";
