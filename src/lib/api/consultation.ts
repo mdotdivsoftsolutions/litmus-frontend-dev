@@ -11,8 +11,18 @@ export interface ConsultationData {
   source: string;
 }
 
+export interface ConsultationParams {
+  status?: string;
+  source?: string;
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}
+
 export const consultationApi = {
   createConsultation: (data: ConsultationData) => apiClient.post('/consultations', data),
-  getConsultations: () => apiClient.get('/consultations'),
+  getConsultations: (params?: ConsultationParams) => apiClient.get('/consultations', { params }),
   updateStatus: (id: string, status: string) => apiClient.patch(`/consultations/${id}/status`, { status }),
 };

@@ -21,7 +21,7 @@ export default function LaboratoryDetailPage() {
 
  const { data: bookingsData } = useQuery({
  queryKey: ["admin-bookings"],
- queryFn: adminApi.getBookings,
+ queryFn: () => adminApi.getBookings(),
  });
 
  if (isLoading) {

@@ -3,26 +3,73 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Eye, CheckCircle2, XCircle, FileText, Search, Filter, CalendarIcon, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { Progress } from "@/components/ui/progress";
+import { 
+  Eye, 
+  CheckCircle2, 
+  XCircle, 
+  FileText, 
+  Search, 
+  Filter, 
+  CalendarIcon, 
+  ChevronLeft, 
+  ChevronRight, 
+  AlertTriangle, 
+  Upload, 
+  Edit3, 
+  ShieldCheck, 
+  Lightbulb, 
+  HelpCircle, 
+  Loader2, 
+  PlusCircle, 
+  ExternalLink 
+} from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "@/lib/api/admin";
+import { uploadApi } from "@/lib/api/uploadApi";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function AdminReports() {
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const newReportFileInputRef = useRef<HTMLInputElement>(null);
+
   const [selectedReport, setSelectedReport] = useState<any | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
-  
+
+  // Edit / Remarks state in Review Dialog
+  const [editSummary, setEditSummary] = useState("");
+  const [editRecs, setEditRecs] = useState("");
+  const [editTips, setEditTips] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [editFiles, setEditFiles] = useState<string[]>([]);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Manual Upload Report for Any Booking Modal
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [targetBookingId, setTargetBookingId] = useState("");
+  const [newUploadedFileUrl, setNewUploadedFileUrl] = useState("");
+  const [newSummary, setNewSummary] = useState("");
+  const [newRecs, setNewRecs] = useState("");
+  const [newTips, setNewTips] = useState("");
+  const [newNotes, setNewNotes] = useState("");
+  const [newIsUploading, setNewIsUploading] = useState(false);
+  const [newUploadProgress, setNewUploadProgress] = useState(0);
+  const [autoApprove, setAutoApprove] = useState(true);
+
   // Filters
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -33,27 +80,45 @@ export default function AdminReports() {
 
   const { data: response, isLoading } = useQuery({
     queryKey: ["adminReports"],
-    queryFn: adminApi.getBookings,
+    queryFn: () => adminApi.getBookings(),
   });
 
-  // Extract bookings that have reports uploaded
   const rawBookings = response?.data || [];
+  
+  // Bookings with reports
   const reportsBookings = rawBookings.filter((b: any) => b.reportFiles && b.reportFiles.length > 0);
+
+  // Bookings without reports (eligible for manual admin report upload)
+  const bookingsWithoutReports = rawBookings.filter((b: any) => !b.reportFiles || b.reportFiles.length === 0);
 
   const mappedReports = reportsBookings.map((b: any) => ({
     id: b._id,
     bookingId: `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`,
-    user: `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim(),
+    user: `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim() || 'Unknown User',
     product: b.items?.[0]?.samples?.[0]?.productName || b.items?.[0]?.packageId?.name || b.items?.[0]?.testId?.name || "Service Item",
-    lab: b.labId?.labName || "Unknown Lab",
+    lab: b.labId?.labName || "Litmus Assigned Lab",
     amount: b.items?.reduce((sum: number, item: any) => sum + (item.price || 0), 0) || 0,
     tests: b.items?.flatMap((item: any) => item.samples?.[0]?.selectedParameters || [item.packageId?.name || item.testId?.name || "Service Item"]) || [],
     reportFiles: b.reportFiles || [],
+    reportSummary: b.reportSummary || {},
     isReportApprovedByAdmin: b.isReportApprovedByAdmin,
     status: b.isReportApprovedByAdmin ? "Verified" : "Pending Verification",
     uploadDate: format(new Date(b.updatedAt || b.createdAt), "MMM d, yyyy"),
-    rawDate: new Date(b.updatedAt || b.createdAt)
+    rawDate: new Date(b.updatedAt || b.createdAt),
+    rawBooking: b,
   }));
+
+  // Sync edit state when a report is selected
+  useEffect(() => {
+    if (selectedReport) {
+      setEditSummary(selectedReport.reportSummary?.summary || "");
+      setEditRecs(selectedReport.reportSummary?.recommendations || "");
+      setEditTips(selectedReport.reportSummary?.tips || "");
+      setEditNotes(selectedReport.reportSummary?.additionalNotes || "");
+      setEditFiles(selectedReport.reportFiles || []);
+      setRejectionReason("");
+    }
+  }, [selectedReport]);
 
   const filteredReports = mappedReports.filter((r: any) => {
     const matchesSearch = !search || 
@@ -82,18 +147,29 @@ export default function AdminReports() {
     setCurrentPage(1);
   };
 
+  // Mutations
   const approveMutation = useMutation({
-    mutationFn: (id: string) => adminApi.approveReport(id),
+    mutationFn: ({ id, data }: { id: string; data?: any }) => adminApi.approveReport(id, data),
     onSuccess: () => {
-      toast.success("Report verified and approved successfully");
+      toast.success("Report verified, updated, and published successfully");
       queryClient.invalidateQueries({ queryKey: ["adminReports"] });
       setSelectedReport(null);
     },
     onError: () => toast.error("Failed to approve report")
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => adminApi.updateBookingReport(id, data),
+    onSuccess: () => {
+      toast.success("Report and remarks updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["adminReports"] });
+      setSelectedReport(null);
+    },
+    onError: () => toast.error("Failed to update report")
+  });
+
   const rejectMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: string, reason: string }) => adminApi.rejectReport(id, reason),
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => adminApi.rejectReport(id, reason),
     onSuccess: () => {
       toast.success("Report rejected successfully");
       queryClient.invalidateQueries({ queryKey: ["adminReports"] });
@@ -103,23 +179,152 @@ export default function AdminReports() {
     onError: () => toast.error("Failed to reject report")
   });
 
-  const handleApprove = (id: string) => approveMutation.mutate(id);
-  const handleReject = (id: string) => {
+  const createReportMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => adminApi.updateBookingReport(id, data),
+    onSuccess: () => {
+      toast.success("Report uploaded and saved successfully");
+      queryClient.invalidateQueries({ queryKey: ["adminReports"] });
+      setIsUploadModalOpen(false);
+      resetNewReportForm();
+    },
+    onError: () => toast.error("Failed to upload report for booking")
+  });
+
+  const resetNewReportForm = () => {
+    setTargetBookingId("");
+    setNewUploadedFileUrl("");
+    setNewSummary("");
+    setNewRecs("");
+    setNewTips("");
+    setNewNotes("");
+    setAutoApprove(true);
+  };
+
+  // File Upload in Edit/Review Dialog
+  const handleEditFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setIsUploadingFile(true);
+      setUploadProgress(0);
+      try {
+        const res = await uploadApi.uploadFile(file, (p: any) => {
+          if (p.total) setUploadProgress(Math.round((p.loaded * 100) / p.total));
+        });
+        const url = res.data?.url || res.url || res.data || res;
+        setEditFiles([url]);
+        setIsUploadingFile(false);
+        toast.success("New report document uploaded successfully");
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || "Failed to upload document");
+        setIsUploadingFile(false);
+      }
+    }
+  };
+
+  // File Upload in Manual Upload Modal
+  const handleNewFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setNewIsUploading(true);
+      setNewUploadProgress(0);
+      try {
+        const res = await uploadApi.uploadFile(file, (p: any) => {
+          if (p.total) setNewUploadProgress(Math.round((p.loaded * 100) / p.total));
+        });
+        const url = res.data?.url || res.url || res.data || res;
+        setNewUploadedFileUrl(url);
+        setNewIsUploading(false);
+        toast.success("Document uploaded successfully");
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || "Failed to upload document");
+        setNewIsUploading(false);
+      }
+    }
+  };
+
+  const handleSaveAndApprove = () => {
+    if (!selectedReport) return;
+    if (editFiles.length === 0) {
+      toast.error("Please ensure a report document is uploaded");
+      return;
+    }
+    approveMutation.mutate({
+      id: selectedReport.id,
+      data: {
+        reportFiles: editFiles,
+        summary: editSummary.trim(),
+        recommendations: editRecs.trim(),
+        tips: editTips.trim(),
+        additionalNotes: editNotes.trim(),
+      },
+    });
+  };
+
+  const handleSaveRemarksOnly = () => {
+    if (!selectedReport) return;
+    updateMutation.mutate({
+      id: selectedReport.id,
+      data: {
+        reportFiles: editFiles,
+        summary: editSummary.trim(),
+        recommendations: editRecs.trim(),
+        tips: editTips.trim(),
+        additionalNotes: editNotes.trim(),
+        isReportApprovedByAdmin: selectedReport.isReportApprovedByAdmin,
+      },
+    });
+  };
+
+  const handleReject = () => {
+    if (!selectedReport) return;
     if (!rejectionReason.trim()) {
       toast.error("Please enter a rejection reason");
       return;
     }
-    rejectMutation.mutate({ id, reason: rejectionReason });
+    rejectMutation.mutate({ id: selectedReport.id, reason: rejectionReason.trim() });
+  };
+
+  const handleCreateReportSubmit = () => {
+    if (!targetBookingId) {
+      toast.error("Please select a booking to upload the report for");
+      return;
+    }
+    if (!newUploadedFileUrl) {
+      toast.error("Please upload a report document (PDF or Image)");
+      return;
+    }
+    createReportMutation.mutate({
+      id: targetBookingId,
+      data: {
+        reportFiles: [newUploadedFileUrl],
+        summary: newSummary.trim(),
+        recommendations: newRecs.trim(),
+        tips: newTips.trim(),
+        additionalNotes: newNotes.trim(),
+        isReportApprovedByAdmin: autoApprove,
+      },
+    });
   };
 
   return (
     <div className="space-y-6 animate-fade-in mx-auto pb-20">
-      <h1 className="text-2xl font-bold text-foreground">Report Verification</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Report Verification & Management</h1>
+          <p className="text-sm text-muted-foreground">Review, edit, upload, and publish certified diagnostic reports with full technical remarks.</p>
+        </div>
+        <Button 
+          onClick={() => setIsUploadModalOpen(true)} 
+          className="bg-primary hover:bg-primary-deep text-white gap-2 shadow-sm"
+        >
+          <PlusCircle className="h-4 w-4" /> Upload Report for Booking
+        </Button>
+      </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4">
         <Card className="border border-border shadow-sm"><CardContent className="p-4 text-center"><p className="text-2xl font-semibold text-primary">{mappedReports.filter((r: any) => r.status === "Pending Verification").length}</p><p className="text-xs text-muted-foreground">Pending Review</p></CardContent></Card>
-        <Card className="border border-border shadow-sm"><CardContent className="p-4 text-center"><p className="text-2xl font-semibold text-litmus-emerald">{mappedReports.filter((r: any) => r.status === "Verified").length}</p><p className="text-xs text-muted-foreground">Verified</p></CardContent></Card>
+        <Card className="border border-border shadow-sm"><CardContent className="p-4 text-center"><p className="text-2xl font-semibold text-litmus-emerald">{mappedReports.filter((r: any) => r.status === "Verified").length}</p><p className="text-xs text-muted-foreground">Verified & Published</p></CardContent></Card>
         <Card className="border border-border shadow-sm"><CardContent className="p-4 text-center"><p className="text-2xl font-semibold text-foreground">{mappedReports.length}</p><p className="text-xs text-muted-foreground">Total Reports</p></CardContent></Card>
       </div>
 
@@ -185,7 +390,7 @@ export default function AdminReports() {
               <TableHead>Lab</TableHead>
               <TableHead>Upload Date</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -220,61 +425,16 @@ export default function AdminReports() {
                     <TableCell className="text-sm text-muted-foreground truncate max-w-[150px]">{r.lab}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{r.uploadDate}</TableCell>
                     <TableCell><StatusBadge status={r.status === "Verified" ? "Approved" : "Pending"} /></TableCell>
-                    <TableCell>
-                      <Dialog open={selectedReport?.id === r.id} onOpenChange={(open) => !open && setSelectedReport(null)}>
-                        <DialogTrigger asChild><Button variant="ghost" size="sm" className="gap-1" onClick={() => setSelectedReport(r)}><Eye className="h-3.5 w-3.5" />Review</Button></DialogTrigger>
-                        <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
-                          <DialogHeader><DialogTitle>Report Review — {r.bookingId}</DialogTitle></DialogHeader>
-                          <div className="grid md:grid-cols-5 gap-6 mt-4">
-                            {/* PDF Preview */}
-                            <div className="md:col-span-3 rounded-lg border border-border bg-muted/30 p-8 flex flex-col items-center justify-center min-h-[300px] md:min-h-[500px]">
-                              {r.reportFiles.length > 0 && r.reportFiles[0].match(/\.(jpeg|jpg|png|gif)$/i) ? (
-                                <img src={r.reportFiles[0]} alt="Report" className="max-w-full max-h-[400px] object-contain mb-4 border border-border rounded shadow-sm" />
-                              ) : (
-                                <FileText className="h-16 w-16 text-muted-foreground mb-4" />
-                              )}
-                              <p className="text-sm font-medium text-foreground">Report Document</p>
-                              <Button variant="outline" size="sm" className="mt-4" onClick={() => window.open(r.reportFiles[0], '_blank')}>Open Document</Button>
-                            </div>
-                            {/* Report details */}
-                            <div className="md:col-span-2 space-y-4">
-                              <div className="space-y-2 text-sm grid grid-cols-2 gap-2">
-                                <div className="rounded-lg border border-border bg-muted/20 p-3 break-all col-span-2 sm:col-span-1"><p className="text-muted-foreground text-xs mb-1">Booking</p><p className="font-mono font-medium text-xs">{r.bookingId}</p></div>
-                                <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2 sm:col-span-1"><p className="text-muted-foreground text-xs mb-1">User</p><p className="font-medium text-sm">{r.user}</p></div>
-                                <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2"><p className="text-muted-foreground text-xs mb-1">Product</p><p className="font-medium text-sm">{r.product}</p></div>
-                                <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2"><p className="text-muted-foreground text-xs mb-1">Lab</p><p className="font-medium text-sm">{r.lab}</p></div>
-                                <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Amount</p><p className="font-medium text-sm">₹{r.amount.toLocaleString()}</p></div>
-                                <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Uploaded</p><p className="font-medium text-sm">{r.uploadDate}</p></div>
-                              </div>
-
-                              <div className="rounded-lg border border-border p-4 bg-card shadow-sm">
-                                <p className="text-sm font-semibold mb-3 border-b border-border pb-2">Tests Included ({r.tests.length})</p>
-                                <div className="flex flex-wrap gap-1.5">
-                                  {r.tests.map((t: string, i: number) => <Badge key={i} variant="outline" className="text-xs bg-muted/50">{t}</Badge>)}
-                                </div>
-                              </div>
-
-                              {!r.isReportApprovedByAdmin && (
-                                <>
-                                  <div className="space-y-2 pt-2">
-                                    <p className="text-sm font-semibold">Rejection Reason</p>
-                                    <Textarea placeholder="Enter reason if rejecting..." className="min-h-[80px]" value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
-                                  </div>
-                                  <div className="flex gap-2 pt-2">
-                                    <Button onClick={() => handleApprove(r.id)} disabled={approveMutation.isPending} className="flex-1 gap-1 bg-litmus-emerald hover:bg-emerald-600 text-white shadow-sm"><CheckCircle2 className="h-4 w-4" />{approveMutation.isPending ? "Verifying..." : "Verify"}</Button>
-                                    <Button onClick={() => handleReject(r.id)} disabled={rejectMutation.isPending} variant="outline" className="flex-1 gap-1 text-status-rejected border-status-rejected/50 hover:bg-red-50"><XCircle className="h-4 w-4" />{rejectMutation.isPending ? "Rejecting..." : "Reject"}</Button>
-                                  </div>
-                                </>
-                              )}
-                              {r.isReportApprovedByAdmin && (
-                                <div className="p-3 bg-litmus-emerald/10 border border-litmus-emerald/20 rounded-lg text-center">
-                                  <p className="text-sm font-medium text-litmus-emerald">This report has been verified and published.</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="gap-1 text-primary hover:text-primary hover:bg-primary/10" 
+                        onClick={() => setSelectedReport(r)}
+                      >
+                        {r.isReportApprovedByAdmin ? <Edit3 className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        {r.isReportApprovedByAdmin ? "Edit Report" : "Review & Edit"}
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -303,6 +463,366 @@ export default function AdminReports() {
           </TableBody>
         </Table>
       </Card>
+
+      {/* Review & Edit Report Dialog */}
+      <Dialog open={!!selectedReport} onOpenChange={(open) => !open && setSelectedReport(null)}>
+        <DialogContent className="max-w-5xl w-[96vw] max-h-[92vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between gap-2 pr-6">
+              <span>Report Review & Edit — {selectedReport?.bookingId}</span>
+              <StatusBadge status={selectedReport?.status === "Verified" ? "Approved" : "Pending"} />
+            </DialogTitle>
+            <DialogDescription>
+              Review the uploaded test certificate and edit Summary, Recommendations, Tips, and Additional Notes before or after verification.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedReport && (
+            <div className="grid md:grid-cols-5 gap-6 mt-2">
+              {/* Left Column: Document Preview & File Replacement */}
+              <div className="md:col-span-2 space-y-4">
+                <div className="rounded-lg border border-border bg-muted/20 p-4 flex flex-col items-center justify-center min-h-[260px] text-center">
+                  {editFiles.length > 0 && editFiles[0].match(/\.(jpeg|jpg|png|gif|webp)$/i) ? (
+                    <img src={editFiles[0]} alt="Report" className="max-w-full max-h-[240px] object-contain mb-3 border border-border rounded shadow-sm" />
+                  ) : (
+                    <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-3">
+                      <FileText className="h-8 w-8" />
+                    </div>
+                  )}
+                  <p className="text-sm font-semibold text-foreground">Attached Report File</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 max-w-xs truncate">
+                    {editFiles.length > 0 ? editFiles[0] : "No document attached"}
+                  </p>
+
+                  <div className="flex gap-2 mt-4 w-full justify-center">
+                    {editFiles.length > 0 && (
+                      <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => window.open(editFiles[0], '_blank')}>
+                        <ExternalLink className="h-3.5 w-3.5" /> View Document
+                      </Button>
+                    )}
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      onChange={handleEditFileUpload} 
+                      className="hidden" 
+                      accept="application/pdf,image/*" 
+                      disabled={isUploadingFile}
+                    />
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      className="gap-1.5 text-xs"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingFile}
+                    >
+                      <Upload className="h-3.5 w-3.5" /> {isUploadingFile ? "Uploading..." : "Replace File"}
+                    </Button>
+                  </div>
+
+                  {isUploadingFile && (
+                    <div className="w-full mt-3 space-y-1.5">
+                      <Progress value={uploadProgress} className="h-1.5 w-full" />
+                      <p className="text-[11px] text-muted-foreground">Uploading {uploadProgress}%</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Booking mini details */}
+                <div className="rounded-lg border border-border bg-card p-3.5 space-y-2 text-xs">
+                  <div className="flex justify-between border-b border-border/50 pb-1.5">
+                    <span className="text-muted-foreground">User:</span>
+                    <span className="font-medium text-foreground">{selectedReport.user}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-border/50 pb-1.5">
+                    <span className="text-muted-foreground">Product:</span>
+                    <span className="font-medium text-foreground">{selectedReport.product}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-border/50 pb-1.5">
+                    <span className="text-muted-foreground">Assigned Lab:</span>
+                    <span className="font-medium text-foreground">{selectedReport.lab}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Amount:</span>
+                    <span className="font-semibold text-primary">₹{selectedReport.amount.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {/* Rejection block if pending */}
+                {!selectedReport.isReportApprovedByAdmin && (
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <Label className="text-xs font-semibold text-status-rejected flex items-center gap-1">
+                      <XCircle className="h-3.5 w-3.5" /> Rejection (Send back to Lab)
+                    </Label>
+                    <Textarea 
+                      placeholder="Reason for rejecting this report..." 
+                      className="text-xs min-h-[60px]" 
+                      value={rejectionReason} 
+                      onChange={(e) => setRejectionReason(e.target.value)} 
+                    />
+                    <Button 
+                      onClick={handleReject} 
+                      disabled={rejectMutation.isPending} 
+                      variant="outline" 
+                      size="sm"
+                      className="w-full gap-1.5 text-xs text-status-rejected border-status-rejected/40 hover:bg-red-50 hover:text-red-700"
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                      {rejectMutation.isPending ? "Rejecting..." : "Reject Report"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: Editable Summary & Remarks */}
+              <div className="md:col-span-3 space-y-4">
+                <div className="space-y-3">
+                  {/* 1. Summary */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
+                      <FileText className="h-3.5 w-3.5 text-primary" /> 1. Executive Summary
+                    </Label>
+                    <Textarea
+                      value={editSummary}
+                      onChange={(e) => setEditSummary(e.target.value)}
+                      placeholder="Summary of findings, key parameters, and safety profile..."
+                      className="text-xs min-h-[75px]"
+                    />
+                  </div>
+
+                  {/* 2. Recommendations */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
+                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> 2. Actionable Recommendations
+                    </Label>
+                    <Textarea
+                      value={editRecs}
+                      onChange={(e) => setEditRecs(e.target.value)}
+                      placeholder="Safety advice, manufacturing/packaging corrections..."
+                      className="text-xs min-h-[75px]"
+                    />
+                  </div>
+
+                  {/* 3. Tips */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
+                      <Lightbulb className="h-3.5 w-3.5 text-amber-600" /> 3. Tips & Best Practices
+                    </Label>
+                    <Textarea
+                      value={editTips}
+                      onChange={(e) => setEditTips(e.target.value)}
+                      placeholder="Storage guidelines, temperature control, shelf-life advice..."
+                      className="text-xs min-h-[75px]"
+                    />
+                  </div>
+
+                  {/* 4. Additional Notes */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                      <HelpCircle className="h-3.5 w-3.5 text-slate-500" /> 4. Additional Notes & Disclaimers
+                    </Label>
+                    <Textarea
+                      value={editNotes}
+                      onChange={(e) => setEditNotes(e.target.value)}
+                      placeholder="Standard test methods (FSSAI/NABL), disclaimers..."
+                      className="text-xs min-h-[70px]"
+                    />
+                  </div>
+                </div>
+
+                {/* Actions Footer */}
+                <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-border">
+                  <Button variant="outline" size="sm" onClick={() => setSelectedReport(null)}>
+                    Cancel
+                  </Button>
+
+                  {!selectedReport.isReportApprovedByAdmin ? (
+                    <>
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={handleSaveRemarksOnly} 
+                        disabled={updateMutation.isPending || approveMutation.isPending}
+                        className="text-xs"
+                      >
+                        {updateMutation.isPending ? "Saving..." : "Save Draft"}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        onClick={handleSaveAndApprove} 
+                        disabled={approveMutation.isPending || updateMutation.isPending}
+                        className="bg-litmus-emerald hover:bg-emerald-600 text-white gap-1.5 text-xs shadow-sm"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        {approveMutation.isPending ? "Verifying & Publishing..." : "Save & Approve Report"}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button 
+                      size="sm" 
+                      onClick={handleSaveRemarksOnly} 
+                      disabled={updateMutation.isPending}
+                      className="bg-primary hover:bg-primary-deep text-white gap-1.5 text-xs shadow-sm"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      {updateMutation.isPending ? "Updating..." : "Update Report & Remarks"}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Manual Upload Report for Any Booking Modal */}
+      <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5 text-primary" /> Upload Report on Behalf of Lab / Admin
+            </DialogTitle>
+            <DialogDescription>
+              Directly attach a test report document and add Summary, Recommendations, Tips, and Notes to any active order.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Booking Selector */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Select Target Booking</Label>
+              <Select value={targetBookingId} onValueChange={setTargetBookingId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a booking..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {bookingsWithoutReports.length === 0 ? (
+                    <div className="p-3 text-xs text-muted-foreground text-center">No bookings waiting for report upload</div>
+                  ) : (
+                    bookingsWithoutReports.map((b: any) => {
+                      const displayId = `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`;
+                      const userName = `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim() || 'User';
+                      const product = b.items?.[0]?.samples?.[0]?.productName || b.items?.[0]?.packageId?.name || b.items?.[0]?.testId?.name || "Order";
+                      return (
+                        <SelectItem key={b._id} value={b._id}>
+                          {displayId} · {product} ({userName})
+                        </SelectItem>
+                      );
+                    })
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* File Upload */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Report Document (PDF or Image)</Label>
+              <input 
+                type="file" 
+                ref={newReportFileInputRef} 
+                onChange={handleNewFileUpload} 
+                className="hidden" 
+                accept="application/pdf,image/*" 
+                disabled={newIsUploading}
+              />
+              <div 
+                onClick={() => newReportFileInputRef.current?.click()}
+                className={cn("border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
+                  newUploadedFileUrl ? "border-emerald-500/50 bg-emerald-500/5" : "border-border hover:border-primary bg-muted/20"
+                )}
+              >
+                {newIsUploading ? (
+                  <div className="space-y-2">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
+                    <p className="text-xs text-muted-foreground">Uploading... {newUploadProgress}%</p>
+                  </div>
+                ) : newUploadedFileUrl ? (
+                  <div className="space-y-1">
+                    <CheckCircle2 className="h-6 w-6 text-emerald-600 mx-auto" />
+                    <p className="text-sm font-medium text-emerald-800">Report Document Attached</p>
+                    <p className="text-xs text-muted-foreground">Click to replace file</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <Upload className="h-6 w-6 text-muted-foreground mx-auto" />
+                    <p className="text-sm font-medium text-foreground">Click to upload report document (PDF/Image)</p>
+                    <p className="text-xs text-muted-foreground">Max 50MB</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Summary */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">1. Executive Summary</Label>
+              <Textarea 
+                value={newSummary} 
+                onChange={(e) => setNewSummary(e.target.value)} 
+                placeholder="Key findings and overall safety observations..." 
+                className="text-xs min-h-[60px]" 
+              />
+            </div>
+
+            {/* Recommendations */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-emerald-700">2. Recommendations</Label>
+              <Textarea 
+                value={newRecs} 
+                onChange={(e) => setNewRecs(e.target.value)} 
+                placeholder="Actionable steps, storage or recipe suggestions..." 
+                className="text-xs min-h-[60px]" 
+              />
+            </div>
+
+            {/* Tips */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-amber-700">3. Tips & Best Practices</Label>
+              <Textarea 
+                value={newTips} 
+                onChange={(e) => setNewTips(e.target.value)} 
+                placeholder="Practical food handling, shelf-life, or consumption tips..." 
+                className="text-xs min-h-[60px]" 
+              />
+            </div>
+
+            {/* Additional Notes */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-slate-700">4. Additional Notes</Label>
+              <Textarea 
+                value={newNotes} 
+                onChange={(e) => setNewNotes(e.target.value)} 
+                placeholder="Compliance references (FSSAI/NABL) and disclaimers..." 
+                className="text-xs min-h-[60px]" 
+              />
+            </div>
+
+            {/* Auto-approve checkbox */}
+            <div className="flex items-center gap-2 pt-2">
+              <input 
+                type="checkbox" 
+                id="auto-approve-chk" 
+                checked={autoApprove} 
+                onChange={(e) => setAutoApprove(e.target.checked)} 
+                className="rounded border-border"
+              />
+              <Label htmlFor="auto-approve-chk" className="text-xs cursor-pointer">
+                Publish and mark as Verified immediately (notifies user via email)
+              </Label>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-border">
+            <Button variant="outline" size="sm" onClick={() => setIsUploadModalOpen(false)}>Cancel</Button>
+            <Button 
+              size="sm" 
+              onClick={handleCreateReportSubmit} 
+              disabled={createReportMutation.isPending || newIsUploading || !targetBookingId || !newUploadedFileUrl}
+              className="bg-primary hover:bg-primary-deep text-white"
+            >
+              {createReportMutation.isPending ? "Submitting..." : "Upload & Save Report"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

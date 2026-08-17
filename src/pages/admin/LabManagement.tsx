@@ -57,7 +57,7 @@ export default function LabManagement() {
 
   const { data: bookingsData } = useQuery({
     queryKey: ["adminBookings"],
-    queryFn: adminApi.getBookings,
+    queryFn: () => adminApi.getBookings(),
   });
 
   const labs = labsData?.data || [];

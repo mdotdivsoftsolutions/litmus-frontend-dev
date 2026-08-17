@@ -11,8 +11,8 @@ export const adminApi = {
     return response.data;
   },
 
-  getBookings: async () => {
-    const response = await apiClient.get('/admin/bookings');
+  getBookings: async (params?: { status?: string; paymentStatus?: string; search?: string; startDate?: string; endDate?: string; page?: number; limit?: number }) => {
+    const response = await apiClient.get('/admin/bookings', { params });
     return response.data;
   },
 
@@ -21,13 +21,23 @@ export const adminApi = {
     return response.data;
   },
 
-  approveReport: async (id: string) => {
-    const response = await apiClient.patch(`/admin/booking/${id}/approve-result`);
+  approveReport: async (id: string, data?: { reportUrl?: string; reportFiles?: string[]; summary?: string; recommendations?: string; tips?: string; additionalNotes?: string }) => {
+    const response = await apiClient.patch(`/admin/booking/${id}/approve-result`, data || {});
+    return response.data;
+  },
+
+  updateBookingReport: async (id: string, data: { reportUrl?: string; reportFiles?: string[]; summary?: string; recommendations?: string; tips?: string; additionalNotes?: string; isReportApprovedByAdmin?: boolean }) => {
+    const response = await apiClient.patch(`/admin/booking/${id}/report`, data);
     return response.data;
   },
 
   rejectReport: async (id: string, reason: string) => {
     const response = await apiClient.patch(`/admin/booking/${id}/reject-result`, { reason });
+    return response.data;
+  },
+
+  updateBookingStatus: async (id: string, data: { status?: string; paymentStatus?: string; labId?: string }) => {
+    const response = await apiClient.patch(`/admin/booking/${id}/status`, data);
     return response.data;
   },
 
@@ -41,7 +51,7 @@ export const adminApi = {
     return response.data;
   },
 
-  updateCollectionDetails: async (id: string, data: { status?: string; collectorName?: string; collectorContact?: string; notifyDelay?: boolean }) => {
+  updateCollectionDetails: async (id: string, data: { status?: string; collectorName?: string; collectorContact?: string; notifyDelay?: boolean; courierDetails?: { trackingId: string; courierName?: string; notes?: string }; trackingId?: string; courierName?: string; notes?: string; collectionMethod?: string }) => {
     const response = await apiClient.patch(`/admin/booking/${id}/collection`, data);
     return response.data;
   },
@@ -56,8 +66,8 @@ export const adminApi = {
     return response.data;
   },
 
-  getUsers: async () => {
-    const response = await apiClient.get('/admin/users');
+  getUsers: async (params?: { status?: string; search?: string; startDate?: string; endDate?: string }) => {
+    const response = await apiClient.get('/admin/users', { params });
     return response.data;
   },
 

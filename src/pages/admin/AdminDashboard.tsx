@@ -11,7 +11,7 @@ import { Users, Building2, ClipboardList, DollarSign, Clock, TrendingUp, Trendin
 
 export default function AdminDashboard() {
   const { data: statsData, isLoading: statsLoading } = useQuery({ queryKey: ["adminStats"], queryFn: adminApi.getStats });
-  const { data: bookingsData, isLoading: bookingsLoading } = useQuery({ queryKey: ["adminBookings"], queryFn: adminApi.getBookings });
+  const { data: bookingsData, isLoading: bookingsLoading } = useQuery({ queryKey: ["adminBookings"], queryFn: () => adminApi.getBookings() });
   const { data: analyticsData, isLoading: analyticsLoading } = useQuery({ queryKey: ["adminAnalytics"], queryFn: adminApi.getAnalytics });
   const { data: labsData, isLoading: labsLoading } = useQuery({ queryKey: ["adminLabs"], queryFn: adminApi.getLabs });
 
