@@ -153,5 +153,9 @@ export const adminApi = {
   rejectPackage: async (id: string, reason: string) => {
     const response = await apiClient.patch(`/admin/package/${id}/reject`, { reason });
     return response.data;
+  },
+  getBookingInvoice: async (bookingId: string) => {
+    const response = await apiClient.get(`/booking/${bookingId}/invoice`);
+    return response.data;
   }
 };

@@ -41,12 +41,14 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { InvoiceDialog } from "@/components/admin/InvoiceDialog";
 
 export default function AdminBookingDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
   const [isReportDrawerOpen, setIsReportDrawerOpen] = useState(false);
   const [selectedLabId, setSelectedLabId] = useState("smart_allocation");
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -318,8 +320,17 @@ export default function AdminBookingDetails() {
           </div>
         </div>
 
-        {/* Top-Right Action Button for Side Drawer */}
-        <div className="flex items-center gap-3">
+        {/* Top-Right Action Buttons */}
+        <div className="flex items-center gap-2.5">
+          <Button 
+            variant="outline"
+            onClick={() => setIsInvoiceOpen(true)}
+            className="border-emerald-200 text-emerald-800 hover:bg-emerald-50 gap-2 font-semibold shadow-2xs"
+          >
+            <FileText className="h-4 w-4 text-emerald-600" />
+            Tax Invoice
+          </Button>
+
           <Button 
             onClick={() => setIsReportDrawerOpen(true)}
             className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 font-semibold shadow-sm px-4 py-2"
@@ -1251,6 +1262,13 @@ export default function AdminBookingDetails() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Reusable Tax Invoice Dialog */}
+      <InvoiceDialog
+        bookingId={b._id}
+        open={isInvoiceOpen}
+        onOpenChange={setIsInvoiceOpen}
+      />
     </div>
   );
 }

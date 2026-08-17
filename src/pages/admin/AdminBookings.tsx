@@ -16,7 +16,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Eye, Filter, ChevronLeft, ChevronRight, AlertTriangle, Calendar as CalendarIcon, Beaker, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
+import { Search, Eye, Filter, ChevronLeft, ChevronRight, AlertTriangle, Calendar as CalendarIcon, Beaker, CheckCircle2, XCircle, RotateCcw, FileText } from "lucide-react";
+import { InvoiceDialog } from "@/components/admin/InvoiceDialog";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -25,6 +26,7 @@ export default function AdminBookings() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [invoiceBookingId, setInvoiceBookingId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -254,11 +256,19 @@ export default function AdminBookings() {
                   <TableCell><StatusBadge status={b.paymentStatus} /></TableCell>
                   <TableCell><StatusBadge status={b.status} /></TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="sm" className="gap-1" onClick={(e) => { e.stopPropagation(); setSelectedBooking(b); }}>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button variant="ghost" size="sm" className="gap-1 h-8 px-2 text-xs" onClick={(e) => { e.stopPropagation(); setSelectedBooking(b); }}>
                         <Eye className="h-3.5 w-3.5" />View
                       </Button>
-                      <Button variant="outline" size="sm" className="gap-1 h-8 bg-white border border-slate-200" onClick={(e) => { e.stopPropagation(); navigate(`/admin/bookings/${b.id}`); }}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="gap-1 h-8 px-2 text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50 bg-white" 
+                        onClick={(e) => { e.stopPropagation(); setInvoiceBookingId(b.id); }}
+                      >
+                        <FileText className="h-3.5 w-3.5 text-emerald-600" /> Invoice
+                      </Button>
+                      <Button variant="outline" size="sm" className="gap-1 h-8 px-2 text-xs bg-white border border-slate-200" onClick={(e) => { e.stopPropagation(); navigate(`/admin/bookings/${b.id}`); }}>
                         Details
                       </Button>
                     </div>
@@ -619,11 +629,26 @@ export default function AdminBookings() {
                     <Button className="w-full bg-primary hover:bg-primary-deep shadow-sm">Approve Report & Release</Button>
                   </div>
                 )}
+                <div className="border-t border-border pt-4">
+                  <Button
+                    className="w-full bg-emerald-700 hover:bg-emerald-800 text-white gap-2 font-semibold shadow-xs"
+                    onClick={() => setInvoiceBookingId(selectedBooking.id)}
+                  >
+                    <FileText className="h-4 w-4" /> View & Print GST Invoice
+                  </Button>
+                </div>
               </div>
             </>
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Reusable Tax Invoice Dialog */}
+      <InvoiceDialog
+        bookingId={invoiceBookingId}
+        open={!!invoiceBookingId}
+        onOpenChange={(open) => !open && setInvoiceBookingId(null)}
+      />
     </div>
   );
 }

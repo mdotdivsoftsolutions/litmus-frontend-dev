@@ -11,13 +11,15 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DollarSign, Clock, Building2, Eye, AlertTriangle, Search, Filter, CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { DollarSign, Clock, Building2, Eye, AlertTriangle, Search, Filter, CalendarIcon, ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { InvoiceDialog } from "@/components/admin/InvoiceDialog";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function AdminPayments() {
   const [search, setSearch] = useState("");
   const [selectedPayment, setSelectedPayment] = useState<any | null>(null);
+  const [invoiceBookingId, setInvoiceBookingId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -35,7 +37,8 @@ export default function AdminPayments() {
 
   const mappedPayments = rawPayments.map((p: any) => ({
     id: p.transactionId || `TXN-${p._id.substring(p._id.length - 6).toUpperCase()}`,
-    bookingId: p.bookingId?._id ? `BKG-${p.bookingId._id.substring(p.bookingId._id.length - 6).toUpperCase()}` : "N/A",
+    bookingId: p.bookingId?._id ? `BKG-${p.bookingId._id.substring(p.bookingId._id.length - 6).toUpperCase()}` : (typeof p.bookingId === "string" ? `BKG-${p.bookingId.substring(p.bookingId.length - 6).toUpperCase()}` : "N/A"),
+    rawBookingId: p.bookingId?._id || (typeof p.bookingId === "string" ? p.bookingId : null),
     lab: p.bookingId?.labId?.labName || "Unknown Lab",
     amount: p.amount || 0,
     gateway: p.method || "Razorpay",
@@ -132,7 +135,23 @@ export default function AdminPayments() {
                   <TableCell className="hidden md:table-cell capitalize">{p.gateway}</TableCell>
                   <TableCell><StatusBadge status={p.status === "Paid" ? "Approved" : p.status === "Refunded" ? "Rejected" : "Pending"} /></TableCell>
                   <TableCell className="text-xs text-muted-foreground">{p.date}</TableCell>
-                  <TableCell><Button variant="ghost" size="sm" className="gap-1" onClick={(e) => { e.stopPropagation(); setSelectedPayment(p); }}><Eye className="h-3.5 w-3.5" />View</Button></TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" onClick={(e) => { e.stopPropagation(); setSelectedPayment(p); }}>
+                        <Eye className="h-3.5 w-3.5" /> View
+                      </Button>
+                      {p.rawBookingId && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 px-2 text-xs gap-1 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800 text-emerald-700 shadow-2xs"
+                          onClick={(e) => { e.stopPropagation(); setInvoiceBookingId(p.rawBookingId); }}
+                        >
+                          <FileText className="h-3.5 w-3.5 text-emerald-600" /> Invoice
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
               {!isLoading && items.length > 0 && (
@@ -283,12 +302,26 @@ export default function AdminPayments() {
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Platform Fee (15%)</span><span className="font-medium text-destructive">- ₹{Math.round(selectedPayment.amount * 0.15).toLocaleString()}</span></div>
                   <div className="border-t border-border pt-3 mt-2 flex justify-between text-base"><span className="font-semibold">Lab Payout</span><span className="font-bold text-primary">₹{Math.round(selectedPayment.amount * 0.85).toLocaleString()}</span></div>
                 </div>
-                <Button variant="outline" className="w-full mt-4 bg-background shadow-sm">Download Receipt</Button>
+                {selectedPayment.rawBookingId && (
+                  <Button 
+                    className="w-full mt-4 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs font-semibold gap-2"
+                    onClick={() => setInvoiceBookingId(selectedPayment.rawBookingId)}
+                  >
+                    <FileText className="h-4 w-4" /> View & Print GST Invoice
+                  </Button>
+                )}
               </div>
             </>
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Reusable Tax Invoice Dialog */}
+      <InvoiceDialog
+        bookingId={invoiceBookingId}
+        open={!!invoiceBookingId}
+        onOpenChange={(open) => !open && setInvoiceBookingId(null)}
+      />
     </div>
   );
 }
