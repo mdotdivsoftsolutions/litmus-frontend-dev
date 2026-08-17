@@ -81,7 +81,7 @@ export default function AdminPayments() {
   };
 
   const renderPaymentTable = (items: any[]) => (
-    <Card className="border border-border shadow-sm overflow-hidden bg-white">
+    <Card className="border border-border shadow-sm overflow-hidden bg-white min-h-[360px]">
       <Table>
         <TableHeader>
           <TableRow className="bg-slate-50">

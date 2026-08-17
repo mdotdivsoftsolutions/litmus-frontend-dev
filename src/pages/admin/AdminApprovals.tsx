@@ -101,7 +101,7 @@ export default function AdminApprovals() {
         </TabsList>
 
         <TabsContent value="tests">
-          <Card className="border border-border shadow-sm overflow-hidden bg-white">
+          <Card className="border border-border shadow-sm overflow-hidden bg-white min-h-[300px]">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -163,7 +163,7 @@ export default function AdminApprovals() {
         </TabsContent>
 
         <TabsContent value="packages">
-          <Card className="border border-border shadow-sm overflow-hidden bg-white">
+          <Card className="border border-border shadow-sm overflow-hidden bg-white min-h-[300px]">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>

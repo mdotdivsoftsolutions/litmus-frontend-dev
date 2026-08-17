@@ -223,7 +223,7 @@ export default function AdminSettings() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 mx-auto max-w-6xl">
+    <div className="w-full space-y-6 animate-fade-in pb-20">
       {/* Title Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -236,15 +236,19 @@ export default function AdminSettings() {
 
       {/* Tabs Container */}
       <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setSearchQuery(""); }} className="space-y-4">
-        {/* Horizontal Scrollable Tabs */}
-        <div className="bg-white p-1.5 rounded-lg border border-border/80 shadow-2xs overflow-x-auto">
-          <TabsList className="bg-slate-100 p-1 rounded-md inline-flex w-auto min-w-full sm:min-w-0">
+        {/* Full-width Responsive Tabs Bar */}
+        <div className="bg-white p-1.5 rounded-xl border border-slate-200/80 shadow-2xs">
+          <TabsList className="bg-slate-100/80 p-1 rounded-lg flex flex-wrap gap-1 h-auto w-full border-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {settingsTabs.map((tab) => (
-              <TabsTrigger key={tab.id} value={tab.id} className="gap-1.5 text-xs py-1.5 px-3">
+              <TabsTrigger 
+                key={tab.id} 
+                value={tab.id} 
+                className="gap-2 text-xs py-2 px-3.5 rounded-md font-medium data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-xs transition-all"
+              >
                 <tab.icon className="h-3.5 w-3.5" />
                 <span>{tab.label}</span>
                 {tab.count !== null && (
-                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200/70 text-slate-700 font-semibold">
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-slate-200/80 text-slate-700 font-bold">
                     {tab.count}
                   </span>
                 )}
@@ -254,7 +258,7 @@ export default function AdminSettings() {
         </div>
 
         {/* Content Card */}
-        <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden">
+        <Card className="bg-white border border-border/80 rounded-xl shadow-2xs overflow-hidden">
           <CardHeader className="p-4 sm:p-5 pb-3 border-b border-slate-100 bg-slate-50/40">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
@@ -416,7 +420,7 @@ export default function AdminSettings() {
             </div>
           </CardHeader>
 
-          <CardContent className="p-0">
+          <CardContent className="p-0 min-h-[380px]">
             {/* 1. Test Types */}
             {activeTab === "test-types" && (
               <div className="divide-y divide-slate-100">
@@ -425,9 +429,9 @@ export default function AdminSettings() {
                 ) : testTypes.length === 0 ? (
                   <div className="py-10 text-center text-xs text-muted-foreground">No test classifications found.</div>
                 ) : (
-                  <div className="grid sm:grid-cols-2 gap-2 p-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 p-4">
                     {testTypes.map((item: any) => (
-                      <div key={item._id} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                      <div key={item._id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors">
                         <div className="flex items-center gap-2.5">
                           <div className="h-7 w-7 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center">
                             <FlaskConical className="h-3.5 w-3.5" />
@@ -457,9 +461,9 @@ export default function AdminSettings() {
                 ) : tags.length === 0 ? (
                   <div className="py-10 text-center text-xs text-muted-foreground">No package tags found.</div>
                 ) : (
-                  <div className="grid sm:grid-cols-3 gap-2.5 p-4">
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-4">
                     {tags.map((item: any) => (
-                      <div key={item._id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                      <div key={item._id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors">
                         <div className="flex items-center gap-2">
                           <TagIcon className="h-3.5 w-3.5 text-primary" />
                           <span className="text-xs font-medium text-slate-800">{item.name}</span>
@@ -487,9 +491,9 @@ export default function AdminSettings() {
                 ) : logisticsOptions.length === 0 ? (
                   <div className="py-10 text-center text-xs text-muted-foreground">No logistics services configured.</div>
                 ) : (
-                  <div className="grid sm:grid-cols-2 gap-2.5 p-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 p-4">
                     {logisticsOptions.map((item: any) => (
-                      <div key={item._id} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                      <div key={item._id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors">
                         <div className="flex items-center gap-2.5">
                           <div className="h-7 w-7 rounded-md bg-sky-50 text-sky-700 border border-sky-100 flex items-center justify-center">
                             <Truck className="h-3.5 w-3.5" />
@@ -519,7 +523,7 @@ export default function AdminSettings() {
                 ) : infrastructureOptions.length === 0 ? (
                   <div className="py-10 text-center text-xs text-muted-foreground">No equipment templates configured.</div>
                 ) : (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 p-4">
                     {infrastructureOptions.map((item: any) => (
                       <div key={item._id} className="p-3.5 rounded-lg border border-slate-200/80 bg-slate-50/40 space-y-1.5 relative">
                         <div className="flex items-start justify-between">
@@ -554,9 +558,9 @@ export default function AdminSettings() {
                 ) : activityStatuses.length === 0 ? (
                   <div className="py-10 text-center text-xs text-muted-foreground">No activity statuses found.</div>
                 ) : (
-                  <div className="grid sm:grid-cols-3 gap-2.5 p-4">
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-4">
                     {activityStatuses.map((item: any) => (
-                      <div key={item._id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                      <div key={item._id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors">
                         <div className="flex items-center gap-2">
                           <span className="h-2 w-2 rounded-full bg-emerald-500" />
                           <span className="text-xs font-semibold text-slate-800">{item.name}</span>
@@ -584,9 +588,9 @@ export default function AdminSettings() {
                 ) : departments.length === 0 ? (
                   <div className="py-10 text-center text-xs text-muted-foreground">No departments configured.</div>
                 ) : (
-                  <div className="grid sm:grid-cols-3 gap-2.5 p-4">
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-4">
                     {departments.map((item: any) => (
-                      <div key={item._id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                      <div key={item._id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors">
                         <div className="flex items-center gap-2">
                           <Briefcase className="h-3.5 w-3.5 text-slate-500" />
                           <span className="text-xs font-medium text-slate-800">{item.value}</span>
@@ -614,9 +618,9 @@ export default function AdminSettings() {
                 ) : designations.length === 0 ? (
                   <div className="py-10 text-center text-xs text-muted-foreground">No designations configured.</div>
                 ) : (
-                  <div className="grid sm:grid-cols-3 gap-2.5 p-4">
+                  <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-4">
                     {designations.map((item: any) => (
-                      <div key={item._id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                      <div key={item._id} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors">
                         <div className="flex items-center gap-2">
                           <BadgeCheck className="h-3.5 w-3.5 text-slate-500" />
                           <span className="text-xs font-medium text-slate-800">{item.value}</span>

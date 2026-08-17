@@ -730,10 +730,10 @@ export default function AdminDashboard() {
           </div>
 
           {/* TAB 1: Urgent Action Items */}
-          <TabsContent value="urgent" className="space-y-4 mt-3">
+          <TabsContent value="urgent" className="space-y-4 mt-3 min-h-[280px]">
             <div className="grid gap-4 lg:grid-cols-2">
               {/* 1. Pending Assignment */}
-              <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden">
+              <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden min-h-[260px]">
                 <CardHeader className="p-3.5 pb-2.5 border-b border-slate-100 bg-slate-50/40 flex flex-row items-center justify-between">
                   <div>
                     <CardTitle className="text-xs font-bold text-foreground flex items-center gap-1.5">
@@ -800,7 +800,7 @@ export default function AdminDashboard() {
               </Card>
 
               {/* 2. Quality Control & Report Verification Queue */}
-              <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden">
+              <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden min-h-[260px]">
                 <CardHeader className="p-3.5 pb-2.5 border-b border-slate-100 bg-slate-50/40 flex flex-row items-center justify-between">
                   <div>
                     <CardTitle className="text-xs font-bold text-foreground flex items-center gap-1.5">
@@ -872,8 +872,8 @@ export default function AdminDashboard() {
           </TabsContent>
 
           {/* TAB 2: Partner Laboratories Matrix */}
-          <TabsContent value="labs" className="mt-3">
-            <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden">
+          <TabsContent value="labs" className="mt-3 min-h-[280px]">
+            <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden min-h-[280px]">
               <CardHeader className="p-3.5 pb-2.5 border-b border-slate-100 bg-slate-50/40 flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-sm font-bold text-foreground flex items-center gap-1.5">
@@ -942,8 +942,8 @@ export default function AdminDashboard() {
           </TabsContent>
 
           {/* TAB 3: Top Diagnostic Packages */}
-          <TabsContent value="products" className="mt-3">
-            <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden">
+          <TabsContent value="products" className="mt-3 min-h-[280px]">
+            <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden min-h-[280px]">
               <CardHeader className="p-3.5 pb-2.5 border-b border-slate-100 bg-slate-50/40 flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-sm font-bold text-foreground flex items-center gap-1.5">
@@ -987,8 +987,8 @@ export default function AdminDashboard() {
           </TabsContent>
 
           {/* TAB 4: Live Payments Feed */}
-          <TabsContent value="transactions" className="mt-3">
-            <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden">
+          <TabsContent value="transactions" className="mt-3 min-h-[280px]">
+            <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden min-h-[280px]">
               <CardHeader className="p-3.5 pb-2.5 border-b border-slate-100 bg-slate-50/40 flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-sm font-bold text-foreground flex items-center gap-1.5">

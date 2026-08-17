@@ -17,9 +17,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { 
   Search, 
   Eye, 
-  Loader2, 
-  UserCheck, 
-  UserX, 
   MoreVertical, 
   PowerOff, 
   Power, 
@@ -29,7 +26,11 @@ import {
   Filter,
   Calendar as CalendarIcon,
   RotateCcw,
-  Users
+  Users,
+  Mail,
+  Phone,
+  ShieldCheck,
+  UserCheck
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CreateUserModal } from "./CreateUserModal";
@@ -154,7 +155,7 @@ export default function UserManagement() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input 
               placeholder="Search by name, email, or phone..." 
-              className="pl-9 bg-white border border-slate-200 shadow-sm h-10 text-xs sm:text-sm" 
+              className="pl-9 bg-white border border-slate-200 shadow-xs h-10 text-xs sm:text-sm" 
               value={search} 
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -171,7 +172,7 @@ export default function UserManagement() {
               setCurrentPage(1); 
             }}
           >
-            <SelectTrigger className="w-36 h-10 bg-white border border-slate-200 shadow-sm text-xs sm:text-sm">
+            <SelectTrigger className="w-36 h-10 bg-white border border-slate-200 shadow-xs text-xs sm:text-sm">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
@@ -185,7 +186,7 @@ export default function UserManagement() {
           <Sheet open={showFilters} onOpenChange={setShowFilters}>
             <Button 
               variant="outline" 
-              className="gap-2 bg-white border border-slate-200 shadow-sm h-10 shrink-0 text-xs sm:text-sm" 
+              className="gap-2 bg-white border border-slate-200 shadow-xs h-10 shrink-0 text-xs sm:text-sm" 
               onClick={() => setShowFilters(true)}
             >
               <CalendarIcon className="h-4 w-4 text-muted-foreground" /> Date Range
@@ -262,7 +263,7 @@ export default function UserManagement() {
         {/* Primary Styled Create User Button */}
         <Button 
           onClick={() => setIsCreateModalOpen(true)} 
-          className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2 self-start lg:self-auto"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs h-10 px-4 gap-2 self-start lg:self-auto"
         >
           <UserPlus className="h-4 w-4" />
           Create User
@@ -270,120 +271,175 @@ export default function UserManagement() {
       </div>
 
       {/* Users Table */}
-      <Card className="border border-border shadow-sm overflow-hidden bg-white">
-        <Table>
-          <TableHeader className="bg-slate-50">
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead className="hidden sm:table-cell">Mobile</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="h-9 w-9 rounded-full bg-muted/60" />
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-32 bg-muted/60" />
-                        <Skeleton className="h-3 w-24 bg-muted/60" />
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-24 bg-muted/60" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-16 rounded-full bg-muted/60" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20 bg-muted/60" /></TableCell>
-                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto rounded-md bg-muted/60" /></TableCell>
-                </TableRow>
-              ))
-            ) : filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <Users className="h-8 w-8 text-muted-foreground/40" />
-                    <span className="font-medium">No users found matching your filters.</span>
-                    {hasActiveFilters && (
-                      <Button variant="link" size="sm" onClick={clearFilters} className="text-xs text-primary">
-                        Clear all filters
-                      </Button>
-                    )}
-                  </div>
-                </TableCell>
+      <Card className="border border-border shadow-xs overflow-hidden bg-white min-h-[380px]">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50/80">
+                <TableHead className="py-3 px-4">User</TableHead>
+                <TableHead className="py-3 px-4">Email Address</TableHead>
+                <TableHead className="py-3 px-4">Phone / Mobile</TableHead>
+                <TableHead className="py-3 px-4">Account Type</TableHead>
+                <TableHead className="py-3 px-4">Status</TableHead>
+                <TableHead className="py-3 px-4">Registered Date</TableHead>
+                <TableHead className="py-3 px-4 text-right">Actions</TableHead>
               </TableRow>
-            ) : (
-              paginatedUsers.map((u: any) => (
-                <TableRow 
-                  key={u._id} 
-                  className="hover:bg-muted/30 cursor-pointer transition-colors"
-                  onClick={() => navigate(`/admin/users/${u._id}`)}
-                >
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9 border border-border">
-                        <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                          {u.firstName?.[0]}{u.lastName?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold text-sm text-foreground">{u.firstName} {u.lastName}</p>
-                        <p className="text-xs text-muted-foreground">{u.email}</p>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-lg bg-muted/60" />
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-28 bg-muted/60" />
+                          <Skeleton className="h-3 w-16 bg-muted/60" />
+                        </div>
                       </div>
+                    </TableCell>
+                    <TableCell className="py-3 px-4"><Skeleton className="h-4 w-36 bg-muted/60" /></TableCell>
+                    <TableCell className="py-3 px-4"><Skeleton className="h-4 w-24 bg-muted/60" /></TableCell>
+                    <TableCell className="py-3 px-4"><Skeleton className="h-5 w-20 rounded-full bg-muted/60" /></TableCell>
+                    <TableCell className="py-3 px-4"><Skeleton className="h-5 w-16 rounded-full bg-muted/60" /></TableCell>
+                    <TableCell className="py-3 px-4"><Skeleton className="h-4 w-24 bg-muted/60" /></TableCell>
+                    <TableCell className="py-3 px-4 text-right"><Skeleton className="h-8 w-16 ml-auto rounded-md bg-muted/60" /></TableCell>
+                  </TableRow>
+                ))
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-16 text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Users className="h-8 w-8 text-muted-foreground/40" />
+                      <span className="font-medium">No users found matching your filters.</span>
+                      {hasActiveFilters && (
+                        <Button variant="link" size="sm" onClick={clearFilters} className="text-xs text-primary">
+                          Clear all filters
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell text-sm font-medium text-foreground">
-                    {u.phone || "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    {u.isActive ? (
-                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/60 font-medium">
-                        Active
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 border-red-200 dark:border-red-900/60 font-medium">
-                        Inactive
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground font-medium">
-                    {u.createdAt ? format(new Date(u.createdAt), "MMM d, yyyy") : "N/A"}
-                  </TableCell>
-                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                          <MoreVertical className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => navigate(`/admin/users/${u._id}`)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          <span>View Details</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => setUserToToggle({ id: u._id, isActive: u.isActive })}
-                          className={u.isActive ? "text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer" : "text-emerald-600 focus:bg-emerald-50 focus:text-emerald-700 cursor-pointer"}
-                        >
-                          {u.isActive ? <PowerOff className="mr-2 h-4 w-4" /> : <Power className="mr-2 h-4 w-4" />}
-                          <span>{u.isActive ? "Deactivate User" : "Activate User"}</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                paginatedUsers.map((u: any) => (
+                  <TableRow 
+                    key={u._id} 
+                    className="hover:bg-slate-50/70 cursor-pointer transition-colors"
+                    onClick={() => navigate(`/admin/users/${u._id}`)}
+                  >
+                    {/* 1. User Name & Avatar */}
+                    <TableCell className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9 rounded-lg border border-slate-200 shrink-0">
+                          <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs rounded-lg">
+                            {u.firstName?.[0]}{u.lastName?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-xs text-slate-900 truncate">{u.firstName} {u.lastName}</p>
+                          <p className="text-[11px] text-muted-foreground font-mono truncate">ID: {String(u._id).slice(-6).toUpperCase()}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    {/* 2. Email Address */}
+                    <TableCell className="py-3 px-4 text-xs font-medium text-slate-700">
+                      <div className="flex items-center gap-1.5 truncate max-w-[220px]" title={u.email}>
+                        <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate">{u.email || "N/A"}</span>
+                      </div>
+                    </TableCell>
+
+                    {/* 3. Phone / Mobile */}
+                    <TableCell className="py-3 px-4 text-xs font-medium text-slate-700 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        <span>{u.phone || "N/A"}</span>
+                      </div>
+                    </TableCell>
+
+                    {/* 4. Role / Account Type */}
+                    <TableCell className="py-3 px-4">
+                      <Badge variant="secondary" className="text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/80 px-2 py-0.5">
+                        {u.role === "ADMIN" ? (
+                          <span className="flex items-center gap-1"><ShieldCheck className="h-3 w-3 text-primary" /> Admin</span>
+                        ) : u.role === "EMPLOYEE" ? (
+                          <span className="flex items-center gap-1"><UserCheck className="h-3 w-3 text-sky-600" /> Employee</span>
+                        ) : (
+                          "Client / User"
+                        )}
+                      </Badge>
+                    </TableCell>
+
+                    {/* 5. Status Badge */}
+                    <TableCell className="py-3 px-4">
+                      {u.isActive ? (
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-medium text-[10px] px-2 py-0.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5" />
+                          Active
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 font-medium text-[10px] px-2 py-0.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-rose-500 mr-1.5" />
+                          Suspended
+                        </Badge>
+                      )}
+                    </TableCell>
+
+                    {/* 6. Registered Date */}
+                    <TableCell className="py-3 px-4 text-xs text-muted-foreground whitespace-nowrap font-medium">
+                      {u.createdAt ? format(new Date(u.createdAt), "MMM d, yyyy") : "N/A"}
+                    </TableCell>
+
+                    {/* 7. Actions */}
+                    <TableCell className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                          onClick={() => navigate(`/admin/users/${u._id}`)}
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1 text-slate-500" /> View
+                        </Button>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-900 outline-none focus:outline-none">
+                              <MoreVertical className="h-4 w-4" />
+                              <span className="sr-only">Open menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44 p-1.5 shadow-lg border border-slate-200 bg-white rounded-xl">
+                            <DropdownMenuItem 
+                              onClick={() => navigate(`/admin/users/${u._id}`)}
+                              className="text-xs flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50"
+                            >
+                              <Eye className="h-3.5 w-3.5 text-slate-500" />
+                              <span>View Profile</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => setUserToToggle({ id: u._id, isActive: u.isActive })}
+                              className={u.isActive ? "text-xs flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer text-rose-600 hover:bg-rose-50 focus:bg-rose-50 focus:text-rose-700" : "text-xs flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer text-emerald-600 hover:bg-emerald-50 focus:bg-emerald-50 focus:text-emerald-700"}
+                            >
+                              {u.isActive ? <PowerOff className="h-3.5 w-3.5 text-rose-500" /> : <Power className="h-3.5 w-3.5 text-emerald-500" />}
+                              <span>{u.isActive ? "Deactivate User" : "Activate User"}</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
         {/* Pagination Bar */}
         {!isLoading && filtered.length > 0 && (
           <div className="flex items-center justify-between border-t border-border px-4 py-3 bg-muted/20">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Showing <span className="font-medium text-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to{" "}
               <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}</span> of{" "}
               <span className="font-medium text-foreground">{filtered.length}</span> users
@@ -398,7 +454,7 @@ export default function UserManagement() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <div className="text-xs sm:text-sm font-medium px-2">
+              <div className="text-xs font-medium px-2">
                 Page {currentPage} of {Math.max(1, totalPages)}
               </div>
               <Button

@@ -374,7 +374,7 @@ export default function LaboratoryDetailPage() {
 
         {/* Tests Tab */}
         <TabsContent value="tests" className="space-y-3 mt-3">
-          <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
+          <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[350px]">
             <div className="p-3.5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -456,7 +456,7 @@ export default function LaboratoryDetailPage() {
 
         {/* Bookings Tab */}
         <TabsContent value="bookings" className="space-y-3 mt-3">
-          <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
+          <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[350px]">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>

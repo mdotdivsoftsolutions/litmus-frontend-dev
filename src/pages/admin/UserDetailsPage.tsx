@@ -332,7 +332,7 @@ export default function UserDetailsPage() {
 
             {/* Bookings Tab */}
             <TabsContent value="bookings" className="mt-3">
-              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
+              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[360px]">
                 {bookings.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
                     <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
@@ -415,7 +415,7 @@ export default function UserDetailsPage() {
 
             {/* Payments Tab */}
             <TabsContent value="payments" className="mt-3">
-              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
+              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[360px]">
                 {payments.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
                     <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
@@ -473,7 +473,7 @@ export default function UserDetailsPage() {
 
             {/* Cart Tab */}
             <TabsContent value="cart" className="mt-3">
-              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
+              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[360px]">
                 {!cart || !cart.items || cart.items.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
                     <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
@@ -522,7 +522,7 @@ export default function UserDetailsPage() {
 
             {/* Consultations Tab */}
             <TabsContent value="consultations" className="mt-3">
-              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
+              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[360px]">
                 {consultations.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
                     <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">

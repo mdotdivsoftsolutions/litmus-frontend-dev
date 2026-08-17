@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, MoreVertical, PowerOff, Power, UserPlus, Pencil } from "lucide-react";
+import { Search, MoreVertical, PowerOff, Power, UserPlus, Pencil, Mail, Phone, Building2, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api/axios";
 import { CreateEmployeeDrawer } from "./CreateEmployeeDrawer";
@@ -58,7 +59,9 @@ export default function EmployeeManagement() {
     const matchesSearch = !search || 
       fullName.includes(search.toLowerCase()) || 
       (u.email && u.email.toLowerCase().includes(search.toLowerCase())) || 
-      (u.phone && u.phone.includes(search));
+      (u.phone && u.phone.includes(search)) ||
+      (u.department && u.department.toLowerCase().includes(search.toLowerCase())) ||
+      (u.designation && u.designation.toLowerCase().includes(search.toLowerCase()));
 
     const matchesStatus = 
       statusFilter === "all" ||
@@ -86,7 +89,7 @@ export default function EmployeeManagement() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Employee Management</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage staff members, roles, access permissions, and account statuses.
+            Manage staff members, department allocations, access permissions, and account statuses.
           </p>
         </div>
       </div>
@@ -98,8 +101,8 @@ export default function EmployeeManagement() {
           <div className="relative flex-1 sm:min-w-[260px] max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input 
-              placeholder="Search by name, email, or phone..." 
-              className="pl-9 bg-white border border-slate-200 shadow-sm h-10 text-xs sm:text-sm" 
+              placeholder="Search by name, email, phone, or department..." 
+              className="pl-9 bg-white border border-slate-200 shadow-xs h-10 text-xs sm:text-sm" 
               value={search} 
               onChange={(e) => setSearch(e.target.value)} 
             />
@@ -110,7 +113,7 @@ export default function EmployeeManagement() {
             value={statusFilter}
             onValueChange={(val) => setStatusFilter(val)}
           >
-            <SelectTrigger className="w-[140px] bg-white border border-slate-200 shadow-sm h-10 text-xs font-medium">
+            <SelectTrigger className="w-[140px] bg-white border border-slate-200 shadow-xs h-10 text-xs font-medium">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
@@ -124,96 +127,166 @@ export default function EmployeeManagement() {
         {/* Primary Styled Add Employee Button */}
         <Button 
           onClick={() => setIsCreateModalOpen(true)} 
-          className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2 self-start lg:self-auto"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs h-10 px-4 gap-2 self-start lg:self-auto"
         >
           <UserPlus className="h-4 w-4" /> Add Employee
         </Button>
       </div>
 
-      <Card className="border border-border shadow-sm overflow-auto bg-white">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50">
-              <TableHead>Employee</TableHead>
-              <TableHead>Permissions</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="h-9 w-9 rounded-full" />
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-32" />
-                        <Skeleton className="h-3 w-24" />
+      <Card className="border border-border shadow-xs overflow-hidden bg-white min-h-[360px]">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50/80">
+                <TableHead className="py-3 px-4">Employee</TableHead>
+                <TableHead className="py-3 px-4">Email</TableHead>
+                <TableHead className="py-3 px-4">Phone</TableHead>
+                <TableHead className="py-3 px-4">Department & Role</TableHead>
+                <TableHead className="py-3 px-4">Permissions</TableHead>
+                <TableHead className="py-3 px-4">Status</TableHead>
+                <TableHead className="py-3 px-4">Joined</TableHead>
+                <TableHead className="py-3 px-4 text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-lg" />
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-28" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
-                  <TableCell><Skeleton className="h-8 w-8 ml-auto rounded-md" /></TableCell>
-                </TableRow>
-              ))
-            ) : filtered.length === 0 ? (
+                    </TableCell>
+                    <TableCell className="py-3 px-4"><Skeleton className="h-4 w-36" /></TableCell>
+                    <TableCell className="py-3 px-4"><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell className="py-3 px-4"><Skeleton className="h-4 w-28" /></TableCell>
+                    <TableCell className="py-3 px-4"><Skeleton className="h-5 w-24 rounded-full" /></TableCell>
+                    <TableCell className="py-3 px-4"><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                    <TableCell className="py-3 px-4"><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell className="py-3 px-4 text-right"><Skeleton className="h-8 w-8 ml-auto rounded-md" /></TableCell>
+                  </TableRow>
+                ))
+              ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                    No employees found.
+                  <TableCell colSpan={8} className="text-center py-16 text-muted-foreground text-xs">
+                    No employees found matching your criteria.
                   </TableCell>
                 </TableRow>
               ) : (
                 filtered.map((u: any) => (
-                  <TableRow key={u._id}>
-                    <TableCell>
+                  <TableRow key={u._id} className="hover:bg-slate-50/70 transition-colors">
+                    {/* 1. Employee Name & Avatar */}
+                    <TableCell className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9">
-                          <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                        <Avatar className="h-9 w-9 rounded-lg border border-slate-200 shrink-0">
+                          {u.profilePic && <AvatarImage src={u.profilePic} alt={u.firstName} />}
+                          <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs rounded-lg">
                             {u.firstName?.[0]}{u.lastName?.[0]}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <p className="font-medium">{u.firstName} {u.lastName}</p>
-                          <p className="text-xs text-muted-foreground">{u.email}</p>
-                          <p className="text-xs text-muted-foreground">{u.phone}</p>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-xs text-slate-900 truncate">{u.firstName} {u.lastName}</p>
+                          <p className="text-[11px] text-muted-foreground font-mono truncate">ID: {String(u._id).slice(-6).toUpperCase()}</p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1 max-w-[200px]">
-                        {u.permissions?.map((p: string) => (
-                          <Badge key={p} variant="outline" className="text-[10px]">{p}</Badge>
-                        )) || <span className="text-xs text-muted-foreground">None</span>}
+
+                    {/* 2. Email Column */}
+                    <TableCell className="py-3 px-4 text-xs font-medium text-slate-700">
+                      <div className="flex items-center gap-1.5 truncate max-w-[200px]" title={u.email}>
+                        <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate">{u.email || "N/A"}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      {u.isActive ? (
-                        <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">Active</Badge>
+
+                    {/* 3. Phone Column */}
+                    <TableCell className="py-3 px-4 text-xs font-medium text-slate-700 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        <span>{u.phone || "N/A"}</span>
+                      </div>
+                    </TableCell>
+
+                    {/* 4. Department & Designation Column */}
+                    <TableCell className="py-3 px-4">
+                      <div className="space-y-0.5 min-w-0 max-w-[160px]">
+                        <p className="text-xs font-semibold text-slate-800 flex items-center gap-1 truncate" title={u.department || "General Department"}>
+                          <Building2 className="h-3 w-3 text-slate-400 shrink-0" />
+                          <span className="truncate">{u.department || "General Department"}</span>
+                        </p>
+                        <p className="text-[11px] text-slate-500 flex items-center gap-1 truncate" title={u.designation || "Staff Member"}>
+                          <Briefcase className="h-3 w-3 text-slate-400 shrink-0" />
+                          <span className="truncate">{u.designation || "Staff Member"}</span>
+                        </p>
+                      </div>
+                    </TableCell>
+
+                    {/* 5. Permissions Badges */}
+                    <TableCell className="py-3 px-4">
+                      <div className="flex flex-wrap gap-1 max-w-[220px]">
+                        {u.permissions && u.permissions.length > 0 ? (
+                          u.permissions.map((p: string) => (
+                            <Badge 
+                              key={p} 
+                              variant="outline" 
+                              className="text-[9px] px-1.5 py-0 h-4 bg-slate-50 border-slate-200 text-slate-700 font-medium"
+                            >
+                              {p.replace(/_/g, " ")}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground">Standard Staff</span>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    {/* 6. Status Badge */}
+                    <TableCell className="py-3 px-4">
+                      {u.isActive !== false ? (
+                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-medium text-[10px] px-2 py-0.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5" />
+                          Active
+                        </Badge>
                       ) : (
-                        <Badge variant="secondary" className="bg-red-100 text-red-700 hover:bg-red-100">Inactive</Badge>
+                        <Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 font-medium text-[10px] px-2 py-0.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-rose-500 mr-1.5" />
+                          Inactive
+                        </Badge>
                       )}
                     </TableCell>
-                    <TableCell>
+
+                    {/* 7. Joined Date */}
+                    <TableCell className="py-3 px-4 text-xs text-muted-foreground whitespace-nowrap">
+                      {u.createdAt ? format(new Date(u.createdAt), "MMM d, yyyy") : "Recent"}
+                    </TableCell>
+
+                    {/* 8. Actions */}
+                    <TableCell className="py-3 px-4 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-900 outline-none focus:outline-none">
                             <MoreVertical className="h-4 w-4" />
                             <span className="sr-only">Open menu</span>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setEmployeeToEdit(u)}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            <span>Edit Permissions</span>
+                        <DropdownMenuContent align="end" className="w-44 p-1.5 shadow-lg border border-slate-200 bg-white rounded-xl">
+                          <DropdownMenuItem 
+                            onClick={() => setEmployeeToEdit(u)}
+                            className="text-xs flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50"
+                          >
+                            <Pencil className="h-3.5 w-3.5 text-slate-500" />
+                            <span>Edit Details</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => setEmployeeToToggle({ id: u._id, isActive: u.isActive })}
-                            className={u.isActive ? "text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer" : "text-green-600 focus:bg-green-100 focus:text-green-700 cursor-pointer"}
+                            onClick={() => setEmployeeToToggle({ id: u._id, isActive: u.isActive !== false })}
+                            className={u.isActive !== false ? "text-xs flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer text-rose-600 hover:bg-rose-50 focus:bg-rose-50 focus:text-rose-700" : "text-xs flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer text-emerald-600 hover:bg-emerald-50 focus:bg-emerald-50 focus:text-emerald-700"}
                           >
-                            {u.isActive ? <PowerOff className="mr-2 h-4 w-4" /> : <Power className="mr-2 h-4 w-4" />}
-                            <span>{u.isActive ? "Deactivate" : "Activate"}</span>
+                            {u.isActive !== false ? <PowerOff className="h-3.5 w-3.5 text-rose-500" /> : <Power className="h-3.5 w-3.5 text-emerald-500" />}
+                            <span>{u.isActive !== false ? "Deactivate" : "Activate"}</span>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -223,6 +296,7 @@ export default function EmployeeManagement() {
               )}
             </TableBody>
           </Table>
+        </div>
       </Card>
 
       <CreateEmployeeDrawer 
