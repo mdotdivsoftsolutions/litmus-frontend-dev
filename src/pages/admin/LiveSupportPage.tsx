@@ -144,20 +144,20 @@ export default function LiveSupportPage() {
   const { data: sessionsData, refetch: refetchSessions } = useQuery({
     queryKey: ["chatSessions", activeTab, searchQuery],
     queryFn: async () => {
-      let statusParam = "ACTIVE";
-      let agentIdParam = undefined;
+      let statusParam: string | undefined = undefined;
+      let agentIdParam: string | undefined = undefined;
 
       if (activeTab === "my_chats") {
         statusParam = "ACTIVE";
         agentIdParam = currentUser?._id;
       } else if (activeTab === "all_chats") {
-        statusParam = "ACTIVE";
+        statusParam = "ALL";
       } else if (activeTab === "history") {
         statusParam = "RESOLVED";
       }
 
       const params: any = { page: 1, limit: 50 };
-      if (statusParam) params.status = statusParam;
+      if (statusParam && statusParam !== "ALL") params.status = statusParam;
       if (agentIdParam) params.agentId = agentIdParam;
       if (searchQuery) params.search = searchQuery;
 
@@ -765,9 +765,27 @@ export default function LiveSupportPage() {
                       >
                         {/* Customer Name & Timestamp */}
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-900 truncate max-w-[130px]">
-                            {sess.guestInfo?.name || (sess.userId ? `${sess.userId.firstName || ""} ${sess.userId.lastName || ""}`.trim() : "Guest Client")}
-                          </span>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-xs font-bold text-slate-900 truncate max-w-[110px]">
+                              {sess.guestInfo?.name || (sess.userId ? `${sess.userId.firstName || ""} ${sess.userId.lastName || ""}`.trim() : "Guest Client")}
+                            </span>
+                            {activeTab === "all_chats" && (
+                              <Badge
+                                className={cn(
+                                  "text-[8px] font-extrabold px-1 py-0 uppercase leading-tight shrink-0",
+                                  sess.status === "ACTIVE"
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : sess.status === "QUEUED"
+                                    ? "bg-rose-50 text-rose-700 border-rose-200 animate-pulse"
+                                    : sess.status === "BOT"
+                                    ? "bg-cyan-50 text-cyan-700 border-cyan-200"
+                                    : "bg-slate-50 text-slate-500 border-slate-200"
+                                )}
+                              >
+                                {sess.status}
+                              </Badge>
+                            )}
+                          </div>
                           <span className="text-[10px] text-slate-400 font-medium shrink-0">
                             {sess.lastMessageAt ? new Date(sess.lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
                           </span>
