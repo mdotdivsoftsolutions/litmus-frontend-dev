@@ -74,7 +74,7 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
       case "Reviews":
         return stats.totalReviews ?? 0;
       case "Reports":
-        return stats.pendingReports ?? 0;
+        return stats.pendingReports > 0 ? stats.pendingReports : (stats.totalReports ?? 0);
       case "Approvals":
         return stats.pendingApprovals ?? 0;
       default:

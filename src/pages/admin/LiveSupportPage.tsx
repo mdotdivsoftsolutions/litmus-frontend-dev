@@ -388,23 +388,21 @@ export default function LiveSupportPage() {
     <div className="flex flex-col h-full w-full overflow-hidden bg-white text-slate-900 font-sans">
       {/* ── Top Header Toolbar (Clean Dashboard Style) ───────────────────────── */}
       <div className="px-5 py-3 bg-white border-b border-slate-200 flex items-center justify-between shrink-0 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold">
-            <Headphones className="h-4 w-4" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-2">
-              <span>Live Support & Diagnostic Desk</span>
-              <Badge className="bg-slate-100 text-slate-700 border-slate-200 text-[10px] font-semibold">
-                Real-Time
-              </Badge>
-            </h1>
-            <p className="text-[11px] text-slate-500">Connect, assist, and track diagnostic inquiries</p>
-          </div>
+        <div>
+          <h1 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
+            Live Support & Diagnostic Desk
+          </h1>
+          <p className="text-[11px] text-slate-500">Connect, assist, and track diagnostic inquiries</p>
         </div>
 
         {/* Presence & Notification Controls */}
         <div className="flex items-center gap-2">
+          {/* Real-Time Live Status Badge */}
+          <Badge className="hidden sm:inline-flex bg-slate-100 text-slate-600 border-slate-200 text-[10px] font-semibold px-2.5 py-1 items-center gap-1.5 rounded-lg shadow-2xs">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Real-Time</span>
+          </Badge>
+
           {/* Notifications / DND Toggle */}
           <Button
             type="button"
@@ -503,7 +501,7 @@ export default function LiveSupportPage() {
         {/* Backdrop for mobile / tablet (< xl) when Left Queue Sidebar is open */}
         {showLeftSidebar && (
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-30 xl:hidden animate-in fade-in duration-200"
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs z-30 xl:hidden animate-in fade-in duration-200"
             onClick={() => setShowLeftSidebar(false)}
           />
         )}
@@ -1139,7 +1137,7 @@ export default function LiveSupportPage() {
         {/* Backdrop for mobile / tablet (< xl) when Customer Details Sidebar is open */}
         {selectedSessionId && selectedSession && showInfoSidebar && (
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-30 xl:hidden animate-in fade-in duration-200"
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs z-30 xl:hidden animate-in fade-in duration-200"
             onClick={() => setShowInfoSidebar(false)}
           />
         )}
