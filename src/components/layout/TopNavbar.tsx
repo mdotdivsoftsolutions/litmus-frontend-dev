@@ -1,8 +1,7 @@
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import { Bell, ChevronRight, Menu, Headphones, UserCheck } from "lucide-react";
+import { Bell, ChevronRight, Menu, Headphones } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAdminSocket } from "@/context/SocketContext";
-import { Button } from "@/components/ui/button";
 
 const notifications = [
   { id: 1, title: "New Booking", message: "A new booking has been placed.", time: "2m ago", read: false },
@@ -21,15 +20,7 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
   const pathParts = location.pathname.split("/").filter(Boolean);
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const { incomingRequests, acceptChat } = useAdminSocket();
-  const latestIncoming = incomingRequests[0];
-
-  const handleQuickAccept = async (sessionId: string) => {
-    const result = await acceptChat(sessionId);
-    if (result.success) {
-      navigate("/admin/live-support");
-    }
-  };
+  const { incomingRequests } = useAdminSocket();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-card px-4 lg:px-6">
@@ -53,25 +44,22 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
         ))}
       </nav>
 
-      {/* Incoming Live Support Alert Banner in TopNav */}
-      {latestIncoming && (
-        <div className="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-700 animate-pulse ml-4">
-          <div className="h-2 w-2 rounded-full bg-cyan-500 animate-ping" />
-          <span className="text-xs font-bold">
-            Live Chat Request: {latestIncoming.guestInfo?.name || "Client"}
-          </span>
-          <Button
-            size="sm"
-            onClick={() => handleQuickAccept(latestIncoming.sessionId)}
-            className="h-6 px-2 text-[11px] rounded-md bg-cyan-600 hover:bg-cyan-500 text-white font-bold border-0 shadow-xs"
-          >
-            <UserCheck className="h-3 w-3 mr-1" />
-            Accept
-          </Button>
-        </div>
-      )}
+      <div className="ml-auto flex items-center gap-2">
+        {/* Live Support Link with live incoming count */}
+        <Link
+          to="/admin/live-support"
+          className="relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors outline-none focus:outline-none border-0"
+          title="Live Support Desk"
+          aria-label="Live Support"
+        >
+          <Headphones className="h-5 w-5 text-slate-700" />
+          {incomingRequests.length > 0 && (
+            <span className="absolute top-0.5 right-0.5 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-extrabold text-white shadow-xs pointer-events-none ring-2 ring-white animate-pulse">
+              {incomingRequests.length}
+            </span>
+          )}
+        </Link>
 
-      <div className="ml-auto flex items-center gap-3">
         {/* Notification bell */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -6,13 +6,12 @@ import {
   LayoutDashboard, Package, FileText, UserCircle,
   Users, Building2, ClipboardList, Grid3X3, TestTubes, FileCheck,
   DollarSign, X, Flame, ChevronLeft, ChevronRight, MessageSquareQuote, CheckSquare,
-  Settings, LogOut, ChevronUp, Headphones
+  Settings, LogOut, ChevronUp
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { adminApi } from "@/lib/api/admin";
-import { useAdminSocket } from "@/context/SocketContext";
 
 interface SidebarNavProps {
   portal: "admin" | "user" | "lab";
@@ -36,7 +35,6 @@ const navItems = [
   { label: "Reviews", icon: MessageSquareQuote, href: "/admin/reviews" },
   { label: "Reports", icon: FileCheck, href: "/admin/reports" },
   { label: "Approvals", icon: CheckSquare, href: "/admin/approvals" },
-  { label: "Live Support", icon: Headphones, href: "/admin/live-support" },
   { label: "Settings", icon: Flame, href: "/admin/settings" },
 ];
 
@@ -45,8 +43,6 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
   const [collapsed, setCollapsed] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
-  const { incomingRequests } = useAdminSocket();
 
   // Live sidebar metrics
   const { data: statsResponse } = useQuery({
@@ -57,9 +53,6 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
   const stats = statsResponse?.data || {};
 
   const getItemBadge = (label: string): number | null => {
-    if (label === "Live Support") {
-      return incomingRequests.length > 0 ? incomingRequests.length : null;
-    }
     if (!statsResponse?.data) return null;
     switch (label) {
       case "Users":

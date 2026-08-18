@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { authApi } from "@/lib/api/auth";
 import { SidebarNav } from "./SidebarNav";
 import { TopNavbar } from "./TopNavbar";
+import { LiveSupportToaster } from "./LiveSupportToaster";
 import { cn } from "@/lib/utils";
 
 interface PortalLayoutProps {
@@ -43,10 +44,18 @@ export function PortalLayout({ portal }: PortalLayoutProps) {
       <SidebarNav portal={portal} open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} onLogoutClick={handleLogout} />
       <div className="flex flex-1 flex-col min-w-0 h-screen overflow-hidden">
         <TopNavbar onMenuClick={() => setSidebarOpen(true)} user={user} onLogoutClick={handleLogout} portal={portal} />
-        <main className={cn("flex-1 min-w-0", isLiveSupport ? "p-0 overflow-hidden h-[calc(100vh-4rem)] flex flex-col" : "overflow-y-auto p-4 lg:p-6")}>
+        <main className={cn(
+          "flex-1 min-w-0",
+          location.pathname.includes("/live-support")
+            ? "p-0 overflow-hidden h-[calc(100vh-4rem)] flex flex-col"
+            : location.pathname.includes("/settings")
+            ? "p-4 lg:p-6 overflow-hidden h-[calc(100vh-4rem)] flex flex-col"
+            : "overflow-y-auto p-4 lg:p-6"
+        )}>
           <Outlet />
         </main>
       </div>
+      <LiveSupportToaster />
     </div>
   );
 }

@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Headphones, MessageSquare, User, Clock, CheckCheck, Send, Search,
   Volume2, VolumeX, Sparkles, CheckCircle2, FileText, UserCheck, Lock, Star, Phone, Mail, Info,
-  ChevronLeft, ChevronRight, Bell, BellOff, X
+  ChevronLeft, ChevronRight, Bell, BellOff, X, Users, UserPlus, ArrowRightLeft, Shield,
+  Activity, Check, AlertCircle, RefreshCw
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { useAdminSocket } from "@/context/SocketContext";
 import { authApi } from "@/lib/api/auth";
 import { apiClient } from "@/lib/api/axios";
@@ -34,6 +37,7 @@ export default function LiveSupportPage() {
     socket,
     presenceStatus,
     setPresenceStatus,
+    onlineAgents,
     incomingRequests,
     audioAlertsEnabled,
     setAudioAlertsEnabled,
@@ -42,6 +46,7 @@ export default function LiveSupportPage() {
     isAudioUnlocked,
     unlockAudioContext,
     acceptChat,
+    transferChat,
   } = useAdminSocket();
 
   const { data: userResponse } = useQuery({
@@ -52,7 +57,7 @@ export default function LiveSupportPage() {
   const currentUser = userResponse?.data;
   const isAdmin = currentUser?.role === "ADMIN";
 
-  const [activeTab, setActiveTab] = useState<"incoming" | "my_chats" | "all_chats" | "history">("incoming");
+  const [activeTab, setActiveTab] = useState<"incoming" | "my_chats" | "all_chats" | "staff" | "history">("incoming");
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messageInput, setMessageInput] = useState("");
@@ -61,8 +66,22 @@ export default function LiveSupportPage() {
   const [cannedResponses, setCannedResponses] = useState<any[]>([]);
   const [newNoteInput, setNewNoteInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showLeftSidebar, setShowLeftSidebar] = useState(true);
-  const [showInfoSidebar, setShowInfoSidebar] = useState(true);
+  const [showLeftSidebar, setShowLeftSidebar] = useState(() => {
+    if (typeof window !== "undefined") return window.innerWidth >= 1280;
+    return true;
+  });
+  const [showInfoSidebar, setShowInfoSidebar] = useState(() => {
+    if (typeof window !== "undefined") return window.innerWidth >= 1280;
+    return false;
+  });
+
+  // Transfer / Forward Chat State
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [transferTargetEmployee, setTransferTargetEmployee] = useState<any | null>(null);
+  const [transferHandoverNote, setTransferHandoverNote] = useState("");
+  const [transferSearchQuery, setTransferSearchQuery] = useState("");
+  const [transferStatusFilter, setTransferStatusFilter] = useState<"ALL" | "ONLINE" | "BUSY">("ALL");
+  const [isTransferring, setIsTransferring] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -78,6 +97,48 @@ export default function LiveSupportPage() {
       if (res.data?.data) setCannedResponses(res.data.data);
     }).catch(() => {});
   }, []);
+
+  // Fetch All Registered Employees / Specialists
+  const { data: employeesData, refetch: refetchEmployees } = useQuery({
+    queryKey: ["allEmployeesDirectory"],
+    queryFn: async () => {
+      const res = await apiClient.get("/employees");
+      return res.data?.data || [];
+    },
+    staleTime: 30 * 1000,
+  });
+
+  const employees: any[] = employeesData || [];
+
+  // Helper: Get employee live presence
+  const getEmployeePresence = useCallback(
+    (empId: string) => {
+      const live = onlineAgents.find((a) => a.agentId === empId);
+      if (live) return live.status as "ONLINE" | "BUSY" | "OFFLINE";
+      if (empId === currentUser?._id) return presenceStatus;
+      return "OFFLINE";
+    },
+    [onlineAgents, currentUser?._id, presenceStatus]
+  );
+
+  const filteredTransferEmployees = employees.filter((emp: any) => {
+    const empId = emp._id || emp.id;
+    const fullName = `${emp.firstName || ""} ${emp.lastName || ""}`.toLowerCase();
+    const designation = (emp.designation || emp.role || "").toLowerCase();
+    const email = (emp.email || "").toLowerCase();
+    const q = transferSearchQuery.toLowerCase().trim();
+    const matchesSearch = !q || fullName.includes(q) || designation.includes(q) || email.includes(q);
+
+    const status = getEmployeePresence(empId);
+    const matchesStatus =
+      transferStatusFilter === "ALL"
+        ? true
+        : transferStatusFilter === "ONLINE"
+        ? status === "ONLINE"
+        : status === "BUSY";
+
+    return matchesSearch && matchesStatus;
+  });
 
   // Fetch Sessions Query
   const { data: sessionsData, refetch: refetchSessions } = useQuery({
@@ -120,6 +181,32 @@ export default function LiveSupportPage() {
   });
 
   const selectedSession = selectedSessionData;
+
+  // Handle Forward / Transfer Chat
+  const handleExecuteTransfer = async () => {
+    if (!selectedSessionId || !transferTargetEmployee) {
+      toast.error("Please select a target specialist to forward the chat.");
+      return;
+    }
+
+    const targetId = transferTargetEmployee._id || transferTargetEmployee.id;
+    const targetName = `${transferTargetEmployee.firstName || ""} ${transferTargetEmployee.lastName || ""}`.trim() || "Specialist";
+
+    setIsTransferring(true);
+    const result = await transferChat(selectedSessionId, targetId, targetName, transferHandoverNote);
+    setIsTransferring(false);
+
+    if (result.success) {
+      toast.success(`Chat successfully transferred to ${targetName}!`);
+      setTransferModalOpen(false);
+      setTransferTargetEmployee(null);
+      setTransferHandoverNote("");
+      refetchSessions();
+      refetchSelectedSession();
+    } else {
+      toast.error(result.message || "Failed to transfer chat session.");
+    }
+  };
 
   // Fetch Messages for Selected Session
   const fetchMessages = useCallback(async (sessId: string) => {
@@ -221,6 +308,9 @@ export default function LiveSupportPage() {
       }
       setActiveTab("my_chats");
       refetchSessions();
+      if (typeof window !== "undefined" && window.innerWidth < 1280) {
+        setShowLeftSidebar(false);
+      }
     } else {
       toast.error(result.message || "Failed to claim chat session.");
       refetchSessions();
@@ -408,37 +498,50 @@ export default function LiveSupportPage() {
         </div>
       </div>
 
-      {/* ── 3-Column Workspace (Collapsible Sidebars) ──────────────────────── */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* ── Column 1: Queue & Navigation (Collapsible) ────────────────────── */}
+      {/* ── 3-Column Workspace (Responsive Layout with Overlay Drawers on < xl) ── */}
+      <div className="flex-1 flex overflow-hidden min-h-0 relative">
+        {/* Backdrop for mobile / tablet (< xl) when Left Queue Sidebar is open */}
         {showLeftSidebar && (
-          <div className="w-64 sm:w-72 md:w-80 border-r border-slate-200 bg-slate-50/60 flex flex-col shrink-0 h-full overflow-hidden animate-in fade-in slide-in-from-left-2 duration-150">
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-30 xl:hidden animate-in fade-in duration-200"
+            onClick={() => setShowLeftSidebar(false)}
+          />
+        )}
+
+        {/* ── Column 1: Queue, Specialists Directory & Navigation ────────── */}
+        {showLeftSidebar && (
+          <div className="absolute inset-y-0 left-0 z-40 w-72 sm:w-84 border-r border-slate-200 bg-white flex flex-col shrink-0 h-full overflow-hidden shadow-2xl xl:shadow-none xl:static xl:z-auto xl:bg-slate-50/60 animate-in fade-in slide-in-from-left-2 duration-150">
             {/* Header & Tabs */}
             <div className="p-3 border-b border-slate-200 bg-white space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800">Support Queue</span>
+                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <Headphones className="h-3.5 w-3.5 text-primary" />
+                  <span>Support Center</span>
+                </span>
                 <button
                   type="button"
                   onClick={() => setShowLeftSidebar(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors outline-none focus:outline-none focus-visible:outline-none focus:ring-0"
                   title="Collapse Queue Sidebar"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
               </div>
 
-              <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl text-[11px] font-bold">
+              {/* Navigation Tabs */}
+              <div className="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl text-[11px] font-bold">
                 <button
                   type="button"
                   onClick={() => setActiveTab("incoming")}
                   className={cn(
-                    "py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 relative",
+                    "py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 relative outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0",
                     activeTab === "incoming" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
                   )}
+                  title="Live Incoming Requests"
                 >
                   <span>Incoming</span>
                   {incomingRequests.length > 0 && (
-                    <span className="h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center">
+                    <span className="h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center animate-pulse">
                       {incomingRequests.length}
                     </span>
                   )}
@@ -448,63 +551,78 @@ export default function LiveSupportPage() {
                   type="button"
                   onClick={() => setActiveTab("my_chats")}
                   className={cn(
-                    "py-1.5 rounded-lg transition-all flex items-center justify-center gap-1",
+                    "py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0",
                     activeTab === "my_chats" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
                   )}
+                  title="My Attended Chats"
                 >
-                  <span>My Active</span>
+                  <span>Mine</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => setActiveTab(isAdmin ? "all_chats" : "history")}
+                  onClick={() => setActiveTab("all_chats")}
                   className={cn(
-                    "py-1.5 rounded-lg transition-all flex items-center justify-center gap-1",
-                    activeTab === "all_chats" || activeTab === "history"
-                      ? "bg-white text-slate-900 shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
+                    "py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0",
+                    activeTab === "all_chats" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
                   )}
+                  title="All Active Staff Chats"
                 >
-                  <span>{isAdmin ? "All Staff" : "History"}</span>
+                  <span>All Chats</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("staff")}
+                  className={cn(
+                    "py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 relative outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0",
+                    activeTab === "staff" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                  )}
+                  title="Specialists Roster & Live Status"
+                >
+                  <Users className="h-3 w-3" />
+                  <span>Team</span>
                 </button>
               </div>
             </div>
 
-            {/* Search Bar */}
-            <div className="p-3 border-b border-slate-200 bg-white">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search name, phone, session..."
-                  className="h-8 pl-8 bg-slate-50 border-slate-200 text-xs rounded-xl text-slate-900 placeholder:text-slate-400 focus-visible:bg-white"
-                />
+            {/* Search Bar (Only shown for conversation lists) */}
+            {activeTab !== "staff" && (
+              <div className="p-3 border-b border-slate-200 bg-white">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search name, phone, session..."
+                    className="h-8 pl-8 bg-slate-50 border-slate-200 text-xs rounded-xl text-slate-900 placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Scrollable Sessions List */}
+            {/* Scrollable Content (Sessions List OR Staff Team Directory) */}
             <div className="flex-1 overflow-y-auto p-2.5 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-200">
               {activeTab === "incoming" ? (
                 incomingRequests.length === 0 ? (
                   <div className="p-6 text-center text-slate-400 space-y-2">
                     <Headphones className="h-7 w-7 mx-auto text-slate-300 stroke-1" />
                     <p className="text-xs font-semibold">No Incoming Requests</p>
-                    <p className="text-[11px] text-slate-400">Incoming requests will appear here in real time.</p>
+                    <p className="text-[11px] text-slate-400">Incoming inquiries from website visitors will appear here live.</p>
                   </div>
                 ) : (
                   incomingRequests.map((req) => (
                     <Card
                       key={req.sessionId}
-                      className="p-3 bg-white border-slate-200 hover:border-slate-300 shadow-xs space-y-2 rounded-xl transition-all"
+                      className="p-3 bg-white border-slate-200 hover:border-slate-300 shadow-xs space-y-2 rounded-xl transition-all ring-1 ring-rose-500/20"
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5 truncate">
-                          <User className="h-3.5 w-3.5 text-slate-600" />
+                          <User className="h-3.5 w-3.5 text-primary" />
                           <span className="truncate">{req.guestInfo?.name || req.user?.firstName || "Guest Client"}</span>
                         </span>
                         <Badge className="bg-rose-50 text-rose-700 border-rose-200 text-[9px] uppercase font-bold animate-pulse">
-                          LIVE
+                          LIVE QUEUE
                         </Badge>
                       </div>
 
@@ -523,89 +641,217 @@ export default function LiveSupportPage() {
                           type="button"
                           size="sm"
                           onClick={() => handleAcceptIncoming(req.sessionId)}
-                          className="h-7 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg shadow-xs"
+                          className="h-7 px-3 bg-primary hover:bg-primary-deep text-white text-xs font-bold rounded-lg shadow-xs"
                         >
-                          Accept
+                          Accept & Assist
                         </Button>
                       </div>
                     </Card>
                   ))
                 )
-              ) : sessions.length === 0 ? (
-                <div className="p-6 text-center text-slate-400 space-y-2">
-                  <MessageSquare className="h-7 w-7 mx-auto text-slate-300 stroke-1" />
-                  <p className="text-xs font-semibold">No Conversations</p>
-                  <p className="text-[11px] text-slate-400">No sessions in this view.</p>
-                </div>
-              ) : (
-                sessions.map((sess: any) => {
-                  const isSelected = sess.sessionId === selectedSessionId;
-                  return (
-                    <button
-                      key={sess.sessionId}
-                      type="button"
-                      onClick={() => setSelectedSessionId(sess.sessionId)}
-                      className={cn(
-                        "w-full text-left p-2.5 rounded-xl transition-all border block space-y-1",
-                        isSelected
-                          ? "bg-white border-slate-900 shadow-xs ring-1 ring-slate-900"
-                          : "bg-white border-slate-200 hover:border-slate-300"
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900 truncate max-w-[130px]">
-                          {sess.guestInfo?.name || (sess.userId ? `${sess.userId.firstName || ""} ${sess.userId.lastName || ""}`.trim() : "Guest Client")}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-medium shrink-0">
-                          {sess.lastMessageAt ? new Date(sess.lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
-                        </span>
-                      </div>
+              ) : activeTab === "staff" ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between px-1 text-[11px] font-bold text-slate-500">
+                      <span>Specialists Directory</span>
+                      <span className="text-[10px] text-slate-400 font-semibold bg-slate-100 px-1.5 py-0.5 rounded-md">
+                        {onlineAgents.filter((a) => a.status === "ONLINE").length} Online
+                      </span>
+                    </div>
 
-                      <div className="flex items-center justify-between text-[11px] text-slate-500">
-                        <span className="truncate max-w-[110px]">{sess.guestInfo?.phone || sess.userId?.phone || sess.sessionId.slice(-8)}</span>
-                        {sess.assignedAgent && (
-                          <span className="text-[10px] text-slate-700 font-semibold truncate max-w-[85px] bg-slate-100 px-1.5 py-0.5 rounded-md">
-                            {sess.assignedAgent.firstName || "Staff"}
-                          </span>
-                        )}
+                    {employees.length === 0 ? (
+                      <div className="p-6 text-center text-slate-400 space-y-2">
+                        <Users className="h-7 w-7 mx-auto text-slate-300 stroke-1" />
+                        <p className="text-xs font-semibold">No Staff Registered</p>
                       </div>
-                    </button>
-                  );
-                })
-              )}
+                    ) : (
+                      employees.map((emp: any) => {
+                        const empId = emp._id || emp.id;
+                        const status = getEmployeePresence(empId);
+                        const fullName = `${emp.firstName || ""} ${emp.lastName || ""}`.trim() || "Specialist";
+                        const isSelf = empId === currentUser?._id;
+
+                        return (
+                          <Card key={empId} className="p-2.5 bg-white border-slate-200 shadow-xs space-y-2 rounded-xl">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="relative shrink-0">
+                                  <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary font-bold text-xs flex items-center justify-center border border-primary/20">
+                                    {emp.firstName?.charAt(0) || "S"}
+                                  </div>
+                                  <div
+                                    className={cn(
+                                      "absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white",
+                                      status === "ONLINE"
+                                        ? "bg-emerald-500 animate-pulse"
+                                        : status === "BUSY"
+                                        ? "bg-amber-500"
+                                        : "bg-slate-300"
+                                    )}
+                                  />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-bold text-slate-900 truncate">
+                                    {fullName} {isSelf && <span className="text-[10px] font-medium text-slate-400">(You)</span>}
+                                  </p>
+                                  <p className="text-[10px] text-slate-500 truncate">{emp.designation || emp.role || "Specialist"}</p>
+                                </div>
+                              </div>
+
+                              <Badge
+                                className={cn(
+                                  "text-[9px] font-bold px-1.5 py-0.5",
+                                  status === "ONLINE"
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : status === "BUSY"
+                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                    : "bg-slate-50 text-slate-500 border-slate-200"
+                                )}
+                              >
+                                {status}
+                              </Badge>
+                            </div>
+
+                            {selectedSessionId && (
+                              <div className="pt-1.5 border-t border-slate-100 flex justify-end">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setTransferTargetEmployee(emp);
+                                    setTransferModalOpen(true);
+                                  }}
+                                  className="h-6 px-2 text-[10px] font-bold bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 rounded-md flex items-center gap-1 shadow-2xs"
+                                >
+                                  <ArrowRightLeft className="h-3 w-3" />
+                                  <span>Forward Active Chat</span>
+                                </Button>
+                              </div>
+                            )}
+                          </Card>
+                        );
+                      })
+                    )}
+                  </div>
+                ) : sessions.length === 0 ? (
+                  <div className="p-6 text-center text-slate-400 space-y-2">
+                    <MessageSquare className="h-7 w-7 mx-auto text-slate-300 stroke-1" />
+                    <p className="text-xs font-semibold">No Conversations</p>
+                    <p className="text-[11px] text-slate-400">No sessions match this view.</p>
+                  </div>
+                ) : (
+                  sessions.map((sess: any) => {
+                    const isSelected = sess.sessionId === selectedSessionId;
+                    const assignedName = sess.assignedAgent
+                      ? `${sess.assignedAgent.firstName || ""} ${sess.assignedAgent.lastName || ""}`.trim()
+                      : null;
+
+                    return (
+                      <button
+                        key={sess.sessionId}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSessionId(sess.sessionId);
+                          if (typeof window !== "undefined" && window.innerWidth < 1280) {
+                            setShowLeftSidebar(false);
+                          }
+                        }}
+                        className={cn(
+                          "w-full text-left p-2.5 rounded-xl transition-all border block space-y-1.5",
+                          isSelected
+                            ? "bg-primary/5 border-primary shadow-xs ring-1 ring-primary"
+                            : "bg-white border-slate-200 hover:border-slate-300"
+                        )}
+                      >
+                        {/* Customer Name & Timestamp */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-900 truncate max-w-[130px]">
+                            {sess.guestInfo?.name || (sess.userId ? `${sess.userId.firstName || ""} ${sess.userId.lastName || ""}`.trim() : "Guest Client")}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-medium shrink-0">
+                            {sess.lastMessageAt ? new Date(sess.lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                          </span>
+                        </div>
+
+                        {/* Customer Phone & Attended Employee Badge */}
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-100/80 text-[10px]">
+                          <span className="truncate max-w-[100px] text-slate-400 font-medium">
+                            {sess.guestInfo?.phone || sess.userId?.phone || sess.sessionId.slice(-8)}
+                          </span>
+
+                          {assignedName ? (
+                            <span
+                              className="inline-flex items-center gap-1 font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 truncate max-w-[130px]"
+                              title={`Attended by ${assignedName}`}
+                            >
+                              <UserCheck className="h-3 w-3 text-primary shrink-0" />
+                              <span className="truncate">{assignedName}</span>
+                            </span>
+                          ) : (
+                            <span className="text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md font-semibold border border-amber-200">
+                              Unassigned
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
             </div>
-          </div>
         )}
 
         {/* ── Column 2: Active Chat Interaction Feed ────────────────────────── */}
-        <div className="flex-1 min-w-0 flex flex-col bg-slate-50/30 overflow-hidden h-full">
+        <div className="flex-1 min-w-0 flex flex-col bg-slate-50/30 overflow-hidden h-full relative">
+          {/* Floating Queue Sidebar Reopen Button when collapsed */}
+          {!showLeftSidebar && !selectedSessionId && (
+            <div className="absolute top-3 left-3 z-30 animate-in fade-in duration-150">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setShowLeftSidebar(true)}
+                className="h-8 px-2.5 rounded-xl border border-slate-200 bg-white/95 backdrop-blur-xs hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-md transition-all hover:scale-105"
+                title="Open Support Queue"
+              >
+                <ChevronRight className="h-4 w-4 text-primary" />
+                <span>Support Queue</span>
+                {incomingRequests.length > 0 && (
+                  <span className="h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
+                    {incomingRequests.length}
+                  </span>
+                )}
+              </Button>
+            </div>
+          )}
           {selectedSessionId ? (
             <>
               {/* Active Chat Header */}
               <div className="px-4 sm:px-6 py-2.5 bg-white border-b border-slate-200 flex items-center justify-between shrink-0 shadow-xs">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  {/* Left Sidebar Expand Arrow Button (shown when collapsed) */}
-                  {!showLeftSidebar && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowLeftSidebar(true)}
-                      className="h-8 px-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1 shadow-xs shrink-0"
-                      title="Expand Queue Panel"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                      <span className="hidden sm:inline">Queue</span>
-                      {incomingRequests.length > 0 && (
-                        <span className="h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
-                          {incomingRequests.length}
-                        </span>
-                      )}
-                    </Button>
-                  )}
+                  {/* Left Sidebar Toggle Button: visible on < xl, or when collapsed on >= xl */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowLeftSidebar(!showLeftSidebar)}
+                    className={cn(
+                      "h-8 px-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-xs shrink-0",
+                      showLeftSidebar ? "xl:hidden" : "flex"
+                    )}
+                    title="Toggle Queue Panel"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                    <span>Queue</span>
+                    {incomingRequests.length > 0 && (
+                      <span className="h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
+                        {incomingRequests.length}
+                      </span>
+                    )}
+                  </Button>
 
-                  <div className="h-8 w-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold text-xs shrink-0">
-                    {selectedSession?.guestInfo?.name?.charAt(0) || "U"}
+                  <div className="h-8 w-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                    {selectedSession?.guestInfo?.name?.charAt(0) || selectedSession?.userId?.firstName?.charAt(0) || "U"}
                   </div>
                   <div className="min-w-0">
                     <h2 className="text-xs sm:text-sm font-bold text-slate-900 truncate">
@@ -614,13 +860,35 @@ export default function LiveSupportPage() {
                           ? `${selectedSession.userId.firstName || ""} ${selectedSession.userId.lastName || ""}`.trim()
                           : "Customer Session")}
                     </h2>
-                    <p className="text-[10px] text-slate-500 font-medium truncate">
-                      Session: {selectedSessionId}
+                    <p className="text-[10px] text-slate-500 font-medium truncate flex items-center gap-1">
+                      <span>Session: {selectedSessionId}</span>
+                      {selectedSession?.assignedAgent && (
+                        <span className="text-primary font-semibold truncate">
+                          • Specialist: {selectedSession.assignedAgent.firstName} {selectedSession.assignedAgent.lastName || ""}
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  {/* Forward / Transfer Chat Button */}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setTransferTargetEmployee(null);
+                      setTransferModalOpen(true);
+                    }}
+                    className="h-8 rounded-xl bg-white border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 shadow-xs"
+                    title="Forward / Transfer this conversation to another specialist"
+                  >
+                    <ArrowRightLeft className="h-3.5 w-3.5 text-primary" />
+                    <span className="hidden sm:inline">Forward</span>
+                  </Button>
+
+                  {/* Mark Resolved Button */}
                   <Button
                     type="button"
                     size="sm"
@@ -628,26 +896,26 @@ export default function LiveSupportPage() {
                     onClick={handleResolveChat}
                     className="h-8 rounded-xl bg-white border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 shadow-xs"
                   >
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Mark as Resolved</span>
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                    <span className="hidden sm:inline">Resolve</span>
                   </Button>
 
-                  {/* Right Sidebar Collapse/Expand Arrow Button */}
+                  {/* Right Sidebar Collapse/Expand Toggle Button */}
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
                     onClick={() => setShowInfoSidebar(!showInfoSidebar)}
                     className={cn(
-                      "h-8 px-2.5 rounded-xl border text-xs font-semibold flex items-center gap-1 shadow-xs transition-colors",
+                      "h-8 px-2.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors",
                       showInfoSidebar
-                        ? "bg-slate-100 border-slate-300 text-slate-900"
+                        ? "bg-primary/10 border-primary/30 text-primary font-bold"
                         : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                     )}
-                    title={showInfoSidebar ? "Collapse Customer Details" : "Expand Customer Details"}
+                    title={showInfoSidebar ? "Close Customer Details" : "Open Customer Details"}
                   >
                     {showInfoSidebar ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
-                    <span className="hidden md:inline">Details</span>
+                    <span>Details</span>
                   </Button>
                 </div>
               </div>
@@ -689,7 +957,7 @@ export default function LiveSupportPage() {
                           className={cn(
                             "h-5 w-5 rounded-md flex items-center justify-center text-[9px] font-bold shadow-xs shrink-0",
                             isAgent
-                              ? "bg-slate-900 text-white"
+                              ? "bg-primary text-white"
                               : isBot
                               ? "bg-slate-100 text-slate-700 border border-slate-200"
                               : "bg-slate-200 text-slate-700"
@@ -704,9 +972,9 @@ export default function LiveSupportPage() {
 
                       <div
                         className={cn(
-                          "p-3 rounded-2xl text-xs sm:text-sm font-medium leading-relaxed max-w-[82%] shadow-xs whitespace-pre-wrap break-words",
+                          "p-3 rounded-2xl text-xs sm:text-sm font-medium leading-relaxed max-w-[85%] shadow-xs whitespace-pre-wrap break-words",
                           isAgent
-                            ? "bg-slate-900 text-white rounded-tr-xs"
+                            ? "bg-primary text-white rounded-tr-xs"
                             : isBot
                             ? "bg-slate-100 text-slate-800 rounded-tl-xs border border-slate-200"
                             : "bg-white text-slate-900 rounded-tl-xs border border-slate-200"
@@ -802,7 +1070,7 @@ export default function LiveSupportPage() {
                         "w-full h-10 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 pr-10",
                         isInternalNote
                           ? "bg-amber-50 border-amber-300 focus-visible:ring-amber-400"
-                          : "bg-slate-50 border-slate-200 focus-visible:ring-1 focus-visible:ring-slate-900 focus-visible:bg-white"
+                          : "bg-slate-50 border-slate-200 focus-visible:ring-1 focus-visible:ring-primary focus-visible:bg-white"
                       )}
                     />
                   </div>
@@ -813,7 +1081,7 @@ export default function LiveSupportPage() {
                       "h-10 w-10 rounded-xl text-white border-0 p-0 flex items-center justify-center shrink-0 shadow-xs",
                       isInternalNote
                         ? "bg-amber-500 hover:bg-amber-600 text-white"
-                        : "bg-slate-900 hover:bg-slate-800 text-white"
+                        : "bg-primary hover:bg-primary-deep text-white"
                     )}
                   >
                     <Send className="h-4 w-4" />
@@ -830,13 +1098,37 @@ export default function LiveSupportPage() {
               <p className="text-xs max-w-sm text-slate-500">
                 Select a conversation from the queue or accept an incoming live request to begin assisting.
               </p>
+              {!showLeftSidebar && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setShowLeftSidebar(true)}
+                  className="mt-2 text-xs bg-primary hover:bg-primary-deep text-white rounded-xl shadow-xs gap-1.5 font-bold"
+                >
+                  <Headphones className="h-3.5 w-3.5" />
+                  <span>Show Support Queue</span>
+                  {incomingRequests.length > 0 && (
+                    <span className="h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center">
+                      {incomingRequests.length}
+                    </span>
+                  )}
+                </Button>
+              )}
             </div>
           )}
         </div>
 
-        {/* ── Column 3: Customer Intelligence & Context Sidebar (Collapsible) ── */}
+        {/* Backdrop for mobile / tablet (< xl) when Customer Details Sidebar is open */}
         {selectedSessionId && selectedSession && showInfoSidebar && (
-          <div className="w-72 lg:w-80 border-l border-slate-200 bg-white flex flex-col shrink-0 h-full overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-200 shadow-xs z-10 animate-in fade-in slide-in-from-right-2 duration-150">
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-30 xl:hidden animate-in fade-in duration-200"
+            onClick={() => setShowInfoSidebar(false)}
+          />
+        )}
+
+        {/* ── Column 3: Customer Intelligence & Context Sidebar (Collapsible / Overlay on < xl) ── */}
+        {selectedSessionId && selectedSession && showInfoSidebar && (
+          <div className="absolute inset-y-0 right-0 z-40 w-72 sm:w-80 lg:w-84 border-l border-slate-200 bg-white flex flex-col shrink-0 h-full overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-200 shadow-2xl xl:shadow-none xl:static xl:z-auto animate-in fade-in slide-in-from-right-2 duration-150">
             <div className="flex items-center justify-between pb-1 border-b border-slate-100">
               <span className="text-xs font-bold text-slate-800">Customer Details</span>
               <button
@@ -845,14 +1137,53 @@ export default function LiveSupportPage() {
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                 title="Collapse Details Sidebar"
               >
-                <ChevronRight className="h-4 w-4" />
+                <X className="h-4 w-4" />
               </button>
             </div>
+
+            {/* Specialist Assigned Information Card */}
+            <Card className="p-3.5 bg-primary/5 border-primary/20 rounded-xl space-y-2 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-primary uppercase tracking-wider flex items-center gap-1">
+                  <UserCheck className="h-3.5 w-3.5" />
+                  <span>Attending Specialist</span>
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setTransferTargetEmployee(null);
+                    setTransferModalOpen(true);
+                  }}
+                  className="h-6 px-1.5 text-[10px] font-bold text-primary hover:bg-primary/10 rounded-md flex items-center gap-1"
+                >
+                  <ArrowRightLeft className="h-3 w-3" />
+                  <span>Transfer</span>
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-primary text-white text-xs font-bold flex items-center justify-center shadow-xs shrink-0">
+                  {selectedSession.assignedAgent?.firstName?.charAt(0) || "S"}
+                </div>
+                <div className="min-w-0 text-xs">
+                  <p className="font-bold text-slate-900 truncate">
+                    {selectedSession.assignedAgent
+                      ? `${selectedSession.assignedAgent.firstName || ""} ${selectedSession.assignedAgent.lastName || ""}`.trim()
+                      : "Unassigned"}
+                  </p>
+                  <p className="text-[10px] text-slate-500 truncate">
+                    {selectedSession.assignedAgent?.designation || selectedSession.assignedAgent?.department || selectedSession.assignedAgent?.email || "Diagnostic Team"}
+                  </p>
+                </div>
+              </div>
+            </Card>
 
             {/* Customer Profile Card */}
             <Card className="p-3.5 bg-slate-50 border-slate-200 rounded-xl space-y-3 shadow-xs">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-sm shadow-xs">
+                <div className="h-10 w-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-sm shadow-xs">
                   {selectedSession.guestInfo?.name?.charAt(0) || selectedSession.userId?.firstName?.charAt(0) || "U"}
                 </div>
                 <div className="min-w-0">
@@ -953,6 +1284,230 @@ export default function LiveSupportPage() {
           </div>
         )}
       </div>
+
+      {/* ── Transfer / Forward Chat Right-Side Drawer (Sheet) ─────────────── */}
+      <Sheet open={transferModalOpen} onOpenChange={setTransferModalOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md md:max-w-lg bg-white border-l border-slate-200 p-0 flex flex-col h-full shadow-2xl">
+          {/* Header */}
+          <div className="p-5 border-b border-slate-100 bg-slate-50/70 space-y-1.5 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 shrink-0">
+                <ArrowRightLeft className="h-4 w-4" />
+              </div>
+              <div>
+                <SheetTitle className="text-base font-bold text-slate-900">
+                  Forward & Transfer Chat
+                </SheetTitle>
+                <SheetDescription className="text-xs text-slate-500">
+                  Reassign active consultation to another specialist in real time.
+                </SheetDescription>
+              </div>
+            </div>
+
+            {/* Current Active Client Context Pill */}
+            {selectedSession && (
+              <div className="mt-2 p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between text-xs shadow-2xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <User className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="font-semibold text-slate-900 truncate">
+                    {selectedSession.guestInfo?.name || selectedSession.userId?.firstName || "Customer"}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono truncate">
+                    ({selectedSession.sessionId.slice(-8)})
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md shrink-0">
+                  Active Session
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Scrollable Body */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            {/* Search & Filter Controls */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                  Select Destination Specialist
+                </label>
+                <span className="text-[10px] text-slate-400 font-semibold">
+                  {filteredTransferEmployees.length} available
+                </span>
+              </div>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <Input
+                  value={transferSearchQuery}
+                  onChange={(e) => setTransferSearchQuery(e.target.value)}
+                  placeholder="Search specialist by name, role, email..."
+                  className="h-9 pl-9 text-xs bg-slate-50 border-slate-200 rounded-xl placeholder:text-slate-400 focus-visible:ring-primary focus-visible:bg-white"
+                />
+              </div>
+
+              {/* Status Filter Chips */}
+              <div className="flex items-center gap-1.5 pt-0.5">
+                {(["ALL", "ONLINE", "BUSY"] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    type="button"
+                    onClick={() => setTransferStatusFilter(filter)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border outline-none focus:outline-none select-none",
+                      transferStatusFilter === filter
+                        ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                    )}
+                  >
+                    {filter === "ALL" && "All Specialists"}
+                    {filter === "ONLINE" && `🟢 Online (${onlineAgents.filter((a) => a.status === "ONLINE").length})`}
+                    {filter === "BUSY" && `🟡 In Consultation (${onlineAgents.filter((a) => a.status === "BUSY").length})`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Specialists Directory List */}
+            <div className="space-y-2">
+              {filteredTransferEmployees.length === 0 ? (
+                <div className="py-10 text-center text-slate-400 space-y-2 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                  <Users className="h-7 w-7 mx-auto text-slate-300 stroke-1" />
+                  <p className="text-xs font-semibold">No Specialists Match Filters</p>
+                  <p className="text-[11px] text-slate-400">Try adjusting your search query or status filter.</p>
+                </div>
+              ) : (
+                filteredTransferEmployees.map((emp: any) => {
+                  const empId = emp._id || emp.id;
+                  const status = getEmployeePresence(empId);
+                  const isSelected = (transferTargetEmployee?._id || transferTargetEmployee?.id) === empId;
+                  const fullName = `${emp.firstName || ""} ${emp.lastName || ""}`.trim() || "Specialist";
+                  const isSelf = empId === currentUser?._id;
+
+                  return (
+                    <div
+                      key={empId}
+                      onClick={() => setTransferTargetEmployee(emp)}
+                      className={cn(
+                        "p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 group select-none",
+                        isSelected
+                          ? "bg-primary/5 border-primary ring-2 ring-primary/30 shadow-xs"
+                          : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/60"
+                      )}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="relative shrink-0">
+                          <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary font-bold text-xs flex items-center justify-center border border-primary/20">
+                            {emp.firstName?.charAt(0) || "S"}
+                          </div>
+                          <div
+                            className={cn(
+                              "absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white",
+                              status === "ONLINE"
+                                ? "bg-emerald-500 animate-pulse"
+                                : status === "BUSY"
+                                ? "bg-amber-500"
+                                : "bg-slate-300"
+                            )}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 truncate group-hover:text-primary transition-colors">
+                            {fullName} {isSelf && <span className="text-[10px] font-normal text-slate-400">(You)</span>}
+                          </p>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {emp.designation || emp.role || "Clinical Specialist"}
+                          </p>
+                          {emp.email && (
+                            <p className="text-[9px] text-slate-400 truncate">
+                              {emp.email}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge
+                          className={cn(
+                            "text-[9px] font-bold px-1.5 py-0.5",
+                            status === "ONLINE"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : status === "BUSY"
+                              ? "bg-amber-50 text-amber-700 border-amber-200"
+                              : "bg-slate-100 text-slate-500 border-slate-200"
+                          )}
+                        >
+                          {status}
+                        </Badge>
+                        <div
+                          className={cn(
+                            "h-5 w-5 rounded-full border flex items-center justify-center transition-all",
+                            isSelected
+                              ? "bg-primary border-primary text-white"
+                              : "border-slate-300 group-hover:border-slate-400"
+                          )}
+                        >
+                          {isSelected && <Check className="h-3 w-3" />}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Handover Note */}
+            <div className="space-y-1.5 pt-2 border-t border-slate-100">
+              <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                Internal Handover Note (Optional)
+              </label>
+              <textarea
+                value={transferHandoverNote}
+                onChange={(e) => setTransferHandoverNote(e.target.value)}
+                rows={3}
+                placeholder="E.g., Patient is inquiring about turnaround time for blood culture test. Already verified prescription."
+                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary focus:bg-white resize-none"
+              />
+              <p className="text-[10px] text-slate-400">
+                This note will appear as a private staff note visible only to clinical team members.
+              </p>
+            </div>
+          </div>
+
+          {/* Sticky Drawer Footer */}
+          <div className="p-4 border-t border-slate-200 bg-white flex items-center justify-between gap-3 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setTransferModalOpen(false);
+                setTransferTargetEmployee(null);
+              }}
+              className="h-9 px-4 rounded-xl border-slate-200 text-xs font-semibold"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={!transferTargetEmployee || isTransferring}
+              onClick={handleExecuteTransfer}
+              className="h-9 px-5 rounded-xl bg-primary hover:bg-primary-deep text-white text-xs font-bold shadow-xs flex items-center gap-1.5"
+            >
+              {isTransferring ? (
+                <>
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  <span>Transferring...</span>
+                </>
+              ) : (
+                <>
+                  <ArrowRightLeft className="h-3.5 w-3.5" />
+                  <span>Confirm Transfer</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

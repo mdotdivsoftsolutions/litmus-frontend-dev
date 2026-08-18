@@ -20,6 +20,7 @@ export interface SocketContextType {
   isConnected: boolean;
   presenceStatus: "ONLINE" | "BUSY" | "OFFLINE";
   setPresenceStatus: (status: "ONLINE" | "BUSY" | "OFFLINE") => void;
+  onlineAgents: Array<{ agentId: string; name: string; status: string; role: string }>;
   incomingRequests: IncomingChatRequest[];
   audioAlertsEnabled: boolean;
   setAudioAlertsEnabled: (enabled: boolean) => void;
@@ -28,6 +29,7 @@ export interface SocketContextType {
   isAudioUnlocked: boolean;
   unlockAudioContext: () => void;
   acceptChat: (sessionId: string) => Promise<{ success: boolean; session?: any; code?: string; message?: string }>;
+  transferChat: (sessionId: string, targetAgentId: string, targetAgentName?: string, note?: string) => Promise<{ success: boolean; session?: any; message?: string }>;
   dismissRequest: (sessionId: string) => void;
 }
 
@@ -45,6 +47,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const saved = localStorage.getItem("admin_presence_status");
     return (saved as "ONLINE" | "BUSY" | "OFFLINE") || "ONLINE";
   });
+  const [onlineAgents, setOnlineAgents] = useState<Array<{ agentId: string; name: string; status: string; role: string }>>([]);
   const [incomingRequests, setIncomingRequests] = useState<IncomingChatRequest[]>([]);
   const [audioAlertsEnabled, setAudioAlertsEnabledState] = useState(() => {
     const saved = localStorage.getItem("admin_audio_alerts_enabled");
@@ -183,9 +186,16 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       newSocket.emit("agent_heartbeat", agentPayload);
     });
 
-    // Fetch Initial Queued Requests via REST fallback
+    // ── Staff Presence Sync ────────────────────────────────────────────────
+    newSocket.on("agents_updated", (data: { onlineAgents: any[] }) => {
+      if (Array.isArray(data?.onlineAgents)) {
+        setOnlineAgents(data.onlineAgents);
+      }
+    });
+
+    // Fetch Initial Queued Requests & Presence via REST fallback
     apiClient
-      .get("/chat/sessions?status=QUEUED&limit=10")
+      .get("/chat/sessions?status=QUEUED&limit=20")
       .then((res) => {
         if (res.data?.data && res.data.data.length > 0) {
           setIncomingRequests(
@@ -198,6 +208,15 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               initialQuery: s.guestInfo?.phone || s.sessionId,
             }))
           );
+        }
+      })
+      .catch(() => {});
+
+    apiClient
+      .get("/chat/presence")
+      .then((res) => {
+        if (res.data?.data?.agents) {
+          setOnlineAgents(res.data.data.agents);
         }
       })
       .catch(() => {});
@@ -259,7 +278,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 }}
                 className="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors"
               >
-                Decline
+                Dismiss
               </button>
               <button
                 type="button"
@@ -278,7 +297,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     });
                   }
                 }}
-                className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors shadow-xs"
+                className="px-3.5 py-1.5 rounded-xl bg-primary hover:bg-primary-deep text-white text-xs font-bold transition-colors shadow-xs"
               >
                 Accept & Assist
               </button>
@@ -346,6 +365,26 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     [socket]
   );
 
+  const transferChat = useCallback(
+    (sessionId: string, targetAgentId: string, targetAgentName?: string, note?: string): Promise<{ success: boolean; session?: any; message?: string }> => {
+      return new Promise((resolve) => {
+        if (!socket || !socket.connected) {
+          resolve({ success: false, message: "Socket disconnected" });
+          return;
+        }
+
+        socket.emit("transfer_chat", { sessionId, targetAgentId, targetAgentName, note }, (res: any) => {
+          if (res?.success) {
+            resolve({ success: true, session: res.session });
+          } else {
+            resolve({ success: false, message: res?.message || "Failed to transfer chat" });
+          }
+        });
+      });
+    },
+    [socket]
+  );
+
   const dismissRequest = (sessionId: string) => {
     setIncomingRequests((prev) => prev.filter((r) => r.sessionId !== sessionId));
   };
@@ -357,6 +396,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isConnected,
         presenceStatus,
         setPresenceStatus,
+        onlineAgents,
         incomingRequests,
         audioAlertsEnabled,
         setAudioAlertsEnabled,
@@ -365,6 +405,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isAudioUnlocked,
         unlockAudioContext,
         acceptChat,
+        transferChat,
         dismissRequest,
       }}
     >
