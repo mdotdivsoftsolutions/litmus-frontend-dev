@@ -128,7 +128,9 @@ export default function LiveSupportPage() {
       if (res.data?.data) {
         setMessages(res.data.data);
       }
-    } catch {}
+    } catch (error) {
+      console.error("Failed to fetch messages for session:", error);
+    }
   }, []);
 
   useEffect(() => {
