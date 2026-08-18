@@ -13,6 +13,8 @@ export interface IncomingChatRequest {
   queuedAt: string | Date;
   initialQuery?: string;
   transcriptPreview?: Array<{ senderType: string; text: string }>;
+  isDirectRoute?: boolean;
+  targetAgentId?: string;
 }
 
 export interface SocketContextType {
@@ -227,6 +229,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // ── Incoming Live Chat Alert ─────────────────────────────────────────────
     newSocket.on("new_chat_request", (req: IncomingChatRequest) => {
+      // Sticky Routing check
+      if (req.isDirectRoute && req.targetAgentId !== (currentUser._id || currentUser.id)) {
+        // This is a direct route for another agent, ignore it until fallback triggers
+        return;
+      }
+
       setIncomingRequests((prev) => {
         if (prev.some((r) => r.sessionId === req.sessionId)) return prev;
         return [req, ...prev];
@@ -248,6 +256,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       toast.custom(
         (id) => (
           <div className="w-80 sm:w-88 bg-white border border-slate-200 rounded-2xl p-4 shadow-xl flex flex-col gap-3 font-sans ring-1 ring-slate-900/5">
+            {req.isDirectRoute && (
+              <div className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-amber-200 -mt-1 flex items-center gap-1.5 shadow-xs">
+                <span>⭐ Returning Customer (Direct Request)</span>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
                 <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
