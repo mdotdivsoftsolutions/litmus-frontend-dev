@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useRef, useCallb
 import { io, Socket } from "socket.io-client";
 import { useQuery } from "@tanstack/react-query";
 import { authApi } from "@/lib/api/auth";
+import { apiClient } from "@/lib/api/axios";
 import { toast } from "sonner";
 
 export interface IncomingChatRequest {
@@ -22,6 +23,8 @@ export interface SocketContextType {
   incomingRequests: IncomingChatRequest[];
   audioAlertsEnabled: boolean;
   setAudioAlertsEnabled: (enabled: boolean) => void;
+  notificationsEnabled: boolean;
+  setNotificationsEnabled: (enabled: boolean) => void;
   isAudioUnlocked: boolean;
   unlockAudioContext: () => void;
   acceptChat: (sessionId: string) => Promise<{ success: boolean; session?: any; code?: string; message?: string }>;
@@ -38,13 +41,33 @@ const SOCKET_SERVER_URL =
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [presenceStatus, setPresenceStatusState] = useState<"ONLINE" | "BUSY" | "OFFLINE">("ONLINE");
+  const [presenceStatus, setPresenceStatusState] = useState<"ONLINE" | "BUSY" | "OFFLINE">(() => {
+    const saved = localStorage.getItem("admin_presence_status");
+    return (saved as "ONLINE" | "BUSY" | "OFFLINE") || "ONLINE";
+  });
   const [incomingRequests, setIncomingRequests] = useState<IncomingChatRequest[]>([]);
-  const [audioAlertsEnabled, setAudioAlertsEnabled] = useState(true);
+  const [audioAlertsEnabled, setAudioAlertsEnabledState] = useState(() => {
+    const saved = localStorage.getItem("admin_audio_alerts_enabled");
+    return saved !== null ? saved === "true" : true;
+  });
+  const [notificationsEnabled, setNotificationsEnabledState] = useState(() => {
+    const saved = localStorage.getItem("admin_support_notifications_enabled");
+    return saved !== null ? saved === "true" : true;
+  });
   const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const socketRef = useRef<Socket | null>(null);
+
+  const setAudioAlertsEnabled = (enabled: boolean) => {
+    setAudioAlertsEnabledState(enabled);
+    localStorage.setItem("admin_audio_alerts_enabled", String(enabled));
+  };
+
+  const setNotificationsEnabled = (enabled: boolean) => {
+    setNotificationsEnabledState(enabled);
+    localStorage.setItem("admin_support_notifications_enabled", String(enabled));
+  };
 
   // Fetch authenticated admin/employee profile
   const { data: userResponse } = useQuery({
@@ -58,7 +81,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // ── Web Audio Chime Synthesizer ──────────────────────────────────────────
   const playNotificationChime = useCallback(() => {
-    if (!audioAlertsEnabled) return;
+    if (!audioAlertsEnabled || !notificationsEnabled || presenceStatus === "OFFLINE") return;
 
     try {
       if (!audioContextRef.current) {
@@ -109,10 +132,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       osc2.start(now + 0.1);
       osc2.stop(now + 0.5);
-    } catch {
-      // Audio playback suppressed
+    } catch (error) {
+      console.warn("Failed to play notification chime:", error);
     }
-  }, [audioAlertsEnabled]);
+  }, [audioAlertsEnabled, notificationsEnabled, presenceStatus]);
 
   // ── Unlock Audio Context on User Gesture ──────────────────────────────────
   const unlockAudioContext = useCallback(() => {
@@ -129,7 +152,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setIsAudioUnlocked(true);
       playNotificationChime();
       toast.success("Sound alerts enabled for incoming chat requests.");
-    } catch {}
+    } catch (error) {
+      console.warn("Failed to initialize or resume AudioContext:", error);
+    }
   }, [playNotificationChime]);
 
   // ── Socket Connection & Presence Lifecycle ────────────────────────────────
@@ -148,9 +173,34 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     newSocket.on("connect", () => {
       setIsConnected(true);
-      // Send initial heartbeat
-      newSocket.emit("agent_heartbeat", { status: presenceStatus });
+      const agentPayload = {
+        agentId: currentUser._id || currentUser.id,
+        name: `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim() || "Admin Staff",
+        role: currentUser.role,
+        status: presenceStatus,
+      };
+      newSocket.emit("register_agent", agentPayload);
+      newSocket.emit("agent_heartbeat", agentPayload);
     });
+
+    // Fetch Initial Queued Requests via REST fallback
+    apiClient
+      .get("/chat/sessions?status=QUEUED&limit=10")
+      .then((res) => {
+        if (res.data?.data && res.data.data.length > 0) {
+          setIncomingRequests(
+            res.data.data.map((s: any) => ({
+              sessionId: s.sessionId,
+              userType: s.userType,
+              user: s.userId,
+              guestInfo: s.guestInfo,
+              queuedAt: s.queuedAt || s.createdAt,
+              initialQuery: s.guestInfo?.phone || s.sessionId,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
 
     newSocket.on("disconnect", () => {
       setIsConnected(false);
@@ -163,22 +213,80 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return [req, ...prev];
       });
 
+      // Suppress notification popup and audio if Offline or DND
+      if (presenceStatus === "OFFLINE" || !notificationsEnabled) {
+        return;
+      }
+
       playNotificationChime();
 
       const customerName =
         req.guestInfo?.name ||
         (req.user ? `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() : "Guest User");
+      const userTypeLabel = req.userType === "REGISTERED" ? "Client" : "Guest";
+      const phone = req.guestInfo?.phone || req.user?.phone;
 
-      toast.info(`🔔 New Live Support Request from ${customerName}`, {
-        description: req.initialQuery || "User requested clinical assistance.",
-        duration: 8000,
-        action: {
-          label: "View Request",
-          onClick: () => {
-            window.location.href = "/admin/live-support";
-          },
-        },
-      });
+      toast.custom(
+        (id) => (
+          <div className="w-80 sm:w-88 bg-white border border-slate-200 rounded-2xl p-4 shadow-xl flex flex-col gap-3 font-sans ring-1 ring-slate-900/5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="text-xs font-bold text-slate-900 truncate">{customerName}</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
+                  {userTypeLabel}
+                </span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium">Just now</span>
+            </div>
+
+            {phone && (
+              <p className="text-[11px] text-slate-500 font-medium -mt-1">📞 {phone}</p>
+            )}
+
+            {req.initialQuery && (
+              <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 line-clamp-2 italic">
+                "{req.initialQuery}"
+              </p>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  toast.dismiss(id);
+                  setIncomingRequests((prev) => prev.filter((r) => r.sessionId !== req.sessionId));
+                }}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors"
+              >
+                Decline
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  toast.dismiss(id);
+                  if (socketRef.current) {
+                    socketRef.current.emit("accept_chat_request", { sessionId: req.sessionId }, (res: any) => {
+                      if (res?.success) {
+                        setIncomingRequests((prev) => prev.filter((r) => r.sessionId !== req.sessionId));
+                        if (window.location.pathname !== "/admin/live-support") {
+                          window.location.href = "/admin/live-support";
+                        }
+                      } else {
+                        toast.error(res?.message || "Failed to claim chat session");
+                      }
+                    });
+                  }
+                }}
+                className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors shadow-xs"
+              >
+                Accept & Assist
+              </button>
+            </div>
+          </div>
+        ),
+        { duration: 12000, position: "top-right" }
+      );
     });
 
     // ── Request Claimed by Another Agent ────────────────────────────────────
@@ -189,7 +297,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // ── Heartbeat Interval ──────────────────────────────────────────────────
     const heartbeatInterval = setInterval(() => {
       if (newSocket.connected) {
-        newSocket.emit("agent_heartbeat", { status: presenceStatus });
+        newSocket.emit("agent_heartbeat", {
+          agentId: currentUser._id || currentUser.id,
+          name: `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim() || "Admin Staff",
+          role: currentUser.role,
+          status: presenceStatus,
+        });
       }
     }, 30000);
 
@@ -197,10 +310,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       clearInterval(heartbeatInterval);
       newSocket.disconnect();
     };
-  }, [currentUser?._id, presenceStatus, playNotificationChime]);
+  }, [currentUser?._id, presenceStatus, notificationsEnabled, playNotificationChime]);
 
   const setPresenceStatus = (status: "ONLINE" | "BUSY" | "OFFLINE") => {
     setPresenceStatusState(status);
+    localStorage.setItem("admin_presence_status", status);
     if (socket && socket.connected) {
       socket.emit("set_agent_status", { status });
     }
@@ -246,6 +360,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         incomingRequests,
         audioAlertsEnabled,
         setAudioAlertsEnabled,
+        notificationsEnabled,
+        setNotificationsEnabled,
         isAudioUnlocked,
         unlockAudioContext,
         acceptChat,

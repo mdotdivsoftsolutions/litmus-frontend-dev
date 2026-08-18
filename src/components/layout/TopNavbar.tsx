@@ -72,20 +72,6 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
       )}
 
       <div className="ml-auto flex items-center gap-3">
-        {/* Live Support Icon Link */}
-        <Link
-          to="/admin/live-support"
-          className="relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-          title="Live Support Desk"
-        >
-          <Headphones className="h-5 w-5 text-slate-700" />
-          {incomingRequests.length > 0 && (
-            <span className="absolute top-0.5 right-0.5 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-extrabold text-white shadow-xs pointer-events-none ring-2 ring-white animate-bounce">
-              {incomingRequests.length}
-            </span>
-          )}
-        </Link>
-
         {/* Notification bell */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

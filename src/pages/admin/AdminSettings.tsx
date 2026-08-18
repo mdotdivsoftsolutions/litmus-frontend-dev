@@ -39,6 +39,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { PickupCoverageSettings } from "./PickupCoverageSettings";
+import { DeskNotificationSettings } from "./DeskNotificationSettings";
 
 const baseSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -220,6 +221,12 @@ export default function AdminSettings() {
         { id: "infrastructure", label: "Lab Equipment", icon: Microscope, count: (infrastructureData?.data || []).length, desc: "Accredited equipment templates" },
         { id: "activity-status", label: "Operational Status", icon: Settings2, count: (activityStatusData?.data || []).length, desc: "Workflow states & labels" },
         { id: "pickup", label: "Pickup Cities", icon: MapPin, count: null, desc: "Direct doorstep pickup zones" },
+      ]
+    },
+    {
+      group: "Live Support & Notifications",
+      items: [
+        { id: "desk-notifications", label: "Desk & Alerts", icon: Settings2, count: null, desc: "Presence status, alerts & chime settings" },
       ]
     },
     {
@@ -608,6 +615,13 @@ export default function AdminSettings() {
               {activeTab === "pickup" && (
                 <div className="-m-4 sm:-m-5">
                   <PickupCoverageSettings />
+                </div>
+              )}
+
+              {/* 9. Live Desk & Notification Settings */}
+              {activeTab === "desk-notifications" && (
+                <div className="p-2">
+                  <DeskNotificationSettings />
                 </div>
               )}
 
