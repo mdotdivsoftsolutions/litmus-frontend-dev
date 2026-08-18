@@ -36,6 +36,8 @@ import AdminSettings from "./pages/admin/AdminSettings.tsx";
 import AdminConsultations from "./pages/admin/AdminConsultations.tsx";
 import CategoryFormPage from "./pages/admin/CategoryFormPage.tsx";
 import LaboratoryDetailPage from "./pages/admin/LaboratoryDetailPage.tsx";
+import LiveSupportPage from "./pages/admin/LiveSupportPage.tsx";
+import { SocketProvider } from "./context/SocketContext.tsx";
 
 const queryClient = new QueryClient();
 
@@ -51,61 +53,64 @@ function ScrollToTop() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ScrollToTop />
-        <ErrorBoundary>
-          <Routes>
-          {/* Public Auth */}
-          <Route path="/admin/login" element={<LoginPage role="admin" />} />
-          
-          <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+    <SocketProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <ScrollToTop />
+          <ErrorBoundary>
+            <Routes>
+            {/* Public Auth */}
+            <Route path="/admin/login" element={<LoginPage role="admin" />} />
+            
+            <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
 
-          {/* Admin Portal */}
-          <Route path="/admin" element={<ProtectedRoute allowedRoles={["ADMIN", "EMPLOYEE"]} />}>
-            <Route element={<PortalLayout portal="admin" />}>
-              <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="employees" element={<EmployeeManagement />} />
-              <Route path="users" element={<UserManagement />} />
-              <Route path="users/:id" element={<UserDetailsPage />} />
-              <Route path="laboratories" element={<LabManagement />} />
-              <Route path="laboratories/new" element={<LabFormPage />} />
-              <Route path="laboratories/:id" element={<LaboratoryDetailPage />} />
-              <Route path="laboratories/:id/edit" element={<LabFormPage />} />
-              <Route path="bookings" element={<AdminBookings />} />
-              <Route path="bookings/:id" element={<AdminBookingDetails />} />
-              <Route path="categories" element={<CategoryManagement />} />
-              <Route path="categories/new" element={<CategoryFormPage />} />
-              <Route path="categories/:id/edit" element={<CategoryFormPage />} />
-              <Route path="products" element={<ProductManagement />} />
-              <Route path="products/new" element={<ProductFormPage />} />
-              <Route path="products/:id/edit" element={<ProductFormPage />} />
-              <Route path="tests" element={<TestManagement />} />
-              <Route path="tests/new" element={<TestFormPage />} />
-              <Route path="tests/:id/edit" element={<TestFormPage />} />
-              <Route path="packages" element={<PackageManagement />} />
-              <Route path="packages/new" element={<PackageFormPage />} />
-              <Route path="packages/:id/edit" element={<PackageFormPage />} />
-              <Route path="payments" element={<AdminPayments />} />
-              <Route path="reviews" element={<ReviewManagement />} />
-              <Route path="reviews/new" element={<ReviewFormPage />} />
-              <Route path="reviews/:id/edit" element={<ReviewFormPage />} />
-              <Route path="analytics" element={<AdminAnalytics />} />
-              <Route path="reports" element={<AdminReports />} />
-              <Route path="approvals" element={<AdminApprovals />} />
-              <Route path="consultations" element={<AdminConsultations />} />
-              <Route path="settings" element={<AdminSettings />} />
+            {/* Admin Portal */}
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={["ADMIN", "EMPLOYEE"]} />}>
+              <Route element={<PortalLayout portal="admin" />}>
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="live-support" element={<LiveSupportPage />} />
+                <Route path="employees" element={<EmployeeManagement />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="users/:id" element={<UserDetailsPage />} />
+                <Route path="laboratories" element={<LabManagement />} />
+                <Route path="laboratories/new" element={<LabFormPage />} />
+                <Route path="laboratories/:id" element={<LaboratoryDetailPage />} />
+                <Route path="laboratories/:id/edit" element={<LabFormPage />} />
+                <Route path="bookings" element={<AdminBookings />} />
+                <Route path="bookings/:id" element={<AdminBookingDetails />} />
+                <Route path="categories" element={<CategoryManagement />} />
+                <Route path="categories/new" element={<CategoryFormPage />} />
+                <Route path="categories/:id/edit" element={<CategoryFormPage />} />
+                <Route path="products" element={<ProductManagement />} />
+                <Route path="products/new" element={<ProductFormPage />} />
+                <Route path="products/:id/edit" element={<ProductFormPage />} />
+                <Route path="tests" element={<TestManagement />} />
+                <Route path="tests/new" element={<TestFormPage />} />
+                <Route path="tests/:id/edit" element={<TestFormPage />} />
+                <Route path="packages" element={<PackageManagement />} />
+                <Route path="packages/new" element={<PackageFormPage />} />
+                <Route path="packages/:id/edit" element={<PackageFormPage />} />
+                <Route path="payments" element={<AdminPayments />} />
+                <Route path="reviews" element={<ReviewManagement />} />
+                <Route path="reviews/new" element={<ReviewFormPage />} />
+                <Route path="reviews/:id/edit" element={<ReviewFormPage />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="reports" element={<AdminReports />} />
+                <Route path="approvals" element={<AdminApprovals />} />
+                <Route path="consultations" element={<AdminConsultations />} />
+                <Route path="settings" element={<AdminSettings />} />
+              </Route>
             </Route>
-          </Route>
 
-          <Route path="*" element={<NotFound />} />
-          </Routes>
-        </ErrorBoundary>
-      </BrowserRouter>
-    </TooltipProvider>
+            <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ErrorBoundary>
+        </BrowserRouter>
+      </TooltipProvider>
+    </SocketProvider>
   </QueryClientProvider>
 );
 

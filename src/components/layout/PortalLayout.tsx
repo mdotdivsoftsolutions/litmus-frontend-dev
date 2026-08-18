@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { authApi } from "@/lib/api/auth";
 import { SidebarNav } from "./SidebarNav";
 import { TopNavbar } from "./TopNavbar";
+import { cn } from "@/lib/utils";
 
 interface PortalLayoutProps {
   portal: "user" | "admin" | "lab";
@@ -14,6 +15,9 @@ export function PortalLayout({ portal }: PortalLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isLiveSupport = location.pathname.includes("/live-support");
 
   const { data: userResponse } = useQuery({
     queryKey: ["userProfile"],
@@ -39,7 +43,7 @@ export function PortalLayout({ portal }: PortalLayoutProps) {
       <SidebarNav portal={portal} open={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} onLogoutClick={handleLogout} />
       <div className="flex flex-1 flex-col min-w-0 h-screen overflow-hidden">
         <TopNavbar onMenuClick={() => setSidebarOpen(true)} user={user} onLogoutClick={handleLogout} portal={portal} />
-        <main className="flex-1 overflow-y-auto min-w-0 p-4 lg:p-6">
+        <main className={cn("flex-1 min-w-0", isLiveSupport ? "p-0 overflow-hidden h-[calc(100vh-4rem)] flex flex-col" : "overflow-y-auto p-4 lg:p-6")}>
           <Outlet />
         </main>
       </div>
