@@ -288,6 +288,32 @@ export default function LiveSupportPage() {
 
   const totalSessionsCount = infiniteSessionsData?.pages[0]?.pagination?.total ?? rawSessions.length;
 
+  // Real-time Tab Counts Summary for all 4 Tabs (Incoming, Mine, All, Team)
+  const { data: tabCountsData } = useQuery({
+    queryKey: ["chatTabCountsSummary", currentUser?._id],
+    queryFn: async () => {
+      const [incomingRes, mineRes, allRes] = await Promise.all([
+        apiClient.get("/chat/sessions", { params: { status: "QUEUED", limit: 1 } }).catch(() => ({ data: { pagination: { total: 0 } } })),
+        currentUser?._id
+          ? apiClient.get("/chat/sessions", { params: { agentId: currentUser._id, limit: 1 } }).catch(() => ({ data: { pagination: { total: 0 } } }))
+          : Promise.resolve({ data: { pagination: { total: 0 } } }),
+        apiClient.get("/chat/sessions", { params: { limit: 1 } }).catch(() => ({ data: { pagination: { total: 0 } } })),
+      ]);
+      return {
+        incoming: incomingRes.data?.pagination?.total ?? 0,
+        mine: mineRes.data?.pagination?.total ?? 0,
+        all: allRes.data?.pagination?.total ?? 0,
+      };
+    },
+    staleTime: 10 * 1000,
+    refetchInterval: 10 * 1000,
+  });
+
+  const incomingCount = Math.max(tabCountsData?.incoming ?? 0, incomingRequests.length);
+  const mineCount = tabCountsData?.mine ?? 0;
+  const allCount = tabCountsData?.all ?? 0;
+  const teamCount = employees.length;
+
   // Merge real-time socket incoming requests with database queued sessions
   const incomingMergedSessions = useMemo(() => {
     if (activeTab !== "incoming") return [];
@@ -691,9 +717,9 @@ export default function LiveSupportPage() {
 
         {/* ── Column 1: Queue, Specialists Directory & Navigation ────────── */}
         {showLeftSidebar && (
-          <div className="absolute inset-y-0 left-0 z-40 w-72 sm:w-84 border-r border-slate-200 bg-white flex flex-col shrink-0 h-full overflow-hidden shadow-2xl xl:shadow-none xl:static xl:z-auto xl:bg-slate-50/60 animate-in fade-in slide-in-from-left-2 duration-150">
+          <div className="absolute inset-y-0 left-0 z-40 w-84 sm:w-96 xl:w-[380px] border-r border-slate-200 bg-white flex flex-col shrink-0 h-full overflow-hidden shadow-2xl xl:shadow-none xl:static xl:z-auto xl:bg-slate-50/60 animate-in fade-in slide-in-from-left-2 duration-150">
             {/* Header & Tabs */}
-            <div className="p-3 border-b border-slate-200 bg-white space-y-2">
+            <div className="p-3.5 border-b border-slate-200 bg-white space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                   <Headphones className="h-3.5 w-3.5 text-primary" />
@@ -709,65 +735,100 @@ export default function LiveSupportPage() {
                 </button>
               </div>
 
-              {/* Navigation Tabs */}
-              <div className="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl text-[11px] font-bold">
+              {/* Navigation Tabs with Live Counts */}
+              <div className="grid grid-cols-4 gap-1.5 bg-slate-100/90 p-1.5 rounded-xl text-xs font-bold">
+                {/* 1. Incoming Tab */}
                 <button
                   type="button"
                   onClick={() => setActiveTab("incoming")}
                   className={cn(
-                    "py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 relative outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0",
-                    activeTab === "incoming" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                    "py-1.5 px-1 rounded-lg transition-all flex items-center justify-center gap-1 relative outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0 text-[11px]",
+                    activeTab === "incoming" ? "bg-white text-slate-900 shadow-xs font-extrabold" : "text-slate-600 hover:text-slate-900 font-semibold"
                   )}
                   title="Incoming Support Requests"
                 >
-                  <span>Incoming</span>
-                  {(incomingRequests.length > 0 || (activeTab === "incoming" && totalSessionsCount > 0)) && (
-                    <span className="h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center animate-pulse">
-                      {incomingRequests.length > 0 ? incomingRequests.length : totalSessionsCount}
-                    </span>
-                  )}
+                  <span className="truncate">Incoming</span>
+                  <span
+                    className={cn(
+                      "h-4 min-w-[16px] px-1 rounded-full text-[9px] font-extrabold flex items-center justify-center shrink-0",
+                      incomingCount > 0
+                        ? "bg-rose-500 text-white animate-pulse shadow-2xs"
+                        : activeTab === "incoming"
+                        ? "bg-slate-200 text-slate-700"
+                        : "bg-slate-200/70 text-slate-500"
+                    )}
+                  >
+                    {incomingCount}
+                  </span>
                 </button>
 
+                {/* 2. Mine Tab */}
                 <button
                   type="button"
                   onClick={() => setActiveTab("my_chats")}
                   className={cn(
-                    "py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0",
-                    activeTab === "my_chats" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                    "py-1.5 px-1 rounded-lg transition-all flex items-center justify-center gap-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0 text-[11px]",
+                    activeTab === "my_chats" ? "bg-white text-slate-900 shadow-xs font-extrabold" : "text-slate-600 hover:text-slate-900 font-semibold"
                   )}
                   title="My Attended Chats"
                 >
-                  <span>Mine</span>
-                  {activeTab === "my_chats" && totalSessionsCount > 0 && (
-                    <span className="h-4 min-w-[16px] px-1 rounded-full bg-primary/10 text-primary text-[9px] font-bold flex items-center justify-center">
-                      {totalSessionsCount}
-                    </span>
-                  )}
+                  <span className="truncate">Mine</span>
+                  <span
+                    className={cn(
+                      "h-4 min-w-[16px] px-1 rounded-full text-[9px] font-bold flex items-center justify-center shrink-0",
+                      activeTab === "my_chats"
+                        ? "bg-slate-900 text-white"
+                        : "bg-slate-200/70 text-slate-600"
+                    )}
+                  >
+                    {mineCount}
+                  </span>
                 </button>
 
+                {/* 3. All Chats Tab */}
                 <button
                   type="button"
                   onClick={() => setActiveTab("all_chats")}
                   className={cn(
-                    "py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0",
-                    activeTab === "all_chats" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                    "py-1.5 px-1 rounded-lg transition-all flex items-center justify-center gap-1 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0 text-[11px]",
+                    activeTab === "all_chats" ? "bg-white text-slate-900 shadow-xs font-extrabold" : "text-slate-600 hover:text-slate-900 font-semibold"
                   )}
                   title="All Active Staff Chats"
                 >
-                  <span>All Chats</span>
+                  <span className="truncate">All</span>
+                  <span
+                    className={cn(
+                      "h-4 min-w-[16px] px-1 rounded-full text-[9px] font-bold flex items-center justify-center shrink-0",
+                      activeTab === "all_chats"
+                        ? "bg-slate-900 text-white"
+                        : "bg-slate-200/70 text-slate-600"
+                    )}
+                  >
+                    {allCount}
+                  </span>
                 </button>
 
+                {/* 4. Team Tab */}
                 <button
                   type="button"
                   onClick={() => setActiveTab("staff")}
                   className={cn(
-                    "py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 relative outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0",
-                    activeTab === "staff" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                    "py-1.5 px-1 rounded-lg transition-all flex items-center justify-center gap-1 relative outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0 text-[11px]",
+                    activeTab === "staff" ? "bg-white text-slate-900 shadow-xs font-extrabold" : "text-slate-600 hover:text-slate-900 font-semibold"
                   )}
                   title="Team Specialists Directory"
                 >
-                  <Users className="h-3 w-3" />
-                  <span>Team</span>
+                  <span className="truncate">Team</span>
+                  <span
+                    className={cn(
+                      "h-4 min-w-[16px] px-1 rounded-full text-[9px] font-bold flex items-center justify-center shrink-0",
+                      activeTab === "staff"
+                        ? "bg-slate-900 text-white"
+                        : "bg-slate-200/70 text-slate-600"
+                    )}
+                  >
+                    {teamCount}
+                  </span>
                 </button>
               </div>
             </div>
