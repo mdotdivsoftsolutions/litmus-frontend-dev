@@ -91,6 +91,37 @@ export default function LiveSupportPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isUserTyping]);
 
+  // Handle external openChatSession events and URL query param
+  useEffect(() => {
+    const handleOpenSession = (sessionId: string) => {
+      setSelectedSessionId(sessionId);
+      setActiveTab("my_chats");
+      if (socket && socket.connected) {
+        socket.emit("join_session", { sessionId });
+      }
+      if (typeof window !== "undefined" && window.innerWidth < 1280) {
+        setShowLeftSidebar(false);
+      }
+    };
+
+    // 1. Check URL for openSessionId
+    const params = new URLSearchParams(window.location.search);
+    const openSessionId = params.get("openSessionId");
+    if (openSessionId) {
+      handleOpenSession(openSessionId);
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // 2. Listen for CustomEvent from SocketContext toast
+    const handleEvent = (e: CustomEvent<string>) => {
+      handleOpenSession(e.detail);
+    };
+
+    window.addEventListener("openChatSession", handleEvent as EventListener);
+    return () => window.removeEventListener("openChatSession", handleEvent as EventListener);
+  }, [socket]);
+
   // Fetch Canned Responses
   useEffect(() => {
     apiClient.get("/chat/canned-responses").then((res) => {

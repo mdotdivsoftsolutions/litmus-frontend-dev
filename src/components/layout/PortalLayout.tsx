@@ -55,7 +55,6 @@ export function PortalLayout({ portal }: PortalLayoutProps) {
           <Outlet />
         </main>
       </div>
-      <LiveSupportToaster />
     </div>
   );
 }

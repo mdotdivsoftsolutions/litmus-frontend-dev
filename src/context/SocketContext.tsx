@@ -287,7 +287,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 type="button"
                 onClick={() => {
                   toast.dismiss(id);
-                  setIncomingRequests((prev) => prev.filter((r) => r.sessionId !== req.sessionId));
                 }}
                 className="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors"
               >
@@ -302,7 +301,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                       if (res?.success) {
                         setIncomingRequests((prev) => prev.filter((r) => r.sessionId !== req.sessionId));
                         if (window.location.pathname !== "/admin/live-support") {
-                          window.location.href = "/admin/live-support";
+                          window.location.href = `/admin/live-support?openSessionId=${req.sessionId}`;
+                        } else {
+                          window.dispatchEvent(new CustomEvent("openChatSession", { detail: req.sessionId }));
                         }
                       } else {
                         toast.error(res?.message || "Failed to claim chat session");

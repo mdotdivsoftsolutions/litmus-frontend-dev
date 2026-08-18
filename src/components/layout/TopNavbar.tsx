@@ -2,6 +2,7 @@ import { useLocation, Link, useNavigate } from "react-router-dom";
 import { Bell, ChevronRight, Menu, Headphones } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAdminSocket } from "@/context/SocketContext";
+import { cn } from "@/lib/utils";
 
 const notifications = [
   { id: 1, title: "New Booking", message: "A new booking has been placed.", time: "2m ago", read: false },
@@ -20,7 +21,7 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
   const pathParts = location.pathname.split("/").filter(Boolean);
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const { incomingRequests } = useAdminSocket();
+  const { incomingRequests, presenceStatus } = useAdminSocket();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-card px-4 lg:px-6">
@@ -48,13 +49,38 @@ export function TopNavbar({ onMenuClick }: TopNavbarProps) {
         {/* Live Support Link with live incoming count */}
         <Link
           to="/admin/live-support"
-          className="relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors outline-none focus:outline-none border-0"
+          className={cn(
+            "relative flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-colors outline-none",
+            presenceStatus === "ONLINE" ? "bg-emerald-50/50 border-emerald-200 hover:bg-emerald-100/50" : 
+            presenceStatus === "BUSY" ? "bg-amber-50/50 border-amber-200 hover:bg-amber-100/50" :
+            "bg-slate-50 border-slate-200 hover:bg-slate-100"
+          )}
           title="Live Support Desk"
           aria-label="Live Support"
         >
-          <Headphones className="h-5 w-5 text-slate-700" />
+          <div className="flex items-center gap-1.5">
+            <div
+              className={cn(
+                "h-2 w-2 rounded-full ring-2 ring-white shadow-sm",
+                presenceStatus === "ONLINE" && "bg-emerald-500 animate-pulse",
+                presenceStatus === "BUSY" && "bg-amber-500",
+                presenceStatus === "OFFLINE" && "bg-slate-400"
+              )}
+            />
+            <span className={cn(
+              "text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block",
+              presenceStatus === "ONLINE" ? "text-emerald-700" :
+              presenceStatus === "BUSY" ? "text-amber-700" :
+              "text-slate-500"
+            )}>
+              {presenceStatus}
+            </span>
+          </div>
+          <div className="h-4 w-[1px] bg-slate-200 mx-0.5 hidden sm:block" />
+          <Headphones className="h-4 w-4 text-slate-600" />
+          
           {incomingRequests.length > 0 && (
-            <span className="absolute top-0.5 right-0.5 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-extrabold text-white shadow-xs pointer-events-none ring-2 ring-white animate-pulse">
+            <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-extrabold text-white shadow-xs pointer-events-none ring-2 ring-white animate-pulse">
               {incomingRequests.length}
             </span>
           )}
