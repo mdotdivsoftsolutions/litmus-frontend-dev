@@ -11,13 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/ui/status-badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowLeft,
   Mail,
@@ -38,19 +33,76 @@ import {
   Check,
   Building2,
   FileText,
-  Plus,
   Edit3,
   TrendingUp,
-  AlertCircle,
   Headphones,
   Send,
   Filter,
+  Ban,
+  UserCheck2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
+
+function TablePaginationBar({
+  currentPage,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
+  itemLabel = "items",
+}: {
+  currentPage: number;
+  totalItems: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+  itemLabel?: string;
+}) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+  if (totalItems <= itemsPerPage) return null;
+
+  const start = (currentPage - 1) * itemsPerPage + 1;
+  const end = Math.min(currentPage * itemsPerPage, totalItems);
+
+  return (
+    <div className="flex items-center justify-between border-t border-border/70 px-4 py-2.5 bg-slate-50/60 text-xs">
+      <p className="text-muted-foreground text-[11px]">
+        Showing <span className="font-semibold text-slate-900">{start}</span> to{" "}
+        <span className="font-semibold text-slate-900">{end}</span> of{" "}
+        <span className="font-semibold text-slate-900">{totalItems}</span> {itemLabel}
+      </p>
+      <div className="flex items-center gap-1.5">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 w-7 p-0 bg-white border-border/80 shadow-2xs hover:bg-slate-50"
+          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+        >
+          <ChevronLeft className="h-3.5 w-3.5 text-slate-700" />
+        </Button>
+        <span className="text-[11px] font-bold text-slate-700 px-1.5">
+          Page {currentPage} of {totalPages}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 w-7 p-0 bg-white border-border/80 shadow-2xs hover:bg-slate-50"
+          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage >= totalPages}
+        >
+          <ChevronRight className="h-3.5 w-3.5 text-slate-700" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function UserDetailsPage() {
   const { id: userId } = useParams<{ id: string }>();
@@ -59,8 +111,13 @@ export default function UserDetailsPage() {
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showStatusConfirm, setShowStatusConfirm] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [showEditDrawer, setShowEditDrawer] = useState(false);
   const [bookingFilter, setBookingFilter] = useState<"ALL" | "COMPLETED" | "PENDING" | "UNPAID" | "CANCELLED">("ALL");
+  const [bookingPage, setBookingPage] = useState(1);
+  const [paymentPage, setPaymentPage] = useState(1);
+  const [consultationPage, setConsultationPage] = useState(1);
+  const [chatPage, setChatPage] = useState(1);
+  const ITEMS_PER_PAGE = 6;
   const [newNote, setNewNote] = useState("");
 
   // Edit Profile Form State
@@ -110,7 +167,7 @@ export default function UserDetailsPage() {
     onSuccess: () => {
       toast.success("User profile updated successfully");
       queryClient.invalidateQueries({ queryKey: ["adminUserDetailed", userId] });
-      setShowEditModal(false);
+      setShowEditDrawer(false);
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to update profile");
@@ -158,7 +215,7 @@ export default function UserDetailsPage() {
       shippingState: user.shippingAddress?.state || "",
       shippingPincode: user.shippingAddress?.pincode || "",
     });
-    setShowEditModal(true);
+    setShowEditDrawer(true);
   };
 
   const handleSaveEdit = (e: React.FormEvent) => {
@@ -197,11 +254,56 @@ export default function UserDetailsPage() {
     addNoteMutation.mutate(newNote.trim());
   };
 
+  const detailedData = response?.data;
+  const user = detailedData?.user;
+  const stats = detailedData?.stats;
+  const bookings = detailedData?.bookings || [];
+  const payments = detailedData?.payments || [];
+  const cart = detailedData?.cart;
+  const consultations = detailedData?.consultations || [];
+  const chatSessions = detailedData?.chatSessions || [];
+  const activities = detailedData?.activities || [];
+
+  // Filtered Bookings for the Table
+  const filteredBookings = useMemo(() => {
+    return bookings.filter((b: any) => {
+      if (bookingFilter === "ALL") return true;
+      const statusUpper = String(b.status || "").toUpperCase();
+      const isPaid = ["SUCCESS", "PAID"].includes(String(b.paymentStatus || "").toUpperCase()) || statusUpper === "COMPLETED";
+
+      if (bookingFilter === "COMPLETED") return statusUpper === "COMPLETED";
+      if (bookingFilter === "PENDING") return !["COMPLETED", "REJECTED", "CANCELLED"].includes(statusUpper);
+      if (bookingFilter === "UNPAID") return !isPaid && !["CANCELLED", "REJECTED"].includes(statusUpper);
+      if (bookingFilter === "CANCELLED") return ["CANCELLED", "REJECTED"].includes(statusUpper);
+      return true;
+    });
+  }, [bookings, bookingFilter]);
+
+  const paginatedBookings = useMemo(() => {
+    const start = (bookingPage - 1) * ITEMS_PER_PAGE;
+    return filteredBookings.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredBookings, bookingPage]);
+
+  const paginatedPayments = useMemo(() => {
+    const start = (paymentPage - 1) * ITEMS_PER_PAGE;
+    return payments.slice(start, start + ITEMS_PER_PAGE);
+  }, [payments, paymentPage]);
+
+  const paginatedConsultations = useMemo(() => {
+    const start = (consultationPage - 1) * ITEMS_PER_PAGE;
+    return consultations.slice(start, start + ITEMS_PER_PAGE);
+  }, [consultations, consultationPage]);
+
+  const paginatedChats = useMemo(() => {
+    const start = (chatPage - 1) * ITEMS_PER_PAGE;
+    return chatSessions.slice(start, start + ITEMS_PER_PAGE);
+  }, [chatSessions, chatPage]);
+
   if (isLoading) {
     return (
       <div className="space-y-6 animate-fade-in mx-auto pb-20 w-full">
         <div className="flex items-center gap-4">
-          <Skeleton className="h-10 w-10 rounded-full" />
+          <Skeleton className="h-11 w-11 rounded-xl" />
           <div className="space-y-2">
             <Skeleton className="h-8 w-64" />
             <Skeleton className="h-4 w-40" />
@@ -220,9 +322,7 @@ export default function UserDetailsPage() {
     );
   }
 
-  const detailedData = response?.data;
-
-  if (!detailedData || !detailedData.user) {
+  if (!detailedData || !user) {
     return (
       <div className="flex flex-col h-[70vh] items-center justify-center gap-4 text-center">
         <AlertTriangle className="h-12 w-12 text-amber-500" />
@@ -237,52 +337,30 @@ export default function UserDetailsPage() {
     );
   }
 
-  const {
-    user,
-    stats,
-    bookings = [],
-    payments = [],
-    cart,
-    consultations = [],
-    chatSessions = [],
-    activities = [],
-  } = detailedData;
-
   const initials = `${(user.firstName || "").charAt(0)}${(user.lastName || "").charAt(0)}`.toUpperCase() || "U";
-
-  // Filtered Bookings for the Table
-  const filteredBookings = bookings.filter((b: any) => {
-    if (bookingFilter === "ALL") return true;
-    const statusUpper = String(b.status || "").toUpperCase();
-    const isPaid = ["SUCCESS", "PAID"].includes(String(b.paymentStatus || "").toUpperCase()) || statusUpper === "COMPLETED";
-
-    if (bookingFilter === "COMPLETED") return statusUpper === "COMPLETED";
-    if (bookingFilter === "PENDING") return !["COMPLETED", "REJECTED", "CANCELLED"].includes(statusUpper);
-    if (bookingFilter === "UNPAID") return !isPaid && !["CANCELLED", "REJECTED"].includes(statusUpper);
-    if (bookingFilter === "CANCELLED") return ["CANCELLED", "REJECTED"].includes(statusUpper);
-    return true;
-  });
 
   return (
     <div className="space-y-6 animate-fade-in mx-auto pb-20 font-sans">
-      {/* ── Top Navigation & Executive Summary Header ────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-border/80 shadow-2xs">
+      {/* ── Top Header Toolbar (Matching Platform Design Flow) ───────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Left Side: Back Button + User Badge + Identity */}
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
             size="icon"
             onClick={() => navigate("/admin/users")}
-            className="h-10 w-10 rounded-lg bg-white border border-border/80 shadow-2xs shrink-0 hover:bg-slate-50 text-slate-700"
+            className="h-11 w-11 rounded-lg bg-white border border-border/80 shadow-2xs shrink-0 hover:bg-slate-50 text-slate-700"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
+
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-primary text-white font-extrabold flex items-center justify-center text-lg shadow-sm">
+            <div className="h-11 w-11 rounded-lg bg-primary text-white font-black flex items-center justify-center text-lg shadow-2xs shrink-0">
               {initials}
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
                   {user.firstName} {user.lastName}
                 </h1>
                 {user.companyName && (
@@ -320,30 +398,30 @@ export default function UserDetailsPage() {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+        {/* Right Side: Action Buttons (Following Standard Platform Flow) */}
+        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+          {/* Edit Profile Button (Primary Action) */}
           <Button
-            variant="outline"
-            size="sm"
             onClick={() => handleOpenEdit(user)}
-            className="h-8.5 px-3 rounded-lg border border-border/80 text-xs font-semibold bg-white text-slate-700 hover:bg-slate-50 shadow-2xs flex items-center gap-1.5"
+            className="bg-primary hover:bg-primary/90 text-white shadow-2xs text-xs h-9 px-4 rounded-lg font-bold flex items-center gap-1.5 transition-all"
           >
-            <Edit3 className="h-3.5 w-3.5 text-slate-600" />
+            <Edit3 className="h-3.5 w-3.5" />
             <span>Edit Profile</span>
           </Button>
 
+          {/* Suspend / Activate Account Button (Secondary Action) */}
           <Button
             variant="outline"
-            size="sm"
             onClick={() => setShowStatusConfirm(true)}
             className={cn(
-              "h-8.5 px-3 rounded-lg border text-xs font-semibold shadow-2xs transition-all",
+              "text-xs h-9 px-4 rounded-lg font-bold border shadow-2xs flex items-center gap-1.5 transition-all",
               user.isActive
                 ? "bg-white border-rose-200 text-rose-700 hover:bg-rose-50"
                 : "bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100"
             )}
           >
-            {user.isActive ? "Suspend Account" : "Activate Account"}
+            {user.isActive ? <Ban className="h-3.5 w-3.5" /> : <UserCheck2 className="h-3.5 w-3.5" />}
+            <span>{user.isActive ? "Suspend Account" : "Activate Account"}</span>
           </Button>
         </div>
       </div>
@@ -351,7 +429,7 @@ export default function UserDetailsPage() {
       {/* ── 5 Key Performance Metrics Cards ──────────────────────────────────── */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
         {/* 1. Total Bookings */}
-        <Card className="bg-white border border-border/80 rounded-xl shadow-2xs hover:shadow-xs transition-shadow">
+        <Card className="bg-white border border-border/80 rounded-lg shadow-2xs hover:shadow-xs transition-shadow">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -361,7 +439,7 @@ export default function UserDetailsPage() {
                 Lifetime
               </span>
             </div>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
               {(stats?.totalBookings ?? bookings.length).toLocaleString()}
             </p>
             <p className="text-xs font-semibold text-slate-600 mt-0.5">Total Orders Placed</p>
@@ -372,7 +450,7 @@ export default function UserDetailsPage() {
         </Card>
 
         {/* 2. Completed Orders */}
-        <Card className="bg-white border border-border/80 rounded-xl shadow-2xs hover:shadow-xs transition-shadow">
+        <Card className="bg-white border border-border/80 rounded-lg shadow-2xs hover:shadow-xs transition-shadow">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -382,7 +460,7 @@ export default function UserDetailsPage() {
                 Delivered
               </span>
             </div>
-            <p className="text-xl sm:text-2xl font-black text-emerald-700 tracking-tight">
+            <p className="text-xl sm:text-2xl font-bold text-emerald-700 tracking-tight">
               {(stats?.completedBookings ?? 0).toLocaleString()}
             </p>
             <p className="text-xs font-semibold text-slate-600 mt-0.5">Completed Bookings</p>
@@ -391,7 +469,7 @@ export default function UserDetailsPage() {
         </Card>
 
         {/* 3. Pending & Unpaid */}
-        <Card className="bg-white border border-border/80 rounded-xl shadow-2xs hover:shadow-xs transition-shadow">
+        <Card className="bg-white border border-border/80 rounded-lg shadow-2xs hover:shadow-xs transition-shadow">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="h-8 w-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
@@ -401,7 +479,7 @@ export default function UserDetailsPage() {
                 Action Req.
               </span>
             </div>
-            <p className="text-xl sm:text-2xl font-black text-amber-700 tracking-tight">
+            <p className="text-xl sm:text-2xl font-bold text-amber-700 tracking-tight">
               {(stats?.pendingBookings ?? 0).toLocaleString()}
             </p>
             <p className="text-xs font-semibold text-slate-600 mt-0.5">Pending / In Testing</p>
@@ -414,7 +492,7 @@ export default function UserDetailsPage() {
         </Card>
 
         {/* 4. Lifetime Value (Total Spend) */}
-        <Card className="bg-white border border-border/80 rounded-xl shadow-2xs hover:shadow-xs transition-shadow">
+        <Card className="bg-white border border-border/80 rounded-lg shadow-2xs hover:shadow-xs transition-shadow">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -424,7 +502,7 @@ export default function UserDetailsPage() {
                 Revenue
               </span>
             </div>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
               {formatCurrency(stats?.totalAmountPaid ?? 0)}
             </p>
             <p className="text-xs font-semibold text-slate-600 mt-0.5">Lifetime Purchase (LTV)</p>
@@ -433,7 +511,7 @@ export default function UserDetailsPage() {
         </Card>
 
         {/* 5. Average Order Value & Inquiries */}
-        <Card className="bg-white border border-border/80 rounded-xl shadow-2xs hover:shadow-xs transition-shadow col-span-2 lg:col-span-1">
+        <Card className="bg-white border border-border/80 rounded-lg shadow-2xs hover:shadow-xs transition-shadow col-span-2 lg:col-span-1">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="h-8 w-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
@@ -443,7 +521,7 @@ export default function UserDetailsPage() {
                 AOV
               </span>
             </div>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
               {formatCurrency(stats?.averageOrderValue ?? 0)}
             </p>
             <p className="text-xs font-semibold text-slate-600 mt-0.5">Average Order Value</p>
@@ -459,7 +537,7 @@ export default function UserDetailsPage() {
         {/* Left Column: Account, Contact, Business & Compliance ──────────────── */}
         <div className="w-full xl:w-[340px] shrink-0 space-y-4">
           {/* Contact Details Card */}
-          <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden">
+          <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3 px-4">
               <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-700">
                 <UserCheck className="h-4 w-4 text-primary" /> Contact Information
@@ -545,7 +623,7 @@ export default function UserDetailsPage() {
           </Card>
 
           {/* Business & Regulatory Details Card */}
-          <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden">
+          <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3 px-4">
               <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-700">
                 <Building2 className="h-4 w-4 text-primary" /> Business & Compliance
@@ -579,7 +657,7 @@ export default function UserDetailsPage() {
 
           {/* Billing & Shipping Addresses Card */}
           {(user.billingAddress?.city || user.shippingAddress?.city || user.address) && (
-            <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden">
+            <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
               <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3 px-4">
                 <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-700">
                   <MapPin className="h-4 w-4 text-primary" /> Registered Addresses
@@ -612,46 +690,46 @@ export default function UserDetailsPage() {
         {/* Right Column: Complete Order History, Payments, Activities, Notes Hub ── */}
         <div className="flex-1 min-w-0 w-full space-y-4">
           <Tabs defaultValue="bookings" className="w-full">
-            <TabsList className="bg-white border border-border/80 shadow-2xs p-1 rounded-xl inline-flex w-full sm:w-auto h-auto flex-wrap gap-1">
+            <TabsList className="bg-white border border-border/80 shadow-2xs p-1 rounded-lg inline-flex w-full sm:w-auto h-auto flex-wrap gap-1">
               <TabsTrigger
                 value="bookings"
-                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+                className="text-xs px-3.5 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all"
               >
                 Bookings ({bookings.length})
               </TabsTrigger>
               <TabsTrigger
                 value="payments"
-                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+                className="text-xs px-3.5 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all"
               >
                 Payments ({payments.length})
               </TabsTrigger>
               <TabsTrigger
                 value="activities"
-                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+                className="text-xs px-3.5 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all"
               >
                 Activity Timeline ({activities.length})
               </TabsTrigger>
               <TabsTrigger
                 value="notes"
-                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+                className="text-xs px-3.5 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all"
               >
                 Staff Notes ({user.adminNotes?.length || 0})
               </TabsTrigger>
               <TabsTrigger
                 value="consultations"
-                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+                className="text-xs px-3.5 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all"
               >
                 Consultations ({consultations.length})
               </TabsTrigger>
               <TabsTrigger
                 value="support"
-                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+                className="text-xs px-3.5 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all"
               >
                 Support Chats ({chatSessions.length})
               </TabsTrigger>
               <TabsTrigger
                 value="cart"
-                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+                className="text-xs px-3.5 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all"
               >
                 Cart ({cart?.items?.length || 0})
               </TabsTrigger>
@@ -660,18 +738,21 @@ export default function UserDetailsPage() {
             {/* ── Tab 1: Complete Booking History ────────────────────────────── */}
             <TabsContent value="bookings" className="mt-3 space-y-3">
               {/* Filter Pills */}
-              <div className="flex items-center gap-1.5 flex-wrap bg-slate-100/80 p-1.5 rounded-xl text-xs font-semibold">
-                <span className="text-slate-500 text-[11px] px-2 flex items-center gap-1">
+              <div className="flex items-center gap-1.5 flex-wrap bg-slate-100/80 p-1.5 rounded-lg text-xs font-medium">
+                <span className="text-slate-500 text-[11px] px-2 flex items-center gap-1 font-semibold">
                   <Filter className="h-3 w-3" /> Filter:
                 </span>
                 {(["ALL", "COMPLETED", "PENDING", "UNPAID", "CANCELLED"] as const).map((filterVal) => (
                   <button
                     key={filterVal}
                     type="button"
-                    onClick={() => setBookingFilter(filterVal)}
+                    onClick={() => {
+                      setBookingFilter(filterVal);
+                      setBookingPage(1);
+                    }}
                     className={cn(
-                      "px-2.5 py-1 rounded-lg text-xs font-bold transition-all",
-                      bookingFilter === filterVal ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                      "px-2.5 py-1 rounded-md text-xs font-medium transition-all",
+                      bookingFilter === filterVal ? "bg-white text-slate-900 shadow-xs font-bold" : "text-slate-600 hover:text-slate-900"
                     )}
                   >
                     {filterVal === "ALL" && `All Orders (${bookings.length})`}
@@ -683,32 +764,32 @@ export default function UserDetailsPage() {
                 ))}
               </div>
 
-              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden min-h-[380px]">
+              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[380px] flex flex-col justify-between">
                 {filteredBookings.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground flex-1">
                     <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
                       <Calendar className="h-6 w-6 text-slate-400" />
                     </div>
-                    <p className="font-bold text-slate-900">No bookings match this filter</p>
-                    <p className="text-xs text-muted-foreground mt-1">Try switching back to "All Orders" to view full history.</p>
+                    <p className="font-bold text-slate-900">No orders found</p>
+                    <p className="text-xs text-muted-foreground mt-1">No bookings match the selected status filter.</p>
                   </div>
                 ) : (
-                  <div className="w-full overflow-x-auto">
+                  <div className="flex-1 flex flex-col justify-between">
                     <Table className="w-full">
                       <TableHeader>
                         <TableRow className="bg-slate-50 text-[11px]">
-                          <TableHead className="py-3 px-3">Booking ID</TableHead>
-                          <TableHead className="py-3 px-3">Date Placed</TableHead>
-                          <TableHead className="py-3 px-3">Test / Package Items</TableHead>
-                          <TableHead className="py-3 px-3 hidden md:table-cell">Laboratory</TableHead>
-                          <TableHead className="py-3 px-3">Payment</TableHead>
-                          <TableHead className="py-3 px-3">Status</TableHead>
-                          <TableHead className="py-3 px-3 text-right">Amount Paid</TableHead>
-                          <TableHead className="py-3 px-3 text-right">Action</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Booking ID</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Date Placed</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Test / Package Items</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap hidden md:table-cell">Laboratory</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Payment</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Status</TableHead>
+                          <TableHead className="py-3 px-3 text-xs text-right whitespace-nowrap">Amount Paid</TableHead>
+                          <TableHead className="py-3 px-3 text-xs text-right whitespace-nowrap">Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredBookings.map((b: any) => {
+                        {paginatedBookings.map((b: any) => {
                           const displayId = `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`;
                           const itemSummary =
                             b.items?.[0]?.packageId?.name ||
@@ -725,29 +806,31 @@ export default function UserDetailsPage() {
                               className="hover:bg-slate-50/60 cursor-pointer transition-colors"
                               onClick={() => navigate(`/admin/bookings/${b._id}`)}
                             >
-                              <TableCell className="py-3 px-3 font-mono text-xs font-bold text-slate-900">{displayId}</TableCell>
+                              <TableCell className="py-3 px-3 font-mono text-xs font-bold text-slate-900 whitespace-nowrap">
+                                {displayId}
+                              </TableCell>
                               <TableCell className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
                                 {b.createdAt ? format(new Date(b.createdAt), "MMM d, yyyy • h:mm a") : "N/A"}
                               </TableCell>
-                              <TableCell className="py-3 px-3 text-xs font-semibold text-slate-800 max-w-[200px] truncate" title={itemSummary}>
+                              <TableCell className="py-3 px-3 text-xs font-semibold text-slate-800 max-w-[220px] truncate whitespace-nowrap" title={itemSummary}>
                                 {itemSummary}
                               </TableCell>
                               <TableCell
-                                className="py-3 px-3 text-xs text-muted-foreground hidden md:table-cell max-w-[140px] truncate"
+                                className="py-3 px-3 text-xs text-muted-foreground hidden md:table-cell max-w-[160px] truncate whitespace-nowrap"
                                 title={b.labId?.labName || "Litmus Smart Allocation"}
                               >
                                 {b.labId?.labName || "Litmus Smart Allocation"}
                               </TableCell>
-                              <TableCell className="py-3 px-3">
+                              <TableCell className="py-3 px-3 whitespace-nowrap">
                                 <StatusBadge status={isPaid ? "Paid" : b.paymentStatus || "Pending"} />
                               </TableCell>
-                              <TableCell className="py-3 px-3">
+                              <TableCell className="py-3 px-3 whitespace-nowrap">
                                 <StatusBadge status={b.status || "Pending"} />
                               </TableCell>
                               <TableCell className="py-3 px-3 text-right text-xs font-black text-slate-900 whitespace-nowrap">
                                 {formatCurrency(b.totalAmount || 0)}
                               </TableCell>
-                              <TableCell className="py-3 px-3 text-right">
+                              <TableCell className="py-3 px-3 text-right whitespace-nowrap">
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -765,6 +848,14 @@ export default function UserDetailsPage() {
                         })}
                       </TableBody>
                     </Table>
+
+                    <TablePaginationBar
+                      currentPage={bookingPage}
+                      totalItems={filteredBookings.length}
+                      itemsPerPage={ITEMS_PER_PAGE}
+                      onPageChange={setBookingPage}
+                      itemLabel="orders"
+                    />
                   </div>
                 )}
               </Card>
@@ -772,9 +863,9 @@ export default function UserDetailsPage() {
 
             {/* ── Tab 2: Payments & Invoices ──────────────────────────────────── */}
             <TabsContent value="payments" className="mt-3">
-              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden min-h-[380px]">
+              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[380px] flex flex-col justify-between">
                 {payments.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground flex-1">
                     <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
                       <CreditCard className="h-6 w-6 text-slate-400" />
                     </div>
@@ -782,20 +873,20 @@ export default function UserDetailsPage() {
                     <p className="text-xs text-muted-foreground mt-1">Payment transactions and receipts will appear here once processed.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
+                  <div className="flex-1 flex flex-col justify-between">
+                    <Table className="w-full">
                       <TableHeader>
                         <TableRow className="bg-slate-50 text-[11px]">
-                          <TableHead className="py-3 px-3">Transaction ID</TableHead>
-                          <TableHead className="py-3 px-3">Date & Time</TableHead>
-                          <TableHead className="py-3 px-3">Linked Booking</TableHead>
-                          <TableHead className="py-3 px-3">Method</TableHead>
-                          <TableHead className="py-3 px-3">Status</TableHead>
-                          <TableHead className="py-3 px-3 text-right">Amount Paid</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Transaction ID</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Date & Time</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Linked Booking</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Method</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Status</TableHead>
+                          <TableHead className="py-3 px-3 text-xs text-right whitespace-nowrap">Amount Paid</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {payments.map((p: any) => {
+                        {paginatedPayments.map((p: any) => {
                           const txnId = p.transactionId || p.razorpayPaymentId || `TXN-${String(p._id).slice(-6).toUpperCase()}`;
                           const bkgId = p.bookingId?._id
                             ? `BKG-${String(p.bookingId._id).slice(-6).toUpperCase()}`
@@ -806,16 +897,16 @@ export default function UserDetailsPage() {
 
                           return (
                             <TableRow key={p._id} className="hover:bg-slate-50/60 text-xs">
-                              <TableCell className="font-mono font-bold text-slate-900">{txnId}</TableCell>
+                              <TableCell className="font-mono font-bold text-slate-900 whitespace-nowrap">{txnId}</TableCell>
                               <TableCell className="text-muted-foreground whitespace-nowrap">
                                 {p.createdAt ? format(new Date(p.createdAt), "MMM d, yyyy • h:mm a") : "N/A"}
                               </TableCell>
-                              <TableCell className="font-mono text-primary font-bold">{bkgId}</TableCell>
-                              <TableCell className="text-slate-700 capitalize font-medium">{p.method || "Online Gateway"}</TableCell>
-                              <TableCell>
+                              <TableCell className="font-mono text-primary font-bold whitespace-nowrap">{bkgId}</TableCell>
+                              <TableCell className="text-slate-700 capitalize font-medium whitespace-nowrap">{p.method || "Online Gateway"}</TableCell>
+                              <TableCell className="whitespace-nowrap">
                                 <StatusBadge status={isSuccess ? "Paid" : p.status === "FAILED" ? "Rejected" : "Pending"} />
                               </TableCell>
-                              <TableCell className="text-right font-black text-slate-900">
+                              <TableCell className="text-right font-black text-slate-900 whitespace-nowrap">
                                 {formatCurrency(p.amount || 0)}
                               </TableCell>
                             </TableRow>
@@ -823,6 +914,14 @@ export default function UserDetailsPage() {
                         })}
                       </TableBody>
                     </Table>
+
+                    <TablePaginationBar
+                      currentPage={paymentPage}
+                      totalItems={payments.length}
+                      itemsPerPage={ITEMS_PER_PAGE}
+                      onPageChange={setPaymentPage}
+                      itemLabel="transactions"
+                    />
                   </div>
                 )}
               </Card>
@@ -830,7 +929,7 @@ export default function UserDetailsPage() {
 
             {/* ── Tab 3: Unified Activity Timeline ───────────────────────────── */}
             <TabsContent value="activities" className="mt-3">
-              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden p-5">
+              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden p-5">
                 {activities.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
                     <Activity className="h-8 w-8 text-slate-400 mb-2" />
@@ -879,7 +978,7 @@ export default function UserDetailsPage() {
 
             {/* ── Tab 4: Internal Staff Notes ───────────────────────────────── */}
             <TabsContent value="notes" className="mt-3 space-y-4">
-              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden p-4">
+              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden p-4">
                 <form onSubmit={handleAddNoteSubmit} className="space-y-3">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-primary" />
@@ -905,7 +1004,7 @@ export default function UserDetailsPage() {
                 </form>
               </Card>
 
-              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden p-4">
+              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden p-4">
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Previous Staff Notes</h3>
                 {!user.adminNotes || user.adminNotes.length === 0 ? (
                   <p className="text-xs text-muted-foreground py-6 text-center">No internal notes added yet for this client.</p>
@@ -929,9 +1028,9 @@ export default function UserDetailsPage() {
 
             {/* ── Tab 5: Consultations & Inquiries ───────────────────────────── */}
             <TabsContent value="consultations" className="mt-3">
-              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden min-h-[380px]">
+              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[380px] flex flex-col justify-between">
                 {consultations.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground flex-1">
                     <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
                       <MessageSquare className="h-6 w-6 text-slate-400" />
                     </div>
@@ -939,26 +1038,26 @@ export default function UserDetailsPage() {
                     <p className="text-xs text-muted-foreground mt-1">This user hasn't submitted any advisory inquiries.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
+                  <div className="flex-1 flex flex-col justify-between">
+                    <Table className="w-full">
                       <TableHeader>
                         <TableRow className="bg-slate-50 text-[11px]">
-                          <TableHead className="py-3 px-3">Date</TableHead>
-                          <TableHead className="py-3 px-3">Source / Topic</TableHead>
-                          <TableHead className="py-3 px-3">Service of Interest</TableHead>
-                          <TableHead className="py-3 px-3">Status</TableHead>
-                          <TableHead className="py-3 px-3 text-right">Action</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Date</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Source / Topic</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Service of Interest</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Status</TableHead>
+                          <TableHead className="py-3 px-3 text-xs text-right whitespace-nowrap">Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {consultations.map((c: any) => (
+                        {paginatedConsultations.map((c: any) => (
                           <TableRow key={c._id} className="hover:bg-slate-50/60 text-xs">
                             <TableCell className="text-muted-foreground whitespace-nowrap">
                               {c.createdAt ? format(new Date(c.createdAt), "MMM d, yyyy") : "N/A"}
                             </TableCell>
-                            <TableCell className="font-bold text-slate-900">{c.source || "Website Consultation"}</TableCell>
-                            <TableCell className="text-slate-600">{c.service || c.topic || "Food Safety Analysis"}</TableCell>
-                            <TableCell>
+                            <TableCell className="font-bold text-slate-900 whitespace-nowrap">{c.source || "Website Consultation"}</TableCell>
+                            <TableCell className="text-slate-600 whitespace-nowrap">{c.service || c.topic || "Food Safety Analysis"}</TableCell>
+                            <TableCell className="whitespace-nowrap">
                               <Badge
                                 variant="outline"
                                 className={
@@ -972,7 +1071,7 @@ export default function UserDetailsPage() {
                                 {c.status || "Pending"}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right whitespace-nowrap">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -986,6 +1085,14 @@ export default function UserDetailsPage() {
                         ))}
                       </TableBody>
                     </Table>
+
+                    <TablePaginationBar
+                      currentPage={consultationPage}
+                      totalItems={consultations.length}
+                      itemsPerPage={ITEMS_PER_PAGE}
+                      onPageChange={setConsultationPage}
+                      itemLabel="consultations"
+                    />
                   </div>
                 )}
               </Card>
@@ -993,9 +1100,9 @@ export default function UserDetailsPage() {
 
             {/* ── Tab 6: Support Chats ────────────────────────────────────────── */}
             <TabsContent value="support" className="mt-3">
-              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden min-h-[380px]">
+              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[380px] flex flex-col justify-between">
                 {chatSessions.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground flex-1">
                     <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
                       <Headphones className="h-6 w-6 text-slate-400" />
                     </div>
@@ -1003,32 +1110,32 @@ export default function UserDetailsPage() {
                     <p className="text-xs text-muted-foreground mt-1">Live customer support interactions will be recorded here.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
+                  <div className="flex-1 flex flex-col justify-between">
+                    <Table className="w-full">
                       <TableHeader>
                         <TableRow className="bg-slate-50 text-[11px]">
-                          <TableHead className="py-3 px-3">Session ID</TableHead>
-                          <TableHead className="py-3 px-3">Date</TableHead>
-                          <TableHead className="py-3 px-3">Attending Specialist</TableHead>
-                          <TableHead className="py-3 px-3">Initial Query</TableHead>
-                          <TableHead className="py-3 px-3">Status</TableHead>
-                          <TableHead className="py-3 px-3 text-right">Action</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Session ID</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Date</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Attending Specialist</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Initial Query</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Status</TableHead>
+                          <TableHead className="py-3 px-3 text-xs text-right whitespace-nowrap">Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {chatSessions.map((s: any) => (
+                        {paginatedChats.map((s: any) => (
                           <TableRow key={s._id} className="hover:bg-slate-50/60 text-xs">
-                            <TableCell className="font-mono font-bold text-slate-900">{s.sessionId}</TableCell>
+                            <TableCell className="font-mono font-bold text-slate-900 whitespace-nowrap">{s.sessionId}</TableCell>
                             <TableCell className="text-muted-foreground whitespace-nowrap">
                               {s.createdAt ? format(new Date(s.createdAt), "MMM d, yyyy • h:mm a") : "N/A"}
                             </TableCell>
-                            <TableCell className="font-semibold text-slate-800">
+                            <TableCell className="font-semibold text-slate-800 whitespace-nowrap">
                               {s.assignedAgent ? `${s.assignedAgent.firstName || ""} ${s.assignedAgent.lastName || ""}` : "Unassigned"}
                             </TableCell>
-                            <TableCell className="max-w-[200px] truncate text-slate-600" title={s.initialQuery}>
+                            <TableCell className="max-w-[200px] truncate text-slate-600 whitespace-nowrap" title={s.initialQuery}>
                               {s.initialQuery || "Live Support Consultation"}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="whitespace-nowrap">
                               <Badge
                                 variant="outline"
                                 className={
@@ -1042,7 +1149,7 @@ export default function UserDetailsPage() {
                                 {s.status}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right whitespace-nowrap">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1056,6 +1163,14 @@ export default function UserDetailsPage() {
                         ))}
                       </TableBody>
                     </Table>
+
+                    <TablePaginationBar
+                      currentPage={chatPage}
+                      totalItems={chatSessions.length}
+                      itemsPerPage={ITEMS_PER_PAGE}
+                      onPageChange={setChatPage}
+                      itemLabel="chat sessions"
+                    />
                   </div>
                 )}
               </Card>
@@ -1063,7 +1178,7 @@ export default function UserDetailsPage() {
 
             {/* ── Tab 7: Cart & Abandoned Items ──────────────────────────────── */}
             <TabsContent value="cart" className="mt-3">
-              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden min-h-[380px]">
+              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[380px]">
                 {!cart || !cart.items || cart.items.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
                     <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
@@ -1073,13 +1188,13 @@ export default function UserDetailsPage() {
                     <p className="text-xs text-muted-foreground mt-1">This user does not currently have un-purchased tests in their active cart.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
+                  <div className="w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                    <Table className="w-full">
                       <TableHeader>
                         <TableRow className="bg-slate-50 text-[11px]">
-                          <TableHead className="py-3 px-3">Test / Package Item</TableHead>
-                          <TableHead className="py-3 px-3">Type</TableHead>
-                          <TableHead className="py-3 px-3 text-right">Price</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Test / Package Item</TableHead>
+                          <TableHead className="py-3 px-3 text-xs whitespace-nowrap">Type</TableHead>
+                          <TableHead className="py-3 px-3 text-xs text-right whitespace-nowrap">Price</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1089,13 +1204,13 @@ export default function UserDetailsPage() {
 
                           return (
                             <TableRow key={idx} className="hover:bg-slate-50/60 text-xs">
-                              <TableCell className="font-bold text-slate-900">{itemName}</TableCell>
-                              <TableCell>
+                              <TableCell className="font-bold text-slate-900 whitespace-nowrap">{itemName}</TableCell>
+                              <TableCell className="whitespace-nowrap">
                                 <Badge variant="outline" className="text-[10px] bg-slate-50 uppercase font-semibold">
                                   {item.itemType || "Test"}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="text-right font-black text-slate-900">
+                              <TableCell className="text-right font-black text-slate-900 whitespace-nowrap">
                                 {formatCurrency(item.price || item.packageId?.price || item.testId?.price || 0)}
                               </TableCell>
                             </TableRow>
@@ -1111,174 +1226,232 @@ export default function UserDetailsPage() {
         </div>
       </div>
 
-      {/* ── Edit Profile Modal ────────────────────────────────────────────────── */}
-      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto font-sans">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+      {/* ── Slide-Over Side Drawer for Edit Profile & Business Details ──────── */}
+      <Sheet open={showEditDrawer} onOpenChange={setShowEditDrawer}>
+        <SheetContent side="right" className="sm:max-w-[540px] w-full p-0 flex flex-col h-full bg-white font-sans">
+          <SheetHeader className="px-6 py-4 border-b shrink-0 bg-white">
+            <SheetTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
               <Building2 className="h-4 w-4 text-primary" /> Edit User Profile & Business Details
-            </DialogTitle>
-          </DialogHeader>
+            </SheetTitle>
+          </SheetHeader>
 
-          <form onSubmit={handleSaveEdit} className="space-y-4 pt-2 text-xs">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="font-bold text-slate-700">First Name</label>
-                <Input
-                  value={editForm.firstName}
-                  onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                  className="h-8.5 text-xs mt-1"
-                  required
-                />
-              </div>
-              <div>
-                <label className="font-bold text-slate-700">Last Name</label>
-                <Input
-                  value={editForm.lastName}
-                  onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                  className="h-8.5 text-xs mt-1"
-                />
-              </div>
-            </div>
+          <ScrollArea className="flex-1 px-6">
+            <form id="edit-user-form" onSubmit={handleSaveEdit} className="space-y-4 py-5 text-xs">
+              {/* Personal Information */}
+              <div className="space-y-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 border-b pb-1.5 flex items-center gap-1.5">
+                  <UserCheck className="h-3.5 w-3.5 text-primary" /> Personal Information
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-700">First Name</label>
+                    <Input
+                      value={editForm.firstName}
+                      onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                      className="h-9 text-xs mt-1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700">Last Name</label>
+                    <Input
+                      value={editForm.lastName}
+                      onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                      className="h-9 text-xs mt-1"
+                    />
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="font-bold text-slate-700">Phone</label>
-                <Input
-                  value={editForm.phone}
-                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                  className="h-8.5 text-xs mt-1"
-                  required
-                />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-700">Mobile Number</label>
+                    <Input
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                      className="h-9 text-xs mt-1"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700">Alternate Phone</label>
+                    <Input
+                      value={editForm.alternatePhone}
+                      onChange={(e) => setEditForm({ ...editForm, alternatePhone: e.target.value })}
+                      className="h-9 text-xs mt-1"
+                      placeholder="+91..."
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="font-bold text-slate-700">Alternate Phone</label>
-                <Input
-                  value={editForm.alternatePhone}
-                  onChange={(e) => setEditForm({ ...editForm, alternatePhone: e.target.value })}
-                  className="h-8.5 text-xs mt-1"
-                  placeholder="+91..."
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="font-bold text-slate-700">Company / Organization</label>
-                <Input
-                  value={editForm.companyName}
-                  onChange={(e) => setEditForm({ ...editForm, companyName: e.target.value })}
-                  className="h-8.5 text-xs mt-1"
-                  placeholder="e.g. Acme Foods Ltd"
-                />
-              </div>
-              <div>
-                <label className="font-bold text-slate-700">Industry Category</label>
-                <Input
-                  value={editForm.industryCategory}
-                  onChange={(e) => setEditForm({ ...editForm, industryCategory: e.target.value })}
-                  className="h-8.5 text-xs mt-1"
-                  placeholder="e.g. Dairy, Spices, Bakery"
-                />
-              </div>
-            </div>
+              {/* Corporate & Business Credentials */}
+              <div className="space-y-3 pt-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 border-b pb-1.5 flex items-center gap-1.5">
+                  <Building2 className="h-3.5 w-3.5 text-primary" /> Business & Regulatory Details
+                </h3>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="font-bold text-slate-700">FSSAI License Number</label>
-                <Input
-                  value={editForm.fssaiNumber}
-                  onChange={(e) => setEditForm({ ...editForm, fssaiNumber: e.target.value })}
-                  className="h-8.5 text-xs mt-1"
-                  placeholder="14-digit FSSAI"
-                />
-              </div>
-              <div>
-                <label className="font-bold text-slate-700">GSTIN Tax ID</label>
-                <Input
-                  value={editForm.gstNumber}
-                  onChange={(e) => setEditForm({ ...editForm, gstNumber: e.target.value })}
-                  className="h-8.5 text-xs mt-1"
-                  placeholder="15-character GSTIN"
-                />
-              </div>
-            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-700">Company / Organization</label>
+                    <Input
+                      value={editForm.companyName}
+                      onChange={(e) => setEditForm({ ...editForm, companyName: e.target.value })}
+                      className="h-9 text-xs mt-1"
+                      placeholder="e.g. Acme Foods Ltd"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700">Industry Category</label>
+                    <Input
+                      value={editForm.industryCategory}
+                      onChange={(e) => setEditForm({ ...editForm, industryCategory: e.target.value })}
+                      className="h-9 text-xs mt-1"
+                      placeholder="e.g. Dairy, Spices, Bakery"
+                    />
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="font-bold text-slate-700">Customer Segment</label>
-                <select
-                  value={editForm.customerSegment}
-                  onChange={(e) => setEditForm({ ...editForm, customerSegment: e.target.value })}
-                  className="w-full h-8.5 mt-1 rounded-md border border-input bg-background px-3 text-xs"
-                >
-                  <option value="INDIVIDUAL">Individual</option>
-                  <option value="FOOD_BUSINESS">Food Business</option>
-                  <option value="ENTERPRISE">Enterprise</option>
-                  <option value="LAB_PARTNER">Lab Partner</option>
-                </select>
-              </div>
-              <div>
-                <label className="font-bold text-slate-700">KYC Verification Status</label>
-                <select
-                  value={editForm.kycStatus}
-                  onChange={(e) => setEditForm({ ...editForm, kycStatus: e.target.value })}
-                  className="w-full h-8.5 mt-1 rounded-md border border-input bg-background px-3 text-xs"
-                >
-                  <option value="PENDING">Pending Verification</option>
-                  <option value="VERIFIED">Verified</option>
-                  <option value="REJECTED">Rejected</option>
-                </select>
-              </div>
-            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-700">FSSAI License Number</label>
+                    <Input
+                      value={editForm.fssaiNumber}
+                      onChange={(e) => setEditForm({ ...editForm, fssaiNumber: e.target.value })}
+                      className="h-9 text-xs mt-1"
+                      placeholder="14-digit FSSAI"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700">GSTIN Tax ID</label>
+                    <Input
+                      value={editForm.gstNumber}
+                      onChange={(e) => setEditForm({ ...editForm, gstNumber: e.target.value })}
+                      className="h-9 text-xs mt-1"
+                      placeholder="15-character GSTIN"
+                    />
+                  </div>
+                </div>
 
-            {/* Billing Address */}
-            <div className="pt-2 border-t border-slate-200">
-              <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Primary Billing Address</span>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                <Input
-                  placeholder="Street / Facility Address"
-                  value={editForm.billingStreet}
-                  onChange={(e) => setEditForm({ ...editForm, billingStreet: e.target.value })}
-                  className="col-span-2 h-8 text-xs"
-                />
-                <Input
-                  placeholder="City"
-                  value={editForm.billingCity}
-                  onChange={(e) => setEditForm({ ...editForm, billingCity: e.target.value })}
-                  className="h-8 text-xs"
-                />
-                <Input
-                  placeholder="State"
-                  value={editForm.billingState}
-                  onChange={(e) => setEditForm({ ...editForm, billingState: e.target.value })}
-                  className="h-8 text-xs"
-                />
-                <Input
-                  placeholder="Pincode"
-                  value={editForm.billingPincode}
-                  onChange={(e) => setEditForm({ ...editForm, billingPincode: e.target.value })}
-                  className="h-8 text-xs"
-                />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-700">Customer Segment</label>
+                    <select
+                      value={editForm.customerSegment}
+                      onChange={(e) => setEditForm({ ...editForm, customerSegment: e.target.value })}
+                      className="w-full h-9 mt-1 rounded-md border border-input bg-background px-3 text-xs"
+                    >
+                      <option value="INDIVIDUAL">Individual</option>
+                      <option value="FOOD_BUSINESS">Food Business</option>
+                      <option value="ENTERPRISE">Enterprise</option>
+                      <option value="LAB_PARTNER">Lab Partner</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700">KYC Status</label>
+                    <select
+                      value={editForm.kycStatus}
+                      onChange={(e) => setEditForm({ ...editForm, kycStatus: e.target.value })}
+                      className="w-full h-9 mt-1 rounded-md border border-input bg-background px-3 text-xs"
+                    >
+                      <option value="PENDING">Pending Verification</option>
+                      <option value="VERIFIED">Verified</option>
+                      <option value="REJECTED">Rejected</option>
+                    </select>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <DialogFooter className="pt-3">
-              <Button type="button" variant="outline" size="sm" onClick={() => setShowEditModal(false)}>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={updateProfileMutation.isPending}
-                className="bg-primary hover:bg-primary/90 text-white font-bold"
-              >
-                {updateProfileMutation.isPending ? "Saving Changes..." : "Save Profile Details"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+              {/* Billing Address */}
+              <div className="space-y-3 pt-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 border-b pb-1.5 flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-primary" /> Primary Billing Address
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    placeholder="Street / Facility Address"
+                    value={editForm.billingStreet}
+                    onChange={(e) => setEditForm({ ...editForm, billingStreet: e.target.value })}
+                    className="col-span-2 h-9 text-xs"
+                  />
+                  <Input
+                    placeholder="City"
+                    value={editForm.billingCity}
+                    onChange={(e) => setEditForm({ ...editForm, billingCity: e.target.value })}
+                    className="h-9 text-xs"
+                  />
+                  <Input
+                    placeholder="State"
+                    value={editForm.billingState}
+                    onChange={(e) => setEditForm({ ...editForm, billingState: e.target.value })}
+                    className="h-9 text-xs"
+                  />
+                  <Input
+                    placeholder="Pincode"
+                    value={editForm.billingPincode}
+                    onChange={(e) => setEditForm({ ...editForm, billingPincode: e.target.value })}
+                    className="h-9 text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Sample Pickup Address */}
+              <div className="space-y-3 pt-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 border-b pb-1.5 flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-primary" /> Sample Pickup Address
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    placeholder="Street / Lab Delivery Hub Address"
+                    value={editForm.shippingStreet}
+                    onChange={(e) => setEditForm({ ...editForm, shippingStreet: e.target.value })}
+                    className="col-span-2 h-9 text-xs"
+                  />
+                  <Input
+                    placeholder="City"
+                    value={editForm.shippingCity}
+                    onChange={(e) => setEditForm({ ...editForm, shippingCity: e.target.value })}
+                    className="h-9 text-xs"
+                  />
+                  <Input
+                    placeholder="State"
+                    value={editForm.shippingState}
+                    onChange={(e) => setEditForm({ ...editForm, shippingState: e.target.value })}
+                    className="h-9 text-xs"
+                  />
+                  <Input
+                    placeholder="Pincode"
+                    value={editForm.shippingPincode}
+                    onChange={(e) => setEditForm({ ...editForm, shippingPincode: e.target.value })}
+                    className="h-9 text-xs"
+                  />
+                </div>
+              </div>
+            </form>
+          </ScrollArea>
+
+          {/* Side Drawer Footer */}
+          <div className="p-4 border-t bg-slate-50 flex items-center justify-end gap-2.5 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowEditDrawer(false)}
+              className="text-xs h-9 px-4 rounded-lg font-semibold"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="edit-user-form"
+              size="sm"
+              disabled={updateProfileMutation.isPending}
+              className="bg-primary hover:bg-primary/90 text-white font-bold text-xs h-9 px-4 rounded-lg shadow-sm"
+            >
+              {updateProfileMutation.isPending ? "Saving Changes..." : "Save Profile Details"}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* ── Account Status Confirmation Dialog ─────────────────────────────────── */}
       <ConfirmDialog
