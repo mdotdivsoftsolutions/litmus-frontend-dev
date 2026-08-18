@@ -81,6 +81,16 @@ export const adminApi = {
     return response.data;
   },
 
+  updateUserProfile: async (id: string, data: any) => {
+    const response = await apiClient.put(`/admin/user/${id}`, data);
+    return response.data;
+  },
+
+  addUserAdminNote: async (id: string, note: string) => {
+    const response = await apiClient.post(`/admin/user/${id}/notes`, { note });
+    return response.data;
+  },
+
   updateUserStatus: async (data: { userId: string; isActive: boolean }) => {
     const response = await apiClient.patch('/admin/user/status', data);
     return response.data;

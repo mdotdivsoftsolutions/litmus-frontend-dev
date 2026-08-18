@@ -1,30 +1,89 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { adminApi } from "@/lib/api/admin";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { 
-  ArrowLeft, Mail, Phone, Calendar, Clock, ShoppingCart, 
-  CreditCard, Activity, CheckCircle2, AlertTriangle, Eye, 
-  MapPin, ShieldCheck, UserCheck, MessageSquare, Copy, Check
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  ArrowLeft,
+  Mail,
+  Phone,
+  Calendar,
+  Clock,
+  ShoppingCart,
+  CreditCard,
+  Activity,
+  CheckCircle2,
+  AlertTriangle,
+  Eye,
+  MapPin,
+  ShieldCheck,
+  UserCheck,
+  MessageSquare,
+  Copy,
+  Check,
+  Building2,
+  FileText,
+  Plus,
+  Edit3,
+  TrendingUp,
+  AlertCircle,
+  Headphones,
+  Send,
+  Filter,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/currency";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { cn } from "@/lib/utils";
 
 export default function UserDetailsPage() {
   const { id: userId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showStatusConfirm, setShowStatusConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [bookingFilter, setBookingFilter] = useState<"ALL" | "COMPLETED" | "PENDING" | "UNPAID" | "CANCELLED">("ALL");
+  const [newNote, setNewNote] = useState("");
+
+  // Edit Profile Form State
+  const [editForm, setEditForm] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    alternatePhone: "",
+    companyName: "",
+    fssaiNumber: "",
+    gstNumber: "",
+    industryCategory: "General Food & Beverage",
+    customerSegment: "INDIVIDUAL",
+    kycStatus: "PENDING",
+    billingStreet: "",
+    billingCity: "",
+    billingState: "",
+    billingPincode: "",
+    shippingStreet: "",
+    shippingCity: "",
+    shippingState: "",
+    shippingPincode: "",
+  });
 
   const { data: response, isLoading } = useQuery({
     queryKey: ["adminUserDetailed", userId],
@@ -46,12 +105,96 @@ export default function UserDetailsPage() {
     },
   });
 
+  const updateProfileMutation = useMutation({
+    mutationFn: (data: any) => adminApi.updateUserProfile(userId!, data),
+    onSuccess: () => {
+      toast.success("User profile updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["adminUserDetailed", userId] });
+      setShowEditModal(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    },
+  });
+
+  const addNoteMutation = useMutation({
+    mutationFn: (noteText: string) => adminApi.addUserAdminNote(userId!, noteText),
+    onSuccess: () => {
+      toast.success("Staff note added");
+      setNewNote("");
+      queryClient.invalidateQueries({ queryKey: ["adminUserDetailed", userId] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to add note");
+    },
+  });
+
   const copyToClipboard = (text: string, fieldName: string) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
     setCopiedField(fieldName);
     toast.success(`Copied ${fieldName} to clipboard`);
     setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const handleOpenEdit = (user: any) => {
+    setEditForm({
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      phone: user.phone || "",
+      alternatePhone: user.alternatePhone || "",
+      companyName: user.companyName || "",
+      fssaiNumber: user.fssaiNumber || "",
+      gstNumber: user.gstNumber || "",
+      industryCategory: user.industryCategory || "General Food & Beverage",
+      customerSegment: user.customerSegment || "INDIVIDUAL",
+      kycStatus: user.kycStatus || "PENDING",
+      billingStreet: user.billingAddress?.street || "",
+      billingCity: user.billingAddress?.city || "",
+      billingState: user.billingAddress?.state || "",
+      billingPincode: user.billingAddress?.pincode || "",
+      shippingStreet: user.shippingAddress?.street || "",
+      shippingCity: user.shippingAddress?.city || "",
+      shippingState: user.shippingAddress?.state || "",
+      shippingPincode: user.shippingAddress?.pincode || "",
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfileMutation.mutate({
+      firstName: editForm.firstName,
+      lastName: editForm.lastName,
+      phone: editForm.phone,
+      alternatePhone: editForm.alternatePhone,
+      companyName: editForm.companyName,
+      fssaiNumber: editForm.fssaiNumber,
+      gstNumber: editForm.gstNumber,
+      industryCategory: editForm.industryCategory,
+      customerSegment: editForm.customerSegment,
+      kycStatus: editForm.kycStatus,
+      billingAddress: {
+        street: editForm.billingStreet,
+        city: editForm.billingCity,
+        state: editForm.billingState,
+        pincode: editForm.billingPincode,
+        country: "India",
+      },
+      shippingAddress: {
+        street: editForm.shippingStreet,
+        city: editForm.shippingCity,
+        state: editForm.shippingState,
+        pincode: editForm.shippingPincode,
+        country: "India",
+      },
+    });
+  };
+
+  const handleAddNoteSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newNote.trim()) return;
+    addNoteMutation.mutate(newNote.trim());
   };
 
   if (isLoading) {
@@ -64,13 +207,11 @@ export default function UserDetailsPage() {
             <Skeleton className="h-4 w-40" />
           </div>
         </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {[1, 2, 3, 4, 5].map((i) => (
             <Skeleton key={i} className="h-28 rounded-xl bg-white border border-slate-200" />
           ))}
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Skeleton className="h-96 rounded-xl bg-white border border-slate-200" />
           <Skeleton className="h-96 rounded-xl lg:col-span-2 bg-white border border-slate-200" />
@@ -96,146 +237,253 @@ export default function UserDetailsPage() {
     );
   }
 
-  const { user, stats, bookings = [], payments = [], cart, consultations = [] } = detailedData;
+  const {
+    user,
+    stats,
+    bookings = [],
+    payments = [],
+    cart,
+    consultations = [],
+    chatSessions = [],
+    activities = [],
+  } = detailedData;
 
   const initials = `${(user.firstName || "").charAt(0)}${(user.lastName || "").charAt(0)}`.toUpperCase() || "U";
 
+  // Filtered Bookings for the Table
+  const filteredBookings = bookings.filter((b: any) => {
+    if (bookingFilter === "ALL") return true;
+    const statusUpper = String(b.status || "").toUpperCase();
+    const isPaid = ["SUCCESS", "PAID"].includes(String(b.paymentStatus || "").toUpperCase()) || statusUpper === "COMPLETED";
+
+    if (bookingFilter === "COMPLETED") return statusUpper === "COMPLETED";
+    if (bookingFilter === "PENDING") return !["COMPLETED", "REJECTED", "CANCELLED"].includes(statusUpper);
+    if (bookingFilter === "UNPAID") return !isPaid && !["CANCELLED", "REJECTED"].includes(statusUpper);
+    if (bookingFilter === "CANCELLED") return ["CANCELLED", "REJECTED"].includes(statusUpper);
+    return true;
+  });
+
   return (
-    <div className="space-y-6 animate-fade-in mx-auto pb-20">
-      {/* Top Navigation Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 animate-fade-in mx-auto pb-20 font-sans">
+      {/* ── Top Navigation & Executive Summary Header ────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-border/80 shadow-2xs">
         <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            size="icon" 
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => navigate("/admin/users")}
-            className="h-11 w-11 rounded-lg bg-white border border-border/80 shadow-2xs shrink-0 hover:bg-slate-50 text-slate-700"
+            className="h-10 w-10 rounded-lg bg-white border border-border/80 shadow-2xs shrink-0 hover:bg-slate-50 text-slate-700"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-lg bg-primary text-white font-bold flex items-center justify-center text-base shadow-2xs">
+            <div className="h-12 w-12 rounded-xl bg-primary text-white font-extrabold flex items-center justify-center text-lg shadow-sm">
               {initials}
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
                   {user.firstName} {user.lastName}
                 </h1>
-                <Badge 
-                  variant="outline" 
-                  className={user.isActive 
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-medium text-xs" 
-                    : "bg-rose-50 text-rose-700 border-rose-200 font-medium text-xs"
+                {user.companyName && (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                    {user.companyName}
+                  </span>
+                )}
+                <Badge
+                  variant="outline"
+                  className={
+                    user.isActive
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold text-xs"
+                      : "bg-rose-50 text-rose-700 border-rose-200 font-semibold text-xs"
                   }
                 >
-                  <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${user.isActive ? "bg-emerald-500" : "bg-rose-500"}`} />
+                  <span className={cn("h-1.5 w-1.5 rounded-full mr-1.5", user.isActive ? "bg-emerald-500" : "bg-rose-500")} />
                   {user.isActive ? "Active Account" : "Suspended"}
                 </Badge>
-                <Badge variant="secondary" className="bg-slate-100 text-slate-700 text-xs border border-slate-200/80">
-                  {user.role === "ADMIN" ? "Administrator" : "Customer / Client"}
+                <Badge
+                  variant="outline"
+                  className={
+                    user.kycStatus === "VERIFIED"
+                      ? "bg-blue-50 text-blue-700 border-blue-200 font-semibold text-xs"
+                      : "bg-amber-50 text-amber-700 border-amber-200 font-semibold text-xs"
+                  }
+                >
+                  <ShieldCheck className="h-3 w-3 mr-1" />
+                  {user.kycStatus === "VERIFIED" ? "KYC Verified" : "KYC Pending"}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-                User ID: {user._id}
+                User ID: {user._id} • Segment: <span className="font-semibold text-slate-700">{user.customerSegment || "INDIVIDUAL"}</span>
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
           <Button
             variant="outline"
-            className="bg-white hover:bg-slate-50 text-slate-700 border border-border/80 shadow-2xs text-xs h-8 rounded-md"
+            size="sm"
+            onClick={() => handleOpenEdit(user)}
+            className="h-8.5 px-3 rounded-lg border border-border/80 text-xs font-semibold bg-white text-slate-700 hover:bg-slate-50 shadow-2xs flex items-center gap-1.5"
+          >
+            <Edit3 className="h-3.5 w-3.5 text-slate-600" />
+            <span>Edit Profile</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setShowStatusConfirm(true)}
+            className={cn(
+              "h-8.5 px-3 rounded-lg border text-xs font-semibold shadow-2xs transition-all",
+              user.isActive
+                ? "bg-white border-rose-200 text-rose-700 hover:bg-rose-50"
+                : "bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100"
+            )}
           >
             {user.isActive ? "Suspend Account" : "Activate Account"}
           </Button>
         </div>
       </div>
 
-      {/* KPI Cards Grid - Clean, Unified, Subtle Radius matching Dashboard */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          {
-            title: "Total Bookings",
-            value: (stats?.totalBookings ?? bookings.length).toLocaleString(),
-            subtitle: "Lifetime diagnostic orders",
-            icon: Activity,
-            badgeText: "Total",
-          },
-          {
-            title: "Completed Tests",
-            value: (stats?.completedBookings ?? 0).toLocaleString(),
-            subtitle: "Reports generated & delivered",
-            icon: CheckCircle2,
-            badgeText: "Delivered",
-          },
-          {
-            title: "Pending / Active",
-            value: (stats?.pendingBookings ?? 0).toLocaleString(),
-            subtitle: "In transit or at lab",
-            icon: Clock,
-            badgeText: "In Progress",
-          },
-          {
-            title: "Total Spend",
-            value: formatCurrency(stats?.totalAmountPaid ?? 0),
-            subtitle: "Total revenue collected",
-            icon: CreditCard,
-            badgeText: "Paid",
-          },
-        ].map((kpi) => (
-          <Card 
-            key={kpi.title} 
-            className="bg-white border border-border/80 rounded-lg shadow-2xs hover:shadow-xs transition-shadow duration-150 relative"
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="h-8 w-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-700">
-                  <kpi.icon className="h-4 w-4" />
-                </div>
-                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200/80">
-                  {kpi.badgeText}
-                </span>
+      {/* ── 5 Key Performance Metrics Cards ──────────────────────────────────── */}
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
+        {/* 1. Total Bookings */}
+        <Card className="bg-white border border-border/80 rounded-xl shadow-2xs hover:shadow-xs transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <Activity className="h-4 w-4" />
               </div>
-              <div className="space-y-0.5">
-                <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{kpi.value}</p>
-                <p className="text-xs font-medium text-slate-600">{kpi.title}</p>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100">
+                Lifetime
+              </span>
+            </div>
+            <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              {(stats?.totalBookings ?? bookings.length).toLocaleString()}
+            </p>
+            <p className="text-xs font-semibold text-slate-600 mt-0.5">Total Orders Placed</p>
+            <p className="text-[11px] text-muted-foreground mt-1 truncate">
+              {stats?.firstBookingDate ? `First: ${format(new Date(stats.firstBookingDate), "MMM yyyy")}` : "No bookings yet"}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* 2. Completed Orders */}
+        <Card className="bg-white border border-border/80 rounded-xl shadow-2xs hover:shadow-xs transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <CheckCircle2 className="h-4 w-4" />
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1.5 truncate">{kpi.subtitle}</p>
-            </CardContent>
-          </Card>
-        ))}
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100">
+                Delivered
+              </span>
+            </div>
+            <p className="text-xl sm:text-2xl font-black text-emerald-700 tracking-tight">
+              {(stats?.completedBookings ?? 0).toLocaleString()}
+            </p>
+            <p className="text-xs font-semibold text-slate-600 mt-0.5">Completed Bookings</p>
+            <p className="text-[11px] text-muted-foreground mt-1 truncate">Signed NABL reports generated</p>
+          </CardContent>
+        </Card>
+
+        {/* 3. Pending & Unpaid */}
+        <Card className="bg-white border border-border/80 rounded-xl shadow-2xs hover:shadow-xs transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="h-8 w-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Clock className="h-4 w-4" />
+              </div>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-100">
+                Action Req.
+              </span>
+            </div>
+            <p className="text-xl sm:text-2xl font-black text-amber-700 tracking-tight">
+              {(stats?.pendingBookings ?? 0).toLocaleString()}
+            </p>
+            <p className="text-xs font-semibold text-slate-600 mt-0.5">Pending / In Testing</p>
+            <p className="text-[11px] text-rose-600 font-medium mt-1 truncate">
+              {stats?.unpaidBookings > 0
+                ? `${stats.unpaidBookings} unpaid (${formatCurrency(stats?.totalUnpaidAmount || 0)})`
+                : "All active paid"}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* 4. Lifetime Value (Total Spend) */}
+        <Card className="bg-white border border-border/80 rounded-xl shadow-2xs hover:shadow-xs transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <CreditCard className="h-4 w-4" />
+              </div>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100">
+                Revenue
+              </span>
+            </div>
+            <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              {formatCurrency(stats?.totalAmountPaid ?? 0)}
+            </p>
+            <p className="text-xs font-semibold text-slate-600 mt-0.5">Lifetime Purchase (LTV)</p>
+            <p className="text-[11px] text-muted-foreground mt-1 truncate">Total verified receipts</p>
+          </CardContent>
+        </Card>
+
+        {/* 5. Average Order Value & Inquiries */}
+        <Card className="bg-white border border-border/80 rounded-xl shadow-2xs hover:shadow-xs transition-shadow col-span-2 lg:col-span-1">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="h-8 w-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                <TrendingUp className="h-4 w-4" />
+              </div>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-100">
+                AOV
+              </span>
+            </div>
+            <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              {formatCurrency(stats?.averageOrderValue ?? 0)}
+            </p>
+            <p className="text-xs font-semibold text-slate-600 mt-0.5">Average Order Value</p>
+            <p className="text-[11px] text-muted-foreground mt-1 truncate">
+              {consultations.length} Consultations • {chatSessions.length} Support
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Main Content Layout: Profile Sidebar + Activity Hub */}
+      {/* ── Main Layout: Profile Identity Details + Multi-Tab Activity Hub ──── */}
       <div className="flex flex-col xl:flex-row gap-5 items-start">
-        {/* Left Column: Contact & Profile Details */}
-        <div className="w-full xl:w-[320px] shrink-0 space-y-4">
-          <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
-            <CardHeader className="bg-slate-50/40 border-b border-slate-100 py-3 px-4">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider flex items-center gap-2 text-slate-700">
-                <UserCheck className="h-4 w-4 text-slate-600" /> Contact & Account Information
+        {/* Left Column: Account, Contact, Business & Compliance ──────────────── */}
+        <div className="w-full xl:w-[340px] shrink-0 space-y-4">
+          {/* Contact Details Card */}
+          <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3 px-4">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-700">
+                <UserCheck className="h-4 w-4 text-primary" /> Contact Information
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-3 text-sm">
               {/* Email */}
-              <div className="flex items-start justify-between gap-2 p-2.5 rounded-md bg-slate-50/60 border border-slate-100">
+              <div className="flex items-start justify-between gap-2 p-2.5 rounded-lg bg-slate-50 border border-slate-100">
                 <div className="flex items-center gap-2.5 overflow-hidden">
-                  <div className="h-8 w-8 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
-                    <Mail className="h-4 w-4" />
+                  <div className="h-8 w-8 rounded-md bg-white border border-slate-200 text-slate-700 flex items-center justify-center shrink-0">
+                    <Mail className="h-4 w-4 text-slate-600" />
                   </div>
                   <div className="overflow-hidden">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Email Address</p>
-                    <p className="font-medium text-xs text-slate-900 truncate" title={user.email}>{user.email || "No email"}</p>
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Primary Email</p>
+                    <p className="font-semibold text-xs text-slate-900 truncate" title={user.email}>
+                      {user.email || "No email"}
+                    </p>
                   </div>
                 </div>
                 {user.email && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7 shrink-0 text-slate-400 hover:text-slate-700" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 text-slate-400 hover:text-slate-700"
                     onClick={() => copyToClipboard(user.email, "Email")}
                   >
                     {copiedField === "Email" ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
@@ -244,21 +492,21 @@ export default function UserDetailsPage() {
               </div>
 
               {/* Phone */}
-              <div className="flex items-start justify-between gap-2 p-2.5 rounded-md bg-slate-50/60 border border-slate-100">
+              <div className="flex items-start justify-between gap-2 p-2.5 rounded-lg bg-slate-50 border border-slate-100">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-md bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
-                    <Phone className="h-4 w-4" />
+                  <div className="h-8 w-8 rounded-md bg-white border border-slate-200 text-slate-700 flex items-center justify-center shrink-0">
+                    <Phone className="h-4 w-4 text-slate-600" />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Phone Number</p>
-                    <p className="font-medium text-xs text-slate-900">{user.phone || "Not provided"}</p>
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Mobile Number</p>
+                    <p className="font-semibold text-xs text-slate-900">{user.phone || "Not provided"}</p>
                   </div>
                 </div>
                 {user.phone && (
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7 shrink-0 text-slate-400 hover:text-slate-700" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 text-slate-400 hover:text-slate-700"
                     onClick={() => copyToClipboard(user.phone, "Phone")}
                   >
                     {copiedField === "Phone" ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
@@ -266,21 +514,29 @@ export default function UserDetailsPage() {
                 )}
               </div>
 
+              {/* Alternate Phone */}
+              {user.alternatePhone && (
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+                  <span className="text-muted-foreground">Alternate Phone</span>
+                  <span className="font-semibold text-slate-900">{user.alternatePhone}</span>
+                </div>
+              )}
+
               {/* Timestamps */}
-              <div className="grid grid-cols-2 gap-2 pt-0.5">
-                <div className="p-2.5 rounded-md bg-slate-50/60 border border-slate-100">
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
                   <p className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
                     <Calendar className="h-3 w-3" /> Registered
                   </p>
-                  <p className="font-medium text-xs text-slate-800 mt-1">
+                  <p className="font-semibold text-xs text-slate-800 mt-1">
                     {user.createdAt ? format(new Date(user.createdAt), "MMM d, yyyy") : "N/A"}
                   </p>
                 </div>
-                <div className="p-2.5 rounded-md bg-slate-50/60 border border-slate-100">
+                <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
                   <p className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3 w-3" /> Last Active
                   </p>
-                  <p className="font-medium text-xs text-slate-800 mt-1">
+                  <p className="font-semibold text-xs text-slate-800 mt-1">
                     {user.lastLoginAt ? format(new Date(user.lastLoginAt), "MMM d, HH:mm") : "Recent"}
                   </p>
                 </div>
@@ -288,97 +544,198 @@ export default function UserDetailsPage() {
             </CardContent>
           </Card>
 
-          {/* Quick Summary Card */}
-          <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden">
-            <CardHeader className="bg-slate-50/40 border-b border-slate-100 py-3 px-4">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-700">Account Health & Risk</CardTitle>
+          {/* Business & Regulatory Details Card */}
+          <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3 px-4">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-700">
+                <Building2 className="h-4 w-4 text-primary" /> Business & Compliance
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-2.5 text-xs">
               <div className="flex justify-between items-center py-1 border-b border-slate-100">
-                <span className="text-muted-foreground">Account Verification</span>
-                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-medium text-[10px]">
-                  Verified
-                </Badge>
+                <span className="text-muted-foreground">Company / Organization</span>
+                <span className="font-bold text-slate-900">{user.companyName || "Individual Account"}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-slate-100">
-                <span className="text-muted-foreground">Inquiries / Consultations</span>
-                <span className="font-semibold text-slate-900">{consultations.length}</span>
+                <span className="text-muted-foreground">Industry Category</span>
+                <span className="font-semibold text-slate-900">{user.industryCategory || "Food & Beverage"}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-slate-100">
+                <span className="text-muted-foreground">FSSAI License</span>
+                <span className="font-mono font-bold text-slate-900">{user.fssaiNumber || "Not Provided"}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-slate-100">
+                <span className="text-muted-foreground">GSTIN Number</span>
+                <span className="font-mono font-bold text-slate-900">{user.gstNumber || "Unregistered"}</span>
               </div>
               <div className="flex justify-between items-center py-1">
-                <span className="text-muted-foreground">Abandoned Cart Items</span>
-                <span className="font-semibold text-slate-900">{cart?.items?.length || 0}</span>
+                <span className="text-muted-foreground">Customer Segment</span>
+                <Badge variant="secondary" className="bg-slate-100 text-slate-800 text-[10px] font-bold">
+                  {user.customerSegment || "INDIVIDUAL"}
+                </Badge>
               </div>
             </CardContent>
           </Card>
+
+          {/* Billing & Shipping Addresses Card */}
+          {(user.billingAddress?.city || user.shippingAddress?.city || user.address) && (
+            <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3 px-4">
+                <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-700">
+                  <MapPin className="h-4 w-4 text-primary" /> Registered Addresses
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3 text-xs">
+                {user.billingAddress?.city && (
+                  <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Billing Address</p>
+                    <p className="font-medium text-slate-800 mt-1">
+                      {user.billingAddress.street && `${user.billingAddress.street}, `}
+                      {user.billingAddress.city}, {user.billingAddress.state} - {user.billingAddress.pincode}
+                    </p>
+                  </div>
+                )}
+                {user.shippingAddress?.city && (
+                  <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Sample Pickup Address</p>
+                    <p className="font-medium text-slate-800 mt-1">
+                      {user.shippingAddress.street && `${user.shippingAddress.street}, `}
+                      {user.shippingAddress.city}, {user.shippingAddress.state} - {user.shippingAddress.pincode}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        {/* Right Column: Multi-Tab Detailed Activity Hub */}
-        <div className="flex-1 min-w-0 w-full space-y-3">
+        {/* Right Column: Complete Order History, Payments, Activities, Notes Hub ── */}
+        <div className="flex-1 min-w-0 w-full space-y-4">
           <Tabs defaultValue="bookings" className="w-full">
-            <TabsList className="bg-white border border-border/80 shadow-2xs p-1 rounded-lg inline-flex w-full sm:w-auto h-auto flex-wrap gap-1">
-              <TabsTrigger value="bookings" className="text-xs px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all">
+            <TabsList className="bg-white border border-border/80 shadow-2xs p-1 rounded-xl inline-flex w-full sm:w-auto h-auto flex-wrap gap-1">
+              <TabsTrigger
+                value="bookings"
+                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+              >
                 Bookings ({bookings.length})
               </TabsTrigger>
-              <TabsTrigger value="payments" className="text-xs px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all">
+              <TabsTrigger
+                value="payments"
+                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+              >
                 Payments ({payments.length})
               </TabsTrigger>
-              <TabsTrigger value="cart" className="text-xs px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all">
-                Cart Items ({cart?.items?.length || 0})
+              <TabsTrigger
+                value="activities"
+                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+              >
+                Activity Timeline ({activities.length})
               </TabsTrigger>
-              <TabsTrigger value="consultations" className="text-xs px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-white font-medium rounded-md transition-all">
+              <TabsTrigger
+                value="notes"
+                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+              >
+                Staff Notes ({user.adminNotes?.length || 0})
+              </TabsTrigger>
+              <TabsTrigger
+                value="consultations"
+                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+              >
                 Consultations ({consultations.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="support"
+                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+              >
+                Support Chats ({chatSessions.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="cart"
+                className="text-xs px-3.5 py-2 data-[state=active]:bg-primary data-[state=active]:text-white font-bold rounded-lg transition-all"
+              >
+                Cart ({cart?.items?.length || 0})
               </TabsTrigger>
             </TabsList>
 
-            {/* Bookings Tab */}
-            <TabsContent value="bookings" className="mt-3">
-              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[360px]">
-                {bookings.length === 0 ? (
+            {/* ── Tab 1: Complete Booking History ────────────────────────────── */}
+            <TabsContent value="bookings" className="mt-3 space-y-3">
+              {/* Filter Pills */}
+              <div className="flex items-center gap-1.5 flex-wrap bg-slate-100/80 p-1.5 rounded-xl text-xs font-semibold">
+                <span className="text-slate-500 text-[11px] px-2 flex items-center gap-1">
+                  <Filter className="h-3 w-3" /> Filter:
+                </span>
+                {(["ALL", "COMPLETED", "PENDING", "UNPAID", "CANCELLED"] as const).map((filterVal) => (
+                  <button
+                    key={filterVal}
+                    type="button"
+                    onClick={() => setBookingFilter(filterVal)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs font-bold transition-all",
+                      bookingFilter === filterVal ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                    )}
+                  >
+                    {filterVal === "ALL" && `All Orders (${bookings.length})`}
+                    {filterVal === "COMPLETED" && `Completed (${stats?.completedBookings || 0})`}
+                    {filterVal === "PENDING" && `In Progress (${stats?.pendingBookings || 0})`}
+                    {filterVal === "UNPAID" && `Unpaid / Due (${stats?.unpaidBookings || 0})`}
+                    {filterVal === "CANCELLED" && `Cancelled (${stats?.cancelledBookings || 0})`}
+                  </button>
+                ))}
+              </div>
+
+              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden min-h-[380px]">
+                {filteredBookings.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
                     <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
                       <Calendar className="h-6 w-6 text-slate-400" />
                     </div>
-                    <p className="font-semibold text-slate-900">No bookings placed yet</p>
-                    <p className="text-xs text-muted-foreground mt-1">When this client orders lab testing or packages, they will show up here.</p>
+                    <p className="font-bold text-slate-900">No bookings match this filter</p>
+                    <p className="text-xs text-muted-foreground mt-1">Try switching back to "All Orders" to view full history.</p>
                   </div>
                 ) : (
-                  <div className="w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                  <div className="w-full overflow-x-auto">
                     <Table className="w-full">
                       <TableHeader>
-                        <TableRow className="bg-slate-50">
-                          <TableHead className="py-3 px-3 text-xs">Booking ID</TableHead>
-                          <TableHead className="py-3 px-3 text-xs">Date</TableHead>
-                          <TableHead className="py-3 px-3 text-xs">Product / Package</TableHead>
-                          <TableHead className="py-3 px-3 text-xs hidden md:table-cell">Laboratory</TableHead>
-                          <TableHead className="py-3 px-3 text-xs">Payment</TableHead>
-                          <TableHead className="py-3 px-3 text-xs">Status</TableHead>
-                          <TableHead className="py-3 px-3 text-xs text-right">Total</TableHead>
-                          <TableHead className="py-3 px-3 text-xs text-right">Action</TableHead>
+                        <TableRow className="bg-slate-50 text-[11px]">
+                          <TableHead className="py-3 px-3">Booking ID</TableHead>
+                          <TableHead className="py-3 px-3">Date Placed</TableHead>
+                          <TableHead className="py-3 px-3">Test / Package Items</TableHead>
+                          <TableHead className="py-3 px-3 hidden md:table-cell">Laboratory</TableHead>
+                          <TableHead className="py-3 px-3">Payment</TableHead>
+                          <TableHead className="py-3 px-3">Status</TableHead>
+                          <TableHead className="py-3 px-3 text-right">Amount Paid</TableHead>
+                          <TableHead className="py-3 px-3 text-right">Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {bookings.map((b: any) => {
+                        {filteredBookings.map((b: any) => {
                           const displayId = `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`;
-                          const itemSummary = b.items?.[0]?.packageId?.name 
-                            || b.items?.[0]?.testId?.name 
-                            || b.items?.[0]?.testId?.testName 
-                            || (b.items?.length > 1 ? `${b.items.length} Test Items` : "Diagnostic Service");
-                          const isPaid = ['SUCCESS', 'PAID'].includes(String(b.paymentStatus || '').toUpperCase()) || String(b.status).toUpperCase() === 'COMPLETED';
+                          const itemSummary =
+                            b.items?.[0]?.packageId?.name ||
+                            b.items?.[0]?.testId?.name ||
+                            b.items?.[0]?.testId?.testName ||
+                            (b.items?.length > 1 ? `${b.items.length} Test Items` : "Diagnostic Service");
+                          const isPaid =
+                            ["SUCCESS", "PAID"].includes(String(b.paymentStatus || "").toUpperCase()) ||
+                            String(b.status).toUpperCase() === "COMPLETED";
 
                           return (
-                            <TableRow 
-                              key={b._id} 
+                            <TableRow
+                              key={b._id}
                               className="hover:bg-slate-50/60 cursor-pointer transition-colors"
                               onClick={() => navigate(`/admin/bookings/${b._id}`)}
                             >
-                              <TableCell className="py-3 px-3 font-mono text-xs font-semibold text-slate-900">{displayId}</TableCell>
+                              <TableCell className="py-3 px-3 font-mono text-xs font-bold text-slate-900">{displayId}</TableCell>
                               <TableCell className="py-3 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                                {b.createdAt ? format(new Date(b.createdAt), "MMM d, yyyy") : "N/A"}
+                                {b.createdAt ? format(new Date(b.createdAt), "MMM d, yyyy • h:mm a") : "N/A"}
                               </TableCell>
-                              <TableCell className="py-3 px-3 text-xs font-medium text-slate-800 max-w-[200px] truncate" title={itemSummary}>
+                              <TableCell className="py-3 px-3 text-xs font-semibold text-slate-800 max-w-[200px] truncate" title={itemSummary}>
                                 {itemSummary}
                               </TableCell>
-                              <TableCell className="py-3 px-3 text-xs text-muted-foreground hidden md:table-cell max-w-[140px] truncate" title={b.labId?.labName || "Litmus Smart Allocation"}>
+                              <TableCell
+                                className="py-3 px-3 text-xs text-muted-foreground hidden md:table-cell max-w-[140px] truncate"
+                                title={b.labId?.labName || "Litmus Smart Allocation"}
+                              >
                                 {b.labId?.labName || "Litmus Smart Allocation"}
                               </TableCell>
                               <TableCell className="py-3 px-3">
@@ -387,20 +744,20 @@ export default function UserDetailsPage() {
                               <TableCell className="py-3 px-3">
                                 <StatusBadge status={b.status || "Pending"} />
                               </TableCell>
-                              <TableCell className="py-3 px-3 text-right text-xs font-bold text-slate-900 whitespace-nowrap">
+                              <TableCell className="py-3 px-3 text-right text-xs font-black text-slate-900 whitespace-nowrap">
                                 {formatCurrency(b.totalAmount || 0)}
                               </TableCell>
                               <TableCell className="py-3 px-3 text-right">
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-7 px-2 text-xs"
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs font-semibold hover:bg-slate-100"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     navigate(`/admin/bookings/${b._id}`);
                                   }}
                                 >
-                                  <Eye className="h-3.5 w-3.5 mr-1" /> View
+                                  <Eye className="h-3.5 w-3.5 mr-1 text-slate-600" /> View
                                 </Button>
                               </TableCell>
                             </TableRow>
@@ -413,52 +770,52 @@ export default function UserDetailsPage() {
               </Card>
             </TabsContent>
 
-            {/* Payments Tab */}
+            {/* ── Tab 2: Payments & Invoices ──────────────────────────────────── */}
             <TabsContent value="payments" className="mt-3">
-              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[360px]">
+              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden min-h-[380px]">
                 {payments.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
                     <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
                       <CreditCard className="h-6 w-6 text-slate-400" />
                     </div>
-                    <p className="font-semibold text-slate-900">No payment records found</p>
-                    <p className="text-xs text-muted-foreground mt-1">Payment transactions and gateway receipts will appear here once processed.</p>
+                    <p className="font-bold text-slate-900">No payment records found</p>
+                    <p className="text-xs text-muted-foreground mt-1">Payment transactions and receipts will appear here once processed.</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-slate-50">
-                          <TableHead>Transaction ID</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Linked Booking</TableHead>
-                          <TableHead>Method</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">Amount</TableHead>
+                        <TableRow className="bg-slate-50 text-[11px]">
+                          <TableHead className="py-3 px-3">Transaction ID</TableHead>
+                          <TableHead className="py-3 px-3">Date & Time</TableHead>
+                          <TableHead className="py-3 px-3">Linked Booking</TableHead>
+                          <TableHead className="py-3 px-3">Method</TableHead>
+                          <TableHead className="py-3 px-3">Status</TableHead>
+                          <TableHead className="py-3 px-3 text-right">Amount Paid</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {payments.map((p: any) => {
                           const txnId = p.transactionId || p.razorpayPaymentId || `TXN-${String(p._id).slice(-6).toUpperCase()}`;
-                          const bkgId = p.bookingId?._id 
-                            ? `BKG-${String(p.bookingId._id).slice(-6).toUpperCase()}` 
-                            : p.bookingId 
-                              ? `BKG-${String(p.bookingId).slice(-6).toUpperCase()}` 
-                              : "N/A";
-                          const isSuccess = ['SUCCESS', 'PAID'].includes(String(p.status).toUpperCase());
+                          const bkgId = p.bookingId?._id
+                            ? `BKG-${String(p.bookingId._id).slice(-6).toUpperCase()}`
+                            : p.bookingId
+                            ? `BKG-${String(p.bookingId).slice(-6).toUpperCase()}`
+                            : "N/A";
+                          const isSuccess = ["SUCCESS", "PAID"].includes(String(p.status).toUpperCase());
 
                           return (
-                            <TableRow key={p._id} className="hover:bg-slate-50/60">
-                              <TableCell className="font-mono text-xs font-medium text-slate-900">{txnId}</TableCell>
-                              <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                                {p.createdAt ? format(new Date(p.createdAt), "MMM d, yyyy, h:mm a") : "N/A"}
+                            <TableRow key={p._id} className="hover:bg-slate-50/60 text-xs">
+                              <TableCell className="font-mono font-bold text-slate-900">{txnId}</TableCell>
+                              <TableCell className="text-muted-foreground whitespace-nowrap">
+                                {p.createdAt ? format(new Date(p.createdAt), "MMM d, yyyy • h:mm a") : "N/A"}
                               </TableCell>
-                              <TableCell className="font-mono text-xs text-primary font-medium">{bkgId}</TableCell>
-                              <TableCell className="text-xs text-slate-600 capitalize">{p.method || "Razorpay / Gateway"}</TableCell>
+                              <TableCell className="font-mono text-primary font-bold">{bkgId}</TableCell>
+                              <TableCell className="text-slate-700 capitalize font-medium">{p.method || "Online Gateway"}</TableCell>
                               <TableCell>
                                 <StatusBadge status={isSuccess ? "Paid" : p.status === "FAILED" ? "Rejected" : "Pending"} />
                               </TableCell>
-                              <TableCell className="text-right text-xs font-bold text-slate-900">
+                              <TableCell className="text-right font-black text-slate-900">
                                 {formatCurrency(p.amount || 0)}
                               </TableCell>
                             </TableRow>
@@ -471,93 +828,144 @@ export default function UserDetailsPage() {
               </Card>
             </TabsContent>
 
-            {/* Cart Tab */}
-            <TabsContent value="cart" className="mt-3">
-              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[360px]">
-                {!cart || !cart.items || cart.items.length === 0 ? (
+            {/* ── Tab 3: Unified Activity Timeline ───────────────────────────── */}
+            <TabsContent value="activities" className="mt-3">
+              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden p-5">
+                {activities.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-                    <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
-                      <ShoppingCart className="h-6 w-6 text-slate-400" />
-                    </div>
-                    <p className="font-semibold text-slate-900">Cart is empty</p>
-                    <p className="text-xs text-muted-foreground mt-1">This user does not currently have un-purchased tests in their active cart.</p>
+                    <Activity className="h-8 w-8 text-slate-400 mb-2" />
+                    <p className="font-bold text-slate-900">No recorded activities</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-slate-50">
-                          <TableHead>Test / Package Item</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead className="text-right">Price</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {cart.items.map((item: any, idx: number) => {
-                          const itemName = item.packageId?.name 
-                            || item.testId?.name 
-                            || item.testId?.testName 
-                            || "Custom Test Service";
-
-                          return (
-                            <TableRow key={idx} className="hover:bg-slate-50/60">
-                              <TableCell className="text-xs font-semibold text-slate-900">{itemName}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="text-[10px] bg-slate-50 uppercase font-semibold">
-                                  {item.itemType || "Test"}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right text-xs font-bold text-slate-900">
-                                {formatCurrency(item.price || item.packageId?.price || item.testId?.price || 0)}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
+                  <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
+                    {activities.map((act: any) => (
+                      <div key={act.id} className="relative flex items-start gap-3 text-xs">
+                        <div
+                          className={cn(
+                            "absolute -left-6 top-1 h-5 w-5 rounded-full border-2 border-white flex items-center justify-center text-white shadow-2xs",
+                            act.type === "BOOKING"
+                              ? "bg-blue-600"
+                              : act.type === "PAYMENT"
+                              ? "bg-emerald-600"
+                              : act.type === "CONSULTATION"
+                              ? "bg-purple-600"
+                              : act.type === "SUPPORT_CHAT"
+                              ? "bg-teal-600"
+                              : "bg-slate-700"
+                          )}
+                        >
+                          {act.type === "BOOKING" && <Activity className="h-2.5 w-2.5" />}
+                          {act.type === "PAYMENT" && <CreditCard className="h-2.5 w-2.5" />}
+                          {act.type === "CONSULTATION" && <MessageSquare className="h-2.5 w-2.5" />}
+                          {act.type === "SUPPORT_CHAT" && <Headphones className="h-2.5 w-2.5" />}
+                          {act.type === "REGISTRATION" && <UserCheck className="h-2.5 w-2.5" />}
+                          {act.type === "LOGIN" && <Clock className="h-2.5 w-2.5" />}
+                        </div>
+                        <div className="flex-1 bg-slate-50/70 p-3 rounded-lg border border-slate-100">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="font-bold text-slate-900">{act.title}</span>
+                            <span className="text-[10px] text-muted-foreground font-mono">
+                              {act.date ? format(new Date(act.date), "MMM d, yyyy • h:mm a") : ""}
+                            </span>
+                          </div>
+                          <p className="text-slate-600 mt-1">{act.description}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </Card>
             </TabsContent>
 
-            {/* Consultations Tab */}
+            {/* ── Tab 4: Internal Staff Notes ───────────────────────────────── */}
+            <TabsContent value="notes" className="mt-3 space-y-4">
+              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden p-4">
+                <form onSubmit={handleAddNoteSubmit} className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-primary" />
+                    <span className="text-xs font-bold text-slate-800">Add Staff / Specialist Note</span>
+                  </div>
+                  <Textarea
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
+                    placeholder="Enter private client details, testing preferences, special corporate terms, or compliance remarks..."
+                    className="min-h-[80px] text-xs resize-none"
+                  />
+                  <div className="flex justify-end">
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={!newNote.trim() || addNoteMutation.isPending}
+                      className="bg-primary hover:bg-primary/90 text-white text-xs h-8 px-4 rounded-lg font-bold"
+                    >
+                      <Send className="h-3.5 w-3.5 mr-1.5" />
+                      {addNoteMutation.isPending ? "Saving..." : "Save Staff Note"}
+                    </Button>
+                  </div>
+                </form>
+              </Card>
+
+              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden p-4">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Previous Staff Notes</h3>
+                {!user.adminNotes || user.adminNotes.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-6 text-center">No internal notes added yet for this client.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {user.adminNotes.map((n: any, idx: number) => (
+                      <div key={idx} className="p-3 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="font-bold text-slate-900">{n.authorName || "Litmus Specialist"}</span>
+                          <span className="text-[10px] text-muted-foreground font-mono">
+                            {n.createdAt ? format(new Date(n.createdAt), "MMM d, yyyy • h:mm a") : ""}
+                          </span>
+                        </div>
+                        <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{n.note}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+
+            {/* ── Tab 5: Consultations & Inquiries ───────────────────────────── */}
             <TabsContent value="consultations" className="mt-3">
-              <Card className="border border-border/80 rounded-lg shadow-2xs bg-white overflow-hidden min-h-[360px]">
+              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden min-h-[380px]">
                 {consultations.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
                     <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
                       <MessageSquare className="h-6 w-6 text-slate-400" />
                     </div>
-                    <p className="font-semibold text-slate-900">No consultation requests</p>
-                    <p className="text-xs text-muted-foreground mt-1">This user hasn't submitted any advisory or outreach inquiries.</p>
+                    <p className="font-bold text-slate-900">No consultation requests</p>
+                    <p className="text-xs text-muted-foreground mt-1">This user hasn't submitted any advisory inquiries.</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-slate-50">
-                          <TableHead>Date</TableHead>
-                          <TableHead>Source / Topic</TableHead>
-                          <TableHead>Service of Interest</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">Action</TableHead>
+                        <TableRow className="bg-slate-50 text-[11px]">
+                          <TableHead className="py-3 px-3">Date</TableHead>
+                          <TableHead className="py-3 px-3">Source / Topic</TableHead>
+                          <TableHead className="py-3 px-3">Service of Interest</TableHead>
+                          <TableHead className="py-3 px-3">Status</TableHead>
+                          <TableHead className="py-3 px-3 text-right">Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {consultations.map((c: any) => (
-                          <TableRow key={c._id} className="hover:bg-slate-50/60">
-                            <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                          <TableRow key={c._id} className="hover:bg-slate-50/60 text-xs">
+                            <TableCell className="text-muted-foreground whitespace-nowrap">
                               {c.createdAt ? format(new Date(c.createdAt), "MMM d, yyyy") : "N/A"}
                             </TableCell>
-                            <TableCell className="text-xs font-medium text-slate-900">{c.source || "Website Advisory"}</TableCell>
-                            <TableCell className="text-xs text-slate-600">{c.service || c.topic || "General Inquiry"}</TableCell>
+                            <TableCell className="font-bold text-slate-900">{c.source || "Website Consultation"}</TableCell>
+                            <TableCell className="text-slate-600">{c.service || c.topic || "Food Safety Analysis"}</TableCell>
                             <TableCell>
-                              <Badge 
-                                variant="outline" 
-                                className={c.status === "Resolved" 
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                                  : c.status === "Contacted" 
-                                    ? "bg-blue-50 text-blue-700 border-blue-200" 
+                              <Badge
+                                variant="outline"
+                                className={
+                                  c.status === "Resolved"
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : c.status === "Contacted"
+                                    ? "bg-blue-50 text-blue-700 border-blue-200"
                                     : "bg-amber-50 text-amber-700 border-amber-200"
                                 }
                               >
@@ -565,9 +973,9 @@ export default function UserDetailsPage() {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="h-7 text-xs bg-white border border-border/80 rounded-md shadow-2xs hover:bg-slate-50"
                                 onClick={() => navigate("/admin/consultations")}
                               >
@@ -582,18 +990,305 @@ export default function UserDetailsPage() {
                 )}
               </Card>
             </TabsContent>
+
+            {/* ── Tab 6: Support Chats ────────────────────────────────────────── */}
+            <TabsContent value="support" className="mt-3">
+              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden min-h-[380px]">
+                {chatSessions.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+                    <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                      <Headphones className="h-6 w-6 text-slate-400" />
+                    </div>
+                    <p className="font-bold text-slate-900">No support chat sessions</p>
+                    <p className="text-xs text-muted-foreground mt-1">Live customer support interactions will be recorded here.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-slate-50 text-[11px]">
+                          <TableHead className="py-3 px-3">Session ID</TableHead>
+                          <TableHead className="py-3 px-3">Date</TableHead>
+                          <TableHead className="py-3 px-3">Attending Specialist</TableHead>
+                          <TableHead className="py-3 px-3">Initial Query</TableHead>
+                          <TableHead className="py-3 px-3">Status</TableHead>
+                          <TableHead className="py-3 px-3 text-right">Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {chatSessions.map((s: any) => (
+                          <TableRow key={s._id} className="hover:bg-slate-50/60 text-xs">
+                            <TableCell className="font-mono font-bold text-slate-900">{s.sessionId}</TableCell>
+                            <TableCell className="text-muted-foreground whitespace-nowrap">
+                              {s.createdAt ? format(new Date(s.createdAt), "MMM d, yyyy • h:mm a") : "N/A"}
+                            </TableCell>
+                            <TableCell className="font-semibold text-slate-800">
+                              {s.assignedAgent ? `${s.assignedAgent.firstName || ""} ${s.assignedAgent.lastName || ""}` : "Unassigned"}
+                            </TableCell>
+                            <TableCell className="max-w-[200px] truncate text-slate-600" title={s.initialQuery}>
+                              {s.initialQuery || "Live Support Consultation"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={
+                                  s.status === "RESOLVED"
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : s.status === "ACTIVE"
+                                    ? "bg-blue-50 text-blue-700 border-blue-200 animate-pulse"
+                                    : "bg-amber-50 text-amber-700 border-amber-200"
+                                }
+                              >
+                                {s.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs bg-white border border-border/80 rounded-md shadow-2xs hover:bg-slate-50"
+                                onClick={() => navigate(`/admin/live-support?openSessionId=${s.sessionId}`)}
+                              >
+                                Open in Desk
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+
+            {/* ── Tab 7: Cart & Abandoned Items ──────────────────────────────── */}
+            <TabsContent value="cart" className="mt-3">
+              <Card className="border border-border/80 rounded-xl shadow-2xs bg-white overflow-hidden min-h-[380px]">
+                {!cart || !cart.items || cart.items.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+                    <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                      <ShoppingCart className="h-6 w-6 text-slate-400" />
+                    </div>
+                    <p className="font-bold text-slate-900">Cart is empty</p>
+                    <p className="text-xs text-muted-foreground mt-1">This user does not currently have un-purchased tests in their active cart.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-slate-50 text-[11px]">
+                          <TableHead className="py-3 px-3">Test / Package Item</TableHead>
+                          <TableHead className="py-3 px-3">Type</TableHead>
+                          <TableHead className="py-3 px-3 text-right">Price</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {cart.items.map((item: any, idx: number) => {
+                          const itemName =
+                            item.packageId?.name || item.testId?.name || item.testId?.testName || "Custom Test Service";
+
+                          return (
+                            <TableRow key={idx} className="hover:bg-slate-50/60 text-xs">
+                              <TableCell className="font-bold text-slate-900">{itemName}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-[10px] bg-slate-50 uppercase font-semibold">
+                                  {item.itemType || "Test"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right font-black text-slate-900">
+                                {formatCurrency(item.price || item.packageId?.price || item.testId?.price || 0)}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
           </Tabs>
         </div>
       </div>
 
-      {/* Account Status Confirmation Dialog */}
+      {/* ── Edit Profile Modal ────────────────────────────────────────────────── */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto font-sans">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-primary" /> Edit User Profile & Business Details
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveEdit} className="space-y-4 pt-2 text-xs">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="font-bold text-slate-700">First Name</label>
+                <Input
+                  value={editForm.firstName}
+                  onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                  className="h-8.5 text-xs mt-1"
+                  required
+                />
+              </div>
+              <div>
+                <label className="font-bold text-slate-700">Last Name</label>
+                <Input
+                  value={editForm.lastName}
+                  onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                  className="h-8.5 text-xs mt-1"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="font-bold text-slate-700">Phone</label>
+                <Input
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  className="h-8.5 text-xs mt-1"
+                  required
+                />
+              </div>
+              <div>
+                <label className="font-bold text-slate-700">Alternate Phone</label>
+                <Input
+                  value={editForm.alternatePhone}
+                  onChange={(e) => setEditForm({ ...editForm, alternatePhone: e.target.value })}
+                  className="h-8.5 text-xs mt-1"
+                  placeholder="+91..."
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="font-bold text-slate-700">Company / Organization</label>
+                <Input
+                  value={editForm.companyName}
+                  onChange={(e) => setEditForm({ ...editForm, companyName: e.target.value })}
+                  className="h-8.5 text-xs mt-1"
+                  placeholder="e.g. Acme Foods Ltd"
+                />
+              </div>
+              <div>
+                <label className="font-bold text-slate-700">Industry Category</label>
+                <Input
+                  value={editForm.industryCategory}
+                  onChange={(e) => setEditForm({ ...editForm, industryCategory: e.target.value })}
+                  className="h-8.5 text-xs mt-1"
+                  placeholder="e.g. Dairy, Spices, Bakery"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="font-bold text-slate-700">FSSAI License Number</label>
+                <Input
+                  value={editForm.fssaiNumber}
+                  onChange={(e) => setEditForm({ ...editForm, fssaiNumber: e.target.value })}
+                  className="h-8.5 text-xs mt-1"
+                  placeholder="14-digit FSSAI"
+                />
+              </div>
+              <div>
+                <label className="font-bold text-slate-700">GSTIN Tax ID</label>
+                <Input
+                  value={editForm.gstNumber}
+                  onChange={(e) => setEditForm({ ...editForm, gstNumber: e.target.value })}
+                  className="h-8.5 text-xs mt-1"
+                  placeholder="15-character GSTIN"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="font-bold text-slate-700">Customer Segment</label>
+                <select
+                  value={editForm.customerSegment}
+                  onChange={(e) => setEditForm({ ...editForm, customerSegment: e.target.value })}
+                  className="w-full h-8.5 mt-1 rounded-md border border-input bg-background px-3 text-xs"
+                >
+                  <option value="INDIVIDUAL">Individual</option>
+                  <option value="FOOD_BUSINESS">Food Business</option>
+                  <option value="ENTERPRISE">Enterprise</option>
+                  <option value="LAB_PARTNER">Lab Partner</option>
+                </select>
+              </div>
+              <div>
+                <label className="font-bold text-slate-700">KYC Verification Status</label>
+                <select
+                  value={editForm.kycStatus}
+                  onChange={(e) => setEditForm({ ...editForm, kycStatus: e.target.value })}
+                  className="w-full h-8.5 mt-1 rounded-md border border-input bg-background px-3 text-xs"
+                >
+                  <option value="PENDING">Pending Verification</option>
+                  <option value="VERIFIED">Verified</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Billing Address */}
+            <div className="pt-2 border-t border-slate-200">
+              <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Primary Billing Address</span>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <Input
+                  placeholder="Street / Facility Address"
+                  value={editForm.billingStreet}
+                  onChange={(e) => setEditForm({ ...editForm, billingStreet: e.target.value })}
+                  className="col-span-2 h-8 text-xs"
+                />
+                <Input
+                  placeholder="City"
+                  value={editForm.billingCity}
+                  onChange={(e) => setEditForm({ ...editForm, billingCity: e.target.value })}
+                  className="h-8 text-xs"
+                />
+                <Input
+                  placeholder="State"
+                  value={editForm.billingState}
+                  onChange={(e) => setEditForm({ ...editForm, billingState: e.target.value })}
+                  className="h-8 text-xs"
+                />
+                <Input
+                  placeholder="Pincode"
+                  value={editForm.billingPincode}
+                  onChange={(e) => setEditForm({ ...editForm, billingPincode: e.target.value })}
+                  className="h-8 text-xs"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-3">
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowEditModal(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={updateProfileMutation.isPending}
+                className="bg-primary hover:bg-primary/90 text-white font-bold"
+              >
+                {updateProfileMutation.isPending ? "Saving Changes..." : "Save Profile Details"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Account Status Confirmation Dialog ─────────────────────────────────── */}
       <ConfirmDialog
         open={showStatusConfirm}
         onOpenChange={setShowStatusConfirm}
         title={user.isActive ? "Suspend User Account" : "Re-activate User Account"}
-        description={user.isActive 
-          ? `Are you sure you want to suspend access for ${user.firstName} ${user.lastName}? They will no longer be able to place bookings or log in.`
-          : `Are you sure you want to activate ${user.firstName} ${user.lastName}'s account?`
+        description={
+          user.isActive
+            ? `Are you sure you want to suspend access for ${user.firstName} ${user.lastName}? They will no longer be able to place bookings or log in.`
+            : `Are you sure you want to activate ${user.firstName} ${user.lastName}'s account?`
         }
         confirmText={user.isActive ? "Suspend Account" : "Activate Account"}
         variant={user.isActive ? "destructive" : "default"}
