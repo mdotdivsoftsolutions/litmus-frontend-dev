@@ -1,15 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Headphones, MessageSquare, User, Clock, CheckCheck, Send, Search,
   Volume2, VolumeX, Sparkles, CheckCircle2, FileText, UserCheck, Lock, Star, Phone, Mail, Info,
   ChevronLeft, ChevronRight, Bell, BellOff, X, Users, UserPlus, ArrowRightLeft, Shield,
-  Activity, Check, AlertCircle, RefreshCw
+  Activity, Check, AlertCircle, RefreshCw, Loader2
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -19,6 +20,61 @@ import { authApi } from "@/lib/api/auth";
 import { apiClient } from "@/lib/api/axios";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+
+// ── Animated Skeleton Components for Instant Feedback ───────────────────────────
+function SessionCardSkeleton() {
+  return (
+    <div className="w-full p-2.5 rounded-xl border border-slate-200/80 bg-white space-y-2 animate-pulse shadow-2xs">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Skeleton className="h-3.5 w-24 rounded-md bg-slate-200" />
+          <Skeleton className="h-3 w-12 rounded-full bg-slate-100" />
+        </div>
+        <Skeleton className="h-3 w-10 rounded-md bg-slate-200" />
+      </div>
+      <div className="flex items-center justify-between pt-1 border-t border-slate-100/80">
+        <Skeleton className="h-3 w-20 rounded-md bg-slate-100" />
+        <Skeleton className="h-4 w-20 rounded-md bg-slate-200" />
+      </div>
+    </div>
+  );
+}
+
+function IncomingCardSkeleton() {
+  return (
+    <div className="p-3 bg-white border border-slate-200/80 rounded-xl space-y-2.5 animate-pulse ring-1 ring-rose-500/10 shadow-2xs">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <Skeleton className="h-4 w-4 rounded-full bg-rose-200" />
+          <Skeleton className="h-3.5 w-24 rounded-md bg-slate-200" />
+        </div>
+        <Skeleton className="h-4 w-16 rounded-full bg-rose-100" />
+      </div>
+      <Skeleton className="h-8 w-full rounded-lg bg-slate-100" />
+      <div className="flex items-center justify-between pt-1">
+        <Skeleton className="h-3 w-14 rounded-md bg-slate-200" />
+        <Skeleton className="h-7 w-24 rounded-lg bg-primary/20" />
+      </div>
+    </div>
+  );
+}
+
+function TeamMemberSkeleton() {
+  return (
+    <div className="p-2.5 bg-white border border-slate-200/80 rounded-xl space-y-2 animate-pulse shadow-2xs">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          <Skeleton className="h-8 w-8 rounded-lg bg-slate-200" />
+          <div className="space-y-1">
+            <Skeleton className="h-3.5 w-28 rounded-md bg-slate-200" />
+            <Skeleton className="h-2.5 w-20 rounded-md bg-slate-100" />
+          </div>
+        </div>
+        <Skeleton className="h-4 w-14 rounded-full bg-slate-100" />
+      </div>
+    </div>
+  );
+}
 
 interface ChatMessage {
   _id?: string;
@@ -130,7 +186,7 @@ export default function LiveSupportPage() {
   }, []);
 
   // Fetch All Registered Employees / Specialists
-  const { data: employeesData, refetch: refetchEmployees } = useQuery({
+  const { data: employeesData, isLoading: isLoadingEmployees, refetch: refetchEmployees } = useQuery({
     queryKey: ["allEmployeesDirectory"],
     queryFn: async () => {
       const res = await apiClient.get("/employees");
@@ -140,6 +196,19 @@ export default function LiveSupportPage() {
   });
 
   const employees: any[] = employeesData || [];
+
+  // Filtered employees for Team directory and for Transfer dialog
+  const filteredEmployees = useMemo(() => {
+    return employees.filter((emp: any) => {
+      const fullName = `${emp.firstName || ""} ${emp.lastName || ""}`.toLowerCase();
+      const designation = (emp.designation || emp.role || "").toLowerCase();
+      const email = (emp.email || "").toLowerCase();
+      const phone = (emp.phone || "").toLowerCase();
+      const q = searchQuery.toLowerCase().trim();
+      if (!q) return true;
+      return fullName.includes(q) || designation.includes(q) || email.includes(q) || phone.includes(q);
+    });
+  }, [employees, searchQuery]);
 
   // Helper: Get employee live presence
   const getEmployeePresence = useCallback(
@@ -171,34 +240,117 @@ export default function LiveSupportPage() {
     return matchesSearch && matchesStatus;
   });
 
-  // Fetch Sessions Query
-  const { data: sessionsData, refetch: refetchSessions } = useQuery({
-    queryKey: ["chatSessions", activeTab, searchQuery],
-    queryFn: async () => {
+  // Fetch Infinite Sessions Query (Scalable 20 per page Infinite Scroll)
+  const {
+    data: infiniteSessionsData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isLoadingSessions,
+    refetch: refetchSessions,
+  } = useInfiniteQuery({
+    queryKey: ["chatSessionsInfinite", activeTab, searchQuery, currentUser?._id],
+    queryFn: async ({ pageParam = 1 }) => {
       let statusParam: string | undefined = undefined;
       let agentIdParam: string | undefined = undefined;
 
-      if (activeTab === "my_chats") {
-        statusParam = "ACTIVE";
+      if (activeTab === "incoming") {
+        statusParam = "QUEUED";
+      } else if (activeTab === "my_chats") {
         agentIdParam = currentUser?._id;
       } else if (activeTab === "all_chats") {
         statusParam = "ALL";
-      } else if (activeTab === "history") {
-        statusParam = "RESOLVED";
       }
 
-      const params: any = { page: 1, limit: 50 };
+      const params: any = { page: pageParam, limit: 20 };
       if (statusParam && statusParam !== "ALL") params.status = statusParam;
       if (agentIdParam) params.agentId = agentIdParam;
       if (searchQuery) params.search = searchQuery;
 
       const res = await apiClient.get("/chat/sessions", { params });
-      return res.data?.data || [];
+      return res.data;
     },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { page, pages } = lastPage?.pagination || {};
+      if (page && pages && page < pages) {
+        return page + 1;
+      }
+      return undefined;
+    },
+    enabled: activeTab !== "staff" && Boolean(currentUser?._id || activeTab === "all_chats" || activeTab === "incoming"),
     refetchInterval: 15000,
   });
 
-  const sessions = sessionsData || [];
+  const rawSessions = useMemo(() => {
+    return (infiniteSessionsData?.pages.flatMap((p) => p?.data || []) || []) as any[];
+  }, [infiniteSessionsData]);
+
+  const totalSessionsCount = infiniteSessionsData?.pages[0]?.pagination?.total ?? rawSessions.length;
+
+  // Merge real-time socket incoming requests with database queued sessions
+  const incomingMergedSessions = useMemo(() => {
+    if (activeTab !== "incoming") return [];
+
+    const socketItems = incomingRequests.map((req) => ({
+      sessionId: req.sessionId,
+      userType: req.userType,
+      userId: req.user,
+      guestInfo: req.guestInfo,
+      status: "QUEUED",
+      startedAt: req.queuedAt,
+      queuedAt: req.queuedAt,
+      lastMessageAt: req.queuedAt,
+      initialQuery: req.initialQuery,
+      isDirectRoute: req.isDirectRoute,
+    }));
+
+    const seen = new Set<string>();
+    const combined: any[] = [];
+
+    for (const item of socketItems) {
+      if (!seen.has(item.sessionId)) {
+        seen.add(item.sessionId);
+        combined.push(item);
+      }
+    }
+
+    for (const item of rawSessions) {
+      if (!seen.has(item.sessionId)) {
+        seen.add(item.sessionId);
+        combined.push(item);
+      }
+    }
+
+    return combined;
+  }, [activeTab, incomingRequests, rawSessions]);
+
+  const displayedSessions = activeTab === "incoming" ? incomingMergedSessions : rawSessions;
+  const sessions = displayedSessions;
+
+  // Infinite Scroll Sentinel Intersection Observer
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage || activeTab === "staff") return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "150px" }
+    );
+
+    const el = loadMoreRef.current;
+    if (el) observer.observe(el);
+
+    return () => {
+      if (el) observer.unobserve(el);
+      observer.disconnect();
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, activeTab]);
 
   // Fetch Selected Session Details
   const { data: selectedSessionData, refetch: refetchSelectedSession } = useQuery({
@@ -566,12 +718,12 @@ export default function LiveSupportPage() {
                     "py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 relative outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0",
                     activeTab === "incoming" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
                   )}
-                  title="Live Incoming Requests"
+                  title="Incoming Support Requests"
                 >
                   <span>Incoming</span>
-                  {incomingRequests.length > 0 && (
+                  {(incomingRequests.length > 0 || (activeTab === "incoming" && totalSessionsCount > 0)) && (
                     <span className="h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center animate-pulse">
-                      {incomingRequests.length}
+                      {incomingRequests.length > 0 ? incomingRequests.length : totalSessionsCount}
                     </span>
                   )}
                 </button>
@@ -586,6 +738,11 @@ export default function LiveSupportPage() {
                   title="My Attended Chats"
                 >
                   <span>Mine</span>
+                  {activeTab === "my_chats" && totalSessionsCount > 0 && (
+                    <span className="h-4 min-w-[16px] px-1 rounded-full bg-primary/10 text-primary text-[9px] font-bold flex items-center justify-center">
+                      {totalSessionsCount}
+                    </span>
+                  )}
                 </button>
 
                 <button
@@ -607,7 +764,7 @@ export default function LiveSupportPage() {
                     "py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 relative outline-none focus:outline-none focus-visible:outline-none focus:ring-0 select-none border-0",
                     activeTab === "staff" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
                   )}
-                  title="Specialists Roster & Live Status"
+                  title="Team Specialists Directory"
                 >
                   <Users className="h-3 w-3" />
                   <span>Team</span>
@@ -615,70 +772,111 @@ export default function LiveSupportPage() {
               </div>
             </div>
 
-            {/* Search Bar (Only shown for conversation lists) */}
-            {activeTab !== "staff" && (
-              <div className="p-3 border-b border-slate-200 bg-white">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search name, phone, session..."
-                    className="h-8 pl-8 bg-slate-50 border-slate-200 text-xs rounded-xl text-slate-900 placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary"
-                  />
-                </div>
+            {/* Search Bar (Works for all conversation views and Team directory) */}
+            <div className="p-3 border-b border-slate-200 bg-white">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={
+                    activeTab === "staff"
+                      ? "Search specialists by name, role..."
+                      : "Search name, phone, session ID..."
+                  }
+                  className="h-8 pl-8 pr-8 bg-slate-50 border-slate-200 text-xs rounded-xl text-slate-900 placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
-            )}
+            </div>
 
             {/* Scrollable Content (Sessions List OR Staff Team Directory) */}
             <div className="flex-1 overflow-y-auto p-2.5 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-200">
               {activeTab === "incoming" ? (
-                incomingRequests.length === 0 ? (
+                isLoadingSessions && displayedSessions.length === 0 ? (
+                  <div className="space-y-2">
+                    <IncomingCardSkeleton />
+                    <IncomingCardSkeleton />
+                    <IncomingCardSkeleton />
+                    <IncomingCardSkeleton />
+                  </div>
+                ) : displayedSessions.length === 0 ? (
                   <div className="p-6 text-center text-slate-400 space-y-2">
                     <Headphones className="h-7 w-7 mx-auto text-slate-300 stroke-1" />
                     <p className="text-xs font-semibold">No Incoming Requests</p>
                     <p className="text-[11px] text-slate-400">Incoming inquiries from website visitors will appear here live.</p>
                   </div>
                 ) : (
-                  incomingRequests.map((req) => (
-                    <Card
-                      key={req.sessionId}
-                      className="p-3 bg-white border-slate-200 hover:border-slate-300 shadow-xs space-y-2 rounded-xl transition-all ring-1 ring-rose-500/20"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5 truncate">
-                          <User className="h-3.5 w-3.5 text-primary" />
-                          <span className="truncate">{req.guestInfo?.name || req.user?.firstName || "Guest Client"}</span>
-                        </span>
-                        <Badge className="bg-rose-50 text-rose-700 border-rose-200 text-[9px] uppercase font-bold animate-pulse">
-                          LIVE QUEUE
-                        </Badge>
-                      </div>
+                  <>
+                    {displayedSessions.map((req: any) => (
+                      <Card
+                        key={req.sessionId}
+                        className="p-3 bg-white border-slate-200 hover:border-slate-300 shadow-xs space-y-2 rounded-xl transition-all ring-1 ring-rose-500/20"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5 truncate">
+                            <User className="h-3.5 w-3.5 text-primary" />
+                            <span className="truncate">{req.guestInfo?.name || req.userId?.firstName ? `${req.userId?.firstName || ""} ${req.userId?.lastName || ""}`.trim() : (req.user?.firstName ? `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() : "Guest Client")}</span>
+                          </span>
+                          <Badge className="bg-rose-50 text-rose-700 border-rose-200 text-[9px] uppercase font-bold animate-pulse">
+                            LIVE QUEUE
+                          </Badge>
+                        </div>
 
-                      {req.initialQuery && (
-                        <p className="text-xs text-slate-600 line-clamp-2 bg-slate-50 p-2 rounded-lg border border-slate-100 italic">
-                          "{req.initialQuery}"
-                        </p>
-                      )}
+                        {(req.initialQuery || req.guestInfo?.phone) && (
+                          <p className="text-xs text-slate-600 line-clamp-2 bg-slate-50 p-2 rounded-lg border border-slate-100 italic">
+                            {req.initialQuery ? `"${req.initialQuery}"` : `Phone: ${req.guestInfo?.phone || req.userId?.phone || "N/A"}`}
+                          </p>
+                        )}
 
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          <span>{new Date(req.queuedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-                        </span>
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={() => handleAcceptIncoming(req.sessionId)}
-                          className="h-7 px-3 bg-primary hover:bg-primary-deep text-white text-xs font-bold rounded-lg shadow-xs"
-                        >
-                          Accept & Assist
-                        </Button>
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{req.queuedAt || req.createdAt ? new Date(req.queuedAt || req.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Just now"}</span>
+                          </span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => handleAcceptIncoming(req.sessionId)}
+                            className="h-7 px-3 bg-primary hover:bg-primary-deep text-white text-xs font-bold rounded-lg shadow-xs"
+                          >
+                            Accept & Assist
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+
+                    {/* Infinite Scroll Sentinel & Loader */}
+                    <div ref={loadMoreRef} className="h-2" />
+                    {isFetchingNextPage && (
+                      <div className="py-2 space-y-2">
+                        <IncomingCardSkeleton />
                       </div>
-                    </Card>
-                  ))
+                    )}
+                    {!hasNextPage && displayedSessions.length >= 20 && (
+                      <p className="text-[10px] text-center text-slate-400 py-2">
+                        Loaded all {totalSessionsCount} incoming requests
+                      </p>
+                    )}
+                  </>
                 )
               ) : activeTab === "staff" ? (
+                isLoadingEmployees ? (
+                  <div className="space-y-2">
+                    <TeamMemberSkeleton />
+                    <TeamMemberSkeleton />
+                    <TeamMemberSkeleton />
+                    <TeamMemberSkeleton />
+                  </div>
+                ) : (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between px-1 text-[11px] font-bold text-slate-500">
                       <span>Specialists Directory</span>
@@ -687,13 +885,14 @@ export default function LiveSupportPage() {
                       </span>
                     </div>
 
-                    {employees.length === 0 ? (
+                    {filteredEmployees.length === 0 ? (
                       <div className="p-6 text-center text-slate-400 space-y-2">
                         <Users className="h-7 w-7 mx-auto text-slate-300 stroke-1" />
-                        <p className="text-xs font-semibold">No Staff Registered</p>
+                        <p className="text-xs font-semibold">No Specialists Found</p>
+                        <p className="text-[11px] text-slate-400">Try adjusting your search criteria.</p>
                       </div>
                     ) : (
-                      employees.map((emp: any) => {
+                      filteredEmployees.map((emp: any) => {
                         const empId = emp._id || emp.id;
                         const status = getEmployeePresence(empId);
                         const fullName = `${emp.firstName || ""} ${emp.lastName || ""}`.trim() || "Specialist";
@@ -762,14 +961,24 @@ export default function LiveSupportPage() {
                       })
                     )}
                   </div>
-                ) : sessions.length === 0 ? (
-                  <div className="p-6 text-center text-slate-400 space-y-2">
-                    <MessageSquare className="h-7 w-7 mx-auto text-slate-300 stroke-1" />
-                    <p className="text-xs font-semibold">No Conversations</p>
-                    <p className="text-[11px] text-slate-400">No sessions match this view.</p>
-                  </div>
-                ) : (
-                  sessions.map((sess: any) => {
+                )
+              ) : isLoadingSessions && sessions.length === 0 ? (
+                <div className="space-y-2">
+                  <SessionCardSkeleton />
+                  <SessionCardSkeleton />
+                  <SessionCardSkeleton />
+                  <SessionCardSkeleton />
+                  <SessionCardSkeleton />
+                </div>
+              ) : sessions.length === 0 ? (
+                <div className="p-6 text-center text-slate-400 space-y-2">
+                  <MessageSquare className="h-7 w-7 mx-auto text-slate-300 stroke-1" />
+                  <p className="text-xs font-semibold">No Conversations</p>
+                  <p className="text-[11px] text-slate-400">No sessions match this view.</p>
+                </div>
+              ) : (
+                <>
+                  {sessions.map((sess: any) => {
                     const isSelected = sess.sessionId === selectedSessionId;
                     const assignedName = sess.assignedAgent
                       ? `${sess.assignedAgent.firstName || ""} ${sess.assignedAgent.lastName || ""}`.trim()
@@ -842,10 +1051,25 @@ export default function LiveSupportPage() {
                         </div>
                       </button>
                     );
-                  })
-                )}
-              </div>
+                  })}
+
+                  {/* Infinite Scroll Sentinel & Loader */}
+                  <div ref={loadMoreRef} className="h-2" />
+                  {isFetchingNextPage && (
+                    <div className="py-2 space-y-2">
+                      <SessionCardSkeleton />
+                      <SessionCardSkeleton />
+                    </div>
+                  )}
+                  {!hasNextPage && sessions.length >= 20 && (
+                    <p className="text-[10px] text-center text-slate-400 py-2">
+                      Loaded all {totalSessionsCount} conversations
+                    </p>
+                  )}
+                </>
+              )}
             </div>
+          </div>
         )}
 
         {/* ── Column 2: Active Chat Interaction Feed ────────────────────────── */}
