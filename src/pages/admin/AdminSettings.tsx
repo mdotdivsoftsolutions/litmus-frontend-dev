@@ -25,7 +25,8 @@ import {
   Layers,
   Building2,
   Sliders,
-  ChevronRight
+  ChevronRight,
+  MessageSquare
 } from "lucide-react";
 import { toast } from "sonner";
 import { tagApi } from "@/lib/api/tag";
@@ -40,6 +41,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { PickupCoverageSettings } from "./PickupCoverageSettings";
 import { DeskNotificationSettings } from "./DeskNotificationSettings";
+import { NotificationWorkflowsSettings } from "./NotificationWorkflowsSettings";
+
 
 const baseSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -226,9 +229,11 @@ export default function AdminSettings() {
     {
       group: "Live Support & Notifications",
       items: [
+        { id: "notification-workflows", label: "Email & WhatsApp Workflows", icon: MessageSquare, count: null, desc: "Order milestones, abandoned cart & support alerts" },
         { id: "desk-notifications", label: "Desk & Alerts", icon: Settings2, count: null, desc: "Presence status, alerts & chime settings" },
       ]
     },
+
     {
       group: "Organization & Staff",
       items: [
@@ -251,7 +256,7 @@ export default function AdminSettings() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden space-y-4 animate-fade-in">
+    <div className="w-full h-auto lg:h-full flex flex-col lg:overflow-hidden space-y-4 animate-fade-in pb-8 lg:pb-0">
       {/* Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
         <div>
@@ -263,12 +268,12 @@ export default function AdminSettings() {
       </div>
 
       {/* 2-Column High-End Settings Architecture */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch flex-1 min-h-0 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch lg:flex-1 lg:min-h-0 lg:overflow-hidden">
         
         {/* Left Navigation Sidebar */}
-        <div className="lg:col-span-4 xl:col-span-3 h-full flex flex-col min-h-0">
-          <Card className="bg-white border border-slate-200/80 shadow-xs rounded-xl overflow-hidden h-full flex flex-col">
-            <div className="flex-1 overflow-y-auto p-2 space-y-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="lg:col-span-4 xl:col-span-3 lg:h-full flex flex-col lg:min-h-0">
+          <Card className="bg-white border border-slate-200/80 shadow-xs rounded-xl lg:overflow-hidden lg:h-full flex flex-col">
+            <div className="lg:flex-1 lg:overflow-y-auto p-2 space-y-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {settingsSections.map((section, sIdx) => (
                 <div key={section.group} className={sIdx > 0 ? "pt-3 border-t border-slate-100" : ""}>
                   <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -315,8 +320,8 @@ export default function AdminSettings() {
         </div>
 
         {/* Right Content Panel */}
-        <div className="lg:col-span-8 xl:col-span-9 h-full flex flex-col min-h-0">
-          <Card className="bg-white border border-slate-200/80 shadow-xs rounded-xl overflow-hidden h-full flex flex-col">
+        <div className="lg:col-span-8 xl:col-span-9 lg:h-full flex flex-col lg:min-h-0">
+          <Card className="bg-white border border-slate-200/80 shadow-xs rounded-xl lg:overflow-hidden lg:h-full flex flex-col">
             
             {/* Header with Search and Action */}
             <CardHeader className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
@@ -337,9 +342,10 @@ export default function AdminSettings() {
                   </CardDescription>
                 </div>
 
-                {!["pickup", "desk-notifications"].includes(activeTab) && (
+                {!["pickup", "desk-notifications", "notification-workflows"].includes(activeTab) && (
                   <div className="flex items-center gap-2">
                     <div className="relative w-44 sm:w-56">
+
                       <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                       <Input
                         placeholder={`Filter items...`}
@@ -360,7 +366,8 @@ export default function AdminSettings() {
               </div>
             </CardHeader>
 
-            <CardContent className="flex-1 overflow-y-auto p-4 sm:p-5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <CardContent className="lg:flex-1 lg:overflow-y-auto p-4 sm:p-5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+
               
               {/* 1. Test Classifications */}
               {activeTab === "test-types" && (
@@ -618,12 +625,20 @@ export default function AdminSettings() {
                 </div>
               )}
 
-              {/* 9. Live Desk & Notification Settings */}
+              {/* 9. Notification Workflows (Req #4 & Req #14) */}
+              {activeTab === "notification-workflows" && (
+                <div className="p-1 sm:p-2">
+                  <NotificationWorkflowsSettings />
+                </div>
+              )}
+
+              {/* 10. Live Desk & Notification Settings */}
               {activeTab === "desk-notifications" && (
                 <div className="p-2">
                   <DeskNotificationSettings />
                 </div>
               )}
+
 
             </CardContent>
           </Card>
