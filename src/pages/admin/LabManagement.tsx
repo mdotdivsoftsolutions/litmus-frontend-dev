@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Search, Edit, Eye, Filter, MoreVertical, Trash2, ChevronLeft, ChevronRight, Building2, MapPin, Phone, Mail, Star, ShieldCheck, CheckCircle2, DollarSign, ExternalLink, Copy, Check, Briefcase } from "lucide-react";
+import { Plus, Search, Edit, Eye, Filter, MoreVertical, Trash2, ChevronLeft, ChevronRight, Building2, MapPin, Phone, Mail, Star, ShieldCheck, CheckCircle2, DollarSign, ExternalLink, Copy, Check, Briefcase, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils/currency";
 
@@ -17,6 +17,7 @@ const ITEMS_PER_PAGE = 10;
 import { adminApi } from "@/lib/api/admin";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BulkImportDrawer } from "@/components/admin/BulkImportDrawer";
 
 export default function LabManagement() {
   const [search, setSearch] = useState("");
@@ -26,6 +27,7 @@ export default function LabManagement() {
   const [labToToggle, setLabToToggle] = useState<{lab: any, targetState: boolean} | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const copyToClipboard = (text: string, label: string) => {
@@ -92,7 +94,7 @@ export default function LabManagement() {
         </div>
       </div>
 
-      {/* Single-Line Top Controls: Search + Filters + Add New Lab */}
+      {/* Single-Line Top Controls: Search + Filters + Bulk Import + Add New Lab */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div className="flex flex-1 flex-wrap items-center gap-2">
           {/* Search Input */}
@@ -126,13 +128,40 @@ export default function LabManagement() {
           </Sheet>
         </div>
 
-        {/* Primary Styled Add New Lab Button */}
-        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2 self-start lg:self-auto">
-          <Link to="/admin/laboratories/new">
-            <Plus className="h-4 w-4" /> Add New Lab
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2 self-start lg:self-auto">
+          {/* Bulk Import Button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsBulkImportOpen(true)}
+            className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold shadow-sm h-10 px-3.5 gap-2"
+          >
+            <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+            Bulk Import (Excel)
+          </Button>
+
+          {/* Primary Styled Add New Lab Button */}
+          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2">
+            <Link to="/admin/laboratories/new">
+              <Plus className="h-4 w-4" /> Add New Lab
+            </Link>
+          </Button>
+        </div>
       </div>
+
+      {/* Bulk Import Drawer */}
+      <BulkImportDrawer
+        open={isBulkImportOpen}
+        onOpenChange={setIsBulkImportOpen}
+        entityType="laboratories"
+        title="Bulk Import Laboratories"
+        description="Upload an Excel sheet to bulk register partner laboratories, set credentials, accreditations, and facility details."
+        templateFileName="4_Litmus_Laboratories_Bulk_Template.xlsx"
+        templateDisplayName="4_Litmus_Laboratories_Bulk_Template.xlsx"
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["adminLabs"] });
+        }}
+      />
 
       <Card className="border border-border shadow-sm overflow-auto bg-white">
         <Table>

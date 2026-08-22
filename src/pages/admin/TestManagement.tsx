@@ -11,9 +11,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Edit, Trash2, Filter, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Eye, Tag, Beaker, FileText, CheckCircle2, IndianRupee } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Filter, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Eye, Tag, Beaker, FileText, CheckCircle2, IndianRupee, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { testApi } from "@/lib/api/test";
+import { BulkImportDrawer } from "@/components/admin/BulkImportDrawer";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -24,6 +25,7 @@ export default function TestManagement() {
   const [testToDelete, setTestToDelete] = useState<string | null>(null);
   const [selectedTest, setSelectedTest] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: testsData, isLoading } = useQuery({
@@ -68,7 +70,7 @@ export default function TestManagement() {
         </div>
       </div>
 
-      {/* Single-Line Controls: Search + Filters + Add Test Button */}
+      {/* Single-Line Controls: Search + Filters + Bulk Import + Add Test Button */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div className="flex flex-1 flex-wrap items-center gap-2">
           {/* Search Bar */}
@@ -115,13 +117,40 @@ export default function TestManagement() {
           </Sheet>
         </div>
 
-        {/* Primary Styled Add Test Button */}
-        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2 self-start lg:self-auto">
-          <Link to="/admin/tests/new">
-            <Plus className="h-4 w-4" /> Add Test
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2 self-start lg:self-auto">
+          {/* Bulk Import Button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsBulkImportOpen(true)}
+            className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold shadow-sm h-10 px-3.5 gap-2"
+          >
+            <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+            Bulk Import (Excel)
+          </Button>
+
+          {/* Primary Styled Add Test Button */}
+          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2">
+            <Link to="/admin/tests/new">
+              <Plus className="h-4 w-4" /> Add Test
+            </Link>
+          </Button>
+        </div>
       </div>
+
+      {/* Bulk Import Drawer */}
+      <BulkImportDrawer
+        open={isBulkImportOpen}
+        onOpenChange={setIsBulkImportOpen}
+        entityType="tests"
+        title="Bulk Import Tests & Protocols"
+        description="Upload an Excel sheet to bulk create new tests, configure parameter thresholds, and calculate pricing automatically."
+        templateFileName="2_Litmus_Tests_Bulk_Template.xlsx"
+        templateDisplayName="2_Litmus_Tests_Bulk_Template.xlsx"
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["adminTests"] });
+        }}
+      />
 
       <Card className="border border-border shadow-sm overflow-hidden bg-white">
         <div className="overflow-x-auto">

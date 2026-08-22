@@ -8,9 +8,10 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
-import { Plus, Edit, Trash2, MoreVertical, Package, ImageIcon, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, MoreVertical, Package, ImageIcon, ChevronLeft, ChevronRight, Eye, FileSpreadsheet } from "lucide-react";
 import { categoryApi } from "@/lib/api/category";
 import { toast } from "sonner";
+import { BulkImportDrawer } from "@/components/admin/BulkImportDrawer";
 
 export default function CategoryManagement() {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ export default function CategoryManagement() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const ITEMS_PER_PAGE = 8;
 
   const { data: categoriesData, isLoading } = useQuery({
@@ -66,7 +68,7 @@ export default function CategoryManagement() {
         </div>
       </div>
 
-      {/* Single-Line Controls: Search + Add Category Button */}
+      {/* Single-Line Controls: Search + Bulk Import + Add Category Button */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div className="relative flex-1 sm:min-w-[260px] max-w-md">
           <Input 
@@ -80,13 +82,40 @@ export default function CategoryManagement() {
           />
         </div>
 
-        {/* Primary Styled Add Category Button */}
-        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2 self-start lg:self-auto">
-          <Link to="/admin/categories/new">
-            <Plus className="h-4 w-4" /> Add Category
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2 self-start lg:self-auto">
+          {/* Bulk Import Button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsBulkImportOpen(true)}
+            className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold shadow-sm h-10 px-3.5 gap-2"
+          >
+            <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+            Bulk Import (Excel)
+          </Button>
+
+          {/* Primary Styled Add Category Button */}
+          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2">
+            <Link to="/admin/categories/new">
+              <Plus className="h-4 w-4" /> Add Category
+            </Link>
+          </Button>
+        </div>
       </div>
+
+      {/* Bulk Import Drawer */}
+      <BulkImportDrawer
+        open={isBulkImportOpen}
+        onOpenChange={setIsBulkImportOpen}
+        entityType="categories"
+        title="Bulk Import Categories"
+        description="Upload an Excel sheet to bulk create new categories or update existing categories."
+        templateFileName="1_Litmus_Categories_Bulk_Template.xlsx"
+        templateDisplayName="1_Litmus_Categories_Bulk_Template.xlsx"
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["adminCategories"] });
+        }}
+      />
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {isLoading ? (

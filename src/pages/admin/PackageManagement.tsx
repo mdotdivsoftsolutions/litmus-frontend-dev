@@ -9,10 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, Search, Edit, Trash2, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Package as PackageIcon, Eye, IndianRupee, Tag, Info, CheckSquare } from "lucide-react";
+import { Plus, Search, Edit, Trash2, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Package as PackageIcon, Eye, IndianRupee, Tag, Info, CheckSquare, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { packageApi } from "@/lib/api/package";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BulkImportDrawer } from "@/components/admin/BulkImportDrawer";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -21,11 +22,12 @@ export default function PackageManagement() {
   const [packageToDelete, setPackageToDelete] = useState<string | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<any | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: packagesData, isLoading } = useQuery({
     queryKey: ["adminPackages"],
-    queryFn: packageApi.getAllPackages,
+    queryFn: () => packageApi.getPackages({ limit: 1000 }),
   });
 
   const deleteMutation = useMutation({
@@ -33,16 +35,20 @@ export default function PackageManagement() {
     onSuccess: () => {
       toast.success("Package deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["adminPackages"] });
+      setPackageToDelete(null);
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to delete package");
     }
   });
 
-  const packages = (packagesData?.data || []).slice().sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  const packagesList = Array.isArray(packagesData?.data) ? packagesData.data : (packagesData?.data?.data || []);
+  const packages = packagesList.slice().sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
   const filtered = packages.filter((p: any) => {
-    const matchesSearch = !search || p.name?.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = !search ||
+      p.name?.toLowerCase().includes(search.toLowerCase()) ||
+      p.category?.toLowerCase().includes(search.toLowerCase());
     return matchesSearch;
   });
 
@@ -64,7 +70,7 @@ export default function PackageManagement() {
         </div>
       </div>
 
-      {/* Single-Line Controls: Search + Add Package Button */}
+      {/* Single-Line Controls: Search + Bulk Import + Add Package Button */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div className="relative flex-1 sm:min-w-[260px] max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -79,13 +85,40 @@ export default function PackageManagement() {
           />
         </div>
 
-        {/* Primary Styled Add Package Button */}
-        <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2 self-start lg:self-auto">
-          <Link to="/admin/packages/new">
-            <Plus className="h-4 w-4" /> Add Package
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2 self-start lg:self-auto">
+          {/* Bulk Import Button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsBulkImportOpen(true)}
+            className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold shadow-sm h-10 px-3.5 gap-2"
+          >
+            <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+            Bulk Import (Excel)
+          </Button>
+
+          {/* Primary Styled Add Package Button */}
+          <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm h-10 px-4 gap-2">
+            <Link to="/admin/packages/new">
+              <Plus className="h-4 w-4" /> Add Package
+            </Link>
+          </Button>
+        </div>
       </div>
+
+      {/* Bulk Import Drawer */}
+      <BulkImportDrawer
+        open={isBulkImportOpen}
+        onOpenChange={setIsBulkImportOpen}
+        entityType="packages"
+        title="Bulk Import Test Packages"
+        description="Upload an Excel sheet to bundle diagnostic tests into curated packages with custom pricing and features."
+        templateFileName="3_Litmus_Packages_Bulk_Template.xlsx"
+        templateDisplayName="3_Litmus_Packages_Bulk_Template.xlsx"
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["adminPackages"] });
+        }}
+      />
 
       <Card className="border border-border shadow-sm overflow-hidden bg-white">
         <div className="overflow-x-auto">
