@@ -310,167 +310,30 @@ export function NotificationWorkflowsSettings() {
   }
 
   return (
-    <div className="space-y-8 font-sans pb-12">
-      {/* Top Banner / Gateway Status */}
-      <div className="rounded-2xl border border-slate-200/80 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-6 relative overflow-hidden shadow-lg">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-[#25D366]/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/10 text-[11px] font-semibold tracking-wide uppercase text-emerald-400">
-              <Sparkles className="h-3.5 w-3.5" />
-              Meta WhatsApp Business Cloud API &amp; Email Engine
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-              Automated Notification Workflows
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Configure real-time automated communications for customer lifecycle milestones, order fulfillment stages, abandoned cart recoveries, and instant WhatsApp support lead alerts.
-            </p>
-          </div>
+    <div className="space-y-6 font-sans pb-12">
+      {/* Compact Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-3">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">Automated Notification Workflows</h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Configure automated customer lifecycle updates, order alerts, and instant lead routing.
+          </p>
+        </div>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-white/5 p-3.5 rounded-xl border border-white/10 shrink-0">
-            <div className="space-y-0.5">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">WhatsApp Gateway Status</p>
-              <div className="flex items-center gap-2">
-                <span
-                  className={cn(
-                    "h-2.5 w-2.5 rounded-full",
-                    isConfiguredInEnv ? "bg-[#25D366] animate-pulse" : "bg-amber-400"
-                  )}
-                />
-                <span className="text-xs font-bold text-white">
-                  {isConfiguredInEnv ? "Meta Cloud API Connected" : "Dev / Mock Mode Active"}
-                </span>
-              </div>
-            </div>
-            {!isConfiguredInEnv && (
-              <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-300 border-amber-500/30">
-                Mock Logs in Dev
-              </Badge>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 shrink-0">
+          <span
+            className={cn(
+              "h-2 w-2 rounded-full",
+              isConfiguredInEnv ? "bg-emerald-500 animate-pulse" : "bg-amber-400"
             )}
-          </div>
+          />
+          <span className="text-xs font-semibold text-slate-700">
+            {isConfiguredInEnv ? "Meta WhatsApp API Connected" : "WhatsApp API (Dev / Mock Mode)"}
+          </span>
         </div>
       </div>
 
-      {/* SECTION 1: ADMIN SUPPORT NOTIFICATION WHATSAPP */}
-      <Card className="border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="bg-gradient-to-r from-rose-50/70 to-orange-50/50 p-5 border-b border-rose-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-md">
-              <Headphones className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-slate-900">Admin Support WhatsApp Notification</h3>
-              </div>
-              <p className="text-xs text-slate-600 mt-0.5">
-                Whenever a user submits a support or consultation request from the frontend, the admin will immediately receive this WhatsApp alert.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <CardContent className="p-6 space-y-6">
-          <div className="grid md:grid-cols-2 gap-6 items-start">
-            {/* Phone Configuration */}
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="admin-phone-input" className="text-xs font-bold text-slate-900 flex items-center gap-2">
-                  <Smartphone className="h-4 w-4 text-emerald-600" />
-                  Admin WhatsApp Recipient Number
-                </Label>
-                <p className="text-[11px] text-slate-500">
-                  Include country code (e.g., <span className="font-mono text-slate-700 font-semibold">+91 9876543210</span> or <span className="font-mono text-slate-700 font-semibold">919876543210</span>).
-                </p>
-                <div className="flex gap-2">
-                  <Input
-                    id="admin-phone-input"
-                    value={adminPhone}
-                    onChange={(e) => setAdminPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="font-mono text-sm h-10 border-slate-300"
-                  />
-                  <Button
-                    onClick={handleSaveAll}
-                    disabled={updateSettingsMutation.isPending || !adminPhone.trim()}
-                    className="h-10 px-4 font-semibold text-xs bg-slate-900 hover:bg-slate-800 shrink-0"
-                  >
-                    {updateSettingsMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Phone"}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-600 space-y-1.5">
-                <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                  Instant Trigger Points
-                </div>
-                <ul className="list-disc pl-4 space-y-0.5 text-slate-600">
-                  <li>User Frontend Support Page ("Request a Callback" form)</li>
-                  <li>User Frontend Contact Page ("Send a Message" corporate enquiry)</li>
-                  <li>Live Chat Consultation / Expert Advice Bookings</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Test WhatsApp Alert Trigger */}
-            <div className="space-y-4 p-4 rounded-xl border border-emerald-200/80 bg-emerald-50/40">
-              <div className="space-y-1">
-                <h4 className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
-                  <Send className="h-3.5 w-3.5 text-emerald-600" />
-                  Test Live WhatsApp Notification Dispatch
-                </h4>
-                <p className="text-[11px] text-emerald-800/80">
-                  Send a live test message to verify your Meta Cloud API connection and phone number formatting.
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <Input
-                  value={testPhoneInput}
-                  onChange={(e) => setTestPhoneInput(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="font-mono text-xs h-9 bg-white border-emerald-200"
-                />
-                <Button
-                  onClick={() => testWhatsAppMutation.mutate(testPhoneInput || adminPhone)}
-                  disabled={testWhatsAppMutation.isPending || (!testPhoneInput && !adminPhone)}
-                  size="sm"
-                  className="h-9 text-xs font-bold bg-[#25D366] hover:bg-[#20ba59] text-white shadow-xs shrink-0"
-                >
-                  {testWhatsAppMutation.isPending ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-                  ) : (
-                    <MessageSquare className="h-3.5 w-3.5 mr-1" />
-                  )}
-                  Send Alert
-                </Button>
-              </div>
-
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-[10px] text-slate-500">
-                  Testing outside 24h window? Use approved template:
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => settingsApi.testWhatsApp({ phoneNumber: testPhoneInput || adminPhone, useTemplate: true }).then((res) => toast.success(res.message)).catch((err) => toast.error(err.response?.data?.message || "Failed to send template"))}
-                  className="h-7 text-[10px] font-bold border-emerald-300 text-emerald-800 hover:bg-emerald-100/60"
-                >
-                  Send "hello_world" Template
-                </Button>
-              </div>
-
-              <p className="text-[10px] text-slate-500">
-                Note: In development or test mode without live Meta tokens, notifications will be safely simulated and printed to backend logs.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* SECTION 2: NOTIFICATION WORKFLOWS MATRIX */}
+      {/* NOTIFICATION WORKFLOWS MATRIX */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
