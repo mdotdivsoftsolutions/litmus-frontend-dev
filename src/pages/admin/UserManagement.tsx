@@ -33,7 +33,7 @@ import {
   UserCheck
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { CreateUserModal } from "./CreateUserModal";
+import { CreateUserDrawer } from "./CreateUserDrawer";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -471,7 +471,7 @@ export default function UserManagement() {
         )}
       </Card>
 
-      <CreateUserModal 
+      <CreateUserDrawer 
         open={isCreateModalOpen}
         onOpenChange={setIsCreateModalOpen}
       />

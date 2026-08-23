@@ -155,25 +155,40 @@ export default function PackageFormPage() {
     }
   };
 
- // Auto-calculate MRP and Test Count
- useEffect(() => {
- if (!testsData || !testsData.data) return;
- 
- const testsList = testsData.data;
- let newMrp = 0;
- let newParameterCount = 0;
- 
- selectedTests.forEach((testId: string) => {
- const test = testsList.find((t: any) => t._id === testId);
- if (test) {
- newMrp += test.offerPrice || test.price || 0;
- newParameterCount += (test.metadata?.parameters?.length || 0);
- }
- });
+  // Auto-calculate MRP and Test Count
+  useEffect(() => {
+    if (!testsData || !testsData.data) return;
+    
+    const testsList = testsData.data;
+    let newMrp = 0;
+    let newParameterCount = 0;
+    
+    if (selectedTests && selectedTests.length > 0) {
+      selectedTests.forEach((testId: string) => {
+        const test = testsList.find((t: any) => t._id === testId);
+        if (test) {
+          newMrp += test.offerPrice || test.price || 0;
+          const count = (test.metadata?.parameters && Array.isArray(test.metadata.parameters) && test.metadata.parameters.length > 0)
+            ? test.metadata.parameters.length
+            : 1;
+          newParameterCount += count;
+        }
+      });
+    }
 
- form.setValue("mrp", newMrp, { shouldValidate: true });
- form.setValue("testCount", newParameterCount, { shouldValidate: true });
- }, [selectedTests, testsData, form]);
+    const currentFeatures = form.getValues("features") || [];
+    if (currentFeatures.length > 0) {
+      newParameterCount = Math.max(newParameterCount, currentFeatures.length);
+    }
+
+    if (!isEditing && newMrp > 0) {
+      form.setValue("mrp", newMrp, { shouldValidate: true });
+    }
+    
+    if (newParameterCount > 0) {
+      form.setValue("testCount", newParameterCount, { shouldValidate: true });
+    }
+  }, [selectedTests, testsData, form, isEditing]);
 
  const mrp = form.watch("mrp");
  
@@ -546,19 +561,19 @@ export default function PackageFormPage() {
  )}
  />
  
- <FormField
- control={form.control}
- name="testCount"
- render={({ field }) => (
- <FormItem>
- <FormLabel>Parameters Count</FormLabel>
- <FormControl>
- <Input type="number"{...field} readOnly className="bg-muted"/>
- </FormControl>
- <FormMessage />
- </FormItem>
- )}
- />
+  <FormField
+  control={form.control}
+  name="testCount"
+  render={({ field }) => (
+  <FormItem>
+  <FormLabel>Parameters Count</FormLabel>
+  <FormControl>
+  <Input type="number" min={1} {...field} />
+  </FormControl>
+  <FormMessage />
+  </FormItem>
+  )}
+  />
  </div>
  </div>
 
