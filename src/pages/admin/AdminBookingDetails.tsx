@@ -1035,11 +1035,18 @@ export default function AdminBookingDetails() {
                     <SelectContent>
                       <SelectItem value="smart_allocation">Litmus Smart Allocation (Auto)</SelectItem>
                       <SelectItem value="litmus_direct">⭐ Litmus Central Handling</SelectItem>
-                      {labs.map((l: any) => (
-                        <SelectItem key={l._id} value={l._id}>
-                          {l.labName} {l.location ? `(${l.location})` : ''}
-                        </SelectItem>
-                      ))}
+                      {labs.map((l: any) => {
+                        const locStr = l.location?.city
+                          ? [l.location.city, l.location.state].filter(Boolean).join(", ")
+                          : typeof l.location === "string"
+                          ? l.location
+                          : "";
+                        return (
+                          <SelectItem key={l._id} value={l._id}>
+                            {l.labName} {locStr ? `(${locStr})` : ""}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
