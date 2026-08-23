@@ -1041,9 +1041,26 @@ export default function AdminBookingDetails() {
                           : typeof l.location === "string"
                           ? l.location
                           : "";
+
+                        const labTestIds = new Set((l.tests || []).map((t: any) => (t._id || t).toString()));
+                        const labPkgIds = new Set((l.packages || []).map((p: any) => (p._id || p).toString()));
+                        const isCompatible = rawItems.length === 0 || rawItems.every((it: any) => {
+                          if (it.testId) {
+                            const tid = (it.testId._id || it.testId).toString();
+                            return labTestIds.has(tid);
+                          }
+                          if (it.packageId) {
+                            const pid = (it.packageId._id || it.packageId).toString();
+                            return labPkgIds.has(pid) || labTestIds.has(pid);
+                          }
+                          return true;
+                        });
+
                         return (
                           <SelectItem key={l._id} value={l._id}>
+                            {isCompatible ? "✓ " : "⚠️ "}
                             {l.labName} {locStr ? `(${locStr})` : ""}
+                            {isCompatible ? " • (Offers tests)" : " • (Does not offer test)"}
                           </SelectItem>
                         );
                       })}
