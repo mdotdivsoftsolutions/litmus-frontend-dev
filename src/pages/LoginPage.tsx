@@ -84,7 +84,7 @@ export default function LoginPage({ role }: LoginPageProps) {
       <div className="hidden lg:flex lg:w-1/2 flex-col relative overflow-hidden bg-white border-r border-slate-100">
         {/* Top branding */}
         <div className="relative z-10 px-10 pt-8 flex items-center">
-          <img src="/logo.png" alt="Litmus Food Analytics" className="h-10 object-contain" />
+          <img src="/logo.webp" alt="Litmus Food Analytics" className="h-9 w-auto object-contain" />
         </div>
 
         {/* Headline */}
@@ -113,7 +113,7 @@ export default function LoginPage({ role }: LoginPageProps) {
           
           {/* Mobile Logo & Title */}
           <div className="lg:hidden flex flex-col items-center mb-8 w-full text-center">
-            <img src="/logo.png" alt="Litmus Food Analytics" className="h-10 object-contain mb-6" />
+            <img src="/logo.webp" alt="Litmus Food Analytics" className="h-9 w-auto object-contain mb-6" />
             <h2 className="text-2xl font-light text-secondary/80 leading-snug">
               {role === "admin" ? "Internal Administrator Portal" : role === "lab" ? "Laboratory Partner Portal" : "Safer, Smarter, and Compliant"}
               <br />

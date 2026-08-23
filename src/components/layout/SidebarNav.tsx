@@ -130,7 +130,7 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
           {!collapsed ? (
             <>
               <Link to="/" className="flex flex-col items-start outline-none focus:outline-none select-none">
-                <img src="/logo.png" alt="Litmus Logo" className="h-9 object-contain" />
+                <img src="/logo.webp" alt="Litmus Logo" className="h-8 w-auto object-contain" />
                 <div className="leading-none mt-1">
                   <span className="block text-[9px] tracking-wider text-slate-500 font-bold uppercase">ADMIN PANEL</span>
                 </div>
