@@ -60,11 +60,11 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
       case "Employees":
         return stats.totalEmployees ?? stats.activeEmployees ?? 0;
       case "Consultations":
-        return stats.pendingConsultations > 0 ? stats.pendingConsultations : (stats.totalConsultations ?? 0);
+        return stats.totalConsultations ?? 0;
       case "Laboratories":
         return stats.totalLabs ?? stats.activeLabs ?? 0;
       case "Bookings":
-        return stats.pendingBookings > 0 ? stats.pendingBookings : (stats.totalBookings ?? 0);
+        return stats.totalBookings ?? 0;
       case "Categories":
         return stats.totalCategories ?? 0;
       case "Tests":
@@ -74,7 +74,7 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
       case "Reviews":
         return stats.totalReviews ?? 0;
       case "Reports":
-        return stats.pendingReports > 0 ? stats.pendingReports : (stats.totalReports ?? 0);
+        return stats.totalReports ?? 0;
       case "Approvals":
         return stats.pendingApprovals ?? 0;
       default:
