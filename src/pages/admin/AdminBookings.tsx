@@ -12,11 +12,42 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Eye, Filter, ChevronLeft, ChevronRight, AlertTriangle, Calendar as CalendarIcon, Beaker, CheckCircle2, XCircle, RotateCcw, FileText } from "lucide-react";
+import { 
+  Search, 
+  Eye, 
+  Filter, 
+  ChevronLeft, 
+  ChevronRight, 
+  AlertTriangle, 
+  Calendar as CalendarIcon, 
+  Beaker, 
+  CheckCircle2, 
+  XCircle, 
+  RotateCcw, 
+  FileText,
+  Building2,
+  Phone,
+  Mail,
+  User as UserIcon,
+  Clock,
+  ArrowUpRight,
+  ExternalLink,
+  Package,
+  Layers,
+  MapPin,
+  ShieldCheck,
+  CreditCard,
+  Receipt,
+  Truck,
+  Copy,
+  Check,
+  ArrowRight,
+  FlaskConical
+} from "lucide-react";
 import { InvoiceDialog } from "@/components/admin/InvoiceDialog";
 
 const ITEMS_PER_PAGE = 10;
@@ -34,6 +65,15 @@ export default function AdminBookings() {
   const [selectedLabId, setSelectedLabId] = useState("");
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const handleCopy = (text: string, fieldId: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldId);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   // Filters
   const [statusFilter, setStatusFilter] = useState("all");
@@ -568,171 +608,220 @@ export default function AdminBookings() {
           setSelectedLabId("");
         }
       }}>
-        <SheetContent className="overflow-y-auto sm:max-w-md w-[95vw]">
+        <SheetContent side="right" className="w-full sm:max-w-[520px] p-0 flex flex-col h-full bg-white dark:bg-card border-l border-slate-200 dark:border-slate-800 shadow-2xl font-sans">
           {selectedBooking && (
             <>
-              <SheetHeader>
-                <SheetTitle className="flex justify-between items-center mr-4">
-                  <span>Booking Details</span>
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/admin/bookings/${selectedBooking.id}`)}>View Full Page</Button>
-                </SheetTitle>
-              </SheetHeader>
-              <div className="mt-6 space-y-5 pb-10">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-lg border border-border bg-muted/20 p-3 break-all"><p className="text-muted-foreground text-xs mb-1">Booking ID</p><p className="font-mono font-medium text-xs">{selectedBooking.displayId}</p></div>
-                  <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Date</p><p className="font-medium text-xs">{selectedBooking.date}</p></div>
-                  <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2"><p className="text-muted-foreground text-xs mb-1">User</p><p className="font-medium text-sm">{selectedBooking.user}</p></div>
-                  <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2">
-                    <div className="flex justify-between items-start mb-1">
-                      <p className="text-muted-foreground text-xs">Product</p>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {selectedBooking.itemTypes?.map((t: string) => (
-                          <Badge key={t} className="text-[9px] uppercase tracking-wider px-1.5 py-0 bg-primary/10 text-primary border-primary/20">{t}</Badge>
-                        ))}
-                        {selectedBooking.totalSamples > 0 && <Badge className="text-[9px] uppercase tracking-wider px-1.5 py-0 bg-slate-200 text-slate-700 border-0">{selectedBooking.totalSamples} Samples</Badge>}
-                      </div>
+              <SheetHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-card shrink-0 text-left">
+                <div className="flex items-center justify-between gap-3 pr-8">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-base text-slate-900 dark:text-white tracking-tight">
+                        {selectedBooking.displayId}
+                      </span>
+                      <StatusBadge status={selectedBooking.status} />
+                      <StatusBadge status={selectedBooking.paymentStatus} />
                     </div>
-                    <p className="font-medium text-sm">{selectedBooking.product}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Placed on {selectedBooking.date} • {selectedBooking.testsCount} {selectedBooking.testsCount === 1 ? 'Test' : 'Tests'} • {selectedBooking.totalSamples || 1} {selectedBooking.totalSamples === 1 ? 'Sample' : 'Samples'}
+                    </p>
                   </div>
-                  <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2"><p className="text-muted-foreground text-xs mb-1">Laboratory</p><p className="font-medium text-sm">{selectedBooking.lab}</p></div>
-                  <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Payment</p><StatusBadge status={selectedBooking.paymentStatus} /></div>
-                  <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Status</p><StatusBadge status={selectedBooking.status} /></div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-7 text-xs px-2.5 gap-1 border-slate-200 text-slate-700 hover:text-primary hover:border-primary/40 shadow-2xs" 
+                    onClick={() => navigate(`/admin/bookings/${selectedBooking.id}`)}
+                  >
+                    <span>Full View</span>
+                    <ArrowUpRight className="h-3 w-3" />
+                  </Button>
+                </div>
+              </SheetHeader>
+
+              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                {/* 1. Quick Financial & Order Overview */}
+                <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">Total Amount</span>
+                    <span className="text-xl font-black text-primary">₹{selectedBooking.amount?.toLocaleString()}</span>
+                  </div>
+                  <div className="text-right space-y-0.5">
+                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">Payment Status</span>
+                    <StatusBadge status={selectedBooking.paymentStatus} />
+                  </div>
                 </div>
 
-                {/* Collection Details */}
-                <div className="space-y-3 border-t border-border pt-4">
-                  <h4 className="text-sm font-semibold flex items-center gap-2">Contact Details</h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Name</p><p className="font-medium text-xs">{selectedBooking.collectionDetails?.name || selectedBooking.user}</p></div>
-                    <div className="rounded-lg border border-border bg-muted/20 p-3"><p className="text-muted-foreground text-xs mb-1">Phone</p><p className="font-medium text-xs">{selectedBooking.collectionDetails?.phone || selectedBooking.userPhone || "N/A"}</p></div>
-                    <div className="rounded-lg border border-border bg-muted/20 p-3 col-span-2"><p className="text-muted-foreground text-xs mb-1">Email</p><p className="font-medium text-xs">{selectedBooking.collectionDetails?.email || selectedBooking.userEmail || "N/A"}</p></div>
-                  </div>
-                </div>
-
-                {/* Selected Tests Breakdown */}
-                <div className="space-y-3 border-t border-border pt-4">
-                  <h4 className="text-sm font-semibold flex items-center gap-2"><Beaker className="h-4 w-4" /> Booking Items & Samples</h4>
-                  <div className="space-y-3">
-                    {selectedBooking.rawItems.map((item: any, i: number) => (
-                      <div key={i} className="rounded-lg border border-border overflow-hidden">
-                        <div className="bg-muted/50 px-3 py-2 flex justify-between items-center border-b border-border">
-                          <span className="font-semibold text-sm">Item {i + 1}: {item.itemType} - {item.packageId?.name || item.testId?.testName || item.testId?.name || "Custom"}</span>
-                          {canViewPricing && <span className="font-medium text-sm">₹{item.price?.toLocaleString() || 0}</span>}
+                {/* 2. Customer & Contact Details */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                    <UserIcon className="h-3.5 w-3.5 text-primary" /> Customer Details
+                  </h4>
+                  <div className="rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/30 p-4 space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-9 w-9 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
+                          {(selectedBooking.user || "U").charAt(0).toUpperCase()}
                         </div>
-                        <div className="p-3 bg-card space-y-3">
-                          {item.samples?.map((sample: any, j: number) => (
-                            <div key={j} className="text-sm space-y-3 border-b border-border pb-3 last:border-0 last:pb-0">
-                              <div>
-                                <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block mb-1">Product Info</span>
-                                <p className="font-medium text-base text-foreground">{sample.productName || "Unknown Product"}</p>
-                                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-muted-foreground">
-                                  {sample.quantity && <span>Qty: <span className="font-medium text-slate-700">{sample.quantity}</span></span>}
-                                  {sample.batchNumber && <span>Batch: <span className="font-medium text-slate-700">{sample.batchNumber}</span></span>}
-                                  {sample.sku && <span>SKU: <span className="font-medium text-slate-700">{sample.sku}</span></span>}
-                                </div>
-                              </div>
-                              {((sample.selectedParameters && sample.selectedParameters.length > 0) || (sample.selectedTests && sample.selectedTests.length > 0)) && (
-                                <div>
-                                  <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block mb-1.5">
-                                    {item.itemType === 'PACKAGE' ? 'Tests Included' : 'Parameters to Test'}
-                                  </span>
-                                  <div className="flex flex-wrap gap-1.5 mt-1">
-                                    {((item.itemType === 'PACKAGE' && sample.selectedTests?.length > 0) ? sample.selectedTests : sample.selectedParameters).map((p: string, k: number) => (
-                                      <Badge key={k} variant="outline" className="font-normal text-xs bg-background text-foreground shadow-sm">
-                                        {p.startsWith("pkg-feat-") ? p.replace("pkg-feat-", "") : p}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              {sample.specifics && (
-                                <div>
-                                  <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest block mb-1">Specifics</span>
-                                  <p className="text-xs mt-0.5 bg-muted/30 p-2 rounded-md">{sample.specifics}</p>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                          {(!item.samples || item.samples.length === 0) && (
-                            <p className="text-sm font-medium">{item.packageId?.name || item.testId?.name || "Service Item"}</p>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedBooking.user}</p>
+                          <p className="text-[11px] text-muted-foreground">Consumer Account</p>
+                        </div>
+                      </div>
+                      {selectedBooking.userPhone && (
+                        <a 
+                          href={`tel:${selectedBooking.userPhone}`} 
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline bg-primary/5 px-2.5 py-1 rounded-md"
+                        >
+                          <Phone className="h-3 w-3" /> Call
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 text-xs">
+                      <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+                        <span className="text-muted-foreground">Email:</span>
+                        <div className="flex items-center gap-1 font-medium">
+                          <span className="truncate max-w-[150px]">{selectedBooking.collectionDetails?.email || selectedBooking.userEmail || "N/A"}</span>
+                          {(selectedBooking.collectionDetails?.email || selectedBooking.userEmail) && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(selectedBooking.collectionDetails?.email || selectedBooking.userEmail, 'email')}
+                              className="text-muted-foreground hover:text-foreground"
+                              title="Copy Email"
+                            >
+                              {copiedField === 'email' ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                            </button>
                           )}
                         </div>
                       </div>
-                    ))}
+
+                      <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+                        <span className="text-muted-foreground">Phone:</span>
+                        <div className="flex items-center gap-1 font-medium">
+                          <span>{selectedBooking.collectionDetails?.phone || selectedBooking.userPhone || "N/A"}</span>
+                          {(selectedBooking.collectionDetails?.phone || selectedBooking.userPhone) && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(selectedBooking.collectionDetails?.phone || selectedBooking.userPhone, 'phone')}
+                              className="text-muted-foreground hover:text-foreground"
+                              title="Copy Phone"
+                            >
+                              {copiedField === 'phone' ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {selectedBooking.collectionDetails?.address && (
+                        <div className="sm:col-span-2 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-start gap-1.5 text-slate-600 dark:text-slate-300">
+                          <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                          <span className="leading-snug">
+                            {[
+                              selectedBooking.collectionDetails.address,
+                              selectedBooking.collectionDetails.city,
+                              selectedBooking.collectionDetails.state,
+                              selectedBooking.collectionDetails.pincode
+                            ].filter(Boolean).join(', ')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Timeline */}
-                <div>
-                  <h4 className="text-sm font-semibold mb-3">Booking Timeline</h4>
-                  <div className="space-y-0 bg-muted/10 rounded-lg p-4 border border-border">
-                    {timelineSteps.map((step: any, i: number) => {
-                      const isStepRejected = step.state === "rejected" || step.state === "failed";
-                      const isStepWarning = step.state === "warning";
-                      const isStepRefunded = step.state === "refunded";
-                      const isStepCompleted = step.state === "completed" || step.done;
+                {/* 3. Laboratory Partner */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                    <Building2 className="h-3.5 w-3.5 text-primary" /> Laboratory Partner
+                  </h4>
+                  <div className="rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/30 p-4 flex items-center justify-between shadow-xs">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedBooking.lab}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {selectedBooking.lab?.includes("Litmus") ? "Managed and allocated via Litmus Central Operations" : "Accredited partner diagnostic laboratory"}
+                      </p>
+                    </div>
+                    {isSelectedLabAssigned ? (
+                      <CheckCircle2 className="h-5 w-5 text-litmus-emerald shrink-0" />
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] text-amber-700 bg-amber-50 border-amber-200">
+                        Allocation Needed
+                      </Badge>
+                    )}
+                  </div>
+                </div>
 
+                {/* 4. Ordered Items & Scope */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                      <FlaskConical className="h-3.5 w-3.5 text-primary" /> Test Scope & Samples ({selectedBooking.rawItems?.length || 0})
+                    </h4>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {selectedBooking.itemTypes?.map((t: string) => (
+                        <Badge key={t} className="text-[9px] uppercase tracking-wider px-2 py-0.5 bg-primary/10 text-primary border-primary/20">{t}</Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {selectedBooking.rawItems?.map((item: any, i: number) => {
+                      const itemName = item.packageId?.name || item.testId?.testName || item.testId?.name || item.name || "Custom Test Service";
                       return (
-                        <div key={i} className="flex gap-3">
-                          <div className="flex flex-col items-center">
-                            <div className={`h-4 w-4 rounded-full border-2 shrink-0 flex items-center justify-center ${
-                              isStepRejected 
-                                ? "bg-red-600 border-red-600 text-white" 
-                                : isStepWarning
-                                  ? "bg-amber-500 border-amber-500 text-white"
-                                  : isStepRefunded
-                                    ? "bg-blue-600 border-blue-600 text-white"
-                                    : isStepCompleted 
-                                      ? "bg-litmus-emerald border-litmus-emerald text-white" 
-                                      : "bg-card border-border"
-                            }`}>
-                              {isStepRejected ? (
-                                <XCircle className="h-2.5 w-2.5" />
-                              ) : isStepWarning ? (
-                                <AlertTriangle className="h-2.5 w-2.5" />
-                              ) : isStepRefunded ? (
-                                <RotateCcw className="h-2.5 w-2.5" />
-                              ) : isStepCompleted ? (
-                                <CheckCircle2 className="h-2.5 w-2.5" />
-                              ) : null}
+                        <div key={i} className="rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/30 shadow-xs overflow-hidden">
+                          <div className="bg-slate-50 dark:bg-slate-900/60 px-4 py-2.5 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-2">
+                              <span className="h-5 w-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">
+                                {i + 1}
+                              </span>
+                              <span className="font-semibold text-xs text-foreground uppercase tracking-wide">
+                                {item.itemType || "TEST"}
+                              </span>
                             </div>
-                            {i < timelineSteps.length - 1 && (
-                              <div className={`w-0.5 flex-1 min-h-[1.5rem] my-0.5 ${
-                                isStepRejected 
-                                  ? "bg-red-300 dark:bg-red-900/60" 
-                                  : isStepWarning
-                                    ? "bg-amber-300 dark:bg-amber-900/60"
-                                    : isStepCompleted 
-                                      ? "bg-litmus-emerald" 
-                                      : "bg-border"
-                              }`} />
+                            {canViewPricing && (
+                              <span className="font-bold text-xs text-primary">₹{item.price?.toLocaleString() || 0}</span>
                             )}
                           </div>
-                          <div className="pb-4 flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center justify-between gap-1.5">
-                              <p className={`text-xs ${
-                                isStepRejected 
-                                  ? "text-red-600 dark:text-red-400 font-bold" 
-                                  : isStepWarning
-                                    ? "text-amber-700 dark:text-amber-400 font-semibold"
-                                    : isStepRefunded
-                                      ? "text-blue-700 dark:text-blue-400 font-semibold"
-                                      : isStepCompleted 
-                                        ? "text-foreground font-semibold" 
-                                        : "text-muted-foreground"
-                              }`}>
-                                {step.label}
-                              </p>
-                              {step.sub && (
-                                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
-                                  {step.sub}
-                                </span>
-                              )}
-                            </div>
-                            {step.message && (
-                              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                                {step.message}
-                              </p>
+                          
+                          <div className="p-4 space-y-3">
+                            {item.samples?.map((sample: any, j: number) => (
+                              <div key={j} className="space-y-2.5 border-b border-slate-100 dark:border-slate-800/80 pb-3 last:border-0 last:pb-0">
+                                <div>
+                                  <p className="text-sm font-bold text-foreground">
+                                    {sample.productName || itemName}
+                                  </p>
+                                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-[11px] text-muted-foreground">
+                                    {sample.quantity && <span>Quantity: <strong className="text-foreground">{sample.quantity}</strong></span>}
+                                    {sample.batchNumber && <span>Batch: <strong className="text-foreground">{sample.batchNumber}</strong></span>}
+                                    {sample.sku && <span>SKU: <strong className="text-foreground">{sample.sku}</strong></span>}
+                                  </div>
+                                </div>
+
+                                {((sample.selectedParameters && sample.selectedParameters.length > 0) || (sample.selectedTests && sample.selectedTests.length > 0)) && (
+                                  <div>
+                                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block mb-1">
+                                      {item.itemType === 'PACKAGE' ? 'Tests Included' : 'Parameters to Test'}
+                                    </span>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {((item.itemType === 'PACKAGE' && sample.selectedTests?.length > 0) ? sample.selectedTests : sample.selectedParameters).map((p: string, k: number) => (
+                                        <Badge key={k} variant="secondary" className="font-normal text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-0">
+                                          {p.startsWith("pkg-feat-") ? p.replace("pkg-feat-", "") : p}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {sample.specifics && (
+                                  <div className="p-2 rounded-lg bg-amber-500/5 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300">
+                                    <span className="font-semibold block text-[10px] uppercase">Special Instructions:</span>
+                                    {sample.specifics}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+
+                            {(!item.samples || item.samples.length === 0) && (
+                              <p className="text-sm font-medium text-foreground">{itemName}</p>
                             )}
                           </div>
                         </div>
@@ -741,39 +830,126 @@ export default function AdminBookings() {
                   </div>
                 </div>
 
-                {/* Admin Actions */}
+                {/* 5. Fulfillment Timeline */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5 text-primary" /> Fulfillment Progress
+                  </h4>
+                  <div className="rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/30 p-4 shadow-xs">
+                    <div className="space-y-0">
+                      {timelineSteps.map((step: any, i: number) => {
+                        const isStepRejected = step.state === "rejected" || step.state === "failed";
+                        const isStepWarning = step.state === "warning";
+                        const isStepRefunded = step.state === "refunded";
+                        const isStepCompleted = step.state === "completed" || step.done;
+
+                        return (
+                          <div key={i} className="flex gap-3.5 group">
+                            <div className="flex flex-col items-center">
+                              <div className={`h-4.5 w-4.5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all ${
+                                isStepRejected 
+                                  ? "bg-red-600 border-red-600 text-white" 
+                                  : isStepWarning
+                                    ? "bg-amber-500 border-amber-500 text-white"
+                                    : isStepRefunded
+                                      ? "bg-blue-600 border-blue-600 text-white"
+                                      : isStepCompleted 
+                                        ? "bg-litmus-emerald border-litmus-emerald text-white shadow-2xs" 
+                                        : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700"
+                              }`}>
+                                {isStepRejected ? (
+                                  <XCircle className="h-2.5 w-2.5" />
+                                ) : isStepWarning ? (
+                                  <AlertTriangle className="h-2.5 w-2.5" />
+                                ) : isStepRefunded ? (
+                                  <RotateCcw className="h-2.5 w-2.5" />
+                                ) : isStepCompleted ? (
+                                  <Check className="h-2.5 w-2.5 stroke-[3]" />
+                                ) : null}
+                              </div>
+                              {i < timelineSteps.length - 1 && (
+                                <div className={`w-0.5 flex-1 min-h-[1.5rem] my-0.5 ${
+                                  isStepRejected 
+                                    ? "bg-red-200 dark:bg-red-900/40" 
+                                    : isStepWarning
+                                      ? "bg-amber-200 dark:bg-amber-900/40"
+                                      : isStepCompleted 
+                                        ? "bg-litmus-emerald/80" 
+                                        : "bg-slate-200 dark:bg-slate-800"
+                                }`} />
+                              )}
+                            </div>
+                            <div className="pb-4 flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <p className={`text-xs ${
+                                  isStepRejected 
+                                    ? "text-red-600 dark:text-red-400 font-bold" 
+                                    : isStepWarning
+                                      ? "text-amber-700 dark:text-amber-400 font-semibold"
+                                      : isStepRefunded
+                                        ? "text-blue-700 dark:text-blue-400 font-semibold"
+                                        : isStepCompleted 
+                                          ? "text-slate-900 dark:text-white font-semibold" 
+                                          : "text-muted-foreground"
+                                }`}>
+                                  {step.label}
+                                </p>
+                                {step.sub && (
+                                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
+                                    {step.sub}
+                                  </span>
+                                )}
+                              </div>
+                              {step.message && (
+                                <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                                  {step.message}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 6. Admin Actions (Pending state assignment or rejection) */}
                 {selectedBooking.status?.toLowerCase() === "pending" && (
-                  <div className="space-y-4 border-t border-border pt-4">
-                    <h4 className="text-sm font-semibold">Admin Actions</h4>
+                  <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20 p-4 shadow-xs space-y-3">
+                    <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300">
+                      <ShieldCheck className="h-4 w-4 text-amber-600" />
+                      <h4 className="text-xs font-bold">Admin Allocation Required</h4>
+                    </div>
 
                     {isRejecting ? (
-                      <div className="space-y-3 bg-red-50/50 p-3 rounded-lg border border-red-100 dark:bg-red-950/20 dark:border-red-900">
-                        <label className="text-sm font-medium text-red-800 dark:text-red-300">Reason for Rejection</label>
+                      <div className="space-y-3 bg-white dark:bg-background p-3 rounded-lg border border-red-200 dark:border-red-900">
+                        <label className="text-xs font-semibold text-red-800 dark:text-red-300 block">Reason for Rejection</label>
                         <Textarea
-                          placeholder="Please provide a reason to the user..."
-                          className="bg-background/50 border-red-200 focus-visible:ring-red-500"
+                          placeholder="Please provide a clear reason to notify the client..."
+                          className="border-red-200 focus-visible:ring-red-500 text-xs"
                           value={rejectReason}
                           onChange={(e) => setRejectReason(e.target.value)}
                         />
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 pt-1">
                           <Button
                             variant="destructive"
-                            className="flex-1"
+                            size="sm"
+                            className="flex-1 text-xs"
                             onClick={() => rejectBookingMutation.mutate({ id: selectedBooking.id, reason: rejectReason })}
                             disabled={!rejectReason.trim() || rejectBookingMutation.isPending}
                           >
                             {rejectBookingMutation.isPending ? "Rejecting..." : "Submit Rejection"}
                           </Button>
-                          <Button variant="outline" onClick={() => { setIsRejecting(false); setRejectReason(""); }}>Cancel</Button>
+                          <Button variant="outline" size="sm" className="text-xs" onClick={() => { setIsRejecting(false); setRejectReason(""); }}>Cancel</Button>
                         </div>
                       </div>
                     ) : (
-                      <>
-                        <div className="space-y-2">
-                          <label className="text-sm text-muted-foreground">Assign Laboratory</label>
+                      <div className="space-y-2.5">
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Assign Partner Laboratory</label>
                           <Select value={selectedLabId} onValueChange={setSelectedLabId}>
-                            <SelectTrigger className="bg-background/50">
-                              <SelectValue placeholder="Select lab to forward to..." />
+                            <SelectTrigger className="bg-white dark:bg-card border-slate-200 dark:border-slate-700 h-9 text-xs">
+                              <SelectValue placeholder="Select target laboratory..." />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="litmus_direct" className="font-semibold text-emerald-700 dark:text-emerald-400">
@@ -785,36 +961,48 @@ export default function AdminBookings() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="flex gap-2 pt-2">
+                        <div className="flex gap-2 pt-1">
                           <Button
-                            className="flex-1 bg-litmus-emerald hover:bg-emerald-600 text-white shadow-sm"
+                            className="flex-1 bg-litmus-emerald hover:bg-emerald-600 text-white shadow-xs h-8 text-xs font-semibold"
                             disabled={!selectedLabId || assignLabMutation.isPending}
                             onClick={() => assignLabMutation.mutate({ id: selectedBooking.id, labId: selectedLabId })}
                           >
-                            {assignLabMutation.isPending ? "Assigning..." : "Approve & Assign Lab"}
+                            {assignLabMutation.isPending ? "Assigning..." : "Approve & Forward"}
                           </Button>
-                          <Button variant="outline" className="flex-1 shadow-sm border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => setIsRejecting(true)}>Reject Booking</Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="shadow-xs border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 text-xs h-8" 
+                            onClick={() => setIsRejecting(true)}
+                          >
+                            Reject
+                          </Button>
                         </div>
-                      </>
+                      </div>
                     )}
                   </div>
                 )}
-
-                {selectedBooking.status?.toLowerCase() === "completed" && !selectedBooking.isReportApprovedByAdmin && (
-                  <div className="space-y-3 border-t border-border pt-4">
-                    <h4 className="text-sm font-semibold text-emerald-600">Report Ready for Review</h4>
-                    <Button className="w-full bg-primary hover:bg-primary-deep shadow-sm">Approve Report & Release</Button>
-                  </div>
-                )}
-                <div className="border-t border-border pt-4">
-                  <Button
-                    className="w-full bg-emerald-700 hover:bg-emerald-800 text-white gap-2 font-semibold shadow-xs"
-                    onClick={() => setInvoiceBookingId(selectedBooking.id)}
-                  >
-                    <FileText className="h-4 w-4" /> View & Print GST Invoice
-                  </Button>
-                </div>
               </div>
+
+              {/* Sticky Footer */}
+              <SheetFooter className="p-4 bg-white dark:bg-card border-t border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between gap-3 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 text-xs font-semibold border-slate-200 text-slate-700 hover:bg-slate-50"
+                  onClick={() => setInvoiceBookingId(selectedBooking.id)}
+                >
+                  <FileText className="h-4 w-4 text-emerald-600" /> View Invoice
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="gap-1.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs" 
+                  onClick={() => navigate(`/admin/bookings/${selectedBooking.id}`)}
+                >
+                  <span>Open Full Workspace</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </SheetFooter>
             </>
           )}
         </SheetContent>

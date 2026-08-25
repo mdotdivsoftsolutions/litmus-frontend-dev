@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
 import { 
   Eye, 
@@ -702,27 +702,27 @@ export default function AdminReports() {
         </DialogContent>
       </Dialog>
 
-      {/* Manual Upload Report for Any Booking Modal */}
-      <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5 text-primary" /> Upload Report on Behalf of Lab / Admin
-            </DialogTitle>
-            <DialogDescription>
+      {/* Manual Upload Report for Any Booking Side Drawer */}
+      <Sheet open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-[540px] p-0 flex flex-col h-full bg-background border-l border-border shadow-2xl">
+          <SheetHeader className="px-5 py-4 border-b border-border bg-muted/10 shrink-0 text-left">
+            <SheetTitle className="flex items-center gap-2 text-base font-bold text-foreground">
+              <Upload className="h-4 w-4 text-primary" /> Upload Report on Behalf of Lab / Admin
+            </SheetTitle>
+            <SheetDescription className="text-xs text-muted-foreground mt-0.5">
               Directly attach a test report document and add Summary, Recommendations, Tips, and Notes to any active order.
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
 
-          <div className="space-y-4 py-2">
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
             {/* Booking Selector */}
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Select Target Booking</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Select Target Booking</Label>
               <Select value={targetBookingId} onValueChange={setTargetBookingId}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 bg-background border-border text-xs">
                   <SelectValue placeholder="Choose a booking..." />
                 </SelectTrigger>
-                <SelectContent className="max-h-60">
+                <SelectContent className="max-h-64">
                   {bookingsWithoutReports.length === 0 ? (
                     <div className="p-3 text-xs text-muted-foreground text-center">No bookings waiting for report upload</div>
                   ) : (
@@ -731,8 +731,8 @@ export default function AdminReports() {
                       const userName = `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim() || 'User';
                       const product = b.items?.[0]?.samples?.[0]?.productName || b.items?.[0]?.packageId?.name || b.items?.[0]?.testId?.name || "Order";
                       return (
-                        <SelectItem key={b._id} value={b._id}>
-                          {displayId} · {product} ({userName})
+                        <SelectItem key={b._id} value={b._id} className="text-xs">
+                          <span className="font-semibold text-primary">{displayId}</span> · {product} <span className="text-muted-foreground">({userName})</span>
                         </SelectItem>
                       );
                     })
@@ -742,8 +742,8 @@ export default function AdminReports() {
             </div>
 
             {/* File Upload */}
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Report Document (PDF or Image)</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Report Document (PDF or Image)</Label>
               <input 
                 type="file" 
                 ref={newReportFileInputRef} 
@@ -754,26 +754,32 @@ export default function AdminReports() {
               />
               <div 
                 onClick={() => newReportFileInputRef.current?.click()}
-                className={cn("border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors",
-                  newUploadedFileUrl ? "border-emerald-500/50 bg-emerald-500/5" : "border-border hover:border-primary bg-muted/20"
+                className={cn("border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all duration-200",
+                  newUploadedFileUrl 
+                    ? "border-emerald-500/50 bg-emerald-500/5 hover:bg-emerald-500/10" 
+                    : "border-border hover:border-primary/60 bg-muted/20 hover:bg-muted/40"
                 )}
               >
                 {newIsUploading ? (
-                  <div className="space-y-2">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
-                    <p className="text-xs text-muted-foreground">Uploading... {newUploadProgress}%</p>
+                  <div className="space-y-2 py-2">
+                    <Loader2 className="h-7 w-7 animate-spin text-primary mx-auto" />
+                    <p className="text-xs font-medium text-foreground">Uploading document...</p>
+                    <p className="text-[11px] text-muted-foreground">{newUploadProgress}% completed</p>
                   </div>
                 ) : newUploadedFileUrl ? (
-                  <div className="space-y-1">
-                    <CheckCircle2 className="h-6 w-6 text-emerald-600 mx-auto" />
-                    <p className="text-sm font-medium text-emerald-800">Report Document Attached</p>
-                    <p className="text-xs text-muted-foreground">Click to replace file</p>
+                  <div className="space-y-1.5 py-1">
+                    <CheckCircle2 className="h-7 w-7 text-emerald-600 mx-auto" />
+                    <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Report Document Attached</p>
+                    <p className="text-xs text-muted-foreground truncate max-w-sm mx-auto">{newUploadedFileUrl}</p>
+                    <p className="text-[11px] text-primary hover:underline pt-1">Click to replace file</p>
                   </div>
                 ) : (
-                  <div className="space-y-1">
-                    <Upload className="h-6 w-6 text-muted-foreground mx-auto" />
-                    <p className="text-sm font-medium text-foreground">Click to upload report document (PDF/Image)</p>
-                    <p className="text-xs text-muted-foreground">Max 50MB</p>
+                  <div className="space-y-1.5 py-2">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mx-auto mb-2">
+                      <Upload className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">Click to upload report document (PDF/Image)</p>
+                    <p className="text-xs text-muted-foreground">Supported: PDF, PNG, JPG (Max 50MB)</p>
                   </div>
                 )}
               </div>
@@ -781,76 +787,94 @@ export default function AdminReports() {
 
             {/* Summary */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">1. Executive Summary</Label>
+              <Label className="text-xs font-semibold flex items-center gap-1.5 text-foreground">
+                <FileText className="h-3.5 w-3.5 text-primary" /> 1. Executive Summary
+              </Label>
               <Textarea 
                 value={newSummary} 
                 onChange={(e) => setNewSummary(e.target.value)} 
-                placeholder="Key findings and overall safety observations..." 
-                className="text-xs min-h-[60px]" 
+                placeholder="Key findings, overall safety observations, sample suitability..." 
+                className="text-xs min-h-[75px] resize-y" 
               />
             </div>
 
             {/* Recommendations */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-emerald-700">2. Recommendations</Label>
+              <Label className="text-xs font-semibold flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> 2. Actionable Recommendations
+              </Label>
               <Textarea 
                 value={newRecs} 
                 onChange={(e) => setNewRecs(e.target.value)} 
-                placeholder="Actionable steps, storage or recipe suggestions..." 
-                className="text-xs min-h-[60px]" 
+                placeholder="Actionable steps, storage or recipe suggestions, preventive measures..." 
+                className="text-xs min-h-[75px] resize-y" 
               />
             </div>
 
             {/* Tips */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-amber-700">3. Tips & Best Practices</Label>
+              <Label className="text-xs font-semibold flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
+                <Lightbulb className="h-3.5 w-3.5 text-amber-600" /> 3. Tips & Best Practices
+              </Label>
               <Textarea 
                 value={newTips} 
                 onChange={(e) => setNewTips(e.target.value)} 
                 placeholder="Practical food handling, shelf-life, or consumption tips..." 
-                className="text-xs min-h-[60px]" 
+                className="text-xs min-h-[75px] resize-y" 
               />
             </div>
 
             {/* Additional Notes */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-700">4. Additional Notes</Label>
+              <Label className="text-xs font-semibold flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                <HelpCircle className="h-3.5 w-3.5 text-slate-500" /> 4. Additional Notes & Disclaimers
+              </Label>
               <Textarea 
                 value={newNotes} 
                 onChange={(e) => setNewNotes(e.target.value)} 
-                placeholder="Compliance references (FSSAI/NABL) and disclaimers..." 
-                className="text-xs min-h-[60px]" 
+                placeholder="Compliance references (FSSAI/NABL), test standard methods, legal disclaimers..." 
+                className="text-xs min-h-[70px] resize-y" 
               />
             </div>
 
             {/* Auto-approve checkbox */}
-            <div className="flex items-center gap-2 pt-2">
+            <div className="rounded-lg border border-border/80 bg-muted/20 p-3 flex items-start gap-2.5">
               <input 
                 type="checkbox" 
                 id="auto-approve-chk" 
                 checked={autoApprove} 
                 onChange={(e) => setAutoApprove(e.target.checked)} 
-                className="rounded border-border"
+                className="rounded border-border mt-0.5 h-4 w-4 text-primary focus:ring-primary"
               />
-              <Label htmlFor="auto-approve-chk" className="text-xs cursor-pointer">
-                Publish and mark as Verified immediately (notifies user via email)
+              <Label htmlFor="auto-approve-chk" className="text-xs cursor-pointer font-medium leading-relaxed text-foreground">
+                Publish and mark as Verified immediately (notifies user via email and updates order status to Completed)
               </Label>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-border">
-            <Button variant="outline" size="sm" onClick={() => setIsUploadModalOpen(false)}>Cancel</Button>
+          <SheetFooter className="p-4 bg-muted/30 border-t border-border flex items-center justify-end gap-2 shrink-0">
+            <Button variant="outline" size="sm" onClick={() => setIsUploadModalOpen(false)}>
+              Cancel
+            </Button>
             <Button 
               size="sm" 
               onClick={handleCreateReportSubmit} 
               disabled={createReportMutation.isPending || newIsUploading || !targetBookingId || !newUploadedFileUrl}
-              className="bg-primary hover:bg-primary-deep text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-sm"
             >
-              {createReportMutation.isPending ? "Submitting..." : "Upload & Save Report"}
+              {createReportMutation.isPending ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Submitting...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-3.5 w-3.5" /> Upload & Save Report
+                </>
+              )}
             </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
