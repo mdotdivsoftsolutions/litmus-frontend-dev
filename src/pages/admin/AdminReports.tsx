@@ -85,28 +85,44 @@ export default function AdminReports() {
 
   const rawBookings = response?.data || [];
   
+  const hasReport = (b: any) => 
+    (Array.isArray(b.reportFiles) && b.reportFiles.length > 0) || 
+    Boolean(b.reportUrl) || 
+    Boolean(b.metadata?.reportUrl) ||
+    Boolean(b.reportSummary?.summary);
+
   // Bookings with reports
-  const reportsBookings = rawBookings.filter((b: any) => b.reportFiles && b.reportFiles.length > 0);
+  const reportsBookings = rawBookings.filter(hasReport);
 
   // Bookings without reports (eligible for manual admin report upload)
-  const bookingsWithoutReports = rawBookings.filter((b: any) => !b.reportFiles || b.reportFiles.length === 0);
+  const bookingsWithoutReports = rawBookings.filter((b: any) => !hasReport(b));
 
-  const mappedReports = reportsBookings.map((b: any) => ({
-    id: b._id,
-    bookingId: `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`,
-    user: `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim() || 'Unknown User',
-    product: b.items?.[0]?.samples?.[0]?.productName || b.items?.[0]?.packageId?.name || b.items?.[0]?.testId?.name || "Service Item",
-    lab: b.labId?.labName || "Litmus Assigned Lab",
-    amount: b.items?.reduce((sum: number, item: any) => sum + (item.price || 0), 0) || 0,
-    tests: b.items?.flatMap((item: any) => item.samples?.[0]?.selectedParameters || [item.packageId?.name || item.testId?.name || "Service Item"]) || [],
-    reportFiles: b.reportFiles || [],
-    reportSummary: b.reportSummary || {},
-    isReportApprovedByAdmin: b.isReportApprovedByAdmin,
-    status: b.isReportApprovedByAdmin ? "Verified" : "Pending Verification",
-    uploadDate: format(new Date(b.updatedAt || b.createdAt), "MMM d, yyyy"),
-    rawDate: new Date(b.updatedAt || b.createdAt),
-    rawBooking: b,
-  })).sort((a: any, b: any) => b.rawDate.getTime() - a.rawDate.getTime());
+  const mappedReports = reportsBookings.map((b: any) => {
+    const files = Array.isArray(b.reportFiles) && b.reportFiles.length > 0
+      ? b.reportFiles
+      : b.reportUrl
+        ? [b.reportUrl]
+        : b.metadata?.reportUrl
+          ? [b.metadata.reportUrl]
+          : [];
+
+    return {
+      id: b._id,
+      bookingId: `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`,
+      user: `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim() || 'Unknown User',
+      product: b.items?.[0]?.samples?.[0]?.productName || b.items?.[0]?.packageId?.name || b.items?.[0]?.testId?.name || "Service Item",
+      lab: b.labId?.labName || "Litmus Assigned Lab",
+      amount: b.items?.reduce((sum: number, item: any) => sum + (item.price || 0), 0) || 0,
+      tests: b.items?.flatMap((item: any) => item.samples?.[0]?.selectedParameters || [item.packageId?.name || item.testId?.name || "Service Item"]) || [],
+      reportFiles: files,
+      reportSummary: b.reportSummary || {},
+      isReportApprovedByAdmin: b.isReportApprovedByAdmin,
+      status: b.isReportApprovedByAdmin ? "Verified" : "Pending Verification",
+      uploadDate: format(new Date(b.metadata?.reportSubmittedAt || b.updatedAt || b.createdAt), "MMM d, yyyy"),
+      rawDate: new Date(b.metadata?.reportSubmittedAt || b.updatedAt || b.createdAt),
+      rawBooking: b,
+    };
+  }).sort((a: any, b: any) => b.rawDate.getTime() - a.rawDate.getTime());
 
   // Sync edit state when a report is selected
   useEffect(() => {
@@ -153,6 +169,7 @@ export default function AdminReports() {
     onSuccess: () => {
       toast.success("Report verified, updated, and published successfully");
       queryClient.invalidateQueries({ queryKey: ["adminReports"] });
+      queryClient.invalidateQueries({ queryKey: ["adminBookings"] });
       setSelectedReport(null);
     },
     onError: () => toast.error("Failed to approve report")
@@ -163,6 +180,7 @@ export default function AdminReports() {
     onSuccess: () => {
       toast.success("Report and remarks updated successfully");
       queryClient.invalidateQueries({ queryKey: ["adminReports"] });
+      queryClient.invalidateQueries({ queryKey: ["adminBookings"] });
       setSelectedReport(null);
     },
     onError: () => toast.error("Failed to update report")
@@ -173,6 +191,7 @@ export default function AdminReports() {
     onSuccess: () => {
       toast.success("Report rejected successfully");
       queryClient.invalidateQueries({ queryKey: ["adminReports"] });
+      queryClient.invalidateQueries({ queryKey: ["adminBookings"] });
       setSelectedReport(null);
       setRejectionReason("");
     },
@@ -184,6 +203,7 @@ export default function AdminReports() {
     onSuccess: () => {
       toast.success("New report successfully attached to booking!");
       queryClient.invalidateQueries({ queryKey: ["adminReports"] });
+      queryClient.invalidateQueries({ queryKey: ["adminBookings"] });
       setIsUploadModalOpen(false);
       // Reset form
       setTargetBookingId("");

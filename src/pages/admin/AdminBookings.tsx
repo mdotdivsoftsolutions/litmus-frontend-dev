@@ -124,6 +124,8 @@ export default function AdminBookings() {
       date: format(new Date(b.createdAt || new Date()), "MMM d, yyyy"),
       rawDate: new Date(b.createdAt || new Date()),
       isReportApprovedByAdmin: b.isReportApprovedByAdmin,
+      hasReportPendingApproval: Boolean((b.reportFiles?.length > 0 || b.reportUrl || b.metadata?.reportUrl) && !b.isReportApprovedByAdmin),
+      reportFiles: b.reportFiles || [],
       rawItems: b.items || [],
       userEmail: b.userId?.email,
       userPhone: b.userId?.phone,
@@ -394,7 +396,16 @@ export default function AdminBookings() {
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{b.lab}</TableCell>
                   {canViewPricing && <TableCell className="font-medium">₹{b.amount?.toLocaleString()}</TableCell>}
                   <TableCell><StatusBadge status={b.paymentStatus} /></TableCell>
-                  <TableCell><StatusBadge status={b.status} /></TableCell>
+                  <TableCell>
+                    {b.hasReportPendingApproval ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
+                        <FileText className="h-3.5 w-3.5 text-amber-700" />
+                        Report Uploaded
+                      </span>
+                    ) : (
+                      <StatusBadge status={b.status} />
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <Button variant="ghost" size="sm" className="gap-1 h-8 px-2 text-xs" onClick={(e) => { e.stopPropagation(); setSelectedBooking(b); }}>

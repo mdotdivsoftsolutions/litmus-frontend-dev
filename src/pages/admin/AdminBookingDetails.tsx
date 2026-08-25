@@ -564,6 +564,36 @@ export default function AdminBookingDetails() {
         </div>
       </div>
 
+      {/* Pending Lab Report Approval Banner */}
+      {reportFiles.length > 0 && !b.isReportApprovedByAdmin && (
+        <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-fade-in">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-amber-100 rounded-lg text-amber-800 shrink-0">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-amber-950 flex items-center gap-2">
+                Lab Test Report Uploaded & Awaiting Admin Approval
+                <Badge className="bg-amber-500 text-white text-[10px] uppercase tracking-wider">Action Required</Badge>
+              </h4>
+              <p className="text-xs text-amber-800 mt-0.5">
+                The laboratory has uploaded {reportFiles.length} test report document{reportFiles.length > 1 ? 's' : ''}. The customer cannot view or download this report until you review and approve it.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+            <Button 
+              size="sm" 
+              className="bg-primary hover:bg-primary/90 text-white text-xs font-bold gap-1.5 shadow-sm"
+              onClick={() => setIsReportDrawerOpen(true)}
+            >
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              Review & Approve Report
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* 4-Stat Metric Cards Ribbon */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         
