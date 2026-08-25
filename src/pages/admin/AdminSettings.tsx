@@ -42,6 +42,7 @@ import { cn } from "@/lib/utils";
 import { PickupCoverageSettings } from "./PickupCoverageSettings";
 import { DeskNotificationSettings } from "./DeskNotificationSettings";
 import { NotificationWorkflowsSettings } from "./NotificationWorkflowsSettings";
+import { CourierAddressSettings } from "./CourierAddressSettings";
 
 
 const baseSchema = z.object({
@@ -221,6 +222,7 @@ export default function AdminSettings() {
       group: "Logistics & Facilities",
       items: [
         { id: "logistics", label: "Logistics & Pickup", icon: Truck, count: (logisticsData?.data || []).length, desc: "Sample transport methods" },
+        { id: "courier-address", label: "Courier Dispatch Address", icon: Building2, count: null, desc: "Litmus central sample intake address" },
         { id: "infrastructure", label: "Lab Equipment", icon: Microscope, count: (infrastructureData?.data || []).length, desc: "Accredited equipment templates" },
         { id: "activity-status", label: "Operational Status", icon: Settings2, count: (activityStatusData?.data || []).length, desc: "Workflow states & labels" },
         { id: "pickup", label: "Pickup Cities", icon: MapPin, count: null, desc: "Direct doorstep pickup zones" },
@@ -342,7 +344,7 @@ export default function AdminSettings() {
                   </CardDescription>
                 </div>
 
-                {!["pickup", "desk-notifications", "notification-workflows"].includes(activeTab) && (
+                {!["pickup", "courier-address", "desk-notifications", "notification-workflows"].includes(activeTab) && (
                   <div className="flex items-center gap-2">
                     <div className="relative w-44 sm:w-56">
 
@@ -622,6 +624,13 @@ export default function AdminSettings() {
               {activeTab === "pickup" && (
                 <div className="-m-4 sm:-m-5">
                   <PickupCoverageSettings />
+                </div>
+              )}
+
+              {/* 8b. Courier Dispatch Address */}
+              {activeTab === "courier-address" && (
+                <div className="p-1 sm:p-2">
+                  <CourierAddressSettings />
                 </div>
               )}
 

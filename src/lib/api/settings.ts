@@ -17,6 +17,18 @@ export interface INotificationWorkflows {
   customerNotifications: INotificationWorkflowChannel;
 }
 
+export interface ICourierAddress {
+  facilityName: string;
+  attention: string;
+  street: string;
+  city: string;
+  state: string;
+  pincode: string;
+  phone: string;
+  email: string;
+  workingHours: string;
+}
+
 export interface IPlatformSettingsData {
   _id?: string;
   pickupCities: string[];
@@ -24,6 +36,7 @@ export interface IPlatformSettingsData {
   adminWhatsAppNumber?: string;
   adminEmailRecipient?: string;
   notificationWorkflows?: INotificationWorkflows;
+  courierAddress?: ICourierAddress;
   createdAt?: string;
   updatedAt?: string;
 }
