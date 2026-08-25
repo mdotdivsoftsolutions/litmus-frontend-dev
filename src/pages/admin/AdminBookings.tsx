@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
+import { format, isAfter, isBefore, startOfDay, endOfDay, subDays, startOfMonth } from "date-fns";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api/admin";
 import { authApi } from "@/lib/api/auth";
@@ -49,6 +49,7 @@ import {
   FlaskConical
 } from "lucide-react";
 import { InvoiceDialog } from "@/components/admin/InvoiceDialog";
+import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -75,11 +76,48 @@ export default function AdminBookings() {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  // Filters
+  // Active Filters
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  // Draft Filters (Only applied upon clicking "Apply Filters")
+  const [draftStatusFilter, setDraftStatusFilter] = useState("all");
+  const [draftPaymentStatusFilter, setDraftPaymentStatusFilter] = useState("all");
+  const [draftStartDate, setDraftStartDate] = useState("");
+  const [draftEndDate, setDraftEndDate] = useState("");
+
+  const handleOpenFilters = () => {
+    setDraftStatusFilter(statusFilter);
+    setDraftPaymentStatusFilter(paymentStatusFilter);
+    setDraftStartDate(startDate);
+    setDraftEndDate(endDate);
+    setShowFilters(true);
+  };
+
+  const handleApplyFilters = () => {
+    setStatusFilter(draftStatusFilter);
+    setPaymentStatusFilter(draftPaymentStatusFilter);
+    setStartDate(draftStartDate);
+    setEndDate(draftEndDate);
+    setCurrentPage(1);
+    setShowFilters(false);
+  };
+
+  const clearFilters = () => {
+    setDraftStatusFilter("all");
+    setDraftPaymentStatusFilter("all");
+    setDraftStartDate("");
+    setDraftEndDate("");
+    setStatusFilter("all");
+    setPaymentStatusFilter("all");
+    setStartDate("");
+    setEndDate("");
+    setSearch("");
+    setShowFilters(false);
+    setCurrentPage(1);
+  };
 
   // Query params sent to backend
   const queryParams = {
@@ -177,16 +215,6 @@ export default function AdminBookings() {
 
   const totalBookings = response?.total ?? (response?.count ?? rawBookings.length);
   const totalPages = response?.totalPages ?? Math.max(1, Math.ceil(totalBookings / ITEMS_PER_PAGE));
-
-  const clearFilters = () => {
-    setStatusFilter("all");
-    setPaymentStatusFilter("all");
-    setStartDate("");
-    setEndDate("");
-    setSearch("");
-    setShowFilters(false);
-    setCurrentPage(1);
-  };
 
   const isSelectedRejected = selectedBooking?.status?.toUpperCase() === 'REJECTED';
   const isSelectedCancelled = selectedBooking?.status?.toUpperCase() === 'CANCELLED';
@@ -538,57 +566,153 @@ export default function AdminBookings() {
                 }}
               />
             </div>
-            <Sheet open={showFilters} onOpenChange={setShowFilters}>
-              <Button variant="outline" className="gap-2 bg-white border border-slate-200 shadow-sm h-10 shrink-0 text-xs" onClick={() => setShowFilters(true)}>
-                <Filter className="h-4 w-4" />Filters
-                {(statusFilter !== 'all' || paymentStatusFilter !== 'all' || startDate || endDate) && <span className="ml-1 flex h-2 w-2 rounded-full bg-primary" />}
+            <Sheet open={showFilters} onOpenChange={(open) => {
+              if (open) handleOpenFilters();
+              else setShowFilters(false);
+            }}>
+              <Button variant="outline" className="gap-2 bg-white border border-slate-200 shadow-sm h-10 shrink-0 text-xs" onClick={handleOpenFilters}>
+                <Filter className="h-4 w-4 text-slate-500" />
+                <span>Filters</span>
+                {(statusFilter !== 'all' || paymentStatusFilter !== 'all' || startDate || endDate) && (
+                  <span className="h-2 w-2 rounded-full bg-primary" />
+                )}
               </Button>
-              <SheetContent className="overflow-y-auto">
-                <SheetHeader><SheetTitle>Filter Bookings</SheetTitle></SheetHeader>
-                <div className="mt-6 space-y-6">
+              <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col h-full bg-white dark:bg-card border-l border-slate-200 dark:border-slate-800 shadow-2xl font-sans">
+                <SheetHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-card shrink-0 text-left">
+                  <div className="flex items-center justify-between pr-8">
+                    <div className="flex items-center gap-2">
+                      <Filter className="h-4 w-4 text-primary" />
+                      <span className="font-bold text-base text-slate-900 dark:text-white">Filter Bookings</span>
+                      {(statusFilter !== 'all' || paymentStatusFilter !== 'all' || startDate || endDate) && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                    {(draftStatusFilter !== 'all' || draftPaymentStatusFilter !== 'all' || draftStartDate || draftEndDate || statusFilter !== 'all' || paymentStatusFilter !== 'all' || startDate || endDate) && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="text-xs text-muted-foreground hover:text-primary font-medium"
+                      >
+                        Reset All
+                      </button>
+                    )}
+                  </div>
+                  <SheetDescription className="text-xs text-muted-foreground mt-0.5">
+                    Filter bookings by fulfillment status, payment state, or placement date.
+                  </SheetDescription>
+                </SheetHeader>
+
+                <div className="flex-1 overflow-y-auto p-5 space-y-5">
+                  {/* 1. Fulfillment Status Filter */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Booking Status</label>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="bg-white border border-slate-200 shadow-sm">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+                      Booking Fulfillment Status
+                    </label>
+                    <Select value={draftStatusFilter} onValueChange={setDraftStatusFilter}>
+                      <SelectTrigger className="bg-white dark:bg-card border border-slate-200 dark:border-slate-700 h-10 text-xs shadow-2xs">
                         <SelectValue placeholder="All Statuses" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        {["Pending", "Approved", "In Progress", "Completed", "Rejected"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
+                        <SelectItem value="Pending" className="text-xs">Pending Allocation</SelectItem>
+                        <SelectItem value="Approved" className="text-xs">Approved</SelectItem>
+                        <SelectItem value="In Progress" className="text-xs">In Progress</SelectItem>
+                        <SelectItem value="Completed" className="text-xs">Completed</SelectItem>
+                        <SelectItem value="Rejected" className="text-xs">Rejected</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* 2. Payment Status Filter */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Payment Status</label>
-                    <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
-                      <SelectTrigger className="bg-white border border-slate-200 shadow-sm">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
+                      Payment Status
+                    </label>
+                    <Select value={draftPaymentStatusFilter} onValueChange={setDraftPaymentStatusFilter}>
+                      <SelectTrigger className="bg-white dark:bg-card border border-slate-200 dark:border-slate-700 h-10 text-xs shadow-2xs">
                         <SelectValue placeholder="All Payments" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Payments</SelectItem>
-                        {["Paid", "Pending", "Refunded"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        <SelectItem value="all" className="text-xs">All Payments</SelectItem>
+                        <SelectItem value="Paid" className="text-xs">Paid / Completed</SelectItem>
+                        <SelectItem value="Pending" className="text-xs">Pending</SelectItem>
+                        <SelectItem value="Refunded" className="text-xs">Refunded</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium flex items-center gap-2"><CalendarIcon className="h-4 w-4" /> Date Range</label>
-                    <div className="grid grid-cols-2 gap-2">
+
+                  {/* 3. Date Range Filter */}
+                  <div className="space-y-2.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+                      <CalendarIcon className="h-3.5 w-3.5 text-primary" /> Date Range
+                    </label>
+
+                    {/* Quick Date Presets */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { label: "Today", getRange: () => ({ s: format(new Date(), 'yyyy-MM-dd'), e: format(new Date(), 'yyyy-MM-dd') }) },
+                        { label: "Last 7 Days", getRange: () => ({ s: format(subDays(new Date(), 7), 'yyyy-MM-dd'), e: format(new Date(), 'yyyy-MM-dd') }) },
+                        { label: "Last 30 Days", getRange: () => ({ s: format(subDays(new Date(), 30), 'yyyy-MM-dd'), e: format(new Date(), 'yyyy-MM-dd') }) },
+                        { label: "This Month", getRange: () => ({ s: format(startOfMonth(new Date()), 'yyyy-MM-dd'), e: format(new Date(), 'yyyy-MM-dd') }) },
+                      ].map((preset) => (
+                        <button
+                          key={preset.label}
+                          type="button"
+                          onClick={() => {
+                            const { s, e } = preset.getRange();
+                            setDraftStartDate(s);
+                            setDraftEndDate(e);
+                          }}
+                          className="text-[11px] font-medium px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 hover:text-slate-900"
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900/30 p-3.5 space-y-3 shadow-xs">
                       <div className="space-y-1">
-                        <span className="text-xs text-muted-foreground">From</span>
-                        <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="bg-white border border-slate-200 shadow-sm text-xs" />
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground block">From Date</span>
+                        <Input 
+                          type="date" 
+                          value={draftStartDate} 
+                          onChange={(e) => setDraftStartDate(e.target.value)} 
+                          className="bg-white dark:bg-card border border-slate-200 dark:border-slate-700 h-9 text-xs" 
+                        />
                       </div>
                       <div className="space-y-1">
-                        <span className="text-xs text-muted-foreground">To</span>
-                        <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="bg-white border border-slate-200 shadow-sm text-xs" />
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground block">To Date</span>
+                        <Input 
+                          type="date" 
+                          value={draftEndDate} 
+                          onChange={(e) => setDraftEndDate(e.target.value)} 
+                          className="bg-white dark:bg-card border border-slate-200 dark:border-slate-700 h-9 text-xs" 
+                        />
                       </div>
                     </div>
                   </div>
-
-                  <div className="flex gap-2 pt-4">
-                    <Button className="flex-1 bg-primary hover:bg-primary-deep" onClick={() => { setShowFilters(false); setCurrentPage(1); }}>Apply Filters</Button>
-                    <Button variant="outline" className="flex-1" onClick={clearFilters}>Clear</Button>
-                  </div>
                 </div>
+
+                {/* Sticky Footer */}
+                <SheetFooter className="p-4 bg-white dark:bg-card border-t border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between gap-3 shrink-0">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 text-xs font-semibold h-9 border-slate-200" 
+                    onClick={clearFilters}
+                  >
+                    Clear All
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="flex-1 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground h-9 shadow-xs" 
+                    onClick={handleApplyFilters}
+                  >
+                    Apply Filters
+                  </Button>
+                </SheetFooter>
               </SheetContent>
             </Sheet>
           </div>

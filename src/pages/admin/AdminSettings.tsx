@@ -35,7 +35,7 @@ import { logisticsApi } from "@/lib/api/logistics";
 import { infrastructureApi } from "@/lib/api/infrastructure";
 import { activityStatusApi } from "@/lib/api/activityStatus";
 import { apiClient } from "@/lib/api/axios";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -214,33 +214,33 @@ export default function AdminSettings() {
     {
       group: "Catalog & Classifications",
       items: [
-        { id: "test-types", label: "Test Classifications", icon: FlaskConical, count: (testTypesData?.data || []).length, desc: "Sample & diagnostic test categories" },
-        { id: "tags", label: "Package Tags", icon: TagIcon, count: (tagsData?.data || []).length, desc: "Highlight badges for packages" },
+        { id: "test-types", label: "Test Classifications", singular: "Test Classification", icon: FlaskConical, count: (testTypesData?.data || []).length, desc: "Sample & diagnostic test categories" },
+        { id: "tags", label: "Package Tags", singular: "Package Tag", icon: TagIcon, count: (tagsData?.data || []).length, desc: "Highlight badges for packages" },
       ]
     },
     {
       group: "Logistics & Facilities",
       items: [
-        { id: "logistics", label: "Logistics & Pickup", icon: Truck, count: (logisticsData?.data || []).length, desc: "Sample transport methods" },
-        { id: "courier-address", label: "Courier Dispatch Address", icon: Building2, count: null, desc: "Litmus central sample intake address" },
-        { id: "infrastructure", label: "Lab Equipment", icon: Microscope, count: (infrastructureData?.data || []).length, desc: "Accredited equipment templates" },
-        { id: "activity-status", label: "Operational Status", icon: Settings2, count: (activityStatusData?.data || []).length, desc: "Workflow states & labels" },
-        { id: "pickup", label: "Pickup Cities", icon: MapPin, count: null, desc: "Direct doorstep pickup zones" },
+        { id: "logistics", label: "Logistics & Pickup", singular: "Logistics Service", icon: Truck, count: (logisticsData?.data || []).length, desc: "Sample transport methods" },
+        { id: "courier-address", label: "Courier Dispatch Address", singular: "Address", icon: Building2, count: null, desc: "Litmus central sample intake address" },
+        { id: "infrastructure", label: "Lab Equipment", singular: "Equipment Template", icon: Microscope, count: (infrastructureData?.data || []).length, desc: "Accredited equipment templates" },
+        { id: "activity-status", label: "Operational Status", singular: "Operational Status", icon: Settings2, count: (activityStatusData?.data || []).length, desc: "Workflow states & labels" },
+        { id: "pickup", label: "Pickup Cities", singular: "Pickup City", icon: MapPin, count: null, desc: "Direct doorstep pickup zones" },
       ]
     },
     {
       group: "Live Support & Notifications",
       items: [
-        { id: "notification-workflows", label: "Email & WhatsApp Workflows", icon: MessageSquare, count: null, desc: "Order milestones, abandoned cart & support alerts" },
-        { id: "desk-notifications", label: "Desk & Alerts", icon: Settings2, count: null, desc: "Presence status, alerts & chime settings" },
+        { id: "notification-workflows", label: "Email & WhatsApp Workflows", singular: "Workflow", icon: MessageSquare, count: null, desc: "Order milestones, abandoned cart & support alerts" },
+        { id: "desk-notifications", label: "Desk & Alerts", singular: "Alert Rule", icon: Settings2, count: null, desc: "Presence status, alerts & chime settings" },
       ]
     },
 
     {
       group: "Organization & Staff",
       items: [
-        { id: "departments", label: "Departments", icon: Briefcase, count: (departmentsData?.data || []).length, desc: "Internal organizational divisions" },
-        { id: "designations", label: "Staff Designations", icon: BadgeCheck, count: (designationsData?.data || []).length, desc: "Job roles and positions" },
+        { id: "departments", label: "Departments", singular: "Department", icon: Briefcase, count: (departmentsData?.data || []).length, desc: "Internal organizational divisions" },
+        { id: "designations", label: "Staff Designations", singular: "Staff Designation", icon: BadgeCheck, count: (designationsData?.data || []).length, desc: "Job roles and positions" },
       ]
     }
   ];
@@ -656,148 +656,208 @@ export default function AdminSettings() {
 
       {/* Slide-over Sheet for Creation */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="sm:max-w-md bg-white">
-          <SheetHeader className="pb-4 border-b border-slate-100">
-            <SheetTitle className="text-base font-bold">
-              Add New {currentTabMeta?.label}
-            </SheetTitle>
-            <SheetDescription className="text-xs text-muted-foreground">
-              Define a new system lookup entry for {currentTabMeta?.label.toLowerCase()}.
-            </SheetDescription>
-          </SheetHeader>
+        <SheetContent className="sm:max-w-md w-full p-0 flex flex-col justify-between h-full bg-white shadow-2xl border-l border-slate-200 font-sans">
+          <div className="flex-1 overflow-y-auto">
+            <SheetHeader className="p-5 sm:p-6 border-b border-slate-100 bg-slate-50/70 text-left">
+              <div className="flex items-center gap-3">
+                {currentTabMeta?.icon && (
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                    <currentTabMeta.icon className="h-5 w-5" />
+                  </div>
+                )}
+                <div>
+                  <SheetTitle className="text-base sm:text-lg font-bold text-slate-900">
+                    Add New {currentTabMeta?.singular || currentTabMeta?.label}
+                  </SheetTitle>
+                  <SheetDescription className="text-xs text-muted-foreground mt-0.5">
+                    Define a new system lookup entry for {currentTabMeta?.label.toLowerCase()}.
+                  </SheetDescription>
+                </div>
+              </div>
+            </SheetHeader>
 
-          <div className="py-5">
-            {activeTab === "test-types" && (
-              <Form {...testTypeForm}>
-                <form onSubmit={testTypeForm.handleSubmit((d) => createTestTypeMutation.mutate({ name: d.name }))} className="space-y-4">
-                  <FormField control={testTypeForm.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">Classification Name</FormLabel>
-                      <FormControl><Input placeholder="e.g. Microbiological Analysis" {...field} className="text-xs h-9" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button type="submit" disabled={createTestTypeMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
-                    {createTestTypeMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Classification
-                  </Button>
-                </form>
-              </Form>
-            )}
+            <div className="p-5 sm:p-6 space-y-5">
+              {/* Context helper notice */}
+              <div className="p-3 rounded-lg bg-emerald-50/70 border border-emerald-200/80 text-[11px] text-emerald-800 leading-relaxed flex items-start gap-2">
+                <BadgeCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                <span>
+                  This new lookup entry will immediately be available across administrative forms, catalog setup, and booking management filters.
+                </span>
+              </div>
 
-            {activeTab === "tags" && (
-              <Form {...tagForm}>
-                <form onSubmit={tagForm.handleSubmit((d) => createTagMutation.mutate({ name: d.name }))} className="space-y-4">
-                  <FormField control={tagForm.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">Tag Name</FormLabel>
-                      <FormControl><Input placeholder="e.g. Popular, Advanced Safety" {...field} className="text-xs h-9" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button type="submit" disabled={createTagMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
-                    {createTagMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Tag
-                  </Button>
-                </form>
-              </Form>
-            )}
+              {activeTab === "test-types" && (
+                <Form {...testTypeForm}>
+                  <form id="settings-form" onSubmit={testTypeForm.handleSubmit((d) => createTestTypeMutation.mutate({ name: d.name }))} className="space-y-4">
+                    <FormField control={testTypeForm.control} name="name" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-slate-800">Classification Name <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Microbiological Analysis" {...field} className="text-xs h-9.5 bg-white border-slate-200" />
+                        </FormControl>
+                        <p className="text-[11px] text-muted-foreground mt-1">Examples: Chemical Assay, Heavy Metals, Nutritional Profiling</p>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </form>
+                </Form>
+              )}
 
-            {activeTab === "logistics" && (
-              <Form {...logisticsForm}>
-                <form onSubmit={logisticsForm.handleSubmit((d) => createLogisticsMutation.mutate({ name: d.name }))} className="space-y-4">
-                  <FormField control={logisticsForm.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">Logistics Service Name</FormLabel>
-                      <FormControl><Input placeholder="e.g. Cold-Chain Express" {...field} className="text-xs h-9" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button type="submit" disabled={createLogisticsMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
-                    {createLogisticsMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Logistics Service
-                  </Button>
-                </form>
-              </Form>
-            )}
+              {activeTab === "tags" && (
+                <Form {...tagForm}>
+                  <form id="settings-form" onSubmit={tagForm.handleSubmit((d) => createTagMutation.mutate({ name: d.name }))} className="space-y-4">
+                    <FormField control={tagForm.control} name="name" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-slate-800">Tag Name <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Popular, Advanced Safety" {...field} className="text-xs h-9.5 bg-white border-slate-200" />
+                        </FormControl>
+                        <p className="text-[11px] text-muted-foreground mt-1">Used as promotional and category tags on public packages.</p>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </form>
+                </Form>
+              )}
 
-            {activeTab === "infrastructure" && (
-              <Form {...infrastructureForm}>
-                <form onSubmit={infrastructureForm.handleSubmit((d) => createInfrastructureMutation.mutate({
-                  title: d.title || "",
-                  description: d.description || "",
-                  icon: d.icon || "microscope"
-                }))} className="space-y-4">
-                  <FormField control={infrastructureForm.control} name="title" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">Equipment Title</FormLabel>
-                      <FormControl><Input placeholder="e.g. HPLC Spectrometer" {...field} className="text-xs h-9" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={infrastructureForm.control} name="description" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">Description</FormLabel>
-                      <FormControl><Input placeholder="High precision analytical equipment" {...field} className="text-xs h-9" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button type="submit" disabled={createInfrastructureMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
-                    {createInfrastructureMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Equipment Template
-                  </Button>
-                </form>
-              </Form>
-            )}
+              {activeTab === "logistics" && (
+                <Form {...logisticsForm}>
+                  <form id="settings-form" onSubmit={logisticsForm.handleSubmit((d) => createLogisticsMutation.mutate({ name: d.name }))} className="space-y-4">
+                    <FormField control={logisticsForm.control} name="name" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-slate-800">Logistics Service Name <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Cold-Chain Express" {...field} className="text-xs h-9.5 bg-white border-slate-200" />
+                        </FormControl>
+                        <p className="text-[11px] text-muted-foreground mt-1">Designates transport modes available for sample pickups.</p>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </form>
+                </Form>
+              )}
 
-            {activeTab === "activity-status" && (
-              <Form {...activityStatusForm}>
-                <form onSubmit={activityStatusForm.handleSubmit((d) => createActivityStatusMutation.mutate({ name: d.name }))} className="space-y-4">
-                  <FormField control={activityStatusForm.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">Status Label</FormLabel>
-                      <FormControl><Input placeholder="e.g. Sample Processing" {...field} className="text-xs h-9" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button type="submit" disabled={createActivityStatusMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
-                    {createActivityStatusMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Status
-                  </Button>
-                </form>
-              </Form>
-            )}
+              {activeTab === "infrastructure" && (
+                <Form {...infrastructureForm}>
+                  <form id="settings-form" onSubmit={infrastructureForm.handleSubmit((d) => createInfrastructureMutation.mutate({
+                    title: d.title || "",
+                    description: d.description || "",
+                    icon: d.icon || "microscope"
+                  }))} className="space-y-4">
+                    <FormField control={infrastructureForm.control} name="title" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-slate-800">Equipment Title <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. HPLC Spectrometer" {...field} className="text-xs h-9.5 bg-white border-slate-200" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={infrastructureForm.control} name="description" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-slate-800">Description <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. High precision chromatography analyzer" {...field} className="text-xs h-9.5 bg-white border-slate-200" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </form>
+                </Form>
+              )}
 
-            {activeTab === "departments" && (
-              <Form {...departmentForm}>
-                <form onSubmit={departmentForm.handleSubmit((d) => createDepartmentMutation.mutate({ name: d.name }))} className="space-y-4">
-                  <FormField control={departmentForm.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">Department Name</FormLabel>
-                      <FormControl><Input placeholder="e.g. Microbiology Dept" {...field} className="text-xs h-9" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button type="submit" disabled={createDepartmentMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
-                    {createDepartmentMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Department
-                  </Button>
-                </form>
-              </Form>
-            )}
+              {activeTab === "activity-status" && (
+                <Form {...activityStatusForm}>
+                  <form id="settings-form" onSubmit={activityStatusForm.handleSubmit((d) => createActivityStatusMutation.mutate({ name: d.name }))} className="space-y-4">
+                    <FormField control={activityStatusForm.control} name="name" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-slate-800">Status Label <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Sample In Processing" {...field} className="text-xs h-9.5 bg-white border-slate-200" />
+                        </FormControl>
+                        <p className="text-[11px] text-muted-foreground mt-1">Configures status steps available during lab order workflows.</p>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </form>
+                </Form>
+              )}
 
-            {activeTab === "designations" && (
-              <Form {...designationForm}>
-                <form onSubmit={designationForm.handleSubmit((d) => createDesignationMutation.mutate({ name: d.name }))} className="space-y-4">
-                  <FormField control={designationForm.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-semibold">Designation Title</FormLabel>
-                      <FormControl><Input placeholder="e.g. Lead Microbiologist" {...field} className="text-xs h-9" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button type="submit" disabled={createDesignationMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-white text-xs h-9">
-                    {createDesignationMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null} Save Designation
-                  </Button>
-                </form>
-              </Form>
-            )}
+              {activeTab === "departments" && (
+                <Form {...departmentForm}>
+                  <form id="settings-form" onSubmit={departmentForm.handleSubmit((d) => createDepartmentMutation.mutate({ name: d.name }))} className="space-y-4">
+                    <FormField control={departmentForm.control} name="name" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-slate-800">Department Name <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Microbiology Dept" {...field} className="text-xs h-9.5 bg-white border-slate-200" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </form>
+                </Form>
+              )}
 
+              {activeTab === "designations" && (
+                <Form {...designationForm}>
+                  <form id="settings-form" onSubmit={designationForm.handleSubmit((d) => createDesignationMutation.mutate({ name: d.name }))} className="space-y-4">
+                    <FormField control={designationForm.control} name="name" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-slate-800">Designation Title <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Lead Microbiologist" {...field} className="text-xs h-9.5 bg-white border-slate-200" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </form>
+                </Form>
+              )}
+            </div>
           </div>
+
+          <SheetFooter className="p-4 sm:p-5 bg-slate-50/70 border-t border-slate-100 flex flex-row items-center justify-end gap-2.5 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSheetOpen(false)}
+              className="text-xs h-9 px-4 border-slate-200 hover:bg-slate-100 text-slate-700"
+            >
+              Cancel
+            </Button>
+            <Button
+              form="settings-form"
+              type="submit"
+              size="sm"
+              disabled={
+                createTestTypeMutation.isPending || 
+                createTagMutation.isPending || 
+                createLogisticsMutation.isPending || 
+                createInfrastructureMutation.isPending || 
+                createActivityStatusMutation.isPending || 
+                createDepartmentMutation.isPending || 
+                createDesignationMutation.isPending
+              }
+              className="text-xs h-9 px-5 bg-primary hover:bg-primary/90 text-white font-semibold shadow-xs"
+            >
+              {(
+                createTestTypeMutation.isPending || 
+                createTagMutation.isPending || 
+                createLogisticsMutation.isPending || 
+                createInfrastructureMutation.isPending || 
+                createActivityStatusMutation.isPending || 
+                createDepartmentMutation.isPending || 
+                createDesignationMutation.isPending
+              ) ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Saving...
+                </>
+              ) : (
+                `Save ${currentTabMeta?.singular || "Entry"}`
+              )}
+            </Button>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
 
