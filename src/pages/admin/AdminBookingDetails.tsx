@@ -282,47 +282,178 @@ export default function AdminBookingDetails() {
   const isPaymentRefunded = payStatusUpper === 'REFUNDED';
   const isPaymentRefundInitiated = payStatusUpper === 'REFUND_INITIATED';
 
+  const formatDateSafe = (dateVal: any, formatStr = "MMM d, yyyy • h:mm a") => {
+    if (!dateVal) return null;
+    try {
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return null;
+      return format(d, formatStr);
+    } catch {
+      return null;
+    }
+  };
+
+  const bookingCreatedDate = formatDateSafe(b.createdAt) || formatDateSafe(b.bookingDate) || "Recorded";
+  const paymentConfirmedDate = formatDateSafe(b.metadata?.paymentConfirmedAt) || (isPaymentPaid ? formatDateSafe(b.createdAt) : null);
+
   let paymentTimelineStep: {
     label: string;
     done: boolean;
     state: "completed" | "rejected" | "warning" | "failed" | "refunded" | "pending";
+    sub?: string;
     message?: string;
   };
 
   if (isPaymentPaid) {
-    paymentTimelineStep = { label: "Payment Confirmed (Paid)", done: true, state: "completed" };
+    paymentTimelineStep = { 
+      label: "Payment Confirmed (Paid)", 
+      done: true, 
+      state: "completed",
+      sub: paymentConfirmedDate || undefined
+    };
   } else if (isPaymentRefunded) {
-    paymentTimelineStep = { label: "Payment Refunded", done: true, state: "refunded" };
+    paymentTimelineStep = { 
+      label: "Payment Refunded", 
+      done: true, 
+      state: "refunded",
+      sub: formatDateSafe(b.updatedAt) || undefined
+    };
   } else if (isPaymentRefundInitiated) {
-    paymentTimelineStep = { label: "Refund Initiated", done: true, state: "warning" };
+    paymentTimelineStep = { 
+      label: "Refund Initiated", 
+      done: true, 
+      state: "warning",
+      sub: formatDateSafe(b.updatedAt) || undefined
+    };
   } else if (isPaymentFailed) {
-    paymentTimelineStep = { label: "Payment Failed", done: false, state: "failed", message: "Transaction unverified" };
+    paymentTimelineStep = { 
+      label: "Payment Failed", 
+      done: false, 
+      state: "failed", 
+      message: "Transaction unverified / failed" 
+    };
   } else {
-    paymentTimelineStep = { label: "Payment Pending", done: false, state: "warning", message: "Awaiting customer payment" };
+    paymentTimelineStep = { 
+      label: "Payment Pending", 
+      done: false, 
+      state: "warning", 
+      message: "Awaiting customer payment" 
+    };
   }
 
   const isAdminApproved = ['approved', 'in_progress', 'completed'].includes(status?.toLowerCase() || '');
+  const adminApprovedDate = formatDateSafe(b.metadata?.adminApprovedAt) || (isAdminApproved ? formatDateSafe(b.updatedAt) : null);
+
   const isLabAssigned = Boolean(b.labId?._id || b.metadata?.isLitmusDirect) || ['in_progress', 'completed'].includes(status?.toLowerCase() || '');
+  const labAssignedDate = formatDateSafe(b.metadata?.labAssignedAt) || (isLabAssigned ? formatDateSafe(b.updatedAt) : null);
+  const labNameDisplay = b.labId?.labName ? `Assigned to: ${b.labId.labName}` : b.metadata?.isLitmusDirect ? "Assigned to Litmus Central Lab" : undefined;
+
+  const isCollectorAssigned = Boolean(
+    b.assignedCollector?.name || 
+    ['ASSIGNED', 'REACHED', 'COLLECTED', 'SHIPPED'].includes(b.collectionStatus?.toUpperCase() || '') || 
+    b.courierDetails?.trackingId || 
+    ['in_progress', 'completed'].includes(status?.toLowerCase() || '')
+  );
+  const collectorAssignedDate = formatDateSafe(b.metadata?.collectorAssignedAt) || 
+    formatDateSafe(b.courierDetails?.submittedAt) || 
+    (isCollectorAssigned ? formatDateSafe(b.updatedAt) : null);
+  const collectorDisplayMsg = b.assignedCollector?.name 
+    ? `Collector: ${b.assignedCollector.name}${b.assignedCollector.contact ? ` (${b.assignedCollector.contact})` : ''}`
+    : b.courierDetails?.trackingId 
+      ? `Courier: ${b.courierDetails.courierName || 'Shipped'} (${b.courierDetails.trackingId})`
+      : isCollectorAssigned 
+        ? "Pickup / dispatch partner assigned" 
+        : undefined;
+
+  const isSampleCollected = Boolean(
+    ['COLLECTED', 'REACHED', 'SHIPPED'].includes(b.collectionStatus?.toUpperCase() || '') || 
+    ['in_progress', 'completed'].includes(status?.toLowerCase() || '')
+  );
+  const sampleCollectedDate = formatDateSafe(b.metadata?.sampleCollectedAt) || (isSampleCollected ? formatDateSafe(b.updatedAt) : null);
+  const sampleCollectedMsg = isSampleCollected 
+    ? (isCourierMethod ? "Sample in transit / received at lab" : "Sample collected & verified from client")
+    : undefined;
+
   const isTestingInProgress = ['in_progress', 'completed'].includes(status?.toLowerCase() || '');
+  const testingStartedDate = formatDateSafe(b.metadata?.testingStartedAt) || (isTestingInProgress ? formatDateSafe(b.updatedAt) : null);
+
   const isReportUploaded = (reportFiles && reportFiles.length > 0) || Boolean(reportSummary?.summary) || (b.reportFiles && b.reportFiles.length > 0) || status?.toLowerCase() === 'completed';
+  const reportUploadedDate = formatDateSafe(b.reportSummary?.updatedAt) || formatDateSafe(b.metadata?.reportUploadedAt) || (isReportUploaded ? formatDateSafe(b.updatedAt) : null);
+  const reportDisplayMsg = b.isReportApprovedByAdmin 
+    ? "Certified report verified & released" 
+    : (reportFiles.length > 0 || (b.reportFiles && b.reportFiles.length > 0)) 
+      ? "Report document uploaded" 
+      : undefined;
+
   const isComplete = status?.toLowerCase() === 'completed';
+  const completedDate = formatDateSafe(b.metadata?.completedAt) || (isComplete ? formatDateSafe(b.updatedAt) : null);
 
   const timelineSteps = isRejected ? [
-    { label: "Booking Placed", done: true, state: "completed" as const, sub: format(new Date(b.createdAt), "MMM d") },
+    { label: "Booking Placed", done: true, state: "completed" as const, sub: bookingCreatedDate },
     paymentTimelineStep,
-    { label: "Booking Rejected by Admin", done: true, state: "rejected" as const, message: b.metadata?.rejectionReason },
+    { label: "Booking Rejected by Admin", done: true, state: "rejected" as const, sub: formatDateSafe(b.updatedAt), message: b.metadata?.rejectionReason || "Order rejected" },
   ] : isCancelled ? [
-    { label: "Booking Placed", done: true, state: "completed" as const, sub: format(new Date(b.createdAt), "MMM d") },
+    { label: "Booking Placed", done: true, state: "completed" as const, sub: bookingCreatedDate },
     paymentTimelineStep,
-    { label: "Booking Cancelled", done: true, state: "rejected" as const },
+    { label: "Booking Cancelled", done: true, state: "rejected" as const, sub: formatDateSafe(b.updatedAt), message: "Cancelled by user / administrator" },
   ] : [
-    { label: "Booking Placed", done: true, state: "completed" as const, sub: format(new Date(b.createdAt), "MMM d") },
+    { 
+      label: "Booking Placed", 
+      done: true, 
+      state: "completed" as const, 
+      sub: bookingCreatedDate,
+      message: "Order registered in system"
+    },
     paymentTimelineStep,
-    { label: "Admin Approved", done: isAdminApproved, state: isAdminApproved ? "completed" as const : "pending" as const },
-    { label: "Lab Assigned", done: isLabAssigned, state: isLabAssigned ? "completed" as const : "pending" as const },
-    { label: "Testing in Progress", done: isTestingInProgress, state: isTestingInProgress ? "completed" as const : "pending" as const },
-    { label: "Certified Report Uploaded", done: isReportUploaded, state: isReportUploaded ? "completed" as const : "pending" as const },
-    { label: "Order Fulfilled & Complete", done: isComplete, state: isComplete ? "completed" as const : "pending" as const },
+    { 
+      label: "Admin Approved", 
+      done: isAdminApproved, 
+      state: isAdminApproved ? "completed" as const : "pending" as const,
+      sub: adminApprovedDate || undefined,
+      message: isAdminApproved ? "Approved for execution" : undefined
+    },
+    { 
+      label: "Lab Assigned", 
+      done: isLabAssigned, 
+      state: isLabAssigned ? "completed" as const : "pending" as const,
+      sub: labAssignedDate || undefined,
+      message: labNameDisplay
+    },
+    { 
+      label: isCourierMethod ? "Courier Dispatched" : "Collector Assigned", 
+      done: isCollectorAssigned, 
+      state: isCollectorAssigned ? "completed" as const : "pending" as const,
+      sub: collectorAssignedDate || undefined,
+      message: collectorDisplayMsg
+    },
+    { 
+      label: isCourierMethod ? "Sample Received at Lab" : "Sample Collected", 
+      done: isSampleCollected, 
+      state: isSampleCollected ? "completed" as const : "pending" as const,
+      sub: sampleCollectedDate || undefined,
+      message: sampleCollectedMsg
+    },
+    { 
+      label: "Testing in Progress", 
+      done: isTestingInProgress, 
+      state: isTestingInProgress ? "completed" as const : "pending" as const,
+      sub: testingStartedDate || undefined,
+      message: isTestingInProgress ? "Laboratory diagnostic analysis underway" : undefined
+    },
+    { 
+      label: "Certified Report Uploaded", 
+      done: isReportUploaded, 
+      state: isReportUploaded ? "completed" as const : "pending" as const,
+      sub: reportUploadedDate || undefined,
+      message: reportDisplayMsg
+    },
+    { 
+      label: "Order Fulfilled & Complete", 
+      done: isComplete, 
+      state: isComplete ? "completed" as const : "pending" as const,
+      sub: completedDate || undefined,
+      message: isComplete ? "Order closed & results delivered to user" : undefined
+    },
   ];
 
   const totalSamplesCount = rawItems.reduce((acc: number, item: any) => acc + (item.samples?.length || 1), 0);
@@ -949,23 +1080,34 @@ export default function AdminBookingDetails() {
                     </div>
 
                     {/* Step Info */}
-                    <div className="pb-6 pt-0.5">
-                      <p className={`text-xs ${
-                        isRej 
-                          ? "font-bold text-rose-700" 
-                          : isCompleted 
-                            ? "font-bold text-slate-900" 
-                            : isCurrent
-                              ? "font-bold text-primary"
-                              : "font-medium text-slate-400"
-                      }`}>
-                        {step.label}
-                      </p>
-                      {step.sub && (
-                        <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{step.sub}</p>
-                      )}
+                    <div className="pb-6 pt-0.5 flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center justify-between gap-1.5">
+                        <p className={`text-xs ${
+                          isRej 
+                            ? "font-bold text-rose-700" 
+                            : isCompleted 
+                              ? "font-bold text-slate-900" 
+                              : isCurrent
+                                ? "font-bold text-primary"
+                                : "font-medium text-slate-400"
+                        }`}>
+                          {step.label}
+                        </p>
+                        {step.sub && (
+                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded flex items-center gap-1 font-semibold shrink-0 ${
+                            isCompleted 
+                              ? "bg-slate-100 text-slate-700 border border-slate-200/70" 
+                              : isRej 
+                                ? "bg-rose-50 text-rose-700 border border-rose-200" 
+                                : "bg-slate-50 text-slate-400"
+                          }`}>
+                            <Calendar className="h-2.5 w-2.5 opacity-70" />
+                            {step.sub}
+                          </span>
+                        )}
+                      </div>
                       {step.message && (
-                        <p className="text-[10px] text-slate-600 bg-slate-50 border border-slate-200 rounded px-2 py-0.5 mt-1 font-medium">
+                        <p className="text-[10px] text-slate-600 bg-slate-50 border border-slate-200/80 rounded px-2 py-1 mt-1 font-medium leading-relaxed">
                           {step.message}
                         </p>
                       )}

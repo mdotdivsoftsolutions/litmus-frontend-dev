@@ -155,40 +155,169 @@ export default function AdminBookings() {
   const isSelectedPaymentRefunded = payStatusUpper === 'REFUNDED';
   const isSelectedPaymentRefundInitiated = payStatusUpper === 'REFUND_INITIATED';
 
+  const formatDateSafe = (dateVal: any, formatStr = "MMM d, yyyy • h:mm a") => {
+    if (!dateVal) return null;
+    try {
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return null;
+      return format(d, formatStr);
+    } catch {
+      return null;
+    }
+  };
+
+  const bookingCreatedDate = formatDateSafe(selectedBooking?.createdAt) || formatDateSafe(selectedBooking?.bookingDate) || "Recorded";
+  const paymentConfirmedDate = formatDateSafe(selectedBooking?.metadata?.paymentConfirmedAt) || (isSelectedPaymentPaid ? formatDateSafe(selectedBooking?.createdAt) : null);
+
   let selectedPaymentStep: {
     label: string;
     done: boolean;
     state: "completed" | "rejected" | "warning" | "failed" | "refunded" | "pending";
+    sub?: string;
+    message?: string;
   };
 
   if (isSelectedPaymentPaid) {
-    selectedPaymentStep = { label: "Payment Confirmed (Paid)", done: true, state: "completed" };
+    selectedPaymentStep = { 
+      label: "Payment Confirmed (Paid)", 
+      done: true, 
+      state: "completed",
+      sub: paymentConfirmedDate || undefined
+    };
   } else if (isSelectedPaymentRefunded) {
-    selectedPaymentStep = { label: "Payment Refunded", done: true, state: "refunded" };
+    selectedPaymentStep = { 
+      label: "Payment Refunded", 
+      done: true, 
+      state: "refunded",
+      sub: formatDateSafe(selectedBooking?.updatedAt) || undefined
+    };
   } else if (isSelectedPaymentRefundInitiated) {
-    selectedPaymentStep = { label: "Refund Initiated", done: true, state: "warning" };
+    selectedPaymentStep = { 
+      label: "Refund Initiated", 
+      done: true, 
+      state: "warning",
+      sub: formatDateSafe(selectedBooking?.updatedAt) || undefined
+    };
   } else if (isSelectedPaymentFailed) {
-    selectedPaymentStep = { label: "Payment Failed", done: false, state: "failed" };
+    selectedPaymentStep = { 
+      label: "Payment Failed", 
+      done: false, 
+      state: "failed", 
+      message: "Transaction unverified" 
+    };
   } else {
-    selectedPaymentStep = { label: "Payment Pending", done: false, state: "warning" };
+    selectedPaymentStep = { 
+      label: "Payment Pending", 
+      done: false, 
+      state: "warning", 
+      message: "Awaiting customer payment" 
+    };
   }
 
+  const isSelectedAdminApproved = ["approved", "in_progress", "in progress", "completed"].includes(selectedBooking?.status?.toLowerCase() || "");
+  const selectedAdminApprovedDate = formatDateSafe(selectedBooking?.metadata?.adminApprovedAt) || (isSelectedAdminApproved ? formatDateSafe(selectedBooking?.updatedAt) : null);
+
+  const isSelectedLabAssigned = Boolean(selectedBooking?.lab && selectedBooking?.lab !== "Litmus Smart Allocation") || ["in_progress", "in progress", "completed"].includes(selectedBooking?.status?.toLowerCase() || "");
+  const selectedLabAssignedDate = formatDateSafe(selectedBooking?.metadata?.labAssignedAt) || (isSelectedLabAssigned ? formatDateSafe(selectedBooking?.updatedAt) : null);
+  const selectedLabMsg = selectedBooking?.lab && selectedBooking?.lab !== "Litmus Smart Allocation" ? `Assigned to: ${selectedBooking.lab}` : undefined;
+
+  const selectedCollDetails = selectedBooking?.metadata?.collectionDetails || selectedBooking?.collectionDetails || {};
+  const isSelectedCourierMethod = selectedBooking?.collectionMethod === 'COURIER' || 
+                                  selectedBooking?.metadata?.collectionMethod === 'COURIER' || 
+                                  selectedCollDetails?.collectionMethod === 'COURIER' || 
+                                  Boolean(selectedBooking?.courierDetails?.trackingId);
+
+  const isSelectedCollectorAssigned = Boolean(
+    selectedBooking?.assignedCollector?.name || 
+    ['ASSIGNED', 'REACHED', 'COLLECTED', 'SHIPPED'].includes(selectedBooking?.collectionStatus?.toUpperCase() || '') || 
+    selectedBooking?.courierDetails?.trackingId || 
+    ["in_progress", "in progress", "completed"].includes(selectedBooking?.status?.toLowerCase() || "")
+  );
+  const selectedCollectorDate = formatDateSafe(selectedBooking?.metadata?.collectorAssignedAt) || 
+    formatDateSafe(selectedBooking?.courierDetails?.submittedAt) || 
+    (isSelectedCollectorAssigned ? formatDateSafe(selectedBooking?.updatedAt) : null);
+  const selectedCollectorMsg = selectedBooking?.assignedCollector?.name 
+    ? `Collector: ${selectedBooking.assignedCollector.name}` 
+    : selectedBooking?.courierDetails?.trackingId 
+      ? `Courier: ${selectedBooking.courierDetails.courierName || 'Shipped'} (${selectedBooking.courierDetails.trackingId})` 
+      : isSelectedCollectorAssigned 
+        ? (isSelectedCourierMethod ? "Courier dispatch added" : "Pickup collector assigned") 
+        : undefined;
+
+  const isSelectedSampleCollected = Boolean(
+    ['COLLECTED', 'REACHED', 'SHIPPED'].includes(selectedBooking?.collectionStatus?.toUpperCase() || '') || 
+    ["in_progress", "in progress", "completed"].includes(selectedBooking?.status?.toLowerCase() || "")
+  );
+  const selectedSampleCollectedDate = formatDateSafe(selectedBooking?.metadata?.sampleCollectedAt) || (isSelectedSampleCollected ? formatDateSafe(selectedBooking?.updatedAt) : null);
+  const selectedSampleMsg = isSelectedSampleCollected 
+    ? (isSelectedCourierMethod ? "Sample received & verified at lab" : "Sample collected from client") 
+    : undefined;
+
+  const isSelectedTestingInProgress = ["in_progress", "in progress", "completed"].includes(selectedBooking?.status?.toLowerCase() || "");
+  const selectedTestingDate = formatDateSafe(selectedBooking?.metadata?.testingStartedAt) || (isSelectedTestingInProgress ? formatDateSafe(selectedBooking?.updatedAt) : null);
+
+  const isSelectedReportUploaded = Boolean(selectedBooking?.isReportApprovedByAdmin) || Boolean(selectedBooking?.reportFiles?.length) || selectedBooking?.status?.toLowerCase() === "completed";
+  const selectedReportDate = formatDateSafe(selectedBooking?.reportSummary?.updatedAt) || formatDateSafe(selectedBooking?.metadata?.reportUploadedAt) || (isSelectedReportUploaded ? formatDateSafe(selectedBooking?.updatedAt) : null);
+
+  const isSelectedComplete = selectedBooking?.status?.toLowerCase() === "completed";
+  const selectedCompletedDate = formatDateSafe(selectedBooking?.metadata?.completedAt) || (isSelectedComplete ? formatDateSafe(selectedBooking?.updatedAt) : null);
+
   const timelineSteps = isSelectedRejected ? [
-    { label: "Booking Placed", done: true, state: "completed" as const },
+    { label: "Booking Placed", done: true, state: "completed" as const, sub: bookingCreatedDate },
     selectedPaymentStep,
-    { label: "Booking Rejected by Admin", done: true, state: "rejected" as const },
+    { label: "Booking Rejected by Admin", done: true, state: "rejected" as const, sub: formatDateSafe(selectedBooking?.updatedAt), message: selectedBooking?.metadata?.rejectionReason },
   ] : isSelectedCancelled ? [
-    { label: "Booking Placed", done: true, state: "completed" as const },
+    { label: "Booking Placed", done: true, state: "completed" as const, sub: bookingCreatedDate },
     selectedPaymentStep,
-    { label: "Booking Cancelled", done: true, state: "rejected" as const },
+    { label: "Booking Cancelled", done: true, state: "rejected" as const, sub: formatDateSafe(selectedBooking?.updatedAt) },
   ] : [
-    { label: "Booking Placed", done: true, state: "completed" as const },
+    { label: "Booking Placed", done: true, state: "completed" as const, sub: bookingCreatedDate },
     selectedPaymentStep,
-    { label: "Admin Approved", done: ["approved", "in_progress", "in progress", "completed"].includes(selectedBooking?.status?.toLowerCase() || ""), state: ["approved", "in_progress", "in progress", "completed"].includes(selectedBooking?.status?.toLowerCase() || "") ? "completed" as const : "pending" as const },
-    { label: "Lab Assigned", done: Boolean(selectedBooking?.lab && selectedBooking?.lab !== "Litmus Smart Allocation") || ["in_progress", "in progress", "completed"].includes(selectedBooking?.status?.toLowerCase() || ""), state: Boolean(selectedBooking?.lab && selectedBooking?.lab !== "Litmus Smart Allocation") || ["in_progress", "in progress", "completed"].includes(selectedBooking?.status?.toLowerCase() || "") ? "completed" as const : "pending" as const },
-    { label: "Testing In Progress", done: ["in_progress", "in progress", "completed"].includes(selectedBooking?.status?.toLowerCase() || ""), state: ["in_progress", "in progress", "completed"].includes(selectedBooking?.status?.toLowerCase() || "") ? "completed" as const : "pending" as const },
-    { label: "Report Uploaded", done: Boolean(selectedBooking?.isReportApprovedByAdmin) || selectedBooking?.status?.toLowerCase() === "completed", state: Boolean(selectedBooking?.isReportApprovedByAdmin) || selectedBooking?.status?.toLowerCase() === "completed" ? "completed" as const : "pending" as const },
-    { label: "Complete", done: selectedBooking?.status?.toLowerCase() === "completed", state: selectedBooking?.status?.toLowerCase() === "completed" ? "completed" as const : "pending" as const },
+    { 
+      label: "Admin Approved", 
+      done: isSelectedAdminApproved, 
+      state: isSelectedAdminApproved ? "completed" as const : "pending" as const,
+      sub: selectedAdminApprovedDate || undefined
+    },
+    { 
+      label: "Lab Assigned", 
+      done: isSelectedLabAssigned, 
+      state: isSelectedLabAssigned ? "completed" as const : "pending" as const,
+      sub: selectedLabAssignedDate || undefined,
+      message: selectedLabMsg
+    },
+    { 
+      label: isSelectedCourierMethod ? "Courier Dispatched" : "Collector Assigned", 
+      done: isSelectedCollectorAssigned, 
+      state: isSelectedCollectorAssigned ? "completed" as const : "pending" as const,
+      sub: selectedCollectorDate || undefined,
+      message: selectedCollectorMsg
+    },
+    { 
+      label: isSelectedCourierMethod ? "Sample Received at Lab" : "Sample Collected", 
+      done: isSelectedSampleCollected, 
+      state: isSelectedSampleCollected ? "completed" as const : "pending" as const,
+      sub: selectedSampleCollectedDate || undefined,
+      message: selectedSampleMsg
+    },
+    { 
+      label: "Testing In Progress", 
+      done: isSelectedTestingInProgress, 
+      state: isSelectedTestingInProgress ? "completed" as const : "pending" as const,
+      sub: selectedTestingDate || undefined
+    },
+    { 
+      label: "Certified Report Uploaded", 
+      done: isSelectedReportUploaded, 
+      state: isSelectedReportUploaded ? "completed" as const : "pending" as const,
+      sub: selectedReportDate || undefined
+    },
+    { 
+      label: "Order Fulfilled & Complete", 
+      done: isSelectedComplete, 
+      state: isSelectedComplete ? "completed" as const : "pending" as const,
+      sub: selectedCompletedDate || undefined
+    },
   ];
 
   const renderTable = (items: any[]) => (
@@ -568,19 +697,33 @@ export default function AdminBookings() {
                               }`} />
                             )}
                           </div>
-                          <p className={`text-sm pb-4 ${
-                            isStepRejected 
-                              ? "text-red-600 dark:text-red-400 font-bold" 
-                              : isStepWarning
-                                ? "text-amber-700 dark:text-amber-400 font-semibold"
-                                : isStepRefunded
-                                  ? "text-blue-700 dark:text-blue-400 font-semibold"
-                                  : isStepCompleted 
-                                    ? "text-foreground font-medium" 
-                                    : "text-muted-foreground"
-                          }`}>
-                            {step.label}
-                          </p>
+                          <div className="pb-4 flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center justify-between gap-1.5">
+                              <p className={`text-xs ${
+                                isStepRejected 
+                                  ? "text-red-600 dark:text-red-400 font-bold" 
+                                  : isStepWarning
+                                    ? "text-amber-700 dark:text-amber-400 font-semibold"
+                                    : isStepRefunded
+                                      ? "text-blue-700 dark:text-blue-400 font-semibold"
+                                      : isStepCompleted 
+                                        ? "text-foreground font-semibold" 
+                                        : "text-muted-foreground"
+                              }`}>
+                                {step.label}
+                              </p>
+                              {step.sub && (
+                                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
+                                  {step.sub}
+                                </span>
+                              )}
+                            </div>
+                            {step.message && (
+                              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                                {step.message}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
