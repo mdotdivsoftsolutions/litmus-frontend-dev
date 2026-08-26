@@ -163,9 +163,9 @@ export default function PackageManagement() {
                     {p.tag && <Badge variant="outline" className="ml-2 text-[9px] uppercase tracking-wider">{p.tag}</Badge>}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className="capitalize shadow-sm">
-                      {p.category}
-                    </Badge>
+                    <span className="inline-flex items-center text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-md border border-primary/20">
+                      {p.categoryId?.name || p.category}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <span className="inline-flex items-center justify-center bg-muted rounded-full px-2.5 py-0.5 text-xs font-medium">
@@ -258,8 +258,10 @@ export default function PackageManagement() {
                 </SheetTitle>
               </SheetHeader>
               <div className="mt-6 space-y-6 flex-1 overflow-y-auto pr-2">
-                <div className="flex gap-2 flex-wrap">
-                  <Badge variant="secondary" className="capitalize">{selectedPackage.category}</Badge>
+                <div className="flex gap-2 flex-wrap items-center">
+                  <span className="inline-flex items-center text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-md border border-primary/20">
+                    {selectedPackage.categoryId?.name || selectedPackage.category}
+                  </span>
                   {selectedPackage.tag && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 uppercase tracking-wider">{selectedPackage.tag}</Badge>}
                   {selectedPackage.tat && <Badge variant="outline" className="bg-slate-100">{selectedPackage.tat} TAT</Badge>}
                 </div>
