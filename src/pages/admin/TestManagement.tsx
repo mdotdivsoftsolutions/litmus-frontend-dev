@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Edit, Trash2, Filter, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Eye, Tag, Beaker, FileText, CheckCircle2, IndianRupee, FileSpreadsheet } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Filter, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Eye, Tag, Beaker, FileText, CheckCircle2, IndianRupee, FileSpreadsheet, Clock, Sparkles, Layers, FolderTree } from "lucide-react";
 import { toast } from "sonner";
 import { testApi } from "@/lib/api/test";
 import { BulkImportDrawer } from "@/components/admin/BulkImportDrawer";
@@ -97,14 +97,15 @@ export default function TestManagement() {
               <SheetHeader><SheetTitle>Filter Tests</SheetTitle></SheetHeader>
               <div className="mt-6 space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Test Type</label>
+                  <label className="text-sm font-semibold text-slate-800">Test Discipline / Type</label>
                   <Select value={typeFilter} onValueChange={setTypeFilter}>
                     <SelectTrigger className="bg-white border border-slate-200 shadow-sm"><SelectValue placeholder="All Types" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="physical">Physical</SelectItem>
+                      <SelectItem value="nutritional">Nutritional</SelectItem>
                       <SelectItem value="chemical">Chemical</SelectItem>
                       <SelectItem value="microbiological">Microbiological</SelectItem>
+                      <SelectItem value="physical">Physical</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -159,12 +160,13 @@ export default function TestManagement() {
               <TableRow className="bg-slate-50">
                 <TableHead>Test Name</TableHead>
                 <TableHead>Creator</TableHead>
+                <TableHead>Category / Subcategory</TableHead>
+                <TableHead>Classification</TableHead>
                 <TableHead>Method</TableHead>
-                <TableHead>Type</TableHead>
                 <TableHead>Parameters</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Offer Price</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -173,8 +175,9 @@ export default function TestManagement() {
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-4 w-32 bg-muted/60" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-20 rounded-full bg-muted/60" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24 bg-muted/60" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-28 bg-muted/60" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-20 rounded-full bg-muted/60" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24 bg-muted/60" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-8 rounded-full bg-muted/60" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-16 bg-muted/60" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-16 bg-muted/60" /></TableCell>
@@ -183,7 +186,7 @@ export default function TestManagement() {
                 ))
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
                        <AlertTriangle className="h-8 w-8 text-muted-foreground/50" />
                        <span>No test protocols found matching your criteria.</span>
@@ -205,7 +208,7 @@ export default function TestManagement() {
                           <Beaker className="h-5 w-5" />
                         </div>
                       )}
-                      <span className="font-medium max-w-[200px] truncate text-slate-900" title={t.testName}>
+                      <span className="font-semibold max-w-[190px] truncate text-slate-900" title={t.testName}>
                         {t.testName}
                       </span>
                     </div>
@@ -222,21 +225,74 @@ export default function TestManagement() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">{t.metadata?.method || 'N/A'}</TableCell>
+
+                  {/* Category & Subcategory Column */}
                   <TableCell>
-                    <Badge variant={t.metadata?.type === "chemical" ? "pending" : t.metadata?.type === "microbiological" ? "inprogress" : "outline"} className="capitalize shadow-sm">
+                    <div className="flex flex-col gap-1 max-w-[180px]">
+                      {t.isApplicableToAll ? (
+                        <span className="inline-flex items-center text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 w-fit">
+                          All Categories
+                        </span>
+                      ) : t.applicableCategories && t.applicableCategories.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {t.applicableCategories.map((c: any, idx: number) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded"
+                            >
+                              {typeof c === 'string' ? c : c.name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">General</span>
+                      )}
+
+                      {/* Applicable Subcategories */}
+                      {t.applicableSubcategories && t.applicableSubcategories.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {t.applicableSubcategories.map((sub: string, idx: number) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center text-[10px] font-medium text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200"
+                            >
+                              ↳ {sub}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+
+                  {/* Test Discipline / Type */}
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={`capitalize text-[11px] font-semibold px-2 py-0.5 shadow-2xs ${
+                        t.metadata?.type?.toLowerCase() === "chemical"
+                          ? "bg-amber-50 text-amber-800 border-amber-200"
+                          : t.metadata?.type?.toLowerCase() === "microbiological"
+                          ? "bg-purple-50 text-purple-800 border-purple-200"
+                          : t.metadata?.type?.toLowerCase() === "nutritional"
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                          : "bg-blue-50 text-blue-800 border-blue-200"
+                      }`}
+                    >
                       {t.metadata?.type || 'Standard'}
                     </Badge>
                   </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground max-w-[130px] truncate" title={t.metadata?.method}>
+                    {t.metadata?.method || 'N/A'}
+                  </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center justify-center bg-muted rounded-full px-2.5 py-0.5 text-xs font-medium">
+                    <span className="inline-flex items-center justify-center bg-slate-100 text-slate-700 rounded-full px-2.5 py-0.5 text-xs font-semibold">
                       {t.metadata?.parameters?.length || 0}
                     </span>
                   </TableCell>
-                  <TableCell className="font-medium text-emerald-600 dark:text-emerald-400">
+                  <TableCell className="font-semibold text-emerald-600 dark:text-emerald-400">
                     ₹{t.price?.toLocaleString() || 0}
                   </TableCell>
-                  <TableCell className="font-medium text-primary">
+                  <TableCell className="font-semibold text-primary">
                     {t.offerPrice ? `₹${t.offerPrice.toLocaleString()}` : '-'}
                   </TableCell>
                   <TableCell className="text-right">
@@ -306,95 +362,212 @@ export default function TestManagement() {
         )}
       </Card>
 
-      {/* Test Detail Sheet */}
+      {/* Redesigned Test Detail Sheet */}
       <Sheet open={!!selectedTest} onOpenChange={(open) => !open && setSelectedTest(null)}>
-        <SheetContent className="flex flex-col overflow-y-auto sm:max-w-xl">
+        <SheetContent className="flex flex-col sm:max-w-lg w-full p-0 bg-white">
           {selectedTest && (
             <>
-              <SheetHeader className="shrink-0">
-                <div className="flex items-center gap-3">
-                  {selectedTest.imageUrl || selectedTest.icon ? (
-                    <img
-                      src={selectedTest.imageUrl || selectedTest.icon}
-                      alt={selectedTest.testName}
-                      className="h-12 w-12 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-50"
-                    />
-                  ) : (
-                    <div className="h-12 w-12 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shrink-0">
-                      <Beaker className="h-6 w-6" />
-                    </div>
-                  )}
-                  <SheetTitle className="text-xl flex items-center gap-2">
-                    {selectedTest.testName}
-                  </SheetTitle>
-                </div>
-              </SheetHeader>
-              <div className="mt-6 space-y-6 flex-1 overflow-y-auto pr-2 pb-6">
-                <div className="flex gap-2 flex-wrap">
-                  <Badge variant={selectedTest.creatorType === 'LAB' ? "secondary" : "default"}>
-                    {selectedTest.creatorType === 'LAB' ? "Personalized (Lab)" : "Platform (Admin)"}
-                  </Badge>
-                  {selectedTest.isPopular && <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Popular</Badge>}
-                  {selectedTest.isApplicableToAll && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Universal Test</Badge>}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
-                    <p className="text-muted-foreground text-xs mb-1 flex items-center gap-1"><IndianRupee className="h-3 w-3" /> Base Price</p>
-                    <p className="font-bold text-lg">₹{selectedTest.price?.toLocaleString() || 0}</p>
-                  </div>
-                  <div className="rounded-lg border border-border p-4 bg-background shadow-sm">
-                    <p className="text-muted-foreground text-xs mb-1 flex items-center gap-1"><Tag className="h-3 w-3" /> Offer Price</p>
-                    <p className="font-bold text-lg text-emerald-600">{selectedTest.offerPrice ? `₹${selectedTest.offerPrice.toLocaleString()}` : "—"}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-bold flex items-center gap-2 mb-2"><FileText className="h-4 w-4 text-primary" /> Details & Metadata</h4>
-                    <div className="rounded-lg border border-border divide-y divide-border/50 text-sm">
-                      <div className="flex justify-between p-3"><span className="text-muted-foreground">Type</span><span className="font-medium capitalize">{selectedTest.metadata?.type || 'Standard'}</span></div>
-                      <div className="flex justify-between p-3"><span className="text-muted-foreground">FSSAI Method</span><span className="font-mono font-medium">{selectedTest.metadata?.method || 'N/A'}</span></div>
-                      <div className="flex justify-between p-3"><span className="text-muted-foreground">Turn Around Time</span><span className="font-medium">{selectedTest.turnAroundTime || 'N/A'}</span></div>
-                    </div>
-                  </div>
-                  
-                  {selectedTest.description && (
-                    <div className="rounded-lg bg-muted/30 p-4 border border-border text-sm">
-                      <h4 className="font-bold mb-2 text-xs uppercase tracking-wider text-muted-foreground">Description</h4>
-                      <p className="text-slate-700 leading-relaxed">{selectedTest.description}</p>
-                    </div>
-                  )}
-
-                  <div>
-                    <h4 className="text-sm font-bold flex items-center gap-2 mb-2"><Beaker className="h-4 w-4 text-primary" /> Parameters ({selectedTest.metadata?.parameters?.length || 0})</h4>
-                    {selectedTest.metadata?.parameters?.length > 0 ? (
-                      <div className="rounded-lg border border-border overflow-hidden">
-                        <table className="w-full text-xs text-left">
-                          <thead className="bg-muted text-muted-foreground uppercase font-semibold">
-                            <tr><th className="px-3 py-2">Parameter</th><th className="px-3 py-2">Unit</th><th className="px-3 py-2">Limit</th></tr>
-                          </thead>
-                          <tbody className="divide-y divide-border/50">
-                            {selectedTest.metadata.parameters.map((p: any, i: number) => (
-                              <tr key={i} className="hover:bg-muted/30">
-                                <td className="px-3 py-2 font-medium">{p.name}</td>
-                                <td className="px-3 py-2">{p.unit || '-'}</td>
-                                <td className="px-3 py-2 font-mono">{p.acceptableLimit || '-'}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+              {/* Header */}
+              <div className="p-6 border-b border-border bg-slate-50/70">
+                <div className="flex items-start gap-4">
+                  <div className="h-14 w-14 rounded-2xl border border-slate-200/90 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                    {selectedTest.imageUrl || selectedTest.icon ? (
+                      <img
+                        src={selectedTest.imageUrl || selectedTest.icon}
+                        alt={selectedTest.testName}
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
-                      <div className="p-4 text-center rounded-lg border border-border border-dashed text-sm text-muted-foreground">No parameters defined.</div>
+                      <div className="h-full w-full bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                        <Beaker className="h-7 w-7" />
+                      </div>
                     )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <Badge variant={selectedTest.creatorType === 'LAB' ? "secondary" : "default"} className="text-[10px] h-5">
+                        {selectedTest.creatorType === 'LAB' ? "Personalized (Lab)" : "Platform (Admin)"}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className={`capitalize text-[10px] font-bold px-2 h-5 ${
+                          selectedTest.metadata?.type?.toLowerCase() === "chemical"
+                            ? "bg-amber-50 text-amber-800 border-amber-200"
+                            : selectedTest.metadata?.type?.toLowerCase() === "microbiological"
+                            ? "bg-purple-50 text-purple-800 border-purple-200"
+                            : selectedTest.metadata?.type?.toLowerCase() === "nutritional"
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                            : "bg-blue-50 text-blue-800 border-blue-200"
+                        }`}
+                      >
+                        {selectedTest.metadata?.type || 'Standard'}
+                      </Badge>
+                      {selectedTest.isPopular && (
+                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] h-5">
+                          Popular
+                        </Badge>
+                      )}
+                    </div>
+                    <SheetTitle className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
+                      {selectedTest.testName}
+                    </SheetTitle>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-border mt-auto shrink-0 bg-background">
-                <Button className="w-full bg-primary hover:bg-primary-deep shadow-md" asChild>
-                  <Link to={`/admin/tests/${selectedTest._id}/edit`}><Edit className="mr-2 h-4 w-4" /> Edit Test Protocol</Link>
+              {/* Scrollable Content Body */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-5">
+                {/* 1. Category & Subcategory Card */}
+                <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 space-y-2.5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <FolderTree className="h-3.5 w-3.5 text-primary" />
+                    <span>Category & Subcategory Mapping</span>
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    {selectedTest.isApplicableToAll ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                        <Layers className="h-3.5 w-3.5 text-slate-500" />
+                        Applicable to All Categories
+                      </span>
+                    ) : selectedTest.applicableCategories && selectedTest.applicableCategories.length > 0 ? (
+                      selectedTest.applicableCategories.map((c: any, idx: number) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20"
+                        >
+                          <Layers className="h-3.5 w-3.5" />
+                          {typeof c === 'string' ? c : c.name}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">General Category</span>
+                    )}
+
+                    {selectedTest.applicableSubcategories && selectedTest.applicableSubcategories.length > 0 && (
+                      selectedTest.applicableSubcategories.map((sub: string, idx: number) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center text-xs font-medium text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs"
+                        >
+                          ↳ {sub}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. Pricing Overview Card */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs">
+                    <p className="text-muted-foreground text-xs font-medium mb-1 flex items-center gap-1">
+                      <IndianRupee className="h-3.5 w-3.5 text-slate-400" /> Base Price
+                    </p>
+                    <p className="font-extrabold text-xl text-slate-900">
+                      ₹{selectedTest.price?.toLocaleString() || 0}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/40 p-4 shadow-2xs">
+                    <p className="text-emerald-700 text-xs font-medium mb-1 flex items-center gap-1">
+                      <Tag className="h-3.5 w-3.5 text-emerald-600" /> Offer Price
+                    </p>
+                    <p className="font-extrabold text-xl text-emerald-600">
+                      {selectedTest.offerPrice ? `₹${selectedTest.offerPrice.toLocaleString()}` : "Standard Rate"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3. Details & Metadata Specifications */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5 text-primary" /> Test Specifications
+                  </h4>
+                  <div className="rounded-xl border border-slate-200/80 bg-white divide-y divide-slate-100 overflow-hidden shadow-2xs text-xs">
+                    <div className="flex justify-between items-center p-3">
+                      <span className="text-slate-500 font-medium">Classification</span>
+                      <span className="font-bold text-slate-900 capitalize">{selectedTest.metadata?.type || 'Standard'}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3">
+                      <span className="text-slate-500 font-medium">FSSAI / Reference Method</span>
+                      <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded text-[11px] max-w-[240px] truncate" title={selectedTest.metadata?.method}>
+                        {selectedTest.metadata?.method || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center p-3">
+                      <span className="text-slate-500 font-medium">Turn Around Time (TAT)</span>
+                      <span className="font-bold text-slate-900 flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-slate-400" />
+                        {selectedTest.turnAroundTime || '24-48 Hours'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Description */}
+                {selectedTest.description && (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                      Description & Scope
+                    </h4>
+                    <div className="rounded-xl bg-slate-50 p-4 border border-slate-200 text-xs text-slate-700 leading-relaxed">
+                      {selectedTest.description}
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. Parameters Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <Beaker className="h-3.5 w-3.5 text-primary" />
+                      Parameters ({selectedTest.metadata?.parameters?.length || 0})
+                    </h4>
+                  </div>
+
+                  {selectedTest.metadata?.parameters?.length > 0 ? (
+                    <div className="rounded-xl border border-slate-200/80 bg-white overflow-hidden shadow-2xs">
+                      <table className="w-full text-xs text-left">
+                        <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] border-b border-slate-200/80">
+                          <tr>
+                            <th className="px-3.5 py-2.5">Parameter</th>
+                            <th className="px-3.5 py-2.5">Unit</th>
+                            <th className="px-3.5 py-2.5">Acceptable Limit</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {selectedTest.metadata.parameters.map((p: any, i: number) => (
+                            <tr key={i} className="hover:bg-slate-50/80 transition-colors">
+                              <td className="px-3.5 py-2.5 font-bold text-slate-800">{p.name}</td>
+                              <td className="px-3.5 py-2.5 text-slate-600">{p.unit || '-'}</td>
+                              <td className="px-3.5 py-2.5 font-mono text-slate-700">{p.acceptableLimit || p.maxLimit || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center rounded-xl border border-border border-dashed text-xs text-muted-foreground">
+                      No parameters defined.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Sticky Footer */}
+              <div className="p-4 border-t border-border bg-white shadow-lg flex items-center justify-between gap-3 shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSelectedTest(null)}
+                  className="border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs h-10 px-4"
+                >
+                  Close
+                </Button>
+                <Button className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold h-10 text-xs sm:text-sm gap-2 shadow-sm" asChild>
+                  <Link to={`/admin/tests/${selectedTest._id}/edit`}>
+                    <Edit className="h-4 w-4" /> Edit Test Protocol
+                  </Link>
                 </Button>
               </div>
             </>

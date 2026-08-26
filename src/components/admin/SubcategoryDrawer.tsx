@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { categoryApi } from "@/lib/api/category";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface SubcategoryDrawerProps {
   open: boolean;
@@ -45,6 +46,7 @@ export function SubcategoryDrawer({
 
   // Form state
   const [editingSubId, setEditingSubId] = useState<string | null>(null);
+  const [subToDelete, setSubToDelete] = useState<{ id: string; name: string } | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -318,12 +320,7 @@ export function SubcategoryDrawer({
                             variant="ghost"
                             size="icon"
                             disabled={isDeleting}
-                            onClick={() =>
-                              deleteMutation.mutate({
-                                catId: activeCategoryId,
-                                subId: subIdentifier,
-                              })
-                            }
+                            onClick={() => setSubToDelete({ id: subIdentifier, name: sub.name })}
                             className="h-8 w-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                             title="Delete Subcategory"
                           >
@@ -457,44 +454,70 @@ export function SubcategoryDrawer({
                 </div>
               </div>
 
-              {/* Action Button */}
-              <div className="pt-2">
-                <Button
-                  type="submit"
-                  disabled={isSaving || !name.trim() || categories.length === 0}
-                  className="w-full h-10 bg-primary hover:bg-primary/90 text-white font-semibold gap-1.5 shadow-sm"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> Saving Subcategory...
-                    </>
-                  ) : editingSubId ? (
-                    <>
-                      <Check className="h-4 w-4" /> Save Subcategory Changes
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4" /> Add Subcategory to {currentCategory.name}
-                    </>
-                  )}
-                </Button>
-              </div>
             </form>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-border bg-slate-50 flex items-center justify-end">
+        {/* Sticky Bottom Footer with Action Buttons */}
+        <div className="p-4 border-t border-border bg-white shadow-lg flex items-center justify-between gap-3 shrink-0">
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs h-9 px-4"
+            onClick={() => {
+              if (editingSubId) {
+                resetForm();
+              } else {
+                onOpenChange(false);
+              }
+            }}
+            className="border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs h-10 px-4"
           >
-            Done
+            {editingSubId ? "Cancel Edit" : "Close"}
           </Button>
+
+          {currentCategory && (
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSaving || !name.trim() || categories.length === 0}
+              className="flex-1 h-10 bg-primary hover:bg-primary/90 text-white font-bold gap-1.5 shadow-sm text-xs sm:text-sm"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Saving...
+                </>
+              ) : editingSubId ? (
+                <>
+                  <Check className="h-4 w-4" /> Save Subcategory Changes
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" /> Add Subcategory
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </SheetContent>
+
+      {/* Delete Confirmation Warning Modal */}
+      <ConfirmDialog
+        open={!!subToDelete}
+        onOpenChange={(open) => !open && setSubToDelete(null)}
+        title="Delete Subcategory"
+        description={`Are you sure you want to delete "${subToDelete?.name}" from "${currentCategory?.name}"? Tests mapped specifically to this subcategory will no longer be linked to it.`}
+        onConfirm={() => {
+          if (subToDelete && activeCategoryId) {
+            deleteMutation.mutate({
+              catId: activeCategoryId,
+              subId: subToDelete.id,
+            });
+            setSubToDelete(null);
+          }
+        }}
+        confirmText={deleteMutation.isPending ? "Deleting..." : "Delete Subcategory"}
+        variant="destructive"
+      />
     </Sheet>
   );
 }
