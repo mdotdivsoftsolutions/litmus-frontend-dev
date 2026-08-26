@@ -46,6 +46,7 @@ export default function TestFormPage() {
     creatorType: "ADMIN",
     labId: "",
     applicableCategories: [],
+    applicableSubcategories: [],
     metadata: {
       method: "",
       type: "",
@@ -121,6 +122,7 @@ export default function TestFormPage() {
       creatorType: test.creatorType || "ADMIN",
       labId: test.labId?._id || test.labId || "",
       applicableCategories: test.applicableCategories?.map((c: any) => typeof c === 'string' ? c : c._id) || [],
+      applicableSubcategories: Array.isArray(test.applicableSubcategories) ? test.applicableSubcategories : [],
       metadata: {
         method: test.metadata?.method || "",
         type: test.metadata?.type || "",
@@ -480,45 +482,104 @@ export default function TestFormPage() {
  />
  </div>
  
- {!formData.isApplicableToAll && (
- <div className="space-y-2 pt-2 animate-in fade-in slide-in-from-top-2">
- <Label className="text-sm font-medium">Select Applicable Categories <span className="text-destructive">*</span></Label>
- <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
- {categoriesIsLoading ? (
- <div className="col-span-full text-sm text-muted-foreground">Loading categories...</div>
- ) : categories.length === 0 ? (
- <div className="col-span-full text-sm text-muted-foreground">No categories available.</div>
- ) : (
- categories.map((cat: any) => {
- const isSelected = formData.applicableCategories.includes(cat._id);
- return (
- <label 
- key={cat._id} 
- className={cn(
-"flex items-center gap-2 rounded-lg border p-3 cursor-pointer transition-colors text-sm",
- isSelected ?"border-primary bg-primary/5":"border-border hover:bg-muted/50"
- )}
- >
- <input 
- type="checkbox"
- className="accent-primary"
- checked={isSelected}
- onChange={(e) => {
- if (e.target.checked) {
- setFormData({ ...formData, applicableCategories: [...formData.applicableCategories, cat._id] });
- } else {
- setFormData({ ...formData, applicableCategories: formData.applicableCategories.filter((id: string) => id !== cat._id) });
- }
- }}
- />
- <span className="font-medium truncate">{cat.name}</span>
- </label>
- )
- })
- )}
- </div>
- </div>
- )}
+  {!formData.isApplicableToAll && (
+    <div className="space-y-4 pt-2 animate-in fade-in slide-in-from-top-2">
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Select Applicable Categories <span className="text-destructive">*</span></Label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {categoriesIsLoading ? (
+            <div className="col-span-full text-sm text-muted-foreground">Loading categories...</div>
+          ) : categories.length === 0 ? (
+            <div className="col-span-full text-sm text-muted-foreground">No categories available.</div>
+          ) : (
+            categories.map((cat: any) => {
+              const isSelected = formData.applicableCategories.includes(cat._id);
+              return (
+                <label 
+                  key={cat._id} 
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg border p-3 cursor-pointer transition-colors text-sm",
+                    isSelected ? "border-primary bg-primary/5 font-semibold" : "border-border hover:bg-muted/50"
+                  )}
+                >
+                  <input 
+                    type="checkbox"
+                    className="accent-primary"
+                    checked={isSelected}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData({ ...formData, applicableCategories: [...formData.applicableCategories, cat._id] });
+                      } else {
+                        setFormData({ ...formData, applicableCategories: formData.applicableCategories.filter((id: string) => id !== cat._id) });
+                      }
+                    }}
+                  />
+                  <span className="truncate">{cat.name}</span>
+                </label>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Dynamic Subcategories Selection for Selected Categories */}
+      {formData.applicableCategories.length > 0 && (() => {
+        const selectedCats = categories.filter((c: any) => formData.applicableCategories.includes(c._id));
+        const subcategoriesAvailable = selectedCats.flatMap((c: any) =>
+          (c.subcategories || []).map((s: any) => ({ name: s.name, categoryName: c.name }))
+        );
+
+        if (subcategoriesAvailable.length === 0) return null;
+
+        return (
+          <div className="space-y-2.5 p-4 rounded-xl border border-slate-200/80 bg-slate-50/70">
+            <div>
+              <Label className="text-sm font-semibold text-slate-900">Select Applicable Subcategories (Optional)</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Leave empty if test applies to all subcategories under selected categories, or check specific ones:
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {subcategoriesAvailable.map((sub: any, idx: number) => {
+                const isSubSelected = (formData.applicableSubcategories || []).includes(sub.name);
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      const current = formData.applicableSubcategories || [];
+                      if (isSubSelected) {
+                        setFormData({
+                          ...formData,
+                          applicableSubcategories: current.filter((s: string) => s !== sub.name)
+                        });
+                      } else {
+                        setFormData({
+                          ...formData,
+                          applicableSubcategories: [...current, sub.name]
+                        });
+                      }
+                    }}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 shadow-2xs",
+                      isSubSelected
+                        ? "bg-primary text-white border-primary"
+                        : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-100/60"
+                    )}
+                  >
+                    <span>{sub.name}</span>
+                    <span className={cn("text-[10px] px-1 py-0.2 rounded font-normal", isSubSelected ? "bg-white/20 text-white" : "text-slate-400")}>
+                      {sub.categoryName}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+    </div>
+  )}
  </div>
 
  <div className="space-y-2 pt-2">

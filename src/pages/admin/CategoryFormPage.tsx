@@ -6,59 +6,95 @@ import { Button } from"@/components/ui/button";
 import { Input } from"@/components/ui/input";
 import { Label } from"@/components/ui/label";
 import { Textarea } from"@/components/ui/textarea";
-import { ArrowLeft, Upload, ImageIcon, Loader2 } from"lucide-react";
+import { ArrowLeft, Upload, ImageIcon, Loader2, Plus, X, Tag } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from"@/components/ui/skeleton";
 import { toast } from"sonner";
 import { categoryApi } from"@/lib/api/category";
 
+interface SubcategoryItem {
+  _id?: string;
+  name: string;
+  slug?: string;
+  description?: string;
+}
+
 interface CategoryFormData {
- name: string;
- description: string;
- imageUrl: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+  subcategories: SubcategoryItem[];
 }
 
 export default function CategoryFormPage() {
- const { id } = useParams<{ id: string }>();
- const navigate = useNavigate();
- const queryClient = useQueryClient();
- const fileInputRef = useRef<HTMLInputElement>(null);
- const isEditing = !!id;
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const isEditing = !!id;
 
- const [formData, setFormData] = useState<CategoryFormData>({
- name:"",
- description:"",
- imageUrl:"",
- });
- const [isUploading, setIsUploading] = useState(false);
+  const [formData, setFormData] = useState<CategoryFormData>({
+    name: "",
+    description: "",
+    imageUrl: "",
+    subcategories: [],
+  });
+  const [newSubcategoryName, setNewSubcategoryName] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
- const { data: categoryData, isLoading } = useQuery({
- queryKey: ["category", id],
- queryFn: () => categoryApi.getCategory(id!),
- enabled: isEditing,
- });
+  const { data: categoryData, isLoading } = useQuery({
+    queryKey: ["category", id],
+    queryFn: () => categoryApi.getCategory(id!),
+    enabled: isEditing,
+  });
 
- useEffect(() => {
- if (categoryData?.data?.data) {
- const category = categoryData.data.data;
- setFormData({
- name: category.name ||"",
- description: category.description ||"",
- imageUrl: category.imageUrl ||"",
- });
- }
- }, [categoryData]);
+  useEffect(() => {
+    if (categoryData?.data?.data) {
+      const category = categoryData.data.data;
+      setFormData({
+        name: category.name || "",
+        description: category.description || "",
+        imageUrl: category.imageUrl || "",
+        subcategories: Array.isArray(category.subcategories) ? category.subcategories : [],
+      });
+    }
+  }, [categoryData]);
 
- const saveMutation = useMutation({
- mutationFn: (data: CategoryFormData) => isEditing ? categoryApi.updateCategory(id!, data) : categoryApi.createCategory(data),
- onSuccess: () => {
- toast.success(isEditing ?"Category updated successfully!":"Category created successfully!");
- queryClient.invalidateQueries({ queryKey: ["adminCategories"] });
- navigate("/admin/categories");
- },
- onError: (error: Error | any) => {
- toast.error(error?.response?.data?.message ||"Failed to save category");
- }
- });
+  const handleAddSubcategory = () => {
+    const trimmed = newSubcategoryName.trim();
+    if (!trimmed) return;
+    if (formData.subcategories.some(s => s.name.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error("Subcategory with this name already exists");
+      return;
+    }
+    setFormData({
+      ...formData,
+      subcategories: [
+        ...formData.subcategories,
+        { name: trimmed, slug: trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '-') }
+      ]
+    });
+    setNewSubcategoryName("");
+  };
+
+  const handleRemoveSubcategory = (index: number) => {
+    setFormData({
+      ...formData,
+      subcategories: formData.subcategories.filter((_, i) => i !== index)
+    });
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: (data: CategoryFormData) => isEditing ? categoryApi.updateCategory(id!, data) : categoryApi.createCategory(data),
+    onSuccess: () => {
+      toast.success(isEditing ? "Category updated successfully!" : "Category created successfully!");
+      queryClient.invalidateQueries({ queryKey: ["adminCategories"] });
+      navigate("/admin/categories");
+    },
+    onError: (error: Error | any) => {
+      toast.error(error?.response?.data?.message || "Failed to save category");
+    }
+  });
 
  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
  setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -143,10 +179,74 @@ export default function CategoryFormPage() {
  <Input name="name"value={formData.name} onChange={handleChange} placeholder="e.g. Dairy Products"className="bg-background/50"/>
  </div>
 
- <div className="space-y-2">
- <Label className="text-sm font-medium">Description</Label>
- <Textarea name="description"value={formData.description} onChange={handleChange} placeholder="Describe the items in this category..."className="min-h-[120px] bg-background/50"/>
- </div>
+  <div className="space-y-2">
+    <Label className="text-sm font-medium">Description</Label>
+    <Textarea name="description" value={formData.description} onChange={handleChange} placeholder="Describe the items in this category..." className="min-h-[100px] bg-background/50"/>
+  </div>
+
+  {/* Subcategories Management */}
+  <div className="space-y-3 pt-3 border-t border-border/60">
+    <div>
+      <Label className="text-sm font-medium flex items-center gap-1.5">
+        <Tag className="h-4 w-4 text-primary" />
+        Product Subcategories (Optional)
+      </Label>
+      <p className="text-xs text-muted-foreground mt-0.5">
+        Add specific subcategories under this main category (e.g. Raw Milk, Cheese & Paneer, Butter & Ghee).
+      </p>
+    </div>
+
+    <div className="flex gap-2">
+      <Input
+        value={newSubcategoryName}
+        onChange={(e) => setNewSubcategoryName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleAddSubcategory();
+          }
+        }}
+        placeholder="Enter subcategory name..."
+        className="bg-background/50 text-xs sm:text-sm"
+      />
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handleAddSubcategory}
+        disabled={!newSubcategoryName.trim()}
+        className="gap-1.5 text-xs font-semibold bg-white border-slate-200 hover:bg-slate-50 shrink-0"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        Add Subcategory
+      </Button>
+    </div>
+
+    {formData.subcategories.length > 0 ? (
+      <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200/80 min-h-[50px] items-center">
+        {formData.subcategories.map((sub, index) => (
+          <Badge
+            key={index}
+            variant="outline"
+            className="pl-2.5 pr-1.5 py-1 bg-white border-slate-200 text-slate-800 font-medium text-xs rounded-lg gap-1.5 shadow-2xs group"
+          >
+            <span>{sub.name}</span>
+            <button
+              type="button"
+              onClick={() => handleRemoveSubcategory(index)}
+              className="h-4 w-4 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+              title={`Remove ${sub.name}`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        ))}
+      </div>
+    ) : (
+      <div className="p-3 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-center text-xs text-slate-400">
+        No subcategories added yet. Type a name and click Add.
+      </div>
+    )}
+  </div>
 
  <div className="space-y-2">
  <Label className="text-sm font-medium">Category Image</Label>

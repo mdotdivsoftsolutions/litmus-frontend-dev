@@ -8,10 +8,11 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
-import { Plus, Edit, Trash2, MoreVertical, Package, ImageIcon, ChevronLeft, ChevronRight, Eye, FileSpreadsheet } from "lucide-react";
+import { Plus, Edit, Trash2, MoreVertical, Package, ImageIcon, ChevronLeft, ChevronRight, Eye, FileSpreadsheet, Tag } from "lucide-react";
 import { categoryApi } from "@/lib/api/category";
 import { toast } from "sonner";
 import { BulkImportDrawer } from "@/components/admin/BulkImportDrawer";
+import { SubcategoryDrawer } from "@/components/admin/SubcategoryDrawer";
 
 export default function CategoryManagement() {
   const navigate = useNavigate();
@@ -21,6 +22,8 @@ export default function CategoryManagement() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [isSubcategoryDrawerOpen, setIsSubcategoryDrawerOpen] = useState(false);
+  const [activeDrawerCategoryId, setActiveDrawerCategoryId] = useState<string | undefined>(undefined);
   const ITEMS_PER_PAGE = 8;
 
   const { data: categoriesData, isLoading } = useQuery({
@@ -46,6 +49,8 @@ export default function CategoryManagement() {
     name: string;
     imageUrl?: string;
     productCount?: number;
+    testCount?: number;
+    subcategories?: { _id?: string; name: string; slug?: string }[];
   }
 
   const rawCategories: Category[] = categoriesData?.data?.data || [];
@@ -63,12 +68,12 @@ export default function CategoryManagement() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Category Management</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage food & industrial diagnostic testing categories and imagery.
+            Manage food & industrial diagnostic testing categories, subcategories, and imagery.
           </p>
         </div>
       </div>
 
-      {/* Single-Line Controls: Search + Bulk Import + Add Category Button */}
+      {/* Single-Line Controls: Search + Bulk Import + Add Subcategory + Add Category Button */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div className="relative flex-1 sm:min-w-[260px] max-w-md">
           <Input 
@@ -82,7 +87,7 @@ export default function CategoryManagement() {
           />
         </div>
 
-        <div className="flex items-center gap-2 self-start lg:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-start lg:self-auto">
           {/* Bulk Import Button */}
           <Button
             type="button"
@@ -92,6 +97,20 @@ export default function CategoryManagement() {
           >
             <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
             Bulk Import (Excel)
+          </Button>
+
+          {/* Dedicated Add Subcategory Drawer Button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setActiveDrawerCategoryId(rawCategories[0]?._id);
+              setIsSubcategoryDrawerOpen(true);
+            }}
+            className="bg-white border-primary/30 hover:bg-primary/5 text-primary font-semibold shadow-sm h-10 px-3.5 gap-2"
+          >
+            <Tag className="h-4 w-4 text-primary" />
+            + Add Subcategory
           </Button>
 
           {/* Primary Styled Add Category Button */}
@@ -109,12 +128,20 @@ export default function CategoryManagement() {
         onOpenChange={setIsBulkImportOpen}
         entityType="categories"
         title="Bulk Import Categories"
-        description="Upload an Excel sheet to bulk create new categories or update existing categories."
+        description="Upload an Excel sheet to bulk create new categories or update existing categories with subcategories."
         templateFileName="1_Litmus_Categories_Bulk_Template.xlsx"
         templateDisplayName="1_Litmus_Categories_Bulk_Template.xlsx"
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["adminCategories"] });
         }}
+      />
+
+      {/* Dedicated Subcategory Management Drawer */}
+      <SubcategoryDrawer
+        open={isSubcategoryDrawerOpen}
+        onOpenChange={setIsSubcategoryDrawerOpen}
+        categories={rawCategories}
+        initialCategoryId={activeDrawerCategoryId}
       />
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -133,51 +160,67 @@ export default function CategoryManagement() {
             No categories found. Create your first category to get started.
           </div>
         ) : (
-          paginatedCategories.map((cat: Category) => (
-            <Card key={cat._id} className="border border-border shadow-sm hover:border-primary/50 hover:shadow-md transition-all group overflow-hidden relative flex flex-col">
-              <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="secondary" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm border border-border shadow-sm hover:bg-background">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setSelectedCategory(cat)}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      <span>View Details</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate(`/admin/categories/${cat._id}/edit`)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      <span>Edit Category</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => setCategoryToDelete(cat._id)}
-                      className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      <span>Delete</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              
-              <div className="h-32 w-full bg-muted flex items-center justify-center overflow-hidden border-b border-border">
-                {cat.imageUrl ? (
-                  <img src={cat.imageUrl} alt={cat.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                ) : (
-                  <ImageIcon className="h-10 w-10 text-muted-foreground/30" />
-                )}
-              </div>
-              
-              <CardContent className="p-4 text-center space-y-2 flex-1 flex flex-col justify-center">
-                <h3 className="font-semibold text-foreground line-clamp-1" title={cat.name}>{cat.name}</h3>
-                <p className="text-xs text-muted-foreground font-medium">
-                  {cat.productCount || 0} Products
-                </p>
-              </CardContent>
-            </Card>
-          ))
+          paginatedCategories.map((cat: Category) => {
+            const count = cat.testCount ?? cat.productCount ?? 0;
+            return (
+              <Card key={cat._id} className="border border-border shadow-sm hover:border-primary/50 hover:shadow-md transition-all group overflow-hidden relative flex flex-col">
+                <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="secondary" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm border border-border shadow-sm hover:bg-background">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setSelectedCategory(cat)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        <span>View Details</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => {
+                        setActiveDrawerCategoryId(cat._id);
+                        setIsSubcategoryDrawerOpen(true);
+                      }}>
+                        <Tag className="mr-2 h-4 w-4 text-primary" />
+                        <span>Manage Subcategories</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/admin/categories/${cat._id}/edit`)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        <span>Edit Category</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => setCategoryToDelete(cat._id)}
+                        className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>Delete</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                
+                <div className="h-32 w-full bg-muted flex items-center justify-center overflow-hidden border-b border-border">
+                  {cat.imageUrl ? (
+                    <img src={cat.imageUrl} alt={cat.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  ) : (
+                    <ImageIcon className="h-10 w-10 text-muted-foreground/30" />
+                  )}
+                </div>
+                
+                <CardContent className="p-4 text-center space-y-1.5 flex-1 flex flex-col justify-center">
+                  <h3 className="font-semibold text-foreground line-clamp-1" title={cat.name}>{cat.name}</h3>
+                  <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                    <span>{count} Tests</span>
+                    {cat.subcategories && cat.subcategories.length > 0 && (
+                      <>
+                        <span>·</span>
+                        <span className="text-primary font-semibold">{cat.subcategories.length} Subcategories</span>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
 
@@ -200,23 +243,83 @@ export default function CategoryManagement() {
                   <h2 className="absolute bottom-4 left-4 text-white font-black text-2xl tracking-tight">{selectedCategory.name}</h2>
                 </div>
 
-                <div className="rounded-lg border border-border p-5 bg-background shadow-sm space-y-5">
+                <div className="rounded-lg border border-border p-5 bg-background shadow-sm space-y-4">
                   <div>
                     <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-1.5">Category Name</p>
                     <p className="font-bold text-lg text-slate-900">{selectedCategory.name}</p>
                   </div>
-                  <div className="pt-4 border-t border-border/50">
-                    <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-2">Platform Statistics</p>
-                    <p className="font-medium text-slate-700 flex items-center gap-2">
+                  <div className="pt-3 border-t border-border/50">
+                    <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest mb-1.5">Platform Statistics</p>
+                    <p className="font-medium text-slate-700 flex items-center gap-2 text-sm">
                       <Package className="h-4 w-4 text-primary" />
-                      {selectedCategory.productCount || 0} Connected Products
+                      {selectedCategory.testCount ?? selectedCategory.productCount ?? 0} Connected Tests / Products
                     </p>
+                  </div>
+
+                  {/* Subcategories Section */}
+                  <div className="pt-3 border-t border-border/50">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest">
+                        Subcategories ({selectedCategory.subcategories?.length || 0})
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const targetId = selectedCategory._id;
+                          setSelectedCategory(null);
+                          setActiveDrawerCategoryId(targetId);
+                          setIsSubcategoryDrawerOpen(true);
+                        }}
+                        className="h-6 px-2 text-[11px] text-primary hover:text-primary-deep font-semibold"
+                      >
+                        + Add / Manage
+                      </Button>
+                    </div>
+                    {selectedCategory.subcategories && selectedCategory.subcategories.length > 0 ? (
+                      <div className="space-y-2">
+                        {selectedCategory.subcategories.map((sub: any, i: number) => (
+                          <div
+                            key={i}
+                            className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50 border border-slate-200/80 text-xs"
+                          >
+                            <div className="h-8 w-8 rounded-md bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+                              {sub.imageUrl ? (
+                                <img src={sub.imageUrl} alt={sub.name} className="h-full w-full object-cover" />
+                              ) : (
+                                <ImageIcon className="h-4 w-4 text-slate-300" />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-slate-800 truncate">{sub.name}</p>
+                              {sub.description && (
+                                <p className="text-[11px] text-slate-500 line-clamp-1">{sub.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">No subcategories defined for this category.</p>
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-border mt-auto shrink-0 bg-background">
-                <Button className="w-full bg-primary hover:bg-primary-deep shadow-md" onClick={() => {
+              <div className="pt-4 border-t border-border mt-auto shrink-0 bg-background flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-primary/30 text-primary hover:bg-primary/5 shadow-2xs font-semibold"
+                  onClick={() => {
+                    const targetId = selectedCategory._id;
+                    setSelectedCategory(null);
+                    setActiveDrawerCategoryId(targetId);
+                    setIsSubcategoryDrawerOpen(true);
+                  }}
+                >
+                  <Tag className="mr-2 h-4 w-4" /> Manage Subcategories
+                </Button>
+                <Button className="flex-1 bg-primary hover:bg-primary/90 shadow-md font-semibold" onClick={() => {
                   navigate(`/admin/categories/${selectedCategory._id}/edit`);
                 }}>
                   <Edit className="mr-2 h-4 w-4" /> Edit Category
