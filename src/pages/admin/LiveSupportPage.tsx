@@ -878,13 +878,13 @@ export default function LiveSupportPage() {
                 ) : (
                   <>
                     {displayedSessions.map((req: any) => {
-                      const isGuest = req.userType === "GUEST" || (!req.userId && !req.user);
-                      const displayName = isGuest
-                        ? (req.guestInfo?.name || `Guest User (${req.guestInfo?.guestId ? req.guestInfo.guestId.slice(-6) : req.sessionId.slice(-6)})`)
-                        : (req.userId
-                          ? `${req.userId.firstName || ""} ${req.userId.lastName || ""}`.trim()
-                          : (req.user ? `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() : (req.guestInfo?.name || "Customer")));
-                      const phone = isGuest ? req.guestInfo?.phone : (req.userId?.phone || req.user?.phone || req.guestInfo?.phone);
+                      const isGuest = req.userType === "GUEST" && !req.userId && !req.user;
+                      const displayName = !isGuest
+                        ? (req.userId
+                          ? `${req.userId.firstName || ""} ${req.userId.lastName || ""}`.trim() || req.userId.name || req.userId.email
+                          : (req.user ? `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() || req.user.name || req.user.email : (req.guestInfo?.name || "Registered Client")))
+                        : (req.guestInfo?.name || `Guest User (${req.guestInfo?.guestId ? req.guestInfo.guestId.slice(-6) : req.sessionId.slice(-6)})`);
+                      const phone = !isGuest ? (req.userId?.phone || req.user?.phone || req.guestInfo?.phone) : req.guestInfo?.phone;
 
                       return (
                         <Card
@@ -1076,9 +1076,9 @@ export default function LiveSupportPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <span className="text-xs font-bold text-slate-900 truncate max-w-[110px]">
-                              {sess.userType === "GUEST" || (!sess.userId && !sess.guestInfo?.userId)
+                              {sess.userType === "GUEST" && !sess.userId && !sess.guestInfo?.userId
                                 ? (sess.guestInfo?.name || `Guest (${sess.guestInfo?.guestId ? sess.guestInfo.guestId.slice(-6) : sess.sessionId.slice(-6)})`)
-                                : (sess.userId ? `${sess.userId.firstName || ""} ${sess.userId.lastName || ""}`.trim() : (sess.guestInfo?.name || "Customer"))}
+                                : (sess.userId ? `${sess.userId.firstName || ""} ${sess.userId.lastName || ""}`.trim() || sess.userId.name || sess.userId.email : (sess.guestInfo?.name || "Client"))}
                             </span>
                             {activeTab === "all_chats" && (
                               <Badge
@@ -1105,7 +1105,7 @@ export default function LiveSupportPage() {
                         {/* Customer Phone & Attended Employee Badge */}
                         <div className="flex items-center justify-between pt-1 border-t border-slate-100/80 text-[10px]">
                           <span className="truncate max-w-[100px] text-slate-400 font-medium">
-                            {sess.userType === "GUEST" || (!sess.userId && !sess.guestInfo?.userId)
+                            {sess.userType === "GUEST" && !sess.userId && !sess.guestInfo?.userId
                               ? (sess.guestInfo?.phone || `ID: ${sess.sessionId.slice(-8)}`)
                               : (sess.userId?.phone || sess.guestInfo?.phone || sess.sessionId.slice(-8))}
                           </span>
@@ -1198,21 +1198,21 @@ export default function LiveSupportPage() {
 
                   <div className={cn(
                     "h-8 w-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border",
-                    (selectedSession?.userType === "GUEST" || (!selectedSession?.userId && !selectedSession?.guestInfo?.userId))
+                    (selectedSession?.userType === "GUEST" && !selectedSession?.userId && !selectedSession?.guestInfo?.userId)
                       ? "bg-amber-50 text-amber-800 border-amber-200"
                       : "bg-primary/10 text-primary border-primary/20"
                   )}>
-                    {(selectedSession?.userType === "GUEST" || (!selectedSession?.userId && !selectedSession?.guestInfo?.userId))
+                    {(selectedSession?.userType === "GUEST" && !selectedSession?.userId && !selectedSession?.guestInfo?.userId)
                       ? (selectedSession?.guestInfo?.name?.charAt(0) || "G")
                       : (selectedSession?.userId?.firstName?.charAt(0) || selectedSession?.guestInfo?.name?.charAt(0) || "U")}
                   </div>
                   <div className="min-w-0">
                     <h2 className="text-xs sm:text-sm font-bold text-slate-900 truncate">
-                      {(selectedSession?.userType === "GUEST" || (!selectedSession?.userId && !selectedSession?.guestInfo?.userId))
+                      {(selectedSession?.userType === "GUEST" && !selectedSession?.userId && !selectedSession?.guestInfo?.userId)
                         ? (selectedSession?.guestInfo?.name || `Guest User (${selectedSession?.guestInfo?.guestId ? selectedSession.guestInfo.guestId.slice(-6) : selectedSession?.sessionId?.slice(-6)})`)
                         : (selectedSession?.userId
-                          ? `${selectedSession.userId.firstName || ""} ${selectedSession.userId.lastName || ""}`.trim()
-                          : (selectedSession?.guestInfo?.name || "Customer Session"))}
+                          ? `${selectedSession.userId.firstName || ""} ${selectedSession.userId.lastName || ""}`.trim() || selectedSession.userId.name || selectedSession.userId.email
+                          : (selectedSession?.guestInfo?.name || "Registered Client"))}
                     </h2>
                     <p className="text-[10px] text-slate-500 font-medium truncate flex items-center gap-1">
                       <span>Session: {selectedSessionId}</span>
@@ -1536,21 +1536,21 @@ export default function LiveSupportPage() {
 
             {/* Customer Profile Card */}
             {(() => {
-              const isGuest = selectedSession.userType === "GUEST" || (!selectedSession.userId && !selectedSession.guestInfo?.userId);
-              const displayName = isGuest
-                ? (selectedSession.guestInfo?.name || `Guest User (${selectedSession.guestInfo?.guestId ? selectedSession.guestInfo.guestId.slice(-6) : selectedSession.sessionId.slice(-6)})`)
-                : (selectedSession.userId
-                  ? `${selectedSession.userId.firstName || ""} ${selectedSession.userId.lastName || ""}`.trim()
-                  : (selectedSession.guestInfo?.name || "Registered Customer"));
-              const displayAvatar = isGuest
-                ? (selectedSession.guestInfo?.name?.charAt(0) || "G")
-                : (selectedSession.userId?.firstName?.charAt(0) || selectedSession.guestInfo?.name?.charAt(0) || "U");
-              const displayPhone = isGuest
-                ? (selectedSession.guestInfo?.phone || "Not provided (Guest)")
-                : (selectedSession.userId?.phone || selectedSession.guestInfo?.phone || "Not provided");
-              const displayEmail = isGuest
-                ? (selectedSession.guestInfo?.email || "Not provided (Guest)")
-                : (selectedSession.userId?.email || selectedSession.guestInfo?.email || "Not provided");
+              const isGuest = selectedSession.userType === "GUEST" && !selectedSession.userId && !selectedSession.guestInfo?.userId;
+              const displayName = !isGuest
+                ? (selectedSession.userId
+                  ? `${selectedSession.userId.firstName || ""} ${selectedSession.userId.lastName || ""}`.trim() || selectedSession.userId.name || selectedSession.userId.email
+                  : (selectedSession.guestInfo?.name || "Registered Customer"))
+                : (selectedSession.guestInfo?.name || `Guest User (${selectedSession.guestInfo?.guestId ? selectedSession.guestInfo.guestId.slice(-6) : selectedSession.sessionId.slice(-6)})`);
+              const displayAvatar = !isGuest
+                ? (selectedSession.userId?.firstName?.charAt(0) || selectedSession.guestInfo?.name?.charAt(0) || "U")
+                : (selectedSession.guestInfo?.name?.charAt(0) || "G");
+              const displayPhone = !isGuest
+                ? (selectedSession.userId?.phone || selectedSession.guestInfo?.phone || "Not provided")
+                : (selectedSession.guestInfo?.phone || "Not provided (Guest)");
+              const displayEmail = !isGuest
+                ? (selectedSession.userId?.email || selectedSession.guestInfo?.email || "Not provided")
+                : (selectedSession.guestInfo?.email || "Not provided (Guest)");
 
               return (
                 <Card className="p-3.5 bg-slate-50 border-slate-200 rounded-xl space-y-3 shadow-xs">

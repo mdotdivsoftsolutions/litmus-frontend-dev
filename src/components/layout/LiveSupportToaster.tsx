@@ -34,8 +34,14 @@ export function LiveSupportToaster() {
       aria-label="Incoming Live Support Notifications"
     >
       {visibleRequests.map((req) => {
-        const clientName = req.guestInfo?.name || req.user?.firstName || "Guest Client";
-        const phone = req.guestInfo?.phone || req.user?.phone;
+        const isRegistered = req.userType === "REGISTERED" || Boolean(req.user) || Boolean(req.userId);
+        const registeredName = req.user
+          ? `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() || req.user.name || req.user.email
+          : req.guestInfo?.name;
+        const clientName = isRegistered
+          ? (registeredName || "Registered Client")
+          : (req.guestInfo?.name || `Guest (${req.guestInfo?.guestId ? req.guestInfo.guestId.slice(-6) : req.sessionId.slice(-6)})`);
+        const phone = isRegistered ? (req.user?.phone || req.guestInfo?.phone) : req.guestInfo?.phone;
 
         return (
           <div

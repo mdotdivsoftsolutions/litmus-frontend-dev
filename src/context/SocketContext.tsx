@@ -248,14 +248,21 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       playNotificationChime();
 
-      const isGuestReq = req.userType === "GUEST" || (!req.user && !req.userId);
-      const customerName = isGuestReq
-        ? (req.guestInfo?.name || `Guest User (${req.guestInfo?.guestId ? req.guestInfo.guestId.slice(-6) : req.sessionId.slice(-6)})`)
-        : (req.user
-          ? `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim()
-          : (req.guestInfo?.name || "Customer"));
-      const userTypeLabel = isGuestReq ? "Guest" : "Client";
-      const phone = isGuestReq ? req.guestInfo?.phone : (req.user?.phone || req.guestInfo?.phone);
+      const isRegistered = req.userType === "REGISTERED" || Boolean(req.user) || Boolean(req.userId);
+      const isGuestReq = !isRegistered;
+
+      const registeredName = req.user
+        ? `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() || req.user.name || req.user.email
+        : (req.guestInfo?.name || "Registered Client");
+
+      const customerName = isRegistered
+        ? (registeredName || "Registered Client")
+        : (req.guestInfo?.name || `Guest User (${req.guestInfo?.guestId ? req.guestInfo.guestId.slice(-6) : req.sessionId.slice(-6)})`);
+
+      const userTypeLabel = isRegistered ? "Client" : "Guest";
+      const phone = isRegistered
+        ? (req.user?.phone || req.guestInfo?.phone)
+        : (req.guestInfo?.phone);
 
       toast.custom(
         (id) => (
