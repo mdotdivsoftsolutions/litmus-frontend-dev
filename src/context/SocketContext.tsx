@@ -9,7 +9,8 @@ export interface IncomingChatRequest {
   sessionId: string;
   userType: "REGISTERED" | "GUEST";
   user?: any;
-  guestInfo?: { name?: string; phone?: string; email?: string };
+  userId?: string;
+  guestInfo?: { guestId?: string; name?: string; phone?: string; email?: string; ipAddress?: string; userAgent?: string };
   queuedAt: string | Date;
   initialQuery?: string;
   transcriptPreview?: Array<{ senderType: string; text: string }>;
@@ -247,11 +248,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       playNotificationChime();
 
-      const customerName =
-        req.guestInfo?.name ||
-        (req.user ? `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() : "Guest User");
-      const userTypeLabel = req.userType === "REGISTERED" ? "Client" : "Guest";
-      const phone = req.guestInfo?.phone || req.user?.phone;
+      const isGuestReq = req.userType === "GUEST" || (!req.user && !req.userId);
+      const customerName = isGuestReq
+        ? (req.guestInfo?.name || `Guest User (${req.guestInfo?.guestId ? req.guestInfo.guestId.slice(-6) : req.sessionId.slice(-6)})`)
+        : (req.user
+          ? `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim()
+          : (req.guestInfo?.name || "Customer"));
+      const userTypeLabel = isGuestReq ? "Guest" : "Client";
+      const phone = isGuestReq ? req.guestInfo?.phone : (req.user?.phone || req.guestInfo?.phone);
 
       toast.custom(
         (id) => (

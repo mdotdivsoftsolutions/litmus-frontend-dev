@@ -877,26 +877,35 @@ export default function LiveSupportPage() {
                   </div>
                 ) : (
                   <>
-                    {displayedSessions.map((req: any) => (
-                      <Card
-                        key={req.sessionId}
-                        className="p-3 bg-white border-slate-200 hover:border-slate-300 shadow-xs space-y-2 rounded-xl transition-all ring-1 ring-rose-500/20"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5 truncate">
-                            <User className="h-3.5 w-3.5 text-primary" />
-                            <span className="truncate">{req.guestInfo?.name || req.userId?.firstName ? `${req.userId?.firstName || ""} ${req.userId?.lastName || ""}`.trim() : (req.user?.firstName ? `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() : "Guest Client")}</span>
-                          </span>
-                          <Badge className="bg-rose-50 text-rose-700 border-rose-200 text-[9px] uppercase font-bold animate-pulse">
-                            LIVE QUEUE
-                          </Badge>
-                        </div>
+                    {displayedSessions.map((req: any) => {
+                      const isGuest = req.userType === "GUEST" || (!req.userId && !req.user);
+                      const displayName = isGuest
+                        ? (req.guestInfo?.name || `Guest User (${req.guestInfo?.guestId ? req.guestInfo.guestId.slice(-6) : req.sessionId.slice(-6)})`)
+                        : (req.userId
+                          ? `${req.userId.firstName || ""} ${req.userId.lastName || ""}`.trim()
+                          : (req.user ? `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() : (req.guestInfo?.name || "Customer")));
+                      const phone = isGuest ? req.guestInfo?.phone : (req.userId?.phone || req.user?.phone || req.guestInfo?.phone);
 
-                        {(req.initialQuery || req.guestInfo?.phone) && (
-                          <p className="text-xs text-slate-600 line-clamp-2 bg-slate-50 p-2 rounded-lg border border-slate-100 italic">
-                            {req.initialQuery ? `"${req.initialQuery}"` : `Phone: ${req.guestInfo?.phone || req.userId?.phone || "N/A"}`}
-                          </p>
-                        )}
+                      return (
+                        <Card
+                          key={req.sessionId}
+                          className="p-3 bg-white border-slate-200 hover:border-slate-300 shadow-xs space-y-2 rounded-xl transition-all ring-1 ring-rose-500/20"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5 truncate">
+                              <User className="h-3.5 w-3.5 text-primary" />
+                              <span className="truncate">{displayName}</span>
+                            </span>
+                            <Badge className="bg-rose-50 text-rose-700 border-rose-200 text-[9px] uppercase font-bold animate-pulse">
+                              LIVE QUEUE
+                            </Badge>
+                          </div>
+
+                          {(req.initialQuery || phone) && (
+                            <p className="text-xs text-slate-600 line-clamp-2 bg-slate-50 p-2 rounded-lg border border-slate-100 italic">
+                              {req.initialQuery ? `"${req.initialQuery}"` : `Phone: ${phone || "N/A"}`}
+                            </p>
+                          )}
 
                         <div className="flex items-center justify-between pt-1">
                           <span className="text-[10px] text-slate-400 flex items-center gap-1">
@@ -913,7 +922,8 @@ export default function LiveSupportPage() {
                           </Button>
                         </div>
                       </Card>
-                    ))}
+                    );
+                  })}
 
                     {/* Infinite Scroll Sentinel & Loader */}
                     <div ref={loadMoreRef} className="h-2" />
@@ -1066,7 +1076,9 @@ export default function LiveSupportPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <span className="text-xs font-bold text-slate-900 truncate max-w-[110px]">
-                              {sess.guestInfo?.name || (sess.userId ? `${sess.userId.firstName || ""} ${sess.userId.lastName || ""}`.trim() : "Guest Client")}
+                              {sess.userType === "GUEST" || (!sess.userId && !sess.guestInfo?.userId)
+                                ? (sess.guestInfo?.name || `Guest (${sess.guestInfo?.guestId ? sess.guestInfo.guestId.slice(-6) : sess.sessionId.slice(-6)})`)
+                                : (sess.userId ? `${sess.userId.firstName || ""} ${sess.userId.lastName || ""}`.trim() : (sess.guestInfo?.name || "Customer"))}
                             </span>
                             {activeTab === "all_chats" && (
                               <Badge
@@ -1093,7 +1105,9 @@ export default function LiveSupportPage() {
                         {/* Customer Phone & Attended Employee Badge */}
                         <div className="flex items-center justify-between pt-1 border-t border-slate-100/80 text-[10px]">
                           <span className="truncate max-w-[100px] text-slate-400 font-medium">
-                            {sess.guestInfo?.phone || sess.userId?.phone || sess.sessionId.slice(-8)}
+                            {sess.userType === "GUEST" || (!sess.userId && !sess.guestInfo?.userId)
+                              ? (sess.guestInfo?.phone || `ID: ${sess.sessionId.slice(-8)}`)
+                              : (sess.userId?.phone || sess.guestInfo?.phone || sess.sessionId.slice(-8))}
                           </span>
 
                           {assignedName ? (
@@ -1182,15 +1196,23 @@ export default function LiveSupportPage() {
                     )}
                   </Button>
 
-                  <div className="h-8 w-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs shrink-0">
-                    {selectedSession?.guestInfo?.name?.charAt(0) || selectedSession?.userId?.firstName?.charAt(0) || "U"}
+                  <div className={cn(
+                    "h-8 w-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border",
+                    (selectedSession?.userType === "GUEST" || (!selectedSession?.userId && !selectedSession?.guestInfo?.userId))
+                      ? "bg-amber-50 text-amber-800 border-amber-200"
+                      : "bg-primary/10 text-primary border-primary/20"
+                  )}>
+                    {(selectedSession?.userType === "GUEST" || (!selectedSession?.userId && !selectedSession?.guestInfo?.userId))
+                      ? (selectedSession?.guestInfo?.name?.charAt(0) || "G")
+                      : (selectedSession?.userId?.firstName?.charAt(0) || selectedSession?.guestInfo?.name?.charAt(0) || "U")}
                   </div>
                   <div className="min-w-0">
                     <h2 className="text-xs sm:text-sm font-bold text-slate-900 truncate">
-                      {selectedSession?.guestInfo?.name ||
-                        (selectedSession?.userId
+                      {(selectedSession?.userType === "GUEST" || (!selectedSession?.userId && !selectedSession?.guestInfo?.userId))
+                        ? (selectedSession?.guestInfo?.name || `Guest User (${selectedSession?.guestInfo?.guestId ? selectedSession.guestInfo.guestId.slice(-6) : selectedSession?.sessionId?.slice(-6)})`)
+                        : (selectedSession?.userId
                           ? `${selectedSession.userId.firstName || ""} ${selectedSession.userId.lastName || ""}`.trim()
-                          : "Customer Session")}
+                          : (selectedSession?.guestInfo?.name || "Customer Session"))}
                     </h2>
                     <p className="text-[10px] text-slate-500 font-medium truncate flex items-center gap-1">
                       <span>Session: {selectedSessionId}</span>
@@ -1513,41 +1535,66 @@ export default function LiveSupportPage() {
             </Card>
 
             {/* Customer Profile Card */}
-            <Card className="p-3.5 bg-slate-50 border-slate-200 rounded-xl space-y-3 shadow-xs">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-sm shadow-xs">
-                  {selectedSession.guestInfo?.name?.charAt(0) || selectedSession.userId?.firstName?.charAt(0) || "U"}
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-xs font-bold text-slate-900 truncate">
-                    {selectedSession.guestInfo?.name ||
-                      (selectedSession.userId
-                        ? `${selectedSession.userId.firstName || ""} ${selectedSession.userId.lastName || ""}`.trim()
-                        : "Guest User")}
-                  </h3>
-                  <Badge className="bg-white text-slate-700 border-slate-200 text-[9px]">
-                    {selectedSession.userType}
-                  </Badge>
-                </div>
-              </div>
+            {(() => {
+              const isGuest = selectedSession.userType === "GUEST" || (!selectedSession.userId && !selectedSession.guestInfo?.userId);
+              const displayName = isGuest
+                ? (selectedSession.guestInfo?.name || `Guest User (${selectedSession.guestInfo?.guestId ? selectedSession.guestInfo.guestId.slice(-6) : selectedSession.sessionId.slice(-6)})`)
+                : (selectedSession.userId
+                  ? `${selectedSession.userId.firstName || ""} ${selectedSession.userId.lastName || ""}`.trim()
+                  : (selectedSession.guestInfo?.name || "Registered Customer"));
+              const displayAvatar = isGuest
+                ? (selectedSession.guestInfo?.name?.charAt(0) || "G")
+                : (selectedSession.userId?.firstName?.charAt(0) || selectedSession.guestInfo?.name?.charAt(0) || "U");
+              const displayPhone = isGuest
+                ? (selectedSession.guestInfo?.phone || "Not provided (Guest)")
+                : (selectedSession.userId?.phone || selectedSession.guestInfo?.phone || "Not provided");
+              const displayEmail = isGuest
+                ? (selectedSession.guestInfo?.email || "Not provided (Guest)")
+                : (selectedSession.userId?.email || selectedSession.guestInfo?.email || "Not provided");
 
-              <div className="space-y-2 pt-2 border-t border-slate-200 text-xs">
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phone</span>
-                  <p className="font-semibold text-slate-800 flex items-center gap-1.5 mt-0.5">
-                    <Phone className="h-3 w-3 text-slate-400" />
-                    <span>{selectedSession.guestInfo?.phone || selectedSession.userId?.phone || "Not provided"}</span>
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email</span>
-                  <p className="font-semibold text-slate-800 flex items-center gap-1.5 mt-0.5 truncate">
-                    <Mail className="h-3 w-3 text-slate-400" />
-                    <span>{selectedSession.guestInfo?.email || selectedSession.userId?.email || "Not provided"}</span>
-                  </p>
-                </div>
-              </div>
-            </Card>
+              return (
+                <Card className="p-3.5 bg-slate-50 border-slate-200 rounded-xl space-y-3 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "h-10 w-10 rounded-xl text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0",
+                      isGuest ? "bg-amber-600" : "bg-primary"
+                    )}>
+                      {displayAvatar}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-xs font-bold text-slate-900 truncate">
+                        {displayName}
+                      </h3>
+                      <Badge className={cn(
+                        "text-[9px] font-bold uppercase",
+                        isGuest 
+                          ? "bg-amber-50 text-amber-700 border-amber-200" 
+                          : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      )}>
+                        {isGuest ? "GUEST" : "REGISTERED"}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-2 border-t border-slate-200 text-xs">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phone</span>
+                      <p className="font-semibold text-slate-800 flex items-center gap-1.5 mt-0.5">
+                        <Phone className="h-3 w-3 text-slate-400" />
+                        <span>{displayPhone}</span>
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email</span>
+                      <p className="font-semibold text-slate-800 flex items-center gap-1.5 mt-0.5 truncate">
+                        <Mail className="h-3 w-3 text-slate-400" />
+                        <span>{displayEmail}</span>
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })()}
 
             {/* Internal Staff Notes */}
             <Card className="p-3.5 bg-slate-50 border-slate-200 rounded-xl space-y-3 shadow-xs">
