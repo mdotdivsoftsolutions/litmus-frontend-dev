@@ -19,6 +19,7 @@ export function PortalLayout({ portal }: PortalLayoutProps) {
   const location = useLocation();
 
   const isLiveSupport = location.pathname.includes("/live-support");
+  const isSettings = location.pathname.includes("/settings");
 
   const { data: userResponse } = useQuery({
     queryKey: ["userProfile"],
@@ -45,11 +46,11 @@ export function PortalLayout({ portal }: PortalLayoutProps) {
       <div className="flex flex-1 flex-col min-w-0 h-screen overflow-hidden">
         <TopNavbar onMenuClick={() => setSidebarOpen(true)} user={user} onLogoutClick={handleLogout} portal={portal} />
         <main className={cn(
-          "flex-1 min-w-0",
-          location.pathname.includes("/live-support")
-            ? "p-0 overflow-hidden h-[calc(100vh-4rem)] flex flex-col"
-            : location.pathname.includes("/settings")
-            ? "p-4 lg:p-6 overflow-hidden h-[calc(100vh-4rem)] flex flex-col"
+          "flex-1 min-w-0 min-h-0",
+          isLiveSupport
+            ? "p-0 overflow-hidden flex flex-col"
+            : isSettings
+            ? "p-4 lg:p-6 overflow-hidden flex flex-col"
             : "overflow-y-auto p-4 lg:p-6"
         )}>
           <Outlet />

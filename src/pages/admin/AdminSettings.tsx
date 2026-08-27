@@ -258,9 +258,9 @@ export default function AdminSettings() {
   };
 
   return (
-    <div className="w-full h-auto lg:h-full flex flex-col lg:overflow-hidden space-y-4 animate-fade-in pb-8 lg:pb-0">
+    <div className="w-full h-full flex flex-col min-h-0 overflow-hidden space-y-3 animate-fade-in">
       {/* Title Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Platform Settings</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -270,12 +270,12 @@ export default function AdminSettings() {
       </div>
 
       {/* 2-Column High-End Settings Architecture */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0 overflow-hidden items-stretch">
         
         {/* Left Navigation Sidebar */}
-        <div className="lg:col-span-4 xl:col-span-3 lg:h-full flex flex-col lg:min-h-0">
-          <Card className="bg-white border border-slate-200/80 shadow-xs rounded-xl lg:overflow-hidden lg:h-full flex flex-col">
-            <div className="lg:flex-1 lg:overflow-y-auto p-2 space-y-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="lg:col-span-4 xl:col-span-3 h-full flex flex-col min-h-0 overflow-hidden">
+          <Card className="bg-white border border-slate-200/80 shadow-xs rounded-xl h-full flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-2 space-y-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {settingsSections.map((section, sIdx) => (
                 <div key={section.group} className={sIdx > 0 ? "pt-3 border-t border-slate-100" : ""}>
                   <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -322,8 +322,8 @@ export default function AdminSettings() {
         </div>
 
         {/* Right Content Panel */}
-        <div className="lg:col-span-8 xl:col-span-9 lg:h-full flex flex-col lg:min-h-0">
-          <Card className="bg-white border border-slate-200/80 shadow-xs rounded-xl lg:overflow-hidden lg:h-full flex flex-col">
+        <div className="lg:col-span-8 xl:col-span-9 h-full flex flex-col min-h-0 overflow-hidden">
+          <Card className="bg-white border border-slate-200/80 shadow-xs rounded-xl h-full flex flex-col overflow-hidden">
             
             {/* Header with Search and Action */}
             <CardHeader className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
@@ -368,7 +368,7 @@ export default function AdminSettings() {
               </div>
             </CardHeader>
 
-            <CardContent className="lg:flex-1 lg:overflow-y-auto p-4 sm:p-5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <CardContent className="flex-1 overflow-y-auto p-4 sm:p-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
 
               
               {/* 1. Test Classifications */}
