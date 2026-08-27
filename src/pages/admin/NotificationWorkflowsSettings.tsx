@@ -29,6 +29,13 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { settingsApi, INotificationWorkflows } from "@/lib/api/settings";
 import { cn } from "@/lib/utils";
@@ -379,21 +386,25 @@ export function NotificationWorkflowsSettings() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               <Label className="text-[11px] font-bold text-purple-900 shrink-0">Delay Window:</Label>
-              <select
-                value={abandonedCartDelay}
-                onChange={(e) => setAbandonedCartDelay(Number(e.target.value))}
-                className="h-8 text-xs font-bold bg-white border border-purple-200 rounded-lg px-2 text-purple-950 focus:outline-none focus:ring-1 focus:ring-purple-400"
+              <Select
+                value={String(abandonedCartDelay)}
+                onValueChange={(val) => setAbandonedCartDelay(Number(val))}
               >
-                <option value={1}>After 1 Hour</option>
-                <option value={2}>After 2 Hours (Standard)</option>
-                <option value={4}>After 4 Hours</option>
-                <option value={6}>After 6 Hours</option>
-                <option value={12}>After 12 Hours</option>
-                <option value={24}>After 24 Hours</option>
-              </select>
+                <SelectTrigger className="h-8 w-[175px] text-xs font-bold bg-white border-purple-200 text-purple-950 focus:ring-purple-400">
+                  <SelectValue placeholder="Select Delay" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1" className="text-xs font-medium">After 1 Hour</SelectItem>
+                  <SelectItem value="2" className="text-xs font-medium">After 2 Hours (Standard)</SelectItem>
+                  <SelectItem value="4" className="text-xs font-medium">After 4 Hours</SelectItem>
+                  <SelectItem value="6" className="text-xs font-medium">After 6 Hours</SelectItem>
+                  <SelectItem value="12" className="text-xs font-medium">After 12 Hours</SelectItem>
+                  <SelectItem value="24" className="text-xs font-medium">After 24 Hours</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <Button
@@ -401,12 +412,12 @@ export function NotificationWorkflowsSettings() {
               size="sm"
               onClick={() => triggerCartScanMutation.mutate()}
               disabled={triggerCartScanMutation.isPending}
-              className="h-8 text-xs font-bold bg-white border-purple-300 text-purple-900 hover:bg-purple-100/60 shrink-0"
+              className="h-8 text-xs font-bold bg-white border-purple-300 text-purple-900 hover:bg-purple-100/60 shrink-0 gap-1.5"
             >
               {triggerCartScanMutation.isPending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                <RefreshCw className="h-3.5 w-3.5" />
               )}
               Run Scan Now
             </Button>
