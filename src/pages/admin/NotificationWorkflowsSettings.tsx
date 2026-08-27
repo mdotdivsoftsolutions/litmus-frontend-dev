@@ -450,7 +450,7 @@ export function NotificationWorkflowsSettings() {
                     <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-slate-50 border border-slate-100", item.color)}>
                       <Icon className="h-5 w-5" />
                     </div>
-                    <div className="space-y-1 max-w-xl">
+                    <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h4 className="text-sm font-bold text-slate-900">{item.title}</h4>
                         <Badge variant="outline" className={cn("text-[9px] font-bold uppercase", item.badgeBg)}>

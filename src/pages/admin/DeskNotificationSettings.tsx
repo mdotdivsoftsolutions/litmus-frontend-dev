@@ -20,7 +20,7 @@ export function DeskNotificationSettings() {
   } = useAdminSocket();
 
   return (
-    <div className="space-y-6 max-w-2xl font-sans">
+    <div className="space-y-6 w-full font-sans">
       <div>
         <h3 className="text-sm font-bold text-slate-900">Live Support & Desk Notifications</h3>
         <p className="text-xs text-slate-500 mt-0.5">
@@ -111,7 +111,7 @@ export function DeskNotificationSettings() {
 
         {/* Audio Alerts Setting */}
         <div className="p-4 bg-white border border-slate-200 rounded-2xl flex items-center justify-between shadow-xs">
-          <div className="space-y-0.5 max-w-md">
+          <div className="space-y-0.5 pr-4">
             <Label className="text-xs font-bold text-slate-900 flex items-center gap-2">
               {audioAlertsEnabled ? <Volume2 className="h-4 w-4 text-slate-700" /> : <VolumeX className="h-4 w-4 text-slate-400" />}
               <span>Incoming Call Chime & Audio Alerts</span>
@@ -120,7 +120,7 @@ export function DeskNotificationSettings() {
               Plays an ambient harmonic chime when a customer or patient requests clinical support.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <Button
               type="button"
               variant="outline"
@@ -139,7 +139,7 @@ export function DeskNotificationSettings() {
 
         {/* Desktop Toast Notification Setting */}
         <div className="p-4 bg-white border border-slate-200 rounded-2xl flex items-center justify-between shadow-xs">
-          <div className="space-y-0.5 max-w-md">
+          <div className="space-y-0.5 pr-4">
             <Label className="text-xs font-bold text-slate-900 flex items-center gap-2">
               {notificationsEnabled ? <Bell className="h-4 w-4 text-slate-700" /> : <BellOff className="h-4 w-4 text-slate-400" />}
               <span>In-App Popups & Live Request Toasters</span>
@@ -148,10 +148,12 @@ export function DeskNotificationSettings() {
               Displays the actionable side toaster with one-click Accept and Decline buttons across the admin panel.
             </p>
           </div>
-          <Switch
-            checked={notificationsEnabled}
-            onCheckedChange={setNotificationsEnabled}
-          />
+          <div className="shrink-0">
+            <Switch
+              checked={notificationsEnabled}
+              onCheckedChange={setNotificationsEnabled}
+            />
+          </div>
         </div>
       </div>
     </div>

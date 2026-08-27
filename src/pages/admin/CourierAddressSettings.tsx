@@ -11,7 +11,7 @@ import {
 import { 
   Building2, MapPin, Phone, Mail, Clock, Loader2, Save, 
   RotateCcw, CheckCircle2, ShieldAlert, Sun, Moon, CalendarDays, 
-  Sparkles, Check, Edit3, X 
+  Sparkles, Check, Edit3, X, Copy
 } from "lucide-react";
 import { toast } from "sonner";
 import { settingsApi, ICourierAddress } from "@/lib/api/settings";
@@ -566,13 +566,13 @@ export function CourierAddressSettings() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-4">
+    <div className="space-y-4 w-full font-sans">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
         <div>
-          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" /> Litmus Central Courier & Dispatch Hub
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-primary" /> Litmus Central Courier &amp; Dispatch Hub
           </h3>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Configure the common sample intake address displayed to customers during checkout and order tracking when shipping via courier.
           </p>
         </div>
@@ -581,9 +581,9 @@ export function CourierAddressSettings() {
             <Button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="bg-primary hover:bg-primary/90 text-white font-bold gap-1.5 shadow-sm"
+              className="bg-primary hover:bg-primary/90 text-white font-bold gap-1.5 shadow-sm text-xs h-8 px-4"
             >
-              <Edit3 className="h-4 w-4" /> Edit Address
+              <Edit3 className="h-3.5 w-3.5" /> Edit Address
             </Button>
           ) : (
             <>
@@ -593,7 +593,7 @@ export function CourierAddressSettings() {
                 size="sm"
                 onClick={handleCancel}
                 disabled={updateMutation.isPending}
-                className="gap-1.5"
+                className="gap-1.5 text-xs h-8"
               >
                 <X className="h-3.5 w-3.5" /> Cancel
               </Button>
@@ -603,23 +603,24 @@ export function CourierAddressSettings() {
                 size="sm"
                 onClick={handleReset}
                 disabled={updateMutation.isPending}
-                className="gap-1.5"
+                className="gap-1.5 text-xs h-8"
               >
-                <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" /> Reset Defaults
+                <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" /> Reset
               </Button>
               <Button
                 type="button"
+                size="sm"
                 onClick={handleSave}
                 disabled={updateMutation.isPending}
-                className="bg-primary hover:bg-primary/90 text-white font-bold gap-1.5 shadow-sm"
+                className="bg-primary hover:bg-primary/90 text-white font-bold gap-1.5 shadow-sm text-xs h-8 px-4"
               >
                 {updateMutation.isPending ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Saving...
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving...
                   </>
                 ) : (
                   <>
-                    <Save className="h-4 w-4" /> Save Address
+                    <Save className="h-3.5 w-3.5" /> Save Address
                   </>
                 )}
               </Button>
@@ -628,9 +629,9 @@ export function CourierAddressSettings() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-6">
+      <div className="grid lg:grid-cols-12 gap-5 items-start">
         {/* Form Inputs */}
-        <form onSubmit={handleSave} className="lg:col-span-7 space-y-5">
+        <form onSubmit={handleSave} className="lg:col-span-7 space-y-4">
           <Card className="border-border shadow-xs">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Facility & Location Details</CardTitle>
@@ -803,26 +804,41 @@ export function CourierAddressSettings() {
           </div>
 
           <div className="rounded-xl border-2 border-emerald-200/80 bg-gradient-to-br from-emerald-50/60 via-white to-slate-50 p-5 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-emerald-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-emerald-700 text-white flex items-center justify-center shadow-xs">
+            <div className="border-b border-emerald-100 pb-3">
+              <div className="flex items-start gap-3">
+                <div className="h-8.5 w-8.5 rounded-lg bg-emerald-700 text-white flex items-center justify-center shadow-xs shrink-0 mt-0.5">
                   <Building2 className="h-4 w-4" />
                 </div>
-                <div>
-                  <p className="font-bold text-slate-900 text-xs sm:text-sm">
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-slate-900 text-sm leading-snug">
                     Litmus Sample Dispatch Address
                   </p>
-                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
-                    Courier Destination
-                  </span>
+                  <div className="flex items-center justify-between gap-2 mt-2">
+                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md shrink-0">
+                      Courier Destination
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const fullText = [
+                          formData.facilityName,
+                          formData.attention ? `Attn: ${formData.attention}` : "",
+                          formData.street,
+                          `${formData.city}, ${formData.state} - ${formData.pincode}`,
+                          formData.phone ? `Phone: ${formData.phone}` : "",
+                          formData.email ? `Email: ${formData.email}` : "",
+                        ].filter(Boolean).join("\n");
+                        navigator.clipboard.writeText(fullText);
+                        toast.success("Courier address copied to clipboard!");
+                      }}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white px-2.5 py-1 rounded-md shadow-xs shrink-0 whitespace-nowrap transition-all cursor-pointer"
+                    >
+                      <Copy className="h-3 w-3" />
+                      <span>Copy Address</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-              <button
-                type="button"
-                className="text-[11px] font-bold bg-emerald-700 text-white px-2.5 py-1 rounded-md"
-              >
-                Copy Address
-              </button>
             </div>
 
             <div className="space-y-2 text-xs bg-white/90 p-3 rounded-lg border border-emerald-100/80 shadow-2xs">

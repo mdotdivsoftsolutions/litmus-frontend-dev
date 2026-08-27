@@ -275,7 +275,7 @@ export default function AdminSettings() {
         {/* Left Navigation Sidebar */}
         <div className="lg:col-span-4 xl:col-span-3 h-full flex flex-col min-h-0 overflow-hidden">
           <Card className="bg-white border border-slate-200/80 shadow-xs rounded-xl h-full flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-2 space-y-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex-1 overflow-y-auto p-2 space-y-3 scrollbar-hide">
               {settingsSections.map((section, sIdx) => (
                 <div key={section.group} className={sIdx > 0 ? "pt-3 border-t border-slate-100" : ""}>
                   <p className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -321,33 +321,31 @@ export default function AdminSettings() {
           </Card>
         </div>
 
-        {/* Right Content Panel */}
+        {/* Right Content Area */}
         <div className="lg:col-span-8 xl:col-span-9 h-full flex flex-col min-h-0 overflow-hidden">
           <Card className="bg-white border border-slate-200/80 shadow-xs rounded-xl h-full flex flex-col overflow-hidden">
-            
-            {/* Header with Search and Action */}
-            <CardHeader className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    {currentTabMeta?.icon && (
-                      <div className="h-7 w-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                        <currentTabMeta.icon className="h-4 w-4" />
-                      </div>
-                    )}
-                    <CardTitle className="text-base font-bold text-slate-900">
-                      {currentTabMeta?.label || "Settings"}
-                    </CardTitle>
+            {/* Header with Search and Action — only for standard CRUD lookup lists */}
+            {!["pickup", "courier-address", "desk-notifications", "notification-workflows"].includes(activeTab) && (
+              <CardHeader className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      {currentTabMeta?.icon && (
+                        <div className="h-7 w-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                          <currentTabMeta.icon className="h-4 w-4" />
+                        </div>
+                      )}
+                      <CardTitle className="text-base font-bold text-slate-900">
+                        {currentTabMeta?.label || "Settings"}
+                      </CardTitle>
+                    </div>
+                    <CardDescription className="text-xs text-muted-foreground">
+                      {currentTabMeta?.desc || "Manage lookup configuration for this category."}
+                    </CardDescription>
                   </div>
-                  <CardDescription className="text-xs text-muted-foreground">
-                    {currentTabMeta?.desc || "Manage lookup configuration for this category."}
-                  </CardDescription>
-                </div>
 
-                {!["pickup", "courier-address", "desk-notifications", "notification-workflows"].includes(activeTab) && (
                   <div className="flex items-center gap-2">
                     <div className="relative w-44 sm:w-56">
-
                       <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                       <Input
                         placeholder={`Filter items...`}
@@ -364,11 +362,11 @@ export default function AdminSettings() {
                       <Plus className="h-3.5 w-3.5" /> Add New
                     </Button>
                   </div>
-                )}
-              </div>
-            </CardHeader>
+                </div>
+              </CardHeader>
+            )}
 
-            <CardContent className="flex-1 overflow-y-auto p-4 sm:p-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <CardContent className="flex-1 overflow-y-auto p-4 sm:p-5 scrollbar-hide">
 
               
               {/* 1. Test Classifications */}
