@@ -322,13 +322,28 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             </div>
           </div>
         ),
-        { duration: 12000, position: "top-right" }
+        { id: `chat_toast_${req.sessionId}`, duration: 15000, position: "top-right" }
       );
     });
 
     // ── Request Claimed by Another Agent ────────────────────────────────────
     newSocket.on("chat_request_claimed", (data: { sessionId: string; claimedByAgentName?: string }) => {
       setIncomingRequests((prev) => prev.filter((r) => r.sessionId !== data.sessionId));
+      toast.dismiss(`chat_toast_${data.sessionId}`);
+    });
+
+    // ── Request Cancelled by User ───────────────────────────────────────────
+    newSocket.on("chat_request_cancelled", (data: { sessionId: string }) => {
+      setIncomingRequests((prev) => prev.filter((r) => r.sessionId !== data.sessionId));
+      toast.dismiss(`chat_toast_${data.sessionId}`);
+    });
+
+    // ── Session State Updated ───────────────────────────────────────────────
+    newSocket.on("chat_session_updated", (data: { sessionId: string; status: string }) => {
+      if (data.status !== "QUEUED") {
+        setIncomingRequests((prev) => prev.filter((r) => r.sessionId !== data.sessionId));
+        toast.dismiss(`chat_toast_${data.sessionId}`);
+      }
     });
 
     // ── Heartbeat Interval ──────────────────────────────────────────────────
