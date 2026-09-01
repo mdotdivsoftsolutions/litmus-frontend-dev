@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,47 @@ import { toast } from "sonner";
 import { BulkImportDrawer } from "@/components/admin/BulkImportDrawer";
 import { SubcategoryDrawer } from "@/components/admin/SubcategoryDrawer";
 
+const ITEMS_PER_PAGE = 10;
+
+interface Category {
+  _id: string;
+  name: string;
+  imageUrl?: string;
+  productCount?: number;
+  testCount?: number;
+  subcategories?: { _id?: string; name: string; slug?: string; description?: string; imageUrl?: string }[];
+}
+
+function CategoryCardImage({ src, alt }: { src?: string; alt: string }) {
+  const [hasError, setHasError] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  if (!src || hasError) {
+    return (
+      <div className="h-full w-full bg-slate-100 flex items-center justify-center">
+        <ImageIcon className="h-10 w-10 text-muted-foreground/30" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full w-full bg-slate-100 relative overflow-hidden">
+      {!isLoaded && <div className="absolute inset-0 bg-slate-200 animate-pulse" />}
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setIsLoaded(true)}
+        onError={() => setHasError(true)}
+        className={`h-full w-full object-cover transform-gpu will-change-transform transition-all duration-200 ease-out group-hover:scale-105 ${
+          isLoaded ? "opacity-100" : "opacity-0"
+        }`}
+      />
+    </div>
+  );
+}
+
 export default function CategoryManagement() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -24,11 +65,11 @@ export default function CategoryManagement() {
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [isSubcategoryDrawerOpen, setIsSubcategoryDrawerOpen] = useState(false);
   const [activeDrawerCategoryId, setActiveDrawerCategoryId] = useState<string | undefined>(undefined);
-  const ITEMS_PER_PAGE = 8;
 
   const { data: categoriesData, isLoading } = useQuery({
     queryKey: ["adminCategories"],
     queryFn: () => categoryApi.getCategories(),
+    staleTime: 60 * 1000,
   });
 
   const deleteMutation = useMutation({
@@ -44,25 +85,25 @@ export default function CategoryManagement() {
     }
   });
 
-  interface Category {
-    _id: string;
-    name: string;
-    imageUrl?: string;
-    productCount?: number;
-    testCount?: number;
-    subcategories?: { _id?: string; name: string; slug?: string }[];
-  }
+  const rawCategories: Category[] = useMemo(() => {
+    return categoriesData?.data?.data || [];
+  }, [categoriesData]);
 
-  const rawCategories: Category[] = categoriesData?.data?.data || [];
-  const categories = rawCategories.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase()));
-  const totalPages = Math.max(1, Math.ceil(categories.length / ITEMS_PER_PAGE));
-  const paginatedCategories = categories.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const filteredCategories = useMemo(() => {
+    if (!search.trim()) return rawCategories;
+    const query = search.toLowerCase().trim();
+    return rawCategories.filter((c) => c.name.toLowerCase().includes(query));
+  }, [rawCategories, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCategories.length / ITEMS_PER_PAGE));
+
+  const paginatedCategories = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredCategories.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredCategories, currentPage]);
 
   return (
-    <div className="space-y-6 animate-fade-in pb-20 mx-auto">
+    <div className="space-y-6 pb-20 mx-auto">
       {/* Title Header with Subtitle */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
@@ -144,9 +185,9 @@ export default function CategoryManagement() {
         initialCategoryId={activeDrawerCategoryId}
       />
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {isLoading ? (
-          Array.from({ length: 8 }).map((_, i) => (
+          Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
             <Card key={i} className="border border-border shadow-sm overflow-hidden">
               <Skeleton className="h-32 w-full rounded-none" />
               <CardContent className="p-4 text-center space-y-2">
@@ -199,11 +240,7 @@ export default function CategoryManagement() {
                 </div>
                 
                 <div className="h-32 w-full bg-muted flex items-center justify-center overflow-hidden border-b border-border">
-                  {cat.imageUrl ? (
-                    <img src={cat.imageUrl} alt={cat.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  ) : (
-                    <ImageIcon className="h-10 w-10 text-muted-foreground/30" />
-                  )}
+                  <CategoryCardImage src={cat.imageUrl} alt={cat.name} />
                 </div>
                 
                 <CardContent className="p-4 text-center space-y-1.5 flex-1 flex flex-col justify-center">
@@ -235,7 +272,13 @@ export default function CategoryManagement() {
               <div className="mt-8 space-y-6 flex-1 overflow-y-auto pr-2 pb-6">
                 <div className="aspect-video w-full rounded-xl overflow-hidden bg-muted border border-border flex items-center justify-center relative shadow-sm">
                   {selectedCategory.imageUrl ? (
-                    <img src={selectedCategory.imageUrl} alt={selectedCategory.name} className="w-full h-full object-cover" />
+                    <img 
+                      src={selectedCategory.imageUrl} 
+                      alt={selectedCategory.name} 
+                      loading="lazy" 
+                      decoding="async" 
+                      className="w-full h-full object-cover" 
+                    />
                   ) : (
                     <ImageIcon className="h-10 w-10 text-muted-foreground/30" />
                   )}
@@ -285,7 +328,13 @@ export default function CategoryManagement() {
                           >
                             <div className="h-8 w-8 rounded-md bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
                               {sub.imageUrl ? (
-                                <img src={sub.imageUrl} alt={sub.name} className="h-full w-full object-cover" />
+                                <img 
+                                  src={sub.imageUrl} 
+                                  alt={sub.name} 
+                                  loading="lazy" 
+                                  decoding="async" 
+                                  className="h-full w-full object-cover" 
+                                />
                               ) : (
                                 <ImageIcon className="h-4 w-4 text-slate-300" />
                               )}
@@ -330,10 +379,10 @@ export default function CategoryManagement() {
         </SheetContent>
       </Sheet>
 
-      {!isLoading && categories.length > 0 && (
+      {!isLoading && filteredCategories.length > 0 && (
         <div className="flex items-center justify-between border border-border px-4 py-3 bg-muted/20 mt-6 rounded-lg shadow-sm">
           <p className="text-sm text-muted-foreground">
-            Showing <span className="font-medium text-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, categories.length)}</span> of <span className="font-medium text-foreground">{categories.length}</span> categories
+            Showing <span className="font-medium text-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, filteredCategories.length)}</span> of <span className="font-medium text-foreground">{filteredCategories.length}</span> categories
           </p>
           <div className="flex items-center gap-2">
             <Button
