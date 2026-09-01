@@ -69,7 +69,8 @@ export default function CategoryManagement() {
   const { data: categoriesData, isLoading } = useQuery({
     queryKey: ["adminCategories"],
     queryFn: () => categoryApi.getCategories(),
-    staleTime: 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   const deleteMutation = useMutation({
