@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Package, FileText, UserCircle,
   Users, Building2, ClipboardList, Grid3X3, TestTubes, FileCheck,
   DollarSign, X, Flame, ChevronLeft, ChevronRight, MessageSquareQuote, CheckSquare,
-  Settings, LogOut, ChevronUp
+  Settings, LogOut, ChevronUp, Bell
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +38,7 @@ const navItems = [
   { label: "Settings", icon: Flame, href: "/admin/settings" },
 ];
 
+
 export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick }: SidebarNavProps) {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
@@ -57,6 +58,7 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
     switch (label) {
       case "Users":
         return stats.totalUsers ?? stats.activeUsers ?? 0;
+
       case "Employees":
         return stats.totalEmployees ?? stats.activeEmployees ?? 0;
       case "Consultations":
@@ -81,6 +83,7 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
         return null;
     }
   };
+
   
   // Filter nav items based on user permissions
   const filteredNavItems = navItems.filter((item: any) => {

@@ -37,7 +37,9 @@ import AdminConsultations from "./pages/admin/AdminConsultations.tsx";
 import CategoryFormPage from "./pages/admin/CategoryFormPage.tsx";
 import LaboratoryDetailPage from "./pages/admin/LaboratoryDetailPage.tsx";
 import LiveSupportPage from "./pages/admin/LiveSupportPage.tsx";
+import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.tsx";
 import { SocketProvider } from "./context/SocketContext.tsx";
+
 
 const queryClient = new QueryClient();
 
@@ -71,7 +73,9 @@ const App = () => (
               <Route element={<PortalLayout portal="admin" />}>
                 <Route index element={<Navigate to="dashboard" replace />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="notifications" element={<AdminNotificationsPage />} />
                 <Route path="live-support" element={<LiveSupportPage />} />
+
                 <Route path="employees" element={<EmployeeManagement />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="users/:id" element={<UserDetailsPage />} />
