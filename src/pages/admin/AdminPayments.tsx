@@ -21,6 +21,7 @@ import {
   AlertTriangle, 
   Search, 
   Filter, 
+  Download,
   CalendarIcon, 
   ChevronLeft, 
   ChevronRight, 
@@ -34,6 +35,7 @@ import {
   Wallet
 } from "lucide-react";
 import { InvoiceDialog } from "@/components/admin/InvoiceDialog";
+import { exportToCsv } from "@/lib/utils/exportCsv";
 import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
@@ -139,6 +141,44 @@ export default function AdminPayments() {
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginatedPayments = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const handleExportPayments = () => {
+    if (!filtered || filtered.length === 0) {
+      toast.error("No billing or payment records found to export");
+      return;
+    }
+
+    const rows = filtered.map((p: any) => {
+      const gross = Number(p.amount) || 0;
+      const basePrice = Math.round((gross / 1.18) * 100) / 100;
+      const gstAmt = Math.round((gross - basePrice) * 100) / 100;
+      return {
+        transactionId: p.id,
+        bookingId: p.bookingId,
+        lab: p.lab,
+        baseAmount: basePrice,
+        gstAmount: gstAmt,
+        totalAmount: gross,
+        gateway: p.gateway,
+        status: p.status,
+        date: p.date,
+      };
+    });
+
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    exportToCsv(`Litmus_Billing_Ledger_${todayStr}`, rows, [
+      { label: "Transaction ID", key: "transactionId" },
+      { label: "Booking Ref", key: "bookingId" },
+      { label: "Laboratory", key: "lab" },
+      { label: "Base Amount (₹)", key: "baseAmount" },
+      { label: "GST (18%) (₹)", key: "gstAmount" },
+      { label: "Total Amount (₹)", key: "totalAmount" },
+      { label: "Gateway", key: "gateway" },
+      { label: "Payment Status", key: "status" },
+      { label: "Date & Time", key: "date" },
+    ]);
+    toast.success(`Exported ${rows.length} billing records successfully`);
+  };
 
   const renderPaymentTable = (items: any[]) => (
     <Card className="border border-border shadow-sm overflow-hidden bg-white min-h-[360px]">
@@ -297,6 +337,16 @@ export default function AdminPayments() {
                 {(statusFilter !== 'all' || startDate || endDate) && (
                   <span className="h-2 w-2 rounded-full bg-primary" />
                 )}
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2 bg-white border border-slate-200 shadow-sm h-10 shrink-0 text-xs text-slate-700 hover:text-slate-900"
+                onClick={handleExportPayments}
+                disabled={isLoading || filtered.length === 0}
+                title="Export billing records to CSV"
+              >
+                <Download className="h-4 w-4 text-slate-500" />
+                <span>Export</span>
               </Button>
               <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col h-full bg-white dark:bg-card border-l border-slate-200 dark:border-slate-800 shadow-2xl font-sans">
                 <SheetHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-card shrink-0 text-left">

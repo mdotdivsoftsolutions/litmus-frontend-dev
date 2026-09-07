@@ -20,6 +20,7 @@ import {
   Search, 
   Eye, 
   Filter, 
+  Download,
   ChevronLeft, 
   ChevronRight, 
   AlertTriangle, 
@@ -45,10 +46,11 @@ import {
   Truck,
   Copy,
   Check,
+  FlaskConical,
   ArrowRight,
-  FlaskConical
 } from "lucide-react";
 import { InvoiceDialog } from "@/components/admin/InvoiceDialog";
+import { exportToCsv } from "@/lib/utils/exportCsv";
 import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
@@ -67,6 +69,7 @@ export default function AdminBookings() {
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleCopy = (text: string, fieldId: string) => {
     if (!text) return;
@@ -172,6 +175,81 @@ export default function AdminBookings() {
     },
     onError: (err: any) => toast.error(err.response?.data?.message || "Failed to reject booking")
   });
+
+  const handleExportBookings = async () => {
+    try {
+      setIsExporting(true);
+      toast.info("Preparing bookings export...");
+
+      const exportRes = await adminApi.getBookings({
+        ...queryParams,
+        page: 1,
+        limit: 0,
+      });
+
+      const exportList = exportRes?.data && exportRes.data.length > 0 ? exportRes.data : rawBookings;
+      if (!exportList || exportList.length === 0) {
+        toast.error("No bookings found to export");
+        return;
+      }
+
+      const rows = exportList.map((b: any) => {
+        const productNames = b.items?.map((i: any) => i.samples?.[0]?.productName || i.packageId?.name || i.testId?.testName || i.testId?.name).filter(Boolean);
+        const product = productNames?.length > 0 ? productNames.join(", ") : "Food Testing";
+        const testsCount = b.items?.reduce((count: number, i: any) => count + (i.samples?.reduce((sc: number, s: any) => sc + (s.selectedParameters?.length || 1), 0) || 1), 0) || 0;
+        const totalSamples = b.items?.reduce((count: number, i: any) => count + (i.samples?.length || 0), 0) || 0;
+        const rawPay = String(b.paymentStatus || "").toUpperCase();
+        const isPaid = rawPay === "SUCCESS" || rawPay === "PAID" || ["APPROVED", "IN_PROGRESS", "COMPLETED"].includes(String(b.status || "").toUpperCase());
+        const paymentStatus = isPaid ? "Paid" : rawPay === "REFUNDED" ? "Refunded" : rawPay === "FAILED" ? "Failed" : "Pending";
+        const col = b.metadata?.collectionDetails || b.collectionDetails || {};
+        const userObj = b.userId || {};
+
+        return {
+          displayId: `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`,
+          date: b.createdAt ? format(new Date(b.createdAt), "yyyy-MM-dd HH:mm") : "",
+          customerName: `${userObj.firstName || ""} ${userObj.lastName || ""}`.trim() || col.name || "Customer",
+          customerEmail: userObj.email || col.email || "",
+          customerPhone: userObj.phone || col.phone || "",
+          state: col.state || userObj.billingAddress?.state || userObj.address?.state || "",
+          city: col.city || userObj.billingAddress?.city || userObj.address?.city || "",
+          product,
+          testsCount,
+          samplesCount: totalSamples,
+          labName: b.labId?.labName || (b.metadata?.isLitmusDirect ? "Litmus Direct" : "Litmus Smart Allocation"),
+          collectionMethod: b.collectionMethod || col.collectionMethod || "PICKUP",
+          amount: b.totalAmount || 0,
+          paymentStatus,
+          status: b.status || "PENDING",
+        };
+      });
+
+      const todayStr = format(new Date(), "yyyy-MM-dd");
+      exportToCsv(`Litmus_Bookings_${todayStr}`, rows, [
+        { label: "Booking ID", key: "displayId" },
+        { label: "Date & Time", key: "date" },
+        { label: "Customer Name", key: "customerName" },
+        { label: "Email", key: "customerEmail" },
+        { label: "Phone", key: "customerPhone" },
+        { label: "State", key: "state" },
+        { label: "City", key: "city" },
+        { label: "Products / Tests", key: "product" },
+        { label: "Tests Count", key: "testsCount" },
+        { label: "Samples Count", key: "samplesCount" },
+        { label: "Assigned Laboratory", key: "labName" },
+        { label: "Collection Method", key: "collectionMethod" },
+        { label: "Total Amount (₹)", key: "amount" },
+        { label: "Payment Status", key: "paymentStatus" },
+        { label: "Booking Status", key: "status" },
+      ]);
+
+      toast.success(`Exported ${rows.length} bookings successfully`);
+    } catch (err: any) {
+      console.error("Export failed:", err);
+      toast.error("Failed to export bookings");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // Map API data to our table format. Prioritize API data only.
   const mappedBookings = rawBookings.map((b: any) => {
@@ -576,6 +654,16 @@ export default function AdminBookings() {
                 {(statusFilter !== 'all' || paymentStatusFilter !== 'all' || startDate || endDate) && (
                   <span className="h-2 w-2 rounded-full bg-primary" />
                 )}
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2 bg-white border border-slate-200 shadow-sm h-10 shrink-0 text-xs text-slate-700 hover:text-slate-900"
+                onClick={handleExportBookings}
+                disabled={isExporting || isLoading}
+                title="Export bookings to CSV"
+              >
+                <Download className="h-4 w-4 text-slate-500" />
+                <span>{isExporting ? "Exporting..." : "Export"}</span>
               </Button>
               <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col h-full bg-white dark:bg-card border-l border-slate-200 dark:border-slate-800 shadow-2xl font-sans">
                 <SheetHeader className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-card shrink-0 text-left">
