@@ -80,47 +80,65 @@ export default function PackageFormPage() {
  enabled: isEditing,
  });
 
- const { data: categoriesData } = useQuery({
- queryKey: ["categories"],
- queryFn: () => categoryApi.getCategories().then(res => res.data?.data),
- });
+  const { data: categoriesData, isLoading: isLoadingCategories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => categoryApi.getCategories().then(res => res.data?.data),
+  });
 
- const selectedCategoryId = form.watch("categoryId");
+  const selectedCategoryId = form.watch("categoryId");
+  const selectedCategoryObj = categoriesData?.find((c: any) => c._id === selectedCategoryId);
+  const isGeneralCategory = selectedCategoryObj?.name?.toLowerCase().trim() === "general";
 
- const { data: testsData } = useQuery({
- queryKey: ["tests", selectedCategoryId],
- queryFn: () => testApi.getTests({ category: selectedCategoryId, limit: 500 }),
- enabled: !!selectedCategoryId,
- });
+  const { data: testsData } = useQuery({
+    queryKey: ["tests", selectedCategoryId, isGeneralCategory],
+    queryFn: async () => {
+      const params: any = { limit: 500 };
+      if (selectedCategoryId && !isGeneralCategory) {
+        params.category = selectedCategoryId;
+      }
+      return testApi.getTests(params);
+    },
+    enabled: !!selectedCategoryId || !isEditing,
+  });
 
- const { data: tagsData } = useQuery({
- queryKey: ["adminTags"],
- queryFn: () => tagApi.getTags(),
- });
+  const { data: tagsData } = useQuery({
+    queryKey: ["adminTags"],
+    queryFn: () => tagApi.getTags(),
+  });
 
- useEffect(() => {
- if (packageData?.data) {
- const p = packageData.data;
- form.reset({
- name: p.name,
- description: p.description,
- categoryId: p.categoryId?._id || p.categoryId ||"",
- category: p.category ||"",
- tests: p.tests?.map((t: any) => t._id || t) || [],
- testCount: p.testCount,
- mrp: p.mrp,
- discountType: p.discountType ||"PERCENTAGE",
- discountValue: p.discountValue || 0,
- price: p.price,
- tat: p.tat,
- tag: p.tag ||"",
- features: p.features && p.features.length > 0 
- ? p.features.map((f: string) => ({ value: f })) 
- : [],
- image: p.image || p.imageUrl || "",
- });
- }
- }, [packageData, form]);
+  useEffect(() => {
+    if (packageData?.data) {
+      const p = packageData.data;
+
+      // Resolve categoryId: check populated object, string ID, or match by category name
+      let resolvedCategoryId = p.categoryId?._id || (typeof p.categoryId === 'string' ? p.categoryId : "");
+      if (!resolvedCategoryId && p.category && categoriesData && categoriesData.length > 0) {
+        const found = categoriesData.find(
+          (c: any) => c.name.toLowerCase().trim() === p.category.toLowerCase().trim()
+        );
+        if (found) resolvedCategoryId = found._id;
+      }
+
+      form.reset({
+        name: p.name,
+        description: p.description,
+        categoryId: resolvedCategoryId,
+        category: p.category || "",
+        tests: p.tests?.map((t: any) => t._id || t) || [],
+        testCount: p.testCount,
+        mrp: p.mrp,
+        discountType: p.discountType || "PERCENTAGE",
+        discountValue: p.discountValue || 0,
+        price: p.price,
+        tat: p.tat,
+        tag: p.tag || "",
+        features: p.features && p.features.length > 0 
+          ? p.features.map((f: string) => ({ value: f })) 
+          : [],
+        image: p.image || p.imageUrl || "",
+      });
+    }
+  }, [packageData, categoriesData, form]);
 
  const selectedTests = form.watch("tests");
  const discountType = form.watch("discountType");
@@ -232,20 +250,20 @@ export default function PackageFormPage() {
  mutation.mutate(formattedData);
  };
 
- if (isEditing && isLoadingPackage) {
- return (
- <div className="space-y-6 pb-20 mx-auto">
- <div className="flex items-center gap-4">
- <Skeleton className="h-10 w-10 rounded-full" />
- <div className="space-y-2">
- <Skeleton className="h-8 w-48" />
- <Skeleton className="h-4 w-64" />
- </div>
- </div>
- <Skeleton className="h-[600px] w-full rounded-xl" />
- </div>
- );
- }
+  if (isEditing && (isLoadingPackage || isLoadingCategories)) {
+    return (
+      <div className="space-y-6 pb-20 mx-auto">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+        </div>
+        <Skeleton className="h-[600px] w-full rounded-xl" />
+      </div>
+    );
+  }
 
  return (
  <div className="space-y-6 animate-fade-in pb-20 mx-auto">
@@ -304,179 +322,214 @@ export default function PackageFormPage() {
  )}
  />
 
- <FormField
- control={form.control}
- name="categoryId"
- render={({ field }) => (
- <FormItem>
- <FormLabel>Category</FormLabel>
- <Select 
- onValueChange={(val) => {
- field.onChange(val);
- const cat = categoriesData?.find((c: any) => c._id === val);
- if (cat) form.setValue("category", cat.name);
- if (!isEditing || val !== packageData?.data?.categoryId?._id) {
- form.setValue("tests", []);
- }
- }} 
- value={field.value || undefined}
- >
- <FormControl>
- <SelectTrigger>
- <SelectValue placeholder="Select a category"/>
- </SelectTrigger>
- </FormControl>
- <SelectContent>
- {categoriesData?.map((cat: any) => (
- <SelectItem key={cat._id} value={cat._id}>{cat.name}</SelectItem>
- ))}
- </SelectContent>
- </Select>
- <FormMessage />
- </FormItem>
- )}
- />
+  <FormField
+  control={form.control}
+  name="categoryId"
+  render={({ field }) => (
+  <FormItem>
+  <FormLabel>Category</FormLabel>
+  <Select 
+  onValueChange={(val) => {
+  field.onChange(val);
+  const cat = categoriesData?.find((c: any) => c._id === val);
+  if (cat) form.setValue("category", cat.name);
+  const prevCatId = packageData?.data?.categoryId?._id || (typeof packageData?.data?.categoryId === 'string' ? packageData?.data?.categoryId : undefined);
+  if (!isEditing || (prevCatId && val !== prevCatId)) {
+  form.setValue("tests", []);
+  }
+  }} 
+  value={field.value || undefined}
+  >
+  <FormControl>
+  <SelectTrigger>
+  <SelectValue placeholder="Select a category"/>
+  </SelectTrigger>
+  </FormControl>
+  <SelectContent>
+  {categoriesData?.map((cat: any) => (
+  <SelectItem key={cat._id} value={cat._id}>{cat.name}</SelectItem>
+  ))}
+  </SelectContent>
+  </Select>
+  <FormMessage />
+  </FormItem>
+  )}
+  />
 
- <FormField
- control={form.control}
- name="tag"
- render={({ field }) => (
- <FormItem>
- <FormLabel>Tag (Optional)</FormLabel>
- <Select onValueChange={field.onChange} value={field.value || undefined}>
- <FormControl>
- <SelectTrigger>
- <SelectValue placeholder="Select a tag"/>
- </SelectTrigger>
- </FormControl>
- <SelectContent>
- <SelectItem value="none">None</SelectItem>
- {tagsData?.data?.map((t: any) => (
- <SelectItem key={t._id} value={t.name}>{t.name}</SelectItem>
- ))}
- </SelectContent>
- </Select>
- <FormMessage />
- </FormItem>
- )}
- />
+  <FormField
+  control={form.control}
+  name="tag"
+  render={({ field }) => {
+    const allTags = [...(tagsData?.data || [])];
+    if (field.value && field.value !== "none" && !allTags.some((t: any) => t.name.toLowerCase() === field.value.toLowerCase())) {
+      allTags.push({ _id: "custom_" + field.value, name: field.value });
+    }
 
- <FormField
-            control={form.control}
-            name="image"
-            render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>Package Image</FormLabel>
-                <FormControl>
-                  <div className="flex flex-col sm:flex-row gap-6 items-start mt-2">
-                    <div className="h-40 w-40 shrink-0 rounded-xl border border-dashed border-border bg-muted/50 flex flex-col items-center justify-center overflow-hidden relative">
-                      {field.value ? (
-                        <img src={field.value} alt="Package Preview" className="h-full w-full object-cover" />
-                      ) : (
-                        <>
-                          <ImageIcon className="h-8 w-8 text-muted-foreground mb-2 opacity-50" />
-                          <span className="text-xs text-muted-foreground font-medium">No image</span>
-                        </>
-                      )}
-                      {isUploading && (
-                        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
-                          <Loader2 className="h-6 w-6 text-primary animate-spin" />
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="space-y-3 flex-1">
-                      <p className="text-sm text-muted-foreground">
-                        Upload an image that visually represents this package.
-                      </p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        ref={fileInputRef}
-                        onChange={handleFileChange}
+    return (
+      <FormItem>
+        <FormLabel>Tag (Optional)</FormLabel>
+        <Select onValueChange={field.onChange} value={field.value || undefined}>
+          <FormControl>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a tag"/>
+            </SelectTrigger>
+          </FormControl>
+          <SelectContent>
+            <SelectItem value="none">None</SelectItem>
+            {allTags.map((t: any) => (
+              <SelectItem key={t._id || t.name} value={t.name}>{t.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <FormMessage />
+      </FormItem>
+    );
+  }}
+  />
+
+  <FormField
+             control={form.control}
+             name="image"
+             render={({ field }) => {
+               const isLikelyUrl = field.value && (field.value.startsWith("http://") || field.value.startsWith("https://") || field.value.startsWith("/"));
+
+               return (
+                 <FormItem className="md:col-span-2">
+                   <FormLabel>Package Image</FormLabel>
+                   <FormControl>
+                     <div className="flex flex-col sm:flex-row gap-6 items-start mt-2">
+                       <div className="h-40 w-40 shrink-0 rounded-xl border border-dashed border-border bg-muted/50 flex flex-col items-center justify-center overflow-hidden relative">
+                         {isLikelyUrl ? (
+                           <img 
+                             src={field.value} 
+                             alt="Package Preview" 
+                             className="h-full w-full object-cover" 
+                             onError={(e) => {
+                               (e.target as HTMLImageElement).style.display = "none";
+                               const fallback = (e.target as HTMLImageElement).parentElement?.querySelector('.img-fallback');
+                               if (fallback) fallback.classList.remove('hidden');
+                             }}
+                           />
+                         ) : null}
+                         <div className={`img-fallback flex flex-col items-center justify-center text-center p-2 ${isLikelyUrl ? 'hidden' : ''}`}>
+                           <ImageIcon className="h-8 w-8 text-muted-foreground mb-2 opacity-50" />
+                           <span className="text-xs text-muted-foreground font-medium">
+                             {field.value && !isLikelyUrl ? "Invalid Image URL" : "No image"}
+                           </span>
+                         </div>
+                         {isUploading && (
+                           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+                             <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                           </div>
+                         )}
+                       </div>
+                       
+                       <div className="space-y-3 flex-1">
+                         <p className="text-sm text-muted-foreground">
+                           Upload an image that visually represents this package.
+                         </p>
+                         <input
+                           type="file"
+                           accept="image/*"
+                           className="hidden"
+                           ref={fileInputRef}
+                           onChange={handleFileChange}
+                         />
+                         <div className="flex gap-2">
+                           <Button 
+                             type="button"
+                             variant="outline"
+                             onClick={() => fileInputRef.current?.click()}
+                             disabled={isUploading}
+                             className="gap-2"
+                           >
+                             <Upload className="h-4 w-4" />
+                             {isUploading ? "Uploading..." : field.value ? "Change Image" : "Upload Image"}
+                           </Button>
+                           {field.value && (
+                             <Button 
+                               type="button"
+                               variant="ghost" 
+                               onClick={() => form.setValue("image", "", { shouldValidate: true })} 
+                               className="text-destructive hover:text-destructive"
+                             >
+                               Remove
+                             </Button>
+                           )}
+                         </div>
+                       </div>
+                     </div>
+                   </FormControl>
+                   <FormMessage />
+                 </FormItem>
+               );
+             }}
+           />
+
+  {selectedCategoryId && (
+  <FormField
+  control={form.control}
+  name="tests"
+  render={() => {
+    const testsFromQuery = testsData?.data || [];
+    const existingTestObjects = (packageData?.data?.tests || []).filter((t: any) => typeof t === 'object' && t._id);
+    const allAvailableTests = [...testsFromQuery];
+    existingTestObjects.forEach((et: any) => {
+      if (!allAvailableTests.some((t: any) => t._id === et._id)) {
+        allAvailableTests.push(et);
+      }
+    });
+
+    return (
+      <FormItem className="md:col-span-2">
+        <div className="mb-4">
+          <FormLabel className="text-base">Select Tests</FormLabel>
+        </div>
+        {allAvailableTests.length === 0 ? (
+          <div className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-md border border-dashed text-center">
+            {testsData === undefined ? "Loading tests..." : "No tests found for this category."}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {allAvailableTests.map((item: any) => (
+              <FormField
+                key={item._id}
+                control={form.control}
+                name="tests"
+                render={({ field }) => (
+                  <FormItem
+                    key={item._id}
+                    className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-card hover:bg-accent/50 transition-colors"
+                  >
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value?.includes(item._id)}
+                        onCheckedChange={(checked) => {
+                          return checked
+                            ? field.onChange([...field.value, item._id])
+                            : field.onChange(
+                                field.value?.filter((value: string) => value !== item._id)
+                              );
+                        }}
                       />
-                      <div className="flex gap-2">
-                        <Button 
-                          type="button"
-                          variant="outline"
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={isUploading}
-                          className="gap-2"
-                        >
-                          <Upload className="h-4 w-4" />
-                          {isUploading ? "Uploading..." : field.value ? "Change Image" : "Upload Image"}
-                        </Button>
-                        {field.value && (
-                          <Button 
-                            type="button"
-                            variant="ghost" 
-                            onClick={() => form.setValue("image", "", { shouldValidate: true })} 
-                            className="text-destructive hover:text-destructive"
-                          >
-                            Remove
-                          </Button>
-                        )}
-                      </div>
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="font-normal cursor-pointer text-sm">
+                        {item.testName} <span className="text-muted-foreground ml-1">(₹{item.offerPrice || item.price || 0})</span>
+                      </FormLabel>
                     </div>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
- {selectedCategoryId && testsData?.data && (
- <FormField
- control={form.control}
- name="tests"
- render={() => (
- <FormItem className="md:col-span-2">
- <div className="mb-4">
- <FormLabel className="text-base">Select Tests</FormLabel>
- </div>
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
- {testsData.data.map((item: any) => (
- <FormField
- key={item._id}
- control={form.control}
- name="tests"
- render={({ field }) => {
- return (
- <FormItem
- key={item._id}
- className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-card hover:bg-accent/50 transition-colors"
- >
- <FormControl>
- <Checkbox
- checked={field.value?.includes(item._id)}
- onCheckedChange={(checked) => {
- return checked
- ? field.onChange([...field.value, item._id])
- : field.onChange(
- field.value?.filter(
- (value) => value !== item._id
- )
- )
- }}
- />
- </FormControl>
- <div className="space-y-1 leading-none">
- <FormLabel className="font-normal cursor-pointer text-sm">
- {item.testName} <span className="text-muted-foreground ml-1">(₹{item.offerPrice || item.price})</span>
- </FormLabel>
- </div>
- </FormItem>
- )
- }}
- />
- ))}
- </div>
- <FormMessage />
- </FormItem>
- )}
- />
- )}
+                  </FormItem>
+                )}
+              />
+            ))}
+          </div>
+        )}
+        <FormMessage />
+      </FormItem>
+    );
+  }}
+  />
+  )}
  </div>
  </div>
 
