@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, isAfter, isBefore, startOfDay, endOfDay, subDays, startOfMonth } from "date-fns";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api/admin";
+import { authApi } from "@/lib/api/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,10 +94,20 @@ export default function AdminPayments() {
     setCurrentPage(1);
   };
 
-  const { data: response, isLoading } = useQuery({
+  const { data: userResponse, isLoading: isUserLoading } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: authApi.getMe,
+  });
+  const user = userResponse?.data;
+  const isEmployee = user?.role === "EMPLOYEE";
+
+  const { data: response, isLoading: isPaymentsLoading } = useQuery({
     queryKey: ["adminPayments"],
     queryFn: adminApi.getPayments,
+    enabled: !isEmployee,
   });
+
+  const isLoading = isUserLoading || isPaymentsLoading;
 
   const rawPayments = response?.data || [];
 
@@ -277,6 +288,21 @@ export default function AdminPayments() {
       </Table>
     </Card>
   );
+
+  if (isEmployee) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 space-y-4">
+        <div className="h-14 w-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+          <AlertTriangle className="h-7 w-7" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900">Access Restricted</h2>
+        <p className="text-sm text-slate-500 max-w-md">
+          Revenue, financial settlements, and transaction details are restricted to Administrators only.
+        </p>
+        <Button onClick={() => navigate("/admin/dashboard")}>Return to Dashboard</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in mx-auto pb-20">

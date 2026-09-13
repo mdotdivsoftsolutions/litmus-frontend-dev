@@ -90,6 +90,9 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
     if (user?.role === "ADMIN") return true; 
     
     if (user?.role === "EMPLOYEE") {
+      // Revenue / Payments are restricted from all employees
+      if (item.href === "/admin/payments") return false;
+
       if (item.permission) {
         return user.permissions?.includes(item.permission);
       }

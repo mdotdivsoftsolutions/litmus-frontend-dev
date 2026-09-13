@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminApi } from "@/lib/api/admin";
+import { authApi } from "@/lib/api/auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -51,6 +52,16 @@ export default function AdminDashboard() {
   const [timeRange, setTimeRange] = useState<number>(14); // 7, 14, 30 days
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Check current user role & permissions
+  const { data: userResponse } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: authApi.getMe,
+  });
+  const user = userResponse?.data;
+  const isEmployee = user?.role === "EMPLOYEE";
+  const canViewRevenue = user?.role === "ADMIN";
+  const effectiveChartMetric = canViewRevenue ? chartMetric : "bookings";
+
   // Queries
   const { data: statsData, isLoading: statsLoading } = useQuery({ 
     queryKey: ["adminStats"], 
@@ -64,7 +75,8 @@ export default function AdminDashboard() {
 
   const { data: paymentsData, isLoading: paymentsLoading } = useQuery({ 
     queryKey: ["adminPayments"], 
-    queryFn: adminApi.getPayments 
+    queryFn: adminApi.getPayments,
+    enabled: canViewRevenue,
   });
 
   const { data: labsData, isLoading: labsLoading } = useQuery({ 
@@ -72,7 +84,7 @@ export default function AdminDashboard() {
     queryFn: adminApi.getLabs 
   });
 
-  const isLoading = statsLoading || bookingsLoading || labsLoading || paymentsLoading;
+  const isLoading = statsLoading || bookingsLoading || labsLoading || (canViewRevenue && paymentsLoading);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -332,13 +344,13 @@ export default function AdminDashboard() {
       icon: ClipboardList,
       badgeText: "Total",
     },
-    {
+    ...(canViewRevenue ? [{
       title: "Gross Revenue",
       value: `₹${calculatedRevenue.toLocaleString('en-IN')}`,
       subtitle: "Digital collections",
       icon: IndianRupee,
       badgeText: "Live",
-    },
+    }] : []),
     {
       title: "Actions Required",
       value: (pendingAssignmentBookings.length + pendingVerificationReports.length).toString(),
@@ -361,7 +373,9 @@ export default function AdminDashboard() {
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Real-time operations, booking pipelines, laboratory capacity, and financial summaries.
+            {canViewRevenue 
+              ? "Real-time operations, booking pipelines, laboratory capacity, and financial summaries."
+              : "Real-time operations, booking pipelines, and laboratory capacity."}
           </p>
         </div>
 
@@ -481,37 +495,41 @@ export default function AdminDashboard() {
             <div>
               <CardTitle className="text-sm font-bold text-foreground flex items-center gap-1.5">
                 <Activity className="h-3.5 w-3.5 text-primary" />
-                {chartMetric === "revenue" ? "Revenue Timeline" : "Orders Activity"}
+                {effectiveChartMetric === "revenue" ? "Revenue Timeline" : "Orders Activity"}
               </CardTitle>
               <CardDescription className="text-[11px]">
-                Real-time activity aggregated over the last {timeRange} days.
+                {effectiveChartMetric === "revenue" 
+                  ? `Real-time activity aggregated over the last ${timeRange} days.`
+                  : `Real-time orders activity aggregated over the last ${timeRange} days.`}
               </CardDescription>
             </div>
 
             {/* Metric & Time Toggle */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              <div className="bg-slate-100 p-0.5 rounded-md border border-slate-200/80 flex text-[11px] font-medium">
-                <button
-                  type="button"
-                  onClick={() => setChartMetric("revenue")}
-                  className={cn(
-                    "px-2.5 py-0.5 rounded transition-all",
-                    chartMetric === "revenue" ? "bg-white text-primary shadow-2xs font-semibold" : "text-slate-600 hover:text-foreground"
-                  )}
-                >
-                  Revenue (₹)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setChartMetric("bookings")}
-                  className={cn(
-                    "px-2.5 py-0.5 rounded transition-all",
-                    chartMetric === "bookings" ? "bg-white text-primary shadow-2xs font-semibold" : "text-slate-600 hover:text-foreground"
-                  )}
-                >
-                  Orders Count
-                </button>
-              </div>
+              {canViewRevenue && (
+                <div className="bg-slate-100 p-0.5 rounded-md border border-slate-200/80 flex text-[11px] font-medium">
+                  <button
+                    type="button"
+                    onClick={() => setChartMetric("revenue")}
+                    className={cn(
+                      "px-2.5 py-0.5 rounded transition-all",
+                      chartMetric === "revenue" ? "bg-white text-primary shadow-2xs font-semibold" : "text-slate-600 hover:text-foreground"
+                    )}
+                  >
+                    Revenue (₹)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setChartMetric("bookings")}
+                    className={cn(
+                      "px-2.5 py-0.5 rounded transition-all",
+                      chartMetric === "bookings" ? "bg-white text-primary shadow-2xs font-semibold" : "text-slate-600 hover:text-foreground"
+                    )}
+                  >
+                    Orders Count
+                  </button>
+                </div>
+              )}
 
               <div className="bg-slate-100 p-0.5 rounded-md border border-slate-200/80 flex text-[11px] font-medium">
                 {[7, 14, 30].map((days) => (
@@ -534,7 +552,7 @@ export default function AdminDashboard() {
           <CardContent className="p-4 pt-4">
             <div className="h-[270px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                {chartMetric === "revenue" ? (
+                {effectiveChartMetric === "revenue" ? (
                   <AreaChart data={timelineData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <defs>
                       <linearGradient id="liveRevenueGrad" x1="0" y1="0" x2="0" y2="1">
@@ -716,10 +734,12 @@ export default function AdminDashboard() {
                 <Package className="h-3 w-3 text-amber-600" />
                 Top Packages
               </TabsTrigger>
-              <TabsTrigger value="transactions" className="gap-1.5 text-xs py-1">
-                <CreditCard className="h-3 w-3 text-emerald-600" />
-                Payments ({rawPayments.length})
-              </TabsTrigger>
+              {canViewRevenue && (
+                <TabsTrigger value="transactions" className="gap-1.5 text-xs py-1">
+                  <CreditCard className="h-3 w-3 text-emerald-600" />
+                  Payments ({rawPayments.length})
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <Button variant="ghost" size="sm" asChild className="text-xs text-primary font-medium h-7 px-2">
@@ -899,7 +919,7 @@ export default function AdminDashboard() {
                       <TableHead>Assigned Tests</TableHead>
                       <TableHead>Completed</TableHead>
                       <TableHead>Active Load</TableHead>
-                      <TableHead className="text-right">Processed Revenue</TableHead>
+                      {canViewRevenue && <TableHead className="text-right">Processed Revenue</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -923,14 +943,16 @@ export default function AdminDashboard() {
                             <Progress value={lab.capacityRate} className="h-1 w-full" />
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-bold text-foreground">
-                          ₹{lab.totalRevenue.toLocaleString()}
-                        </TableCell>
+                        {canViewRevenue && (
+                          <TableCell className="text-right font-bold text-foreground">
+                            ₹{lab.totalRevenue.toLocaleString()}
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                     {labsMatrix.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-6 text-muted-foreground text-xs">
+                        <TableCell colSpan={canViewRevenue ? 7 : 6} className="text-center py-6 text-muted-foreground text-xs">
                           No accredited labs registered in the network.
                         </TableCell>
                       </TableRow>
@@ -970,10 +992,12 @@ export default function AdminDashboard() {
                         </Badge>
                       </div>
                       <p className="font-semibold text-foreground text-xs truncate" title={item.name}>{item.name}</p>
-                      <div className="flex justify-between items-center pt-1.5 border-t border-slate-200/60 text-[11px]">
-                        <span className="text-muted-foreground">Revenue:</span>
-                        <span className="font-bold text-emerald-700">₹{item.revenue.toLocaleString()}</span>
-                      </div>
+                      {canViewRevenue && (
+                        <div className="flex justify-between items-center pt-1.5 border-t border-slate-200/60 text-[11px]">
+                          <span className="text-muted-foreground">Revenue:</span>
+                          <span className="font-bold text-emerald-700">₹{item.revenue.toLocaleString()}</span>
+                        </div>
+                      )}
                     </div>
                   ))}
                   {topProductsBreakdown.length === 0 && (
@@ -987,64 +1011,66 @@ export default function AdminDashboard() {
           </TabsContent>
 
           {/* TAB 4: Live Payments Feed */}
-          <TabsContent value="transactions" className="mt-3 min-h-[280px]">
-            <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden min-h-[280px]">
-              <CardHeader className="p-3.5 pb-2.5 border-b border-slate-100 bg-slate-50/40 flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                    <CreditCard className="h-3.5 w-3.5 text-emerald-600" />
-                    Recent Transactions
-                  </CardTitle>
-                  <CardDescription className="text-[11px]">
-                    Live transaction logs synchronized with payment gateway.
-                  </CardDescription>
-                </div>
-                <Button size="sm" variant="outline" asChild className="text-xs h-7 rounded">
-                  <Link to="/admin/payments">Payment Ledger</Link>
-                </Button>
-              </CardHeader>
+          {canViewRevenue && (
+            <TabsContent value="transactions" className="mt-3 min-h-[280px]">
+              <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden min-h-[280px]">
+                <CardHeader className="p-3.5 pb-2.5 border-b border-slate-100 bg-slate-50/40 flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                      <CreditCard className="h-3.5 w-3.5 text-emerald-600" />
+                      Recent Transactions
+                    </CardTitle>
+                    <CardDescription className="text-[11px]">
+                      Live transaction logs synchronized with payment gateway.
+                    </CardDescription>
+                  </div>
+                  <Button size="sm" variant="outline" asChild className="text-xs h-7 rounded">
+                    <Link to="/admin/payments">Payment Ledger</Link>
+                  </Button>
+                </CardHeader>
 
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50/70 text-[10px]">
-                      <TableHead>Transaction ID</TableHead>
-                      <TableHead>Booking</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Payment Method</TableHead>
-                      <TableHead>Timestamp</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentTransactions.map((tx) => (
-                      <TableRow key={tx.id} className="hover:bg-slate-50/80 text-xs">
-                        <TableCell className="font-mono text-slate-700 font-semibold">{tx.transactionId}</TableCell>
-                        <TableCell className="font-mono text-primary font-medium">{tx.bookingDisplayId}</TableCell>
-                        <TableCell className="font-medium text-slate-800">{tx.userName}</TableCell>
-                        <TableCell className="text-slate-600">{tx.method}</TableCell>
-                        <TableCell className="text-muted-foreground">{tx.date}</TableCell>
-                        <TableCell>
-                          <StatusBadge status={tx.status === "SUCCESS" || tx.status === "COMPLETED" ? "Approved" : tx.status} />
-                        </TableCell>
-                        <TableCell className="text-right font-bold text-emerald-700">
-                          ₹{tx.amount.toLocaleString()}
-                        </TableCell>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-slate-50/70 text-[10px]">
+                        <TableHead>Transaction ID</TableHead>
+                        <TableHead>Booking</TableHead>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Payment Method</TableHead>
+                        <TableHead>Timestamp</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
                       </TableRow>
-                    ))}
-                    {recentTransactions.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-6 text-muted-foreground text-xs">
-                          No payment transactions recorded.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                    </TableHeader>
+                    <TableBody>
+                      {recentTransactions.map((tx) => (
+                        <TableRow key={tx.id} className="hover:bg-slate-50/80 text-xs">
+                          <TableCell className="font-mono text-slate-700 font-semibold">{tx.transactionId}</TableCell>
+                          <TableCell className="font-mono text-primary font-medium">{tx.bookingDisplayId}</TableCell>
+                          <TableCell className="font-medium text-slate-800">{tx.userName}</TableCell>
+                          <TableCell className="text-slate-600">{tx.method}</TableCell>
+                          <TableCell className="text-muted-foreground">{tx.date}</TableCell>
+                          <TableCell>
+                            <StatusBadge status={tx.status === "SUCCESS" || tx.status === "COMPLETED" ? "Approved" : tx.status} />
+                          </TableCell>
+                          <TableCell className="text-right font-bold text-emerald-700">
+                            ₹{tx.amount.toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {recentTransactions.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-6 text-muted-foreground text-xs">
+                            No payment transactions recorded.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
       </>
