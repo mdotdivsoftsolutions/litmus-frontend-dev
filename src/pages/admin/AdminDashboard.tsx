@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -40,7 +41,10 @@ import {
   Activity, 
   Package,
   Layers,
-  ChevronRight
+  ChevronRight,
+  Truck,
+  MessageSquare,
+  ShieldAlert
 } from "lucide-react";
 import { format, subDays, isSameDay, parseISO } from "date-fns";
 import { toast } from "sonner";
@@ -51,6 +55,7 @@ export default function AdminDashboard() {
   const [chartMetric, setChartMetric] = useState<"revenue" | "bookings">("revenue");
   const [timeRange, setTimeRange] = useState<number>(14); // 7, 14, 30 days
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSplitDialogOpen, setIsSplitDialogOpen] = useState(false);
 
   // Check current user role & permissions
   const { data: userResponse } = useQuery({
@@ -134,7 +139,7 @@ export default function AdminDashboard() {
   const pendingAssignmentBookings = useMemo(() => {
     return rawBookings.filter((b: any) => {
       const status = (b.status || "").toUpperCase();
-      return status === "PENDING" || !b.labId;
+      return (status === "PENDING" || !b.labId) && status !== "CANCELLED" && status !== "REJECTED";
     });
   }, [rawBookings]);
 
@@ -143,6 +148,32 @@ export default function AdminDashboard() {
       return b.reportFiles && b.reportFiles.length > 0 && !b.isReportApprovedByAdmin;
     });
   }, [rawBookings]);
+
+  const pendingPickupBookings = useMemo(() => {
+    return rawBookings.filter((b: any) => {
+      const status = (b.status || "").toUpperCase();
+      const collStatus = (b.collectionStatus || "").toUpperCase();
+      return (
+        (b.collectionMethod === "PICKUP" || collStatus === "PENDING") &&
+        collStatus !== "COLLECTED" &&
+        collStatus !== "REACHED" &&
+        collStatus !== "SHIPPED" &&
+        collStatus !== "RECEIVED" &&
+        status !== "CANCELLED" &&
+        status !== "REJECTED" &&
+        status !== "COMPLETED"
+      );
+    });
+  }, [rawBookings]);
+
+  const pendingApprovalsCount = Number(rawStats.pendingApprovals) || 0;
+  const pendingConsultationsCount = Number(rawStats.pendingConsultations) || 0;
+  const totalActionsCount = 
+    pendingAssignmentBookings.length + 
+    pendingVerificationReports.length + 
+    (pendingPickupBookings.length > 0 ? pendingPickupBookings.length : 0) +
+    (pendingApprovalsCount > 0 ? pendingApprovalsCount : 0) +
+    (pendingConsultationsCount > 0 ? pendingConsultationsCount : 0);
 
   const completedBookings = useMemo(() => {
     return rawBookings.filter((b: any) => {
@@ -353,10 +384,43 @@ export default function AdminDashboard() {
     }] : []),
     {
       title: "Actions Required",
-      value: (pendingAssignmentBookings.length + pendingVerificationReports.length).toString(),
-      subtitle: `${pendingAssignmentBookings.length} pending · ${pendingVerificationReports.length} reports`,
+      value: totalActionsCount.toString(),
+      subtitle: `${pendingAssignmentBookings.length} to assign · ${pendingVerificationReports.length} reports`,
       icon: AlertCircle,
-      badgeText: pendingAssignmentBookings.length + pendingVerificationReports.length > 0 ? "Pending" : "Clear",
+      badgeText: totalActionsCount > 0 ? `${totalActionsCount} Pending` : "Clear",
+      isActionCard: true,
+      splits: [
+        {
+          label: "To Assign",
+          count: pendingAssignmentBookings.length,
+          variant: "amber",
+          dotColor: "bg-amber-500",
+        },
+        {
+          label: "To Verify",
+          count: pendingVerificationReports.length,
+          variant: pendingVerificationReports.length > 0 ? "emerald" : "slate",
+          dotColor: "bg-emerald-500",
+        },
+        ...(pendingPickupBookings.length > 0 ? [{
+          label: "Pickups",
+          count: pendingPickupBookings.length,
+          variant: "sky",
+          dotColor: "bg-sky-500",
+        }] : []),
+        ...(pendingApprovalsCount > 0 ? [{
+          label: "Approvals",
+          count: pendingApprovalsCount,
+          variant: "purple",
+          dotColor: "bg-purple-500",
+        }] : []),
+        ...(pendingConsultationsCount > 0 ? [{
+          label: "Consults",
+          count: pendingConsultationsCount,
+          variant: "indigo",
+          dotColor: "bg-indigo-500",
+        }] : []),
+      ],
     },
   ];
 
@@ -463,25 +527,81 @@ export default function AdminDashboard() {
 
       {/* KPI Cards Grid - Clean, Unified, Subtle Radius */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {kpis.map((kpi) => (
+        {kpis.map((kpi: any) => (
           <Card 
             key={kpi.title} 
-            className="bg-white border border-border/80 rounded-lg shadow-2xs hover:shadow-xs transition-shadow duration-150 relative"
+            className={cn(
+              "bg-white border border-border/80 rounded-lg shadow-2xs hover:shadow-xs transition-all duration-150 relative flex flex-col justify-between",
+              kpi.isActionCard && totalActionsCount > 0 && "border-amber-200/90 bg-amber-50/[0.12]"
+            )}
           >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="h-8 w-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-700">
-                  <kpi.icon className="h-4 w-4" />
+            <CardContent className="p-4 flex flex-col h-full justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className={cn(
+                    "h-8 w-8 rounded-md flex items-center justify-center",
+                    kpi.isActionCard && totalActionsCount > 0 
+                      ? "bg-amber-100 text-amber-800" 
+                      : "bg-slate-100 text-slate-700"
+                  )}>
+                    <kpi.icon className="h-4 w-4" />
+                  </div>
+                  {kpi.isActionCard ? (
+                    <button
+                      type="button"
+                      onClick={() => setIsSplitDialogOpen(true)}
+                      className={cn(
+                        "text-[10px] font-semibold px-2 py-0.5 rounded border transition-colors inline-flex items-center gap-1 cursor-pointer",
+                        totalActionsCount > 0
+                          ? "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
+                          : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+                      )}
+                      title="Click to view detailed operational backlog split"
+                    >
+                      {totalActionsCount > 0 && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      )}
+                      Split View
+                      <ChevronRight className="h-2.5 w-2.5" />
+                    </button>
+                  ) : (
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200/80">
+                      {kpi.badgeText}
+                    </span>
+                  )}
                 </div>
-                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200/80">
-                  {kpi.badgeText}
-                </span>
+                <div className="space-y-0.5">
+                  <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{kpi.value}</p>
+                  <p className="text-xs font-medium text-slate-600">{kpi.title}</p>
+                </div>
               </div>
-              <div className="space-y-0.5">
-                <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{kpi.value}</p>
-                <p className="text-xs font-medium text-slate-600">{kpi.title}</p>
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1.5 truncate">{kpi.subtitle}</p>
+
+              {kpi.splits ? (
+                <div className="mt-2.5 pt-2 border-t border-slate-100 flex flex-wrap gap-1 items-center">
+                  {kpi.splits.map((s: any, idx: number) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setIsSplitDialogOpen(true)}
+                      className={cn(
+                        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border transition-colors cursor-pointer hover:opacity-85",
+                        s.variant === "amber" && "bg-amber-50 text-amber-800 border-amber-200",
+                        s.variant === "emerald" && "bg-emerald-50 text-emerald-800 border-emerald-200",
+                        s.variant === "sky" && "bg-sky-50 text-sky-800 border-sky-200",
+                        s.variant === "purple" && "bg-purple-50 text-purple-800 border-purple-200",
+                        s.variant === "indigo" && "bg-indigo-50 text-indigo-800 border-indigo-200",
+                        s.variant === "slate" && "bg-slate-50 text-slate-600 border-slate-200"
+                      )}
+                      title={`${s.count} ${s.label} - click to view details`}
+                    >
+                      <span className={cn("h-1.5 w-1.5 rounded-full", s.dotColor)} />
+                      <span className="font-semibold">{s.count}</span> {s.label}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground mt-2 truncate">{kpi.subtitle}</p>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -724,7 +844,7 @@ export default function AdminDashboard() {
             <TabsList className="bg-slate-100 p-0.5 rounded-md">
               <TabsTrigger value="urgent" className="gap-1.5 text-xs py-1">
                 <AlertCircle className="h-3 w-3 text-rose-600" />
-                Urgent Actions ({pendingAssignmentBookings.length + pendingVerificationReports.length})
+                Urgent Actions ({totalActionsCount})
               </TabsTrigger>
               <TabsTrigger value="labs" className="gap-1.5 text-xs py-1">
                 <Building2 className="h-3 w-3 text-sky-600" />
@@ -751,6 +871,72 @@ export default function AdminDashboard() {
 
           {/* TAB 1: Urgent Action Items */}
           <TabsContent value="urgent" className="space-y-4 mt-3 min-h-[280px]">
+            {/* Operational Split Summary Banner */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white border border-border/80 rounded-lg shadow-2xs">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-md bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                  <AlertCircle className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-foreground">Operational Action Queues Split</h3>
+                  <p className="text-[11px] text-muted-foreground">Itemized workload across laboratory assignment, testing QA, logistics, and partner catalog.</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setIsSplitDialogOpen(true)}
+                  className={cn(
+                    "text-[11px] gap-1 py-1 px-2.5 rounded-md border font-medium inline-flex items-center transition-colors cursor-pointer",
+                    pendingAssignmentBookings.length > 0 ? "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100" : "bg-slate-50 text-slate-600 border-slate-200"
+                  )}
+                >
+                  <Clock className="h-3 w-3 text-amber-600" />
+                  <span className="font-bold">{pendingAssignmentBookings.length}</span> To Assign
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsSplitDialogOpen(true)}
+                  className={cn(
+                    "text-[11px] gap-1 py-1 px-2.5 rounded-md border font-medium inline-flex items-center transition-colors cursor-pointer",
+                    pendingVerificationReports.length > 0 ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100" : "bg-slate-50 text-slate-600 border-slate-200"
+                  )}
+                >
+                  <FileCheck2 className="h-3 w-3 text-emerald-600" />
+                  <span className="font-bold">{pendingVerificationReports.length}</span> To Verify
+                </button>
+                {pendingPickupBookings.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsSplitDialogOpen(true)}
+                    className="text-[11px] gap-1 py-1 px-2.5 rounded-md border font-medium inline-flex items-center transition-colors cursor-pointer bg-sky-50 text-sky-800 border-sky-200 hover:bg-sky-100"
+                  >
+                    <Truck className="h-3 w-3 text-sky-600" />
+                    <span className="font-bold">{pendingPickupBookings.length}</span> Pickups
+                  </button>
+                )}
+                {pendingApprovalsCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsSplitDialogOpen(true)}
+                    className="text-[11px] gap-1 py-1 px-2.5 rounded-md border font-medium inline-flex items-center transition-colors cursor-pointer bg-purple-50 text-purple-800 border-purple-200 hover:bg-purple-100"
+                  >
+                    <Layers className="h-3 w-3 text-purple-600" />
+                    <span className="font-bold">{pendingApprovalsCount}</span> Approvals
+                  </button>
+                )}
+                {pendingConsultationsCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsSplitDialogOpen(true)}
+                    className="text-[11px] gap-1 py-1 px-2.5 rounded-md border font-medium inline-flex items-center transition-colors cursor-pointer bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100"
+                  >
+                    <MessageSquare className="h-3 w-3 text-indigo-600" />
+                    <span className="font-bold">{pendingConsultationsCount}</span> Consults
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="grid gap-4 lg:grid-cols-2">
               {/* 1. Pending Assignment */}
               <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden min-h-[260px]">
@@ -1075,6 +1261,169 @@ export default function AdminDashboard() {
       </div>
       </>
       )}
+
+      {/* Operational Backlog Split Dialog */}
+      <Dialog open={isSplitDialogOpen} onOpenChange={setIsSplitDialogOpen}>
+        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-md bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                <AlertCircle className="h-4 w-4" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-bold text-foreground">
+                  Operational Backlog Split ({totalActionsCount} Total Actions)
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Itemized breakdown of pending tasks requiring laboratory routing, sign-off, or logistics.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            {/* 1. Lab Allocation */}
+            <div className="p-3 rounded-lg border border-border/80 bg-slate-50/50 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="h-9 w-9 rounded-md bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                  <Clock className="h-4.5 w-4.5" />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-foreground">Lab Allocation Required</span>
+                    <Badge variant="outline" className={cn(
+                      "text-[10px] px-1.5 py-0",
+                      pendingAssignmentBookings.length > 0 ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                    )}>
+                      {pendingAssignmentBookings.length > 0 ? `${pendingAssignmentBookings.length} Pending` : "Queue Clear"}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Customer orders confirmed and waiting for partner testing laboratory assignment.
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" className="h-7 text-xs px-2.5 bg-primary hover:bg-primary/90 text-white shrink-0" asChild onClick={() => setIsSplitDialogOpen(false)}>
+                <Link to="/admin/bookings?status=PENDING">
+                  Assign Now <ArrowUpRight className="h-3 w-3 ml-1" />
+                </Link>
+              </Button>
+            </div>
+
+            {/* 2. Report Verification */}
+            <div className="p-3 rounded-lg border border-border/80 bg-slate-50/50 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="h-9 w-9 rounded-md bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 mt-0.5">
+                  <FileCheck2 className="h-4.5 w-4.5" />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-foreground">Reports Pending Sign-off</span>
+                    <Badge variant="outline" className={cn(
+                      "text-[10px] px-1.5 py-0",
+                      pendingVerificationReports.length > 0 ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-slate-50 text-slate-600 border-slate-200"
+                    )}>
+                      {pendingVerificationReports.length > 0 ? `${pendingVerificationReports.length} To Verify` : "Queue Clear"}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Uploaded test reports and certificates from partner labs awaiting admin approval & publication.
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" className="h-7 text-xs px-2.5 shrink-0 border-emerald-300 text-emerald-800 hover:bg-emerald-50" asChild onClick={() => setIsSplitDialogOpen(false)}>
+                <Link to="/admin/reports">
+                  Verify Reports <ArrowUpRight className="h-3 w-3 ml-1" />
+                </Link>
+              </Button>
+            </div>
+
+            {/* 3. Sample Pickups */}
+            <div className="p-3 rounded-lg border border-border/80 bg-slate-50/50 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="h-9 w-9 rounded-md bg-sky-100 text-sky-800 flex items-center justify-center shrink-0 mt-0.5">
+                  <Truck className="h-4.5 w-4.5" />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-foreground">Sample Collection & Pickup</span>
+                    <Badge variant="outline" className={cn(
+                      "text-[10px] px-1.5 py-0",
+                      pendingPickupBookings.length > 0 ? "bg-sky-50 text-sky-800 border-sky-200" : "bg-slate-50 text-slate-600 border-slate-200"
+                    )}>
+                      {pendingPickupBookings.length > 0 ? `${pendingPickupBookings.length} Awaiting Collection` : "Queue Clear"}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Doorstep physical sample pickups requiring coordinator dispatch or courier tracking.
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" className="h-7 text-xs px-2.5 shrink-0" asChild onClick={() => setIsSplitDialogOpen(false)}>
+                <Link to="/admin/bookings">
+                  View Bookings <ArrowUpRight className="h-3 w-3 ml-1" />
+                </Link>
+              </Button>
+            </div>
+
+            {/* 4. Partner Catalog Approvals */}
+            <div className="p-3 rounded-lg border border-border/80 bg-slate-50/50 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="h-9 w-9 rounded-md bg-purple-100 text-purple-800 flex items-center justify-center shrink-0 mt-0.5">
+                  <Layers className="h-4.5 w-4.5" />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-foreground">Partner Catalog Approvals</span>
+                    <Badge variant="outline" className={cn(
+                      "text-[10px] px-1.5 py-0",
+                      pendingApprovalsCount > 0 ? "bg-purple-50 text-purple-800 border-purple-200" : "bg-slate-50 text-slate-600 border-slate-200"
+                    )}>
+                      {pendingApprovalsCount > 0 ? `${pendingApprovalsCount} Submissions` : "Queue Clear"}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Custom testing parameters or service packages added by partner labs awaiting validation.
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" className="h-7 text-xs px-2.5 shrink-0" asChild onClick={() => setIsSplitDialogOpen(false)}>
+                <Link to="/admin/approvals">
+                  Review Catalog <ArrowUpRight className="h-3 w-3 ml-1" />
+                </Link>
+              </Button>
+            </div>
+
+            {/* 5. Consultations */}
+            <div className="p-3 rounded-lg border border-border/80 bg-slate-50/50 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="h-9 w-9 rounded-md bg-indigo-100 text-indigo-800 flex items-center justify-center shrink-0 mt-0.5">
+                  <MessageSquare className="h-4.5 w-4.5" />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-foreground">Customer Consultations</span>
+                    <Badge variant="outline" className={cn(
+                      "text-[10px] px-1.5 py-0",
+                      pendingConsultationsCount > 0 ? "bg-indigo-50 text-indigo-800 border-indigo-200" : "bg-slate-50 text-slate-600 border-slate-200"
+                    )}>
+                      {pendingConsultationsCount > 0 ? `${pendingConsultationsCount} Inquiries` : "Queue Clear"}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Expert advice and regulatory consultation requests submitted by clients.
+                  </p>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" className="h-7 text-xs px-2.5 shrink-0" asChild onClick={() => setIsSplitDialogOpen(false)}>
+                <Link to="/admin/consultations">
+                  Open Consults <ArrowUpRight className="h-3 w-3 ml-1" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

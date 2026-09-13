@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, isAfter, isBefore, startOfDay, endOfDay, subDays, startOfMonth } from "date-fns";
 import { toast } from "sonner";
@@ -84,17 +84,31 @@ export default function AdminBookings() {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
+  const [searchParams] = useSearchParams();
+  const queryStatus = searchParams.get("status");
+  const initialStatus = queryStatus ? queryStatus.toLowerCase() : "all";
+
   // Active Filters
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
   // Draft Filters (Only applied upon clicking "Apply Filters")
-  const [draftStatusFilter, setDraftStatusFilter] = useState("all");
+  const [draftStatusFilter, setDraftStatusFilter] = useState(initialStatus);
   const [draftPaymentStatusFilter, setDraftPaymentStatusFilter] = useState("all");
   const [draftStartDate, setDraftStartDate] = useState("");
   const [draftEndDate, setDraftEndDate] = useState("");
+
+  useEffect(() => {
+    const s = searchParams.get("status");
+    if (s) {
+      const normalized = s.toLowerCase();
+      setStatusFilter(normalized);
+      setDraftStatusFilter(normalized);
+      setCurrentPage(1);
+    }
+  }, [searchParams]);
 
   const handleOpenFilters = () => {
     setDraftStatusFilter(statusFilter);
