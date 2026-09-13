@@ -460,12 +460,6 @@ export default function AdminBookings() {
       state: isSelectedReportUploaded ? "completed" as const : "pending" as const,
       sub: selectedReportDate || undefined
     },
-    { 
-      label: "Order Fulfilled & Complete", 
-      done: isSelectedComplete, 
-      state: isSelectedComplete ? "completed" as const : "pending" as const,
-      sub: selectedCompletedDate || undefined
-    },
   ];
 
   const renderTable = (items: any[]) => (

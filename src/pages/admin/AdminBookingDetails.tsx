@@ -447,13 +447,6 @@ export default function AdminBookingDetails() {
       sub: reportUploadedDate || undefined,
       message: reportDisplayMsg
     },
-    { 
-      label: "Order Fulfilled & Complete", 
-      done: isComplete, 
-      state: isComplete ? "completed" as const : "pending" as const,
-      sub: completedDate || undefined,
-      message: isComplete ? "Order closed & results delivered to user" : undefined
-    },
   ];
 
   const totalSamplesCount = rawItems.reduce((acc: number, item: any) => acc + (item.samples?.length || 1), 0);
