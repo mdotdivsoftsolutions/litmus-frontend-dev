@@ -136,31 +136,41 @@ export default function AdminDashboard() {
   }, [rawPayments, rawStats, rawBookings]);
 
   // Operational Queues
+  // Filter for confirmed / paid orders requiring operational action (avoids counting unpaid abandoned checkouts)
+  const isConfirmedOrder = (b: any) => {
+    const status = (b.status || "").toUpperCase();
+    const pay = (b.paymentStatus || "").toUpperCase();
+    return (
+      (pay === "SUCCESS" || pay === "PAID" || status === "APPROVED" || status === "IN_PROGRESS") &&
+      status !== "CANCELLED" &&
+      status !== "REJECTED"
+    );
+  };
+
+  // 1. Confirmed orders requiring laboratory assignment
   const pendingAssignmentBookings = useMemo(() => {
     return rawBookings.filter((b: any) => {
       const status = (b.status || "").toUpperCase();
-      return (status === "PENDING" || !b.labId) && status !== "CANCELLED" && status !== "REJECTED";
+      return isConfirmedOrder(b) && !b.labId && status !== "COMPLETED";
     });
   }, [rawBookings]);
 
+  // 2. Uploaded test certificates awaiting admin QA sign-off
   const pendingVerificationReports = useMemo(() => {
     return rawBookings.filter((b: any) => {
       return b.reportFiles && b.reportFiles.length > 0 && !b.isReportApprovedByAdmin;
     });
   }, [rawBookings]);
 
+  // 3. Confirmed orders requiring doorstep sample pickup dispatch
   const pendingPickupBookings = useMemo(() => {
     return rawBookings.filter((b: any) => {
-      const status = (b.status || "").toUpperCase();
       const collStatus = (b.collectionStatus || "").toUpperCase();
+      const status = (b.status || "").toUpperCase();
       return (
-        (b.collectionMethod === "PICKUP" || collStatus === "PENDING") &&
-        collStatus !== "COLLECTED" &&
-        collStatus !== "REACHED" &&
-        collStatus !== "SHIPPED" &&
-        collStatus !== "RECEIVED" &&
-        status !== "CANCELLED" &&
-        status !== "REJECTED" &&
+        isConfirmedOrder(b) &&
+        b.collectionMethod === "PICKUP" &&
+        collStatus === "PENDING" &&
         status !== "COMPLETED"
       );
     });
@@ -168,11 +178,19 @@ export default function AdminDashboard() {
 
   const pendingApprovalsCount = Number(rawStats.pendingApprovals) || 0;
   const pendingConsultationsCount = Number(rawStats.pendingConsultations) || 0;
+
+  // Deduplicated unique operational items requiring action (prevents double-counting orders needing both lab and pickup)
+  const actionableOrderIds = useMemo(() => {
+    const ids = new Set<string>();
+    pendingAssignmentBookings.forEach((b: any) => ids.add(String(b._id)));
+    pendingPickupBookings.forEach((b: any) => ids.add(String(b._id)));
+    pendingVerificationReports.forEach((b: any) => ids.add(String(b._id)));
+    return ids;
+  }, [pendingAssignmentBookings, pendingPickupBookings, pendingVerificationReports]);
+
   const totalActionsCount = 
-    pendingAssignmentBookings.length + 
-    pendingVerificationReports.length + 
-    (pendingPickupBookings.length > 0 ? pendingPickupBookings.length : 0) +
-    (pendingApprovalsCount > 0 ? pendingApprovalsCount : 0) +
+    actionableOrderIds.size + 
+    (pendingApprovalsCount > 0 ? pendingApprovalsCount : 0) + 
     (pendingConsultationsCount > 0 ? pendingConsultationsCount : 0);
 
   const completedBookings = useMemo(() => {
