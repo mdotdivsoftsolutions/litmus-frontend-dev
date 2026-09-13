@@ -24,5 +24,10 @@ export const testApi = {
   deleteTest: async (id: string) => {
     const response = await apiClient.delete(`/tests/${id}`);
     return response.data;
+  },
+
+  bulkDeleteTests: async (ids: string[]) => {
+    const response = await apiClient.post('/tests/bulk-delete', { ids });
+    return response.data;
   }
 };

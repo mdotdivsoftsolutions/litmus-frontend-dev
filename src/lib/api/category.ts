@@ -6,6 +6,7 @@ export const categoryApi = {
   createCategory: (data: any) => apiClient.post('/categories', data),
   updateCategory: (id: string, data: any) => apiClient.patch(`/categories/${id}`, data),
   deleteCategory: (id: string) => apiClient.delete(`/categories/${id}`),
+  bulkDeleteCategories: (ids: string[]) => apiClient.post('/categories/bulk-delete', { ids }),
   addSubcategory: (categoryId: string, data: { name: string; description?: string; imageUrl?: string }) =>
     apiClient.post(`/categories/${categoryId}/subcategories`, data),
   updateSubcategory: (categoryId: string, subId: string, data: { name?: string; description?: string; imageUrl?: string }) =>

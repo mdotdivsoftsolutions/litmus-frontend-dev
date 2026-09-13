@@ -48,10 +48,13 @@ import {
   Check,
   FlaskConical,
   ArrowRight,
+  Trash2,
 } from "lucide-react";
 import { InvoiceDialog } from "@/components/admin/InvoiceDialog";
 import { exportToCsv } from "@/lib/utils/exportCsv";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -70,6 +73,8 @@ export default function AdminBookings() {
   const [rejectReason, setRejectReason] = useState("");
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
 
   const handleCopy = (text: string, fieldId: string) => {
     if (!text) return;
@@ -107,6 +112,20 @@ export default function AdminBookings() {
     setCurrentPage(1);
     setShowFilters(false);
   };
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: string[]) => adminApi.bulkDeleteBookings(ids),
+    onSuccess: () => {
+      toast.success(`${selectedIds.length} booking(s) deleted successfully`);
+      queryClient.invalidateQueries({ queryKey: ["adminBookings"] });
+      setSelectedIds([]);
+      setIsBulkDeleteConfirmOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to delete selected bookings");
+      setIsBulkDeleteConfirmOpen(false);
+    }
+  });
 
   const clearFilters = () => {
     setDraftStatusFilter("all");
@@ -467,6 +486,24 @@ export default function AdminBookings() {
       <Table>
         <TableHeader>
           <TableRow className="bg-slate-50">
+            <TableHead className="w-12 text-center">
+              <Checkbox
+                checked={
+                  items.length > 0 &&
+                  items.every((b: any) => selectedIds.includes(b.id))
+                }
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    const pageIds = items.map((b: any) => b.id);
+                    setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+                  } else {
+                    const pageIds = new Set(items.map((b: any) => b.id));
+                    setSelectedIds((prev) => prev.filter((id) => !pageIds.has(id)));
+                  }
+                }}
+                aria-label="Select all bookings on this page"
+              />
+            </TableHead>
             <TableHead>Booking ID</TableHead>
             <TableHead>User & Date</TableHead>
             <TableHead>Product & Tests</TableHead>
@@ -481,6 +518,7 @@ export default function AdminBookings() {
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
+                <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                 <TableCell>
                   <div className="space-y-1">
@@ -498,7 +536,7 @@ export default function AdminBookings() {
             ))
           ) : items.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={canViewPricing ? 8 : 7} className="text-center py-10 text-muted-foreground">
+              <TableCell colSpan={canViewPricing ? 9 : 8} className="text-center py-10 text-muted-foreground">
                 <div className="flex flex-col items-center justify-center gap-2">
                   <AlertTriangle className="h-8 w-8 text-muted-foreground/50" />
                   <span className="font-medium">No bookings found matching your criteria.</span>
@@ -508,7 +546,20 @@ export default function AdminBookings() {
           ) : (
             <>
               {items.map((b) => (
-                <TableRow key={b.id} className="hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => setSelectedBooking(b)}>
+                <TableRow key={b.id} className={cn("hover:bg-muted/30 cursor-pointer transition-colors", selectedIds.includes(b.id) && "bg-primary/5")} onClick={() => setSelectedBooking(b)}>
+                  <TableCell className="w-12 text-center" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selectedIds.includes(b.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedIds((prev) => [...prev, b.id]);
+                        } else {
+                          setSelectedIds((prev) => prev.filter((id) => id !== b.id));
+                        }
+                      }}
+                      aria-label={`Select ${b.displayId}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium font-mono text-sm">{b.displayId}</TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
@@ -1219,6 +1270,47 @@ export default function AdminBookings() {
         bookingId={invoiceBookingId}
         open={!!invoiceBookingId}
         onOpenChange={(open) => !open && setInvoiceBookingId(null)}
+      />
+
+      {/* Bulk Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 animate-in fade-in slide-in-from-bottom-4">
+          <div className="flex items-center gap-2 pr-2 border-r border-slate-700 text-xs font-semibold">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white text-[11px] font-bold">
+              {selectedIds.length}
+            </span>
+            <span>selected</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedIds([])}
+            className="h-8 text-xs text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            Deselect All
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setIsBulkDeleteConfirmOpen(true)}
+            className="h-8 text-xs font-medium gap-1.5 bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirm Dialog */}
+      <ConfirmDialog
+        open={isBulkDeleteConfirmOpen}
+        onOpenChange={setIsBulkDeleteConfirmOpen}
+        title={`Delete ${selectedIds.length} Bookings?`}
+        description={`Are you sure you want to delete these ${selectedIds.length} selected bookings? They will no longer appear in the bookings list.`}
+        confirmText="Delete Selected"
+        variant="destructive"
+        loading={bulkDeleteMutation.isPending}
+        onConfirm={() => bulkDeleteMutation.mutate(selectedIds)}
       />
     </div>
   );

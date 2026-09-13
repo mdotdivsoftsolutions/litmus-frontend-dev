@@ -15,6 +15,8 @@ import { Plus, Search, Edit, Trash2, Filter, AlertTriangle, MoreVertical, Chevro
 import { toast } from "sonner";
 import { testApi } from "@/lib/api/test";
 import { BulkImportDrawer } from "@/components/admin/BulkImportDrawer";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -26,6 +28,8 @@ export default function TestManagement() {
   const [selectedTest, setSelectedTest] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: testsData, isLoading } = useQuery({
@@ -41,6 +45,20 @@ export default function TestManagement() {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to delete test");
+    }
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: testApi.bulkDeleteTests,
+    onSuccess: () => {
+      toast.success(`${selectedIds.length} test(s) deleted successfully`);
+      queryClient.invalidateQueries({ queryKey: ["adminTests"] });
+      setSelectedIds([]);
+      setIsBulkDeleteConfirmOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to delete selected tests");
+      setIsBulkDeleteConfirmOpen(false);
     }
   });
 
@@ -158,6 +176,24 @@ export default function TestManagement() {
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50">
+                <TableHead className="w-12 text-center">
+                  <Checkbox
+                    checked={
+                      paginatedTests.length > 0 &&
+                      paginatedTests.every((t: any) => selectedIds.includes(t._id))
+                    }
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        const pageIds = paginatedTests.map((t: any) => t._id);
+                        setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+                      } else {
+                        const pageIds = new Set(paginatedTests.map((t: any) => t._id));
+                        setSelectedIds((prev) => prev.filter((id) => !pageIds.has(id)));
+                      }
+                    }}
+                    aria-label="Select all tests on this page"
+                  />
+                </TableHead>
                 <TableHead>Test Name</TableHead>
                 <TableHead>Creator</TableHead>
                 <TableHead>Category / Subcategory</TableHead>
@@ -173,6 +209,7 @@ export default function TestManagement() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
+                    <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto bg-muted/60" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-32 bg-muted/60" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-20 rounded-full bg-muted/60" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-28 bg-muted/60" /></TableCell>
@@ -186,7 +223,7 @@ export default function TestManagement() {
                 ))
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
                        <AlertTriangle className="h-8 w-8 text-muted-foreground/50" />
                        <span>No test protocols found matching your criteria.</span>
@@ -194,7 +231,20 @@ export default function TestManagement() {
                   </TableCell>
                 </TableRow>
               ) : paginatedTests.map((t: any) => (
-                <TableRow key={t._id} className="hover:bg-muted/30 transition-colors">
+                <TableRow key={t._id} className={cn("hover:bg-muted/30 transition-colors", selectedIds.includes(t._id) && "bg-primary/5")}>
+                  <TableCell className="text-center">
+                    <Checkbox
+                      checked={selectedIds.includes(t._id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedIds((prev) => [...prev, t._id]);
+                        } else {
+                          setSelectedIds((prev) => prev.filter((id) => id !== t._id));
+                        }
+                      }}
+                      aria-label={`Select ${t.testName}`}
+                    />
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       {t.imageUrl || t.icon ? (
@@ -579,7 +629,7 @@ export default function TestManagement() {
         open={!!testToDelete}
         onOpenChange={(open) => !open && setTestToDelete(null)}
         title="Delete Test Protocol"
-        description="Are you sure you want to delete this test protocol? This action cannot be undone."
+        description="Are you sure you want to delete this test protocol? It will no longer appear in the catalog."
         onConfirm={() => {
           if (testToDelete) {
             deleteMutation.mutate(testToDelete);
@@ -588,6 +638,47 @@ export default function TestManagement() {
         }}
         confirmText="Delete"
         variant="destructive"
+      />
+
+      {/* Bulk Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 animate-in fade-in slide-in-from-bottom-4">
+          <div className="flex items-center gap-2 pr-2 border-r border-slate-700 text-xs font-semibold">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white text-[11px] font-bold">
+              {selectedIds.length}
+            </span>
+            <span>selected</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedIds([])}
+            className="h-8 text-xs text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            Deselect All
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setIsBulkDeleteConfirmOpen(true)}
+            className="h-8 text-xs font-medium gap-1.5 bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirm Dialog */}
+      <ConfirmDialog
+        open={isBulkDeleteConfirmOpen}
+        onOpenChange={setIsBulkDeleteConfirmOpen}
+        title={`Delete ${selectedIds.length} Tests?`}
+        description={`Are you sure you want to delete these ${selectedIds.length} selected tests? They will no longer appear in the active catalog.`}
+        confirmText="Delete Selected"
+        variant="destructive"
+        loading={bulkDeleteMutation.isPending}
+        onConfirm={() => bulkDeleteMutation.mutate(selectedIds)}
       />
     </div>
   );

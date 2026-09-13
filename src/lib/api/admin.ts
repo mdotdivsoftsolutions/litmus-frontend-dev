@@ -56,6 +56,16 @@ export const adminApi = {
     return response.data;
   },
 
+  deleteBooking: async (id: string) => {
+    const response = await apiClient.delete(`/admin/booking/${id}`);
+    return response.data;
+  },
+
+  bulkDeleteBookings: async (ids: string[]) => {
+    const response = await apiClient.post('/admin/bookings/bulk-delete', { ids });
+    return response.data;
+  },
+
   getLabById: async (id: string) => {
     const response = await apiClient.get(`/admin/lab/${id}`);
     return response.data;

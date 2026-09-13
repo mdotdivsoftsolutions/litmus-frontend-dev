@@ -8,11 +8,13 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
-import { Plus, Edit, Trash2, MoreVertical, Package, ImageIcon, ChevronLeft, ChevronRight, Eye, FileSpreadsheet, Tag } from "lucide-react";
+import { Plus, Edit, Trash2, MoreVertical, Package, ImageIcon, ChevronLeft, ChevronRight, Eye, FileSpreadsheet, Tag, CheckSquare } from "lucide-react";
 import { categoryApi } from "@/lib/api/category";
 import { toast } from "sonner";
 import { BulkImportDrawer } from "@/components/admin/BulkImportDrawer";
 import { SubcategoryDrawer } from "@/components/admin/SubcategoryDrawer";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -65,6 +67,8 @@ export default function CategoryManagement() {
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [isSubcategoryDrawerOpen, setIsSubcategoryDrawerOpen] = useState(false);
   const [activeDrawerCategoryId, setActiveDrawerCategoryId] = useState<string | undefined>(undefined);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
 
   const { data: categoriesData, isLoading } = useQuery({
     queryKey: ["adminCategories"],
@@ -83,6 +87,20 @@ export default function CategoryManagement() {
     onError: (error: Error | any) => {
       toast.error(error?.response?.data?.message || "Failed to delete category");
       setCategoryToDelete(null);
+    }
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: string[]) => categoryApi.bulkDeleteCategories(ids),
+    onSuccess: () => {
+      toast.success(`${selectedIds.length} category(s) deleted successfully`);
+      queryClient.invalidateQueries({ queryKey: ["adminCategories"] });
+      setSelectedIds([]);
+      setIsBulkDeleteConfirmOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to delete selected categories");
+      setIsBulkDeleteConfirmOpen(false);
     }
   });
 
@@ -130,6 +148,28 @@ export default function CategoryManagement() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 self-start lg:self-auto">
+          {/* Select All on Current Page Button */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              const pageIds = paginatedCategories.map((c) => c._id);
+              const allSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.includes(id));
+              if (allSelected) {
+                const pageSet = new Set(pageIds);
+                setSelectedIds((prev) => prev.filter((id) => !pageSet.has(id)));
+              } else {
+                setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+              }
+            }}
+            className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-sm h-10 px-3 gap-2"
+          >
+            <CheckSquare className="h-4 w-4 text-primary" />
+            {paginatedCategories.length > 0 && paginatedCategories.every((c) => selectedIds.includes(c._id))
+              ? "Deselect Page"
+              : "Select All (Page)"}
+          </Button>
+
           {/* Bulk Import Button */}
           <Button
             type="button"
@@ -205,7 +245,22 @@ export default function CategoryManagement() {
           paginatedCategories.map((cat: Category) => {
             const count = cat.testCount ?? cat.productCount ?? 0;
             return (
-              <Card key={cat._id} className="border border-border shadow-sm hover:border-primary/50 hover:shadow-md transition-all group overflow-hidden relative flex flex-col">
+              <Card key={cat._id} className={cn("border border-border shadow-sm hover:border-primary/50 hover:shadow-md transition-all group overflow-hidden relative flex flex-col", selectedIds.includes(cat._id) && "ring-2 ring-primary border-primary bg-primary/5")}>
+                {/* Multi-select Checkbox on Card top-left */}
+                <div className={cn("absolute top-2 left-2 z-10 transition-opacity bg-white/95 backdrop-blur-sm rounded-md p-1 shadow-sm border border-slate-200", selectedIds.includes(cat._id) ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
+                  <Checkbox
+                    checked={selectedIds.includes(cat._id)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedIds((prev) => [...prev, cat._id]);
+                      } else {
+                        setSelectedIds((prev) => prev.filter((id) => id !== cat._id));
+                      }
+                    }}
+                    aria-label={`Select ${cat.name}`}
+                  />
+                </div>
+
                 <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -415,10 +470,51 @@ export default function CategoryManagement() {
         open={!!categoryToDelete}
         onOpenChange={(open) => !open && setCategoryToDelete(null)}
         title="Delete Category"
-        description="Are you sure you want to delete this category? This will permanently remove the category from the database."
+        description="Are you sure you want to delete this category? It will no longer appear in the catalog."
         onConfirm={() => categoryToDelete && deleteMutation.mutate(categoryToDelete)}
         confirmText={deleteMutation.isPending ? "Deleting..." : "Delete"}
         variant="destructive"
+      />
+
+      {/* Bulk Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 animate-in fade-in slide-in-from-bottom-4">
+          <div className="flex items-center gap-2 pr-2 border-r border-slate-700 text-xs font-semibold">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white text-[11px] font-bold">
+              {selectedIds.length}
+            </span>
+            <span>selected</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedIds([])}
+            className="h-8 text-xs text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            Deselect All
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setIsBulkDeleteConfirmOpen(true)}
+            className="h-8 text-xs font-medium gap-1.5 bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirm Dialog */}
+      <ConfirmDialog
+        open={isBulkDeleteConfirmOpen}
+        onOpenChange={setIsBulkDeleteConfirmOpen}
+        title={`Delete ${selectedIds.length} Categories?`}
+        description={`Are you sure you want to delete these ${selectedIds.length} selected categories? They will no longer appear in the active catalog.`}
+        confirmText="Delete Selected"
+        variant="destructive"
+        loading={bulkDeleteMutation.isPending}
+        onConfirm={() => bulkDeleteMutation.mutate(selectedIds)}
       />
     </div>
   );

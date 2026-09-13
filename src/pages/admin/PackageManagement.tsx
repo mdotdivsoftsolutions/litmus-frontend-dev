@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { packageApi } from "@/lib/api/package";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BulkImportDrawer } from "@/components/admin/BulkImportDrawer";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -23,6 +25,8 @@ export default function PackageManagement() {
   const [selectedPackage, setSelectedPackage] = useState<any | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: packagesData, isLoading } = useQuery({
@@ -39,6 +43,20 @@ export default function PackageManagement() {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to delete package");
+    }
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: packageApi.bulkDeletePackages,
+    onSuccess: () => {
+      toast.success(`${selectedIds.length} package(s) deleted successfully`);
+      queryClient.invalidateQueries({ queryKey: ["adminPackages"] });
+      setSelectedIds([]);
+      setIsBulkDeleteConfirmOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to delete selected packages");
+      setIsBulkDeleteConfirmOpen(false);
     }
   });
 
@@ -125,6 +143,24 @@ export default function PackageManagement() {
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50">
+                <TableHead className="w-12 text-center">
+                  <Checkbox
+                    checked={
+                      paginatedPackages.length > 0 &&
+                      paginatedPackages.every((p: any) => selectedIds.includes(p._id))
+                    }
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        const pageIds = paginatedPackages.map((p: any) => p._id);
+                        setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+                      } else {
+                        const pageIds = new Set(paginatedPackages.map((p: any) => p._id));
+                        setSelectedIds((prev) => prev.filter((id) => !pageIds.has(id)));
+                      }
+                    }}
+                    aria-label="Select all packages on this page"
+                  />
+                </TableHead>
                 <TableHead>Package Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Tests Included</TableHead>
@@ -138,6 +174,7 @@ export default function PackageManagement() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
+                    <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-40" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-8 rounded-full" /></TableCell>
@@ -149,7 +186,7 @@ export default function PackageManagement() {
                 ))
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <AlertTriangle className="h-8 w-8 text-muted-foreground/50" />
                       <span>No packages found matching your criteria.</span>
@@ -157,7 +194,20 @@ export default function PackageManagement() {
                   </TableCell>
                 </TableRow>
               ) : paginatedPackages.map((p: any) => (
-                <TableRow key={p._id} className="hover:bg-muted/30 transition-colors">
+                <TableRow key={p._id} className={cn("hover:bg-muted/30 transition-colors", selectedIds.includes(p._id) && "bg-primary/5")}>
+                  <TableCell className="text-center">
+                    <Checkbox
+                      checked={selectedIds.includes(p._id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedIds((prev) => [...prev, p._id]);
+                        } else {
+                          setSelectedIds((prev) => prev.filter((id) => id !== p._id));
+                        }
+                      }}
+                      aria-label={`Select ${p.name}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium max-w-[200px] truncate" title={p.name}>
                     {p.name}
                     {p.tag && <Badge variant="outline" className="ml-2 text-[9px] uppercase tracking-wider">{p.tag}</Badge>}
@@ -325,7 +375,7 @@ export default function PackageManagement() {
         open={!!packageToDelete}
         onOpenChange={(open) => !open && setPackageToDelete(null)}
         title="Delete Package"
-        description="Are you sure you want to delete this package? This action cannot be undone."
+        description="Are you sure you want to delete this package? It will no longer appear in the catalog."
         onConfirm={() => {
           if (packageToDelete) {
             deleteMutation.mutate(packageToDelete);
@@ -334,6 +384,47 @@ export default function PackageManagement() {
         }}
         confirmText="Delete"
         variant="destructive"
+      />
+
+      {/* Bulk Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 animate-in fade-in slide-in-from-bottom-4">
+          <div className="flex items-center gap-2 pr-2 border-r border-slate-700 text-xs font-semibold">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white text-[11px] font-bold">
+              {selectedIds.length}
+            </span>
+            <span>selected</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedIds([])}
+            className="h-8 text-xs text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            Deselect All
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setIsBulkDeleteConfirmOpen(true)}
+            className="h-8 text-xs font-medium gap-1.5 bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirm Dialog */}
+      <ConfirmDialog
+        open={isBulkDeleteConfirmOpen}
+        onOpenChange={setIsBulkDeleteConfirmOpen}
+        title={`Delete ${selectedIds.length} Packages?`}
+        description={`Are you sure you want to delete these ${selectedIds.length} selected packages? They will no longer appear in the catalog.`}
+        confirmText="Delete Selected"
+        variant="destructive"
+        loading={bulkDeleteMutation.isPending}
+        onConfirm={() => bulkDeleteMutation.mutate(selectedIds)}
       />
     </div>
   );

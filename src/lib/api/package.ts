@@ -30,4 +30,9 @@ export const packageApi = {
     const response = await apiClient.delete(`/packages/${id}`);
     return response.data;
   },
+
+  bulkDeletePackages: async (ids: string[]) => {
+    const response = await apiClient.post('/packages/bulk-delete', { ids });
+    return response.data;
+  },
 };
