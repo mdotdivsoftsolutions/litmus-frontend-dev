@@ -65,7 +65,7 @@ export default function TestManagement() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Test Management</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage master diagnostic test catalog, methodologies, standard pricing, and parameter specifications.
+            Manage master food test catalog, methodologies, standard pricing, and parameter specifications.
           </p>
         </div>
       </div>

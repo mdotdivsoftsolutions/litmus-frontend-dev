@@ -152,7 +152,7 @@ export default function AdminApprovals() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Pending Approvals</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Review and authorize laboratory-submitted test reports, custom tests, and bundled health packages.
+            Review and authorize laboratory-submitted test reports, custom tests, and bundled food testing packages.
           </p>
         </div>
       </div>
@@ -455,7 +455,7 @@ export default function AdminApprovals() {
                 <div>
                   <span className="text-slate-500 block text-[11px]">Product / Test</span>
                   <span className="font-semibold text-slate-900 line-clamp-1">
-                    {reviewingReport.items?.[0]?.samples?.[0]?.productName || reviewingReport.items?.[0]?.packageId?.name || reviewingReport.items?.[0]?.testId?.name || "Diagnostic Service"}
+                    {reviewingReport.items?.[0]?.samples?.[0]?.productName || reviewingReport.items?.[0]?.packageId?.name || reviewingReport.items?.[0]?.testId?.name || "Food Testing Service"}
                   </span>
                 </div>
                 <div>
@@ -493,7 +493,7 @@ export default function AdminApprovals() {
               <div className="space-y-3.5">
                 <div>
                   <Label htmlFor="repSummary" className="text-xs font-semibold text-slate-800">
-                    Clinical / Diagnostic Summary
+                    Food Testing / Analytical Summary
                   </Label>
                   <Textarea
                     id="repSummary"
@@ -513,7 +513,7 @@ export default function AdminApprovals() {
                     id="repRecs"
                     value={reportRecommendations}
                     onChange={(e) => setReportRecommendations(e.target.value)}
-                    placeholder="Doctor recommendations or dietary guidance..."
+                    placeholder="Technical recommendations or compliance guidance..."
                     rows={2}
                     className="text-xs mt-1 bg-white"
                   />
@@ -521,13 +521,13 @@ export default function AdminApprovals() {
 
                 <div>
                   <Label htmlFor="repTips" className="text-xs font-semibold text-slate-800">
-                    Wellness Tips
+                    Compliance & Quality Notes
                   </Label>
                   <Textarea
                     id="repTips"
                     value={reportTips}
                     onChange={(e) => setReportTips(e.target.value)}
-                    placeholder="Lifestyle / hydration tips..."
+                    placeholder="Storage, handling, or shelf-life notes..."
                     rows={2}
                     className="text-xs mt-1 bg-white"
                   />
@@ -541,7 +541,7 @@ export default function AdminApprovals() {
                     id="repNotes"
                     value={reportNotes}
                     onChange={(e) => setReportNotes(e.target.value)}
-                    placeholder="Notes for internal medical team..."
+                    placeholder="Notes for internal food testing team..."
                     rows={2}
                     className="text-xs mt-1 bg-white"
                   />

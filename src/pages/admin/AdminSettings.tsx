@@ -214,7 +214,7 @@ export default function AdminSettings() {
     {
       group: "Catalog & Classifications",
       items: [
-        { id: "test-types", label: "Test Classifications", singular: "Test Classification", icon: FlaskConical, count: (testTypesData?.data || []).length, desc: "Sample & diagnostic test categories" },
+        { id: "test-types", label: "Test Classifications", singular: "Test Classification", icon: FlaskConical, count: (testTypesData?.data || []).length, desc: "Sample & food test categories" },
         { id: "tags", label: "Package Tags", singular: "Package Tag", icon: TagIcon, count: (tagsData?.data || []).length, desc: "Highlight badges for packages" },
       ]
     },
@@ -378,7 +378,7 @@ export default function AdminSettings() {
                     <div className="py-16 text-center text-xs text-muted-foreground flex flex-col items-center justify-center gap-2">
                       <FlaskConical className="h-8 w-8 text-slate-300" />
                       <p className="font-semibold text-slate-800">No test classifications found</p>
-                      <p className="text-[11px]">Click "Add New" above to create your first diagnostic classification.</p>
+                      <p className="text-[11px]">Click "Add New" above to create your first food testing classification.</p>
                     </div>
                   ) : (
                     <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">

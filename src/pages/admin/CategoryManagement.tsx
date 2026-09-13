@@ -110,7 +110,7 @@ export default function CategoryManagement() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Category Management</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage food & industrial diagnostic testing categories, subcategories, and imagery.
+            Manage food & industrial testing categories, subcategories, and imagery.
           </p>
         </div>
       </div>

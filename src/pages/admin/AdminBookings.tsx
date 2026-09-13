@@ -616,7 +616,7 @@ export default function AdminBookings() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Booking Management</h1>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Track diagnostic test orders, sample logistics, lab assignments, and live fulfillment statuses.
+          Track food test orders, sample logistics, lab assignments, and live fulfillment statuses.
         </p>
       </div>
 
@@ -949,7 +949,7 @@ export default function AdminBookings() {
                     <div className="space-y-0.5">
                       <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedBooking.lab}</p>
                       <p className="text-xs text-muted-foreground">
-                        {selectedBooking.lab?.includes("Litmus") ? "Managed and allocated via Litmus Central Operations" : "Accredited partner diagnostic laboratory"}
+                        {selectedBooking.lab?.includes("Litmus") ? "Managed and allocated via Litmus Central Operations" : "Accredited partner food testing laboratory"}
                       </p>
                     </div>
                     {isSelectedLabAssigned ? (

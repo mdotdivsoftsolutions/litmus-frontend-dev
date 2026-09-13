@@ -438,7 +438,7 @@ export default function AdminBookingDetails() {
       done: isTestingInProgress, 
       state: isTestingInProgress ? "completed" as const : "pending" as const,
       sub: testingStartedDate || undefined,
-      message: isTestingInProgress ? "Laboratory diagnostic analysis underway" : undefined
+      message: isTestingInProgress ? "Laboratory food testing analysis underway" : undefined
     },
     { 
       label: "Certified Report Uploaded", 
@@ -548,7 +548,7 @@ export default function AdminBookingDetails() {
               className="h-10 px-4 rounded-lg bg-primary hover:bg-primary/90 text-white gap-2 font-bold text-xs shadow-xs transition-all"
             >
               <FileText className="h-4 w-4" />
-              Report & Clinical Remarks
+              Report & Food Testing Remarks
               {b.isReportApprovedByAdmin ? (
                 <span className="bg-emerald-500 text-white text-[10px] font-black py-0.5 px-2 rounded-full ml-1">
                   Approved
@@ -606,7 +606,7 @@ export default function AdminBookingDetails() {
           <div>
             <StatusBadge status={status} />
             <p className="text-[11px] text-muted-foreground mt-2 font-medium">
-              {isComplete ? "Testing fulfilled and finalized" : "Active diagnostic pipeline"}
+              {isComplete ? "Testing fulfilled and finalized" : "Active testing pipeline"}
             </p>
           </div>
         </Card>
@@ -643,7 +643,7 @@ export default function AdminBookingDetails() {
               ₹{amount.toLocaleString("en-IN")}
             </p>
             <p className="text-[11px] text-muted-foreground mt-1 font-medium">
-              GST (18%) & Diagnostics Inclusive
+              GST (18%) & Testing Inclusive
             </p>
           </div>
         </Card>
@@ -964,7 +964,7 @@ export default function AdminBookingDetails() {
             </CardContent>
           </Card>
 
-          {/* Ordered Diagnostic Items & Sample Breakdown */}
+          {/* Ordered Food Testing Items & Sample Breakdown */}
           <Card className="bg-white border border-slate-200/80 shadow-2xs rounded-lg overflow-hidden">
             <CardHeader className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50 flex flex-row items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -972,7 +972,7 @@ export default function AdminBookingDetails() {
                   <Beaker className="h-4 w-4 text-indigo-700" />
                 </div>
                 <div>
-                  <CardTitle className="text-sm font-bold text-slate-900">Ordered Diagnostic Tests & Samples</CardTitle>
+                  <CardTitle className="text-sm font-bold text-slate-900">Ordered Food Tests & Samples</CardTitle>
                   <p className="text-[11px] text-muted-foreground">Matrix analysis parameters, SKUs, and batch specifications</p>
                 </div>
               </div>
@@ -983,7 +983,7 @@ export default function AdminBookingDetails() {
 
             <CardContent className="p-5 space-y-4">
               {rawItems.map((item: any, i: number) => {
-                const itemTitle = item.packageId?.name || item.testId?.testName || item.testId?.name || "Diagnostic Service Item";
+                const itemTitle = item.packageId?.name || item.testId?.testName || item.testId?.name || "Food Testing Service Item";
                 return (
                   <div key={i} className="rounded-lg border border-slate-200 overflow-hidden bg-white shadow-2xs">
                     <div className="bg-slate-50/90 px-4 py-3 flex justify-between items-center border-b border-slate-200">
@@ -1287,14 +1287,14 @@ export default function AdminBookingDetails() {
         </div>
       </div>
 
-      {/* Slide-Over Side Drawer for Test Report & Clinical Remarks */}
+      {/* Slide-Over Side Drawer for Test Report & Food Testing Remarks */}
       <Sheet open={isReportDrawerOpen} onOpenChange={setIsReportDrawerOpen}>
         <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto p-6 space-y-6">
           <SheetHeader className="pr-12 pb-4 border-b border-slate-100 text-left">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2.5 flex-wrap">
                 <SheetTitle className="text-xl font-bold flex items-center gap-2 text-slate-900">
-                  <FileText className="h-5 w-5 text-primary" /> Test Report & Clinical Remarks
+                  <FileText className="h-5 w-5 text-primary" /> Test Report & Food Testing Remarks
                 </SheetTitle>
                 {b.isReportApprovedByAdmin ? (
                   <Badge className="bg-emerald-600 text-white text-xs font-bold">
@@ -1389,11 +1389,11 @@ export default function AdminBookingDetails() {
             </div>
           </div>
 
-          {/* Clinical Remarks Editor */}
+          {/* Food Testing Remarks Editor */}
           <div className="space-y-4 pt-4 border-t border-slate-100">
             <div className="space-y-1.5">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-600 block">
-                Executive Clinical Summary
+                Executive Food Testing Summary
               </label>
               <Textarea
                 placeholder="Provide an executive summary of sample findings and key observations..."

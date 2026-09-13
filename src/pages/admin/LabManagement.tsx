@@ -89,7 +89,7 @@ export default function LabManagement() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Laboratory Management</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage partner diagnostic facilities, accreditations, catalog testing capabilities, and facility visibility.
+            Manage partner food testing facilities, accreditations, catalog testing capabilities, and facility visibility.
           </p>
         </div>
       </div>

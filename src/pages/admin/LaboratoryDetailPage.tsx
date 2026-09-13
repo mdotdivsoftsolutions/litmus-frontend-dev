@@ -75,7 +75,7 @@ export default function LaboratoryDetailPage() {
         <Building2 className="h-12 w-12 text-slate-400" />
         <div>
           <h2 className="text-2xl font-bold text-foreground">Laboratory Not Found</h2>
-          <p className="text-sm text-muted-foreground mt-1">The requested diagnostic partner could not be located.</p>
+          <p className="text-sm text-muted-foreground mt-1">The requested food testing partner could not be located.</p>
         </div>
         <Button onClick={() => navigate("/admin/laboratories")} className="bg-primary hover:bg-primary/90 text-white">
           Back to Laboratory Directory
@@ -206,7 +206,7 @@ export default function LaboratoryDetailPage() {
           {
             title: "Configured Tests",
             value: (lab.tests?.length || 0).toLocaleString(),
-            subtitle: "Diagnostic catalog items",
+            subtitle: "Food testing catalog items",
             icon: FileText,
             badgeText: "Catalog",
           },
@@ -489,7 +489,7 @@ export default function LaboratoryDetailPage() {
                       const itemSummary = b.items?.[0]?.packageId?.name 
                         || b.items?.[0]?.testId?.name 
                         || b.items?.[0]?.testId?.testName 
-                        || (b.items?.length > 1 ? `${b.items.length} Test Items` : "Diagnostic Service");
+                        || (b.items?.length > 1 ? `${b.items.length} Test Items` : "Food Testing Service");
                       const isPaid = ['SUCCESS', 'PAID'].includes(String(b.paymentStatus || '').toUpperCase()) || String(b.status).toUpperCase() === 'COMPLETED';
 
                       return (
@@ -556,7 +556,7 @@ export default function LaboratoryDetailPage() {
             <Card className="border border-border/80 rounded-lg shadow-2xs bg-white p-4">
               <p className="text-xs font-medium text-slate-600">Net Laboratory Payout (85%)</p>
               <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight mt-1">{formatCurrency(labPayout)}</p>
-              <p className="text-[11px] text-muted-foreground mt-1">Estimated payable to diagnostic partner</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Estimated payable to food testing partner</p>
             </Card>
           </div>
         </TabsContent>

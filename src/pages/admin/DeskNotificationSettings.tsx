@@ -117,7 +117,7 @@ export function DeskNotificationSettings() {
               <span>Incoming Call Chime & Audio Alerts</span>
             </Label>
             <p className="text-[11px] text-slate-500">
-              Plays an ambient harmonic chime when a customer or patient requests clinical support.
+              Plays an ambient harmonic chime when a customer requests food testing support.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">

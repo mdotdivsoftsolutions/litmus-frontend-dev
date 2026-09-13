@@ -59,7 +59,7 @@ const WORKFLOW_CONFIGS: WorkflowItemConfig[] = [
     key: "supportRequestAdminAlert",
     title: "Support & Lead Alert (Admin WhatsApp)",
     category: "Admin Immediate Alert",
-    description: "Sends an immediate WhatsApp alert directly to the admin whenever a customer requests clinical support or submits a contact inquiry.",
+    description: "Sends an immediate WhatsApp alert directly to the admin whenever a customer requests food testing support or submits a contact inquiry.",
 
     icon: Headphones,
     color: "text-rose-600",
@@ -94,7 +94,7 @@ const WORKFLOW_CONFIGS: WorkflowItemConfig[] = [
     sampleWhatsAppPreview: `🧪 *LITMUS FOOD ANALYTICS - BOOKING CONFIRMED*
 ━━━━━━━━━━━━━━━━━━━━━
 Dear *John Doe*,
-Thank you for choosing Litmus. Your diagnostic test booking has been confirmed.
+Thank you for choosing Litmus. Your food test booking has been confirmed.
 
 🔖 *Booking ID:* #BKG-98421
 📋 *Tests Selected:* Nutritional Profile & Heavy Metals
@@ -124,7 +124,7 @@ Your sample for Booking *#BKG-98421* has been received at our accredited laborat
 📊 *Status:* Chemical & Microbiological Analysis In Progress
 🏢 *Lab Facility:* Litmus Central Analytical Lab
 
-Our certified analysts are conducting the diagnostic procedures. You will be notified the moment your report is ready.
+Our certified analysts are conducting the food testing procedures. You will be notified the moment your report is ready.
 ━━━━━━━━━━━━━━━━━━━━━
 _Litmus Laboratory Operations_`,
   },
@@ -164,7 +164,7 @@ We will notify you immediately once the laboratory confirms physical receipt and
     sampleWhatsAppPreview: `📑 *LITMUS - OFFICIAL TEST REPORT PUBLISHED*
 ━━━━━━━━━━━━━━━━━━━━━
 Great news *John Doe*!
-The clinical testing and quality certification for Booking *#BKG-98421* has been completed.
+The food testing and quality certification for Booking *#BKG-98421* has been completed.
 
 Your verified laboratory report is now available for viewing and digital download.
 
@@ -176,7 +176,7 @@ Thank you for trusting Litmus Food Analytics for your testing requirements.`,
     key: "abandonedCart",
     title: "Abandoned Cart Reminders",
     category: "Conversion Recovery",
-    description: "Automated recovery notification sent to customers who left diagnostic packages in their cart without checking out.",
+    description: "Automated recovery notification sent to customers who left food testing packages in their cart without checking out.",
     icon: ShoppingCart,
     color: "text-purple-600",
     badgeBg: "bg-purple-50 text-purple-700 border-purple-200",
@@ -186,7 +186,7 @@ Thank you for trusting Litmus Food Analytics for your testing requirements.`,
     sampleWhatsAppPreview: `🛒 *LITMUS - COMPLETE YOUR TEST BOOKING*
 ━━━━━━━━━━━━━━━━━━━━━
 Hello *John Doe*,
-We noticed you have *2 diagnostic test(s)* waiting in your cart.
+We noticed you have *2 food test(s)* waiting in your cart.
 
 💰 *Cart Total:* ₹3,200
 
@@ -204,7 +204,7 @@ Complete your order today to secure your testing slot and priority sample proces
     badgeBg: "bg-slate-100 text-slate-700 border-slate-200",
     emailDefault: true,
     whatsappDefault: true,
-    sampleEmailSubject: "Important Diagnostic & Regulatory Update - Litmus",
+    sampleEmailSubject: "Important Food Testing & Regulatory Update - Litmus",
     sampleWhatsAppPreview: `📢 *LITMUS FOOD ANALYTICS - PLATFORM NOTICE*
 ━━━━━━━━━━━━━━━━━━━━━
 Dear Valued Partner,

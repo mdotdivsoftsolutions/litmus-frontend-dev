@@ -65,7 +65,7 @@ export default function PackageManagement() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Package Management</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Bundle multiple diagnostic tests into curated packages, manage turnaround times (TAT), and promotional pricing.
+            Bundle multiple food tests into curated packages, manage turnaround times (TAT), and promotional pricing.
           </p>
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function PackageManagement() {
         onOpenChange={setIsBulkImportOpen}
         entityType="packages"
         title="Bulk Import Test Packages"
-        description="Upload an Excel sheet to bundle diagnostic tests into curated packages with custom pricing and features."
+        description="Upload an Excel sheet to bundle food tests into curated packages with custom pricing and features."
         templateFileName="3_Litmus_Packages_Bulk_Template.xlsx"
         templateDisplayName="3_Litmus_Packages_Bulk_Template.xlsx"
         onSuccess={() => {

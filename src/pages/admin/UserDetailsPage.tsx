@@ -795,7 +795,7 @@ export default function UserDetailsPage() {
                             b.items?.[0]?.packageId?.name ||
                             b.items?.[0]?.testId?.name ||
                             b.items?.[0]?.testId?.testName ||
-                            (b.items?.length > 1 ? `${b.items.length} Test Items` : "Diagnostic Service");
+                            (b.items?.length > 1 ? `${b.items.length} Test Items` : "Food Testing Service");
                           const isPaid =
                             ["SUCCESS", "PAID"].includes(String(b.paymentStatus || "").toUpperCase()) ||
                             String(b.status).toUpperCase() === "COMPLETED";

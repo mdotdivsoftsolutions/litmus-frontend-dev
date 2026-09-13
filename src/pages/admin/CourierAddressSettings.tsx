@@ -470,7 +470,7 @@ function IntakeSchedulePicker({
 }
 
 const defaultAddress: ICourierAddress = {
-  facilityName: "Litmus Sample Central Intake & Diagnostics Hub",
+  facilityName: "Litmus Sample Central Intake & Food Testing Hub",
   attention: "Sample Logistics & Ingestion Desk",
   street: "Tower B, Innovation Corridor, Old Mahabalipuram Road (OMR)",
   city: "Chennai",
@@ -648,7 +648,7 @@ export function CourierAddressSettings() {
                   value={formData.facilityName}
                   disabled={!isEditing}
                   onChange={handleChange}
-                  placeholder="e.g. Litmus Sample Central Intake & Diagnostics Hub"
+                  placeholder="e.g. Litmus Sample Central Intake & Food Testing Hub"
                   className="disabled:opacity-85 disabled:cursor-not-allowed disabled:bg-slate-50/70"
                   required
                 />

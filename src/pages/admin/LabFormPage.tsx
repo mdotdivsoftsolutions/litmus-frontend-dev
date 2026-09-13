@@ -681,7 +681,7 @@ export default function LabFormPage() {
  <div className="space-y-4">
  <h3 className="text-lg font-semibold border-b border-border/50 pb-2">Overview & Analytics</h3>
  <div className="space-y-2">
- <Label className="text-sm font-medium">Diagnostic Excellence Overview</Label>
+ <Label className="text-sm font-medium">Food Testing Excellence Overview</Label>
  <textarea 
  name="overview"
  value={formData.overview} 

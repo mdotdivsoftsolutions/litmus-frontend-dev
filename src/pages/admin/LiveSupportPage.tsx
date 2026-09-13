@@ -599,9 +599,9 @@ export default function LiveSupportPage() {
       <div className="px-5 py-3 bg-white border-b border-slate-200 flex items-center justify-between shrink-0 shadow-xs">
         <div>
           <h1 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
-            Live Support & Diagnostic Desk
+            Live Support & Food Testing Desk
           </h1>
-          <p className="text-[11px] text-slate-500">Connect, assist, and track diagnostic inquiries</p>
+          <p className="text-[11px] text-slate-500">Connect, assist, and track food testing inquiries</p>
         </div>
 
         {/* Presence & Notification Controls */}
@@ -1528,7 +1528,7 @@ export default function LiveSupportPage() {
                       : "Unassigned"}
                   </p>
                   <p className="text-[10px] text-slate-500 truncate">
-                    {selectedSession.assignedAgent?.designation || selectedSession.assignedAgent?.department || selectedSession.assignedAgent?.email || "Diagnostic Team"}
+                    {selectedSession.assignedAgent?.designation || selectedSession.assignedAgent?.department || selectedSession.assignedAgent?.email || "Food Testing Team"}
                   </p>
                 </div>
               </div>
@@ -1795,7 +1795,7 @@ export default function LiveSupportPage() {
                             {fullName} {isSelf && <span className="text-[10px] font-normal text-slate-400">(You)</span>}
                           </p>
                           <p className="text-[10px] text-slate-500 truncate">
-                            {emp.designation || emp.role || "Clinical Specialist"}
+                            {emp.designation || emp.role || "Food Testing Specialist"}
                           </p>
                           {emp.email && (
                             <p className="text-[9px] text-slate-400 truncate">
@@ -1844,11 +1844,11 @@ export default function LiveSupportPage() {
                 value={transferHandoverNote}
                 onChange={(e) => setTransferHandoverNote(e.target.value)}
                 rows={3}
-                placeholder="E.g., Patient is inquiring about turnaround time for blood culture test. Already verified prescription."
+                placeholder="E.g., Customer is inquiring about turnaround time for microbiology test. Already verified sample specification."
                 className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-primary focus:bg-white resize-none"
               />
               <p className="text-[10px] text-slate-400">
-                This note will appear as a private staff note visible only to clinical team members.
+                This note will appear as a private staff note visible only to food testing team members.
               </p>
             </div>
           </div>

@@ -237,7 +237,7 @@ export default function AdminDashboard() {
     
     rawBookings.forEach((b: any) => {
       b.items?.forEach((item: any) => {
-        const name = item.samples?.[0]?.productName || item.packageId?.name || item.testId?.name || "Standard Diagnostic Package";
+        const name = item.samples?.[0]?.productName || item.packageId?.name || item.testId?.name || "Standard Food Testing Package";
         const price = Number(item.price) || 0;
         if (!productMap[name]) {
           productMap[name] = { count: 0, revenue: 0 };
@@ -941,7 +941,7 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* TAB 3: Top Diagnostic Packages */}
+          {/* TAB 3: Top Food Testing Packages */}
           <TabsContent value="products" className="mt-3 min-h-[280px]">
             <Card className="bg-white border border-border/80 rounded-lg shadow-2xs overflow-hidden min-h-[280px]">
               <CardHeader className="p-3.5 pb-2.5 border-b border-slate-100 bg-slate-50/40 flex flex-row items-center justify-between">

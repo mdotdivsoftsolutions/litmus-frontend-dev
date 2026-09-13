@@ -325,7 +325,7 @@ export default function AdminReports() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Report Verification & Management</h1>
-          <p className="text-sm text-muted-foreground">Review, edit, upload, and publish certified diagnostic reports with full technical remarks.</p>
+          <p className="text-sm text-muted-foreground">Review, edit, upload, and publish certified food test reports with full technical remarks.</p>
         </div>
         <Button 
           onClick={() => setIsUploadModalOpen(true)} 
