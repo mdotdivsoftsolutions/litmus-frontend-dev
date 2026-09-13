@@ -681,10 +681,13 @@ export default function AdminBookings() {
 
       <Tabs defaultValue="all" value={statusFilter === "all" ? "all" : statusFilter.toLowerCase()} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <TabsList className="bg-white border border-slate-200 shadow-sm p-1 self-start lg:self-auto">
+          <TabsList className="bg-white border border-slate-200 shadow-sm p-1 self-start lg:self-auto flex-wrap">
             <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="pending">Pending</TabsTrigger>
+            <TabsTrigger value="to_assign" className="font-semibold text-amber-900 data-[state=active]:bg-amber-50 data-[state=active]:text-amber-900">
+              To Assign
+            </TabsTrigger>
             <TabsTrigger value="approved">Approved</TabsTrigger>
+            <TabsTrigger value="pending">Pending Payment</TabsTrigger>
             <TabsTrigger value="in_progress">In Progress</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>

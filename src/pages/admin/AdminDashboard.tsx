@@ -999,7 +999,7 @@ export default function AdminDashboard() {
                             <TableCell className="font-semibold text-foreground">₹{total.toLocaleString()}</TableCell>
                             <TableCell className="text-right">
                               <Button size="sm" variant="default" className="h-6 text-[11px] px-2 bg-primary hover:bg-primary/90 text-white rounded" asChild>
-                                <Link to={`/admin/bookings`}>
+                                <Link to="/admin/bookings?status=to_assign">
                                   Assign
                                 </Link>
                               </Button>
@@ -1322,7 +1322,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <Button size="sm" className="h-7 text-xs px-2.5 bg-primary hover:bg-primary/90 text-white shrink-0" asChild onClick={() => setIsSplitDialogOpen(false)}>
-                <Link to="/admin/bookings?status=PENDING">
+                <Link to="/admin/bookings?status=to_assign">
                   Assign Now <ArrowUpRight className="h-3 w-3 ml-1" />
                 </Link>
               </Button>
