@@ -687,7 +687,7 @@ export default function AdminBookings() {
               To Assign
             </TabsTrigger>
             <TabsTrigger value="approved">Approved</TabsTrigger>
-            <TabsTrigger value="pending">Pending Payment</TabsTrigger>
+            <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="in_progress">In Progress</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
             <TabsTrigger value="rejected">Rejected</TabsTrigger>
@@ -1187,8 +1187,8 @@ export default function AdminBookings() {
                   </div>
                 </div>
 
-                {/* 6. Admin Actions (Pending state assignment or rejection) */}
-                {selectedBooking.status?.toLowerCase() === "pending" && (
+                {/* 6. Admin Actions (Pending state assignment, unallocated lab assignment, or rejection) */}
+                {(selectedBooking.status?.toLowerCase() === "pending" || !selectedBooking.lab || selectedBooking.lab === "Litmus Smart Allocation") && selectedBooking.status?.toLowerCase() !== "completed" && selectedBooking.status?.toLowerCase() !== "rejected" && (
                   <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/40 dark:bg-amber-950/20 p-4 shadow-xs space-y-3">
                     <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300">
                       <ShieldCheck className="h-4 w-4 text-amber-600" />
