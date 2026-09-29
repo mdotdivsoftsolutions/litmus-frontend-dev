@@ -199,7 +199,7 @@ export default function PackageFormPage() {
       newParameterCount = Math.max(newParameterCount, currentFeatures.length);
     }
 
-    if (!isEditing && newMrp > 0) {
+    if (newMrp > 0) {
       form.setValue("mrp", newMrp, { shouldValidate: true });
     }
     
