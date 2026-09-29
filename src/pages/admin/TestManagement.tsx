@@ -62,7 +62,7 @@ export default function TestManagement() {
     }
   });
 
-  const tests = (testsData?.data || []).slice().sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  const tests = (testsData?.data || []).slice().sort((a: any, b: any) => (a.testName || '').localeCompare(b.testName || ''));
   
   const filtered = tests.filter((t: any) => {
     const matchesSearch = !search || t.testName?.toLowerCase().includes(search.toLowerCase());
