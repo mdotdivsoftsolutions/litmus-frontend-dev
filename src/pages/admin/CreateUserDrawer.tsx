@@ -15,6 +15,7 @@ export function CreateUserDrawer({ open, onOpenChange }: { open: boolean, onOpen
     lastName: "",
     email: "",
     phone: "",
+    companyName: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -36,7 +37,7 @@ export function CreateUserDrawer({ open, onOpenChange }: { open: boolean, onOpen
       queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
       queryClient.invalidateQueries({ queryKey: ["adminStats"] });
       onOpenChange(false);
-      setFormData({ firstName: "", lastName: "", email: "", phone: "", password: "" });
+      setFormData({ firstName: "", lastName: "", email: "", phone: "", companyName: "", password: "" });
       setShowPassword(false);
     },
     onError: (error: any) => {
@@ -133,6 +134,18 @@ export function CreateUserDrawer({ open, onOpenChange }: { open: boolean, onOpen
                 onChange={handleChange} 
                 required 
                 className="h-10 text-sm font-mono"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="companyName" className="text-xs font-semibold text-slate-700">Company Name</Label>
+              <Input 
+                id="companyName" 
+                name="companyName" 
+                placeholder="e.g. Fresh Foods Pvt. Ltd."
+                value={formData.companyName} 
+                onChange={handleChange} 
+                className="h-10 text-sm"
               />
             </div>
 
