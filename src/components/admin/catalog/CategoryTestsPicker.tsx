@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Beaker, Globe2, Info, Search, X } from "lucide-react";
+import { Beaker, CheckSquare, Globe2, Info, RotateCcw, Search, Square, X } from "lucide-react";
 import { categoryTestsApi, CategoryTestItem, CategoryTestsChanges } from "@/lib/api/categoryTests";
 import { cn } from "@/lib/utils";
 
@@ -61,12 +61,13 @@ export function CategoryTestsPicker({ categoryId, onChange }: CategoryTestsPicke
     const q = search.trim().toLowerCase();
     return tests.filter((t) => {
       if (q && !t.testName.toLowerCase().includes(q) && !t.type.toLowerCase().includes(q)) return false;
-      if (view === "in") return selected.has(t._id);
-      if (view === "out") return !selected.has(t._id);
+      // Tabs follow the saved state, so ticking a row doesn't make it jump away before saving.
+      if (view === "in") return isIncluded(t);
+      if (view === "out") return !isIncluded(t);
       if (view === "changed") return changedIds.has(t._id);
       return true;
     });
-  }, [tests, search, view, selected, changedIds]);
+  }, [tests, search, view, changedIds]);
 
   useEffect(() => setVisibleCount(PAGE_STEP), [search, view]);
 
@@ -85,8 +86,18 @@ export function CategoryTestsPicker({ categoryId, onChange }: CategoryTestsPicke
       return next;
     });
 
+  const resetChanges = () => setSelected(new Set(tests.filter(isIncluded).map((t) => t._id)));
+
+  // With a search or filter active, bulk actions apply to the shown tests only.
+  const isFiltered = search.trim() !== "" || view !== "all";
+  const scopeLabel = isFiltered ? `shown (${filtered.length})` : `all (${tests.length})`;
+  const shownSelectedCount = filtered.filter((t) => selected.has(t._id)).length;
+  const headerState: boolean | "indeterminate" =
+    shownSelectedCount === 0 ? false : shownSelectedCount === filtered.length ? true : "indeterminate";
+
   const removedAllCategoryTests = tests.filter((t) => t.membership === "ALL" && !selected.has(t._id)).length;
-  const counts = { all: tests.length, in: selected.size, out: tests.length - selected.size, changed: changedIds.size };
+  const savedInCount = useMemo(() => tests.filter(isIncluded).length, [tests]);
+  const counts = { all: tests.length, in: savedInCount, out: tests.length - savedInCount, changed: changedIds.size };
   const chips: { key: ViewFilter; label: string }[] = [
     { key: "all", label: "All tests" },
     { key: "in", label: "In this category" },
@@ -116,12 +127,37 @@ export function CategoryTestsPicker({ categoryId, onChange }: CategoryTestsPicke
             </button>
           )}
         </div>
-        <div className="flex gap-1.5 shrink-0">
-          <Button type="button" variant="outline" size="sm" className="h-9 text-xs" onClick={() => setShown(true)} disabled={!filtered.length}>
-            Add shown
+        <div className="flex flex-wrap gap-1.5 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 text-xs gap-1.5"
+            onClick={() => setShown(true)}
+            disabled={!filtered.length || shownSelectedCount === filtered.length}
+          >
+            <CheckSquare className="h-3.5 w-3.5 text-primary" /> Select {scopeLabel}
           </Button>
-          <Button type="button" variant="outline" size="sm" className="h-9 text-xs" onClick={() => setShown(false)} disabled={!filtered.length}>
-            Remove shown
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 text-xs gap-1.5"
+            onClick={() => setShown(false)}
+            disabled={!filtered.length || shownSelectedCount === 0}
+          >
+            <Square className="h-3.5 w-3.5 text-slate-500" /> Unselect {scopeLabel}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-9 text-xs gap-1.5 text-slate-600"
+            onClick={resetChanges}
+            disabled={changedIds.size === 0}
+            title="Undo all unsaved changes"
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> Reset
           </Button>
         </div>
       </div>
@@ -163,6 +199,19 @@ export function CategoryTestsPicker({ categoryId, onChange }: CategoryTestsPicke
           <p className="p-6 text-center text-xs text-muted-foreground">No tests match.</p>
         ) : (
           <>
+            <label className="sticky top-0 z-10 flex items-center gap-3 px-3 py-2 bg-slate-50 border-b border-slate-200 cursor-pointer">
+              <Checkbox
+                checked={headerState}
+                onCheckedChange={() => setShown(headerState !== true)}
+                aria-label={headerState === true ? "Unselect all shown tests" : "Select all shown tests"}
+              />
+              <span className="text-[11px] font-bold text-slate-700">
+                {headerState === true ? "Unselect" : "Select"} {isFiltered ? "all shown" : "all"} tests
+              </span>
+              <span className="ml-auto text-[11px] text-slate-500">
+                {shownSelectedCount} of {filtered.length} selected
+              </span>
+            </label>
             {filtered.slice(0, visibleCount).map((t) => {
               const checked = selected.has(t._id);
               const willAdd = checked && !isIncluded(t);
