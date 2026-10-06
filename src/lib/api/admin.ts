@@ -12,11 +12,16 @@ export const adminApi = {
   },
 
   /** One booking with the same joins as the list (for the detail page). */
+  /** Booking count & revenue per lab: [{ labId, bookings, revenue }]. */
+  getLabBookingStats: async (): Promise<{ data: { labId: string; bookings: number; revenue: number }[] }> => {
+    const response = await apiClient.get('/admin/labs/booking-stats');
+    return response.data;
+  },
   getBookingById: async (id: string) => {
     const response = await apiClient.get(`/admin/bookings/${id}`);
     return response.data;
   },
-  getBookings: async (params?: { status?: string; paymentStatus?: string; search?: string; startDate?: string; endDate?: string; page?: number; limit?: number }) => {
+  getBookings: async (params?: { labId?: string; status?: string; paymentStatus?: string; search?: string; startDate?: string; endDate?: string; page?: number; limit?: number }) => {
     const response = await apiClient.get('/admin/bookings', { params });
     return response.data;
   },

@@ -71,13 +71,14 @@ export default function LabManagement() {
     queryFn: adminApi.getLabs,
   });
 
-  const { data: bookingsData } = useQuery({
-    queryKey: ["adminBookings"],
-    queryFn: () => adminApi.getBookings(),
+  // Per-lab totals computed on the server (previously every booking was downloaded).
+  const { data: labStatsData } = useQuery({
+    queryKey: ["adminBookings", "labStats"],
+    queryFn: adminApi.getLabBookingStats,
   });
 
   const labs = (labsData?.data || []).slice().sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-  const allBookings = bookingsData?.data || [];
+  const labStats = new Map((labStatsData?.data || []).map((s) => [s.labId, s]));
   const filtered = labs.filter((l: any) => !search || l.labName?.toLowerCase().includes(search.toLowerCase()));
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
@@ -206,8 +207,8 @@ export default function LabManagement() {
             ) : filtered.length === 0 ? (
               <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground">No laboratories found.</TableCell></TableRow>
             ) : paginatedLabs.map((lab: any) => {
-              const labBookings = allBookings.filter((b: any) => b.labId?._id === lab._id || b.labId === lab._id || b.laboratory?._id === lab._id || b.laboratory === lab._id);
-              const totalRevenue = labBookings.reduce((sum: number, b: any) => sum + (b.totalAmount || 0), 0);
+              const bookingCount = labStats.get(lab._id)?.bookings || 0;
+              const totalRevenue = labStats.get(lab._id)?.revenue || 0;
               
               return (
               <TableRow key={lab._id} className={selection.isSelected(lab._id) ? "bg-primary/5" : "hover:bg-muted/30"}>
@@ -227,7 +228,7 @@ export default function LabManagement() {
                   </div>
                 </TableCell>
                 <TableCell>{lab.tests?.length || "—"}</TableCell>
-                <TableCell>{labBookings.length > 0 ? labBookings.length : "—"}</TableCell>
+                <TableCell>{bookingCount > 0 ? bookingCount : "—"}</TableCell>
                 <TableCell>{totalRevenue > 0 ? `₹${totalRevenue.toLocaleString('en-IN')}` : "—"}</TableCell>
                 <TableCell>
                   <Switch 

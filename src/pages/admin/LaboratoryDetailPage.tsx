@@ -32,9 +32,11 @@ export default function LaboratoryDetailPage() {
     enabled: !!id,
   });
 
+  // Only this laboratory's bookings (filtered on the server).
   const { data: bookingsData, isLoading: isBookingsLoading } = useQuery({
-    queryKey: ["admin-bookings"],
-    queryFn: () => adminApi.getBookings(),
+    queryKey: ["adminBookings", "byLab", id],
+    queryFn: () => adminApi.getBookings({ labId: id }),
+    enabled: !!id,
   });
 
   const copyToClipboard = (text: string, label: string) => {

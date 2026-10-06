@@ -106,6 +106,7 @@ export default function LiveSupportPage() {
     acceptChat,
     transferChat,
   } = useAdminSocket();
+  const queryClient = useQueryClient();
 
   const { data: userResponse } = useQuery({
     queryKey: ["userProfile"],
@@ -281,7 +282,7 @@ export default function LiveSupportPage() {
       return undefined;
     },
     enabled: activeTab !== "staff" && activeTab !== "missed" && Boolean(currentUser?._id || activeTab === "all_chats" || activeTab === "incoming"),
-    refetchInterval: 15000,
+    refetchInterval: 30 * 1000, // fallback only: socket events refresh the list in real time
   });
 
   const rawSessions = useMemo(() => {
@@ -308,7 +309,7 @@ export default function LiveSupportPage() {
       };
     },
     staleTime: 10 * 1000,
-    refetchInterval: 10 * 1000,
+    refetchInterval: 30 * 1000, // fallback only: refreshed on socket session updates
   });
 
   const incomingCount = Math.max(tabCountsData?.incoming ?? 0, incomingRequests.length);
@@ -494,6 +495,7 @@ export default function LiveSupportPage() {
     const handleSessionUpdated = () => {
       refetchSessions();
       refetchSelectedSession();
+      queryClient.invalidateQueries({ queryKey: ["chatTabCountsSummary"] });
     };
 
     socket.on("receive_message", handleReceiveMessage);
@@ -508,7 +510,7 @@ export default function LiveSupportPage() {
       socket.off("user_typing", handleUserTyping);
       socket.off("chat_session_updated", handleSessionUpdated);
     };
-  }, [socket, selectedSessionId, refetchSessions, refetchSelectedSession]);
+  }, [socket, selectedSessionId, refetchSessions, refetchSelectedSession, queryClient]);
 
   // Handle Accept Incoming Chat
   const handleAcceptIncoming = async (sessionId: string) => {
