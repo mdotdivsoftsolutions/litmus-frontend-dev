@@ -255,15 +255,12 @@ export default function TestManagement() {
                     aria-label="Select all tests on this page"
                   />
                 </TableHead>
-                <TableHead className="w-24" title="Storefront priority: 1 is shown first">Priority</TableHead>
-                <TableHead>Test Name</TableHead>
-                <TableHead>Creator</TableHead>
-                <TableHead>Category / Subcategory</TableHead>
-                <TableHead>Classification</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Parameters</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Offer Price</TableHead>
+                <TableHead className="w-[72px]" title="Storefront priority: 1 is shown first. Click a badge to change it.">Priority</TableHead>
+                <TableHead className="min-w-[220px]">Test</TableHead>
+                <TableHead className="min-w-[160px]">Category / Subcategory</TableHead>
+                <TableHead>Type &amp; Method</TableHead>
+                <TableHead className="text-center">Params</TableHead>
+                <TableHead className="text-right">Price</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -272,21 +269,23 @@ export default function TestManagement() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto bg-muted/60" /></TableCell>
-                    <TableCell><Skeleton className="h-8 w-16 bg-muted/60" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32 bg-muted/60" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-20 rounded-full bg-muted/60" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28 bg-muted/60" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-20 rounded-full bg-muted/60" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24 bg-muted/60" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-8 rounded-full bg-muted/60" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16 bg-muted/60" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16 bg-muted/60" /></TableCell>
+                    <TableCell><Skeleton className="h-7 w-12 rounded-md bg-muted/60" /></TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-lg bg-muted/60" />
+                        <div className="space-y-1.5"><Skeleton className="h-4 w-36 bg-muted/60" /><Skeleton className="h-3 w-16 bg-muted/60" /></div>
+                      </div>
+                    </TableCell>
+                    <TableCell><Skeleton className="h-5 w-24 rounded bg-muted/60" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-24 rounded-full bg-muted/60" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-8 rounded-full mx-auto bg-muted/60" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16 ml-auto bg-muted/60" /></TableCell>
                     <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto rounded-md bg-muted/60" /></TableCell>
                   </TableRow>
                 ))
               ) : paginatedTests.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
                        <AlertTriangle className="h-8 w-8 text-muted-foreground/50" />
                        <span>No test protocols found matching your criteria.</span>
@@ -311,105 +310,107 @@ export default function TestManagement() {
                   <TableCell>
                     <DisplayOrderCell entity="tests" id={t._id} value={t.displayOrder} invalidateKeys={["adminTests"]} />
                   </TableCell>
+
+                  {/* Test name + creator */}
                   <TableCell>
                     <div className="flex items-center gap-3">
                       {t.imageUrl || t.icon ? (
                         <img
                           src={t.imageUrl || t.icon}
                           alt={t.testName}
-                          className="h-10 w-10 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-50"
+                          loading="lazy"
+                          className="h-9 w-9 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-50"
                         />
                       ) : (
-                        <div className="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shrink-0">
-                          <Beaker className="h-5 w-5" />
+                        <div className="h-9 w-9 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shrink-0">
+                          <Beaker className="h-4 w-4" />
                         </div>
                       )}
-                      <span className="font-semibold max-w-[190px] truncate text-slate-900" title={t.testName}>
-                        {t.testName}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <Badge variant={t.creatorType === 'LAB' ? "secondary" : "default"} className="w-fit text-[10px]">
-                        {t.creatorType === 'LAB' ? "Personalized" : "Platform"}
-                      </Badge>
-                      {t.creatorType === 'LAB' && t.labId && (
-                        <span className="text-[10px] text-muted-foreground truncate max-w-[120px]" title={t.labId.labName}>
-                          {t.labId.labName}
-                        </span>
-                      )}
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm text-slate-900 max-w-[230px] truncate" title={t.testName}>
+                          {t.testName}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground truncate max-w-[230px]">
+                          {t.creatorType === "LAB" ? `Lab · ${t.labId?.labName || "Personalized"}` : "Platform"}
+                        </p>
+                      </div>
                     </div>
                   </TableCell>
 
-                  {/* Category & Subcategory Column */}
+                  {/* Category & Subcategory (first two shown, rest summarised) */}
                   <TableCell>
-                    <div className="flex flex-col gap-1 max-w-[180px]">
+                    <div className="flex flex-col gap-1 max-w-[200px]">
                       {t.isApplicableToAll ? (
-                        <span className="inline-flex items-center text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 w-fit">
-                          All Categories
+                        <span className="text-[11px] font-semibold text-slate-600">All Categories</span>
+                      ) : t.applicableCategories?.length > 0 ? (
+                        <span
+                          className="text-[11px] font-bold text-primary truncate"
+                          title={t.applicableCategories.map((c: any) => (typeof c === "string" ? c : c.name)).join(", ")}
+                        >
+                          {t.applicableCategories.map((c: any) => (typeof c === "string" ? c : c.name)).join(", ")}
                         </span>
-                      ) : t.applicableCategories && t.applicableCategories.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {t.applicableCategories.map((c: any, idx: number) => (
-                            <span
-                              key={idx}
-                              className="inline-flex items-center text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded"
-                            >
-                              {typeof c === 'string' ? c : c.name}
-                            </span>
-                          ))}
-                        </div>
                       ) : (
                         <span className="text-xs text-muted-foreground italic">General</span>
                       )}
-
-                      {/* Applicable Subcategories */}
-                      {t.applicableSubcategories && t.applicableSubcategories.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {t.applicableSubcategories.map((sub: string, idx: number) => (
+                      {t.applicableSubcategories?.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1" title={t.applicableSubcategories.join(", ")}>
+                          {t.applicableSubcategories.slice(0, 2).map((sub: string) => (
                             <span
-                              key={idx}
-                              className="inline-flex items-center text-[10px] font-medium text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200"
+                              key={sub}
+                              className="text-[10px] font-medium text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded max-w-[90px] truncate"
                             >
-                              ↳ {sub}
+                              {sub}
                             </span>
                           ))}
+                          {t.applicableSubcategories.length > 2 && (
+                            <span className="text-[10px] font-semibold text-slate-500">+{t.applicableSubcategories.length - 2}</span>
+                          )}
                         </div>
                       )}
                     </div>
                   </TableCell>
 
-                  {/* Test Discipline / Type */}
+                  {/* Test discipline + method */}
                   <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={`capitalize text-[11px] font-semibold px-2 py-0.5 shadow-2xs ${
-                        t.metadata?.type?.toLowerCase() === "chemical"
-                          ? "bg-amber-50 text-amber-800 border-amber-200"
-                          : t.metadata?.type?.toLowerCase() === "microbiological"
-                          ? "bg-purple-50 text-purple-800 border-purple-200"
-                          : t.metadata?.type?.toLowerCase() === "nutritional"
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                          : "bg-blue-50 text-blue-800 border-blue-200"
-                      }`}
-                    >
-                      {t.metadata?.type || 'Standard'}
-                    </Badge>
+                    <div className="flex flex-col gap-1">
+                      <Badge
+                        variant="outline"
+                        className={`w-fit capitalize text-[10px] font-semibold px-2 py-0 ${
+                          t.metadata?.type?.toLowerCase() === "chemical"
+                            ? "bg-amber-50 text-amber-800 border-amber-200"
+                            : t.metadata?.type?.toLowerCase() === "microbiological"
+                            ? "bg-purple-50 text-purple-800 border-purple-200"
+                            : t.metadata?.type?.toLowerCase() === "nutritional"
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                            : "bg-blue-50 text-blue-800 border-blue-200"
+                        }`}
+                      >
+                        {t.metadata?.type || "Standard"}
+                      </Badge>
+                      {t.metadata?.method && (
+                        <span className="font-mono text-[10px] text-muted-foreground max-w-[140px] truncate" title={t.metadata.method}>
+                          {t.metadata.method}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground max-w-[130px] truncate" title={t.metadata?.method}>
-                    {t.metadata?.method || 'N/A'}
-                  </TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center justify-center bg-slate-100 text-slate-700 rounded-full px-2.5 py-0.5 text-xs font-semibold">
+
+                  <TableCell className="text-center">
+                    <span className="inline-flex items-center justify-center bg-slate-100 text-slate-700 rounded-full min-w-[28px] px-2 py-0.5 text-xs font-semibold">
                       {t.metadata?.parameters?.length || 0}
                     </span>
                   </TableCell>
-                  <TableCell className="font-semibold text-emerald-600 dark:text-emerald-400">
-                    ₹{t.price?.toLocaleString() || 0}
-                  </TableCell>
-                  <TableCell className="font-semibold text-primary">
-                    {t.offerPrice ? `₹${t.offerPrice.toLocaleString()}` : '-'}
+
+                  {/* Price: offer price with the base price struck through */}
+                  <TableCell className="text-right whitespace-nowrap">
+                    {t.offerPrice && t.offerPrice < (t.price || 0) ? (
+                      <div className="flex flex-col items-end leading-tight">
+                        <span className="font-bold text-emerald-600">₹{t.offerPrice.toLocaleString("en-IN")}</span>
+                        <span className="text-[11px] text-slate-400 line-through">₹{t.price.toLocaleString("en-IN")}</span>
+                      </div>
+                    ) : (
+                      <span className="font-bold text-slate-900">₹{(t.offerPrice || t.price || 0).toLocaleString("en-IN")}</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

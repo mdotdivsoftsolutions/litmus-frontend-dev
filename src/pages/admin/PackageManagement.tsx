@@ -200,14 +200,13 @@ export default function PackageManagement() {
                     aria-label="Select all packages on this page"
                   />
                 </TableHead>
-                <TableHead className="w-24" title="Storefront priority: 1 is shown first">Priority</TableHead>
-                <TableHead>Package Name</TableHead>
+                <TableHead className="w-[72px]" title="Storefront priority: 1 is shown first. Click a badge to change it.">Priority</TableHead>
+                <TableHead className="min-w-[220px]">Package Name</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Tests Included</TableHead>
+                <TableHead className="text-center">Tests</TableHead>
                 <TableHead>TAT</TableHead>
-                <TableHead>Original Price</TableHead>
-                <TableHead>Litmus Price</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="text-right">Price</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -215,19 +214,18 @@ export default function PackageManagement() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
-                    <TableCell><Skeleton className="h-8 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-7 w-12 rounded-md" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-40" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-8 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-8 rounded-full mx-auto" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
                     <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto rounded-md" /></TableCell>
                   </TableRow>
                 ))
               ) : paginatedPackages.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <AlertTriangle className="h-8 w-8 text-muted-foreground/50" />
                       <span>No packages found matching your criteria.</span>
@@ -252,28 +250,32 @@ export default function PackageManagement() {
                   <TableCell>
                     <DisplayOrderCell entity="packages" id={p._id} value={p.displayOrder} invalidateKeys={["adminPackages"]} />
                   </TableCell>
-                  <TableCell className="font-medium max-w-[200px] truncate" title={p.name}>
-                    {p.name}
-                    {p.tag && <Badge variant="outline" className="ml-2 text-[9px] uppercase tracking-wider">{p.tag}</Badge>}
+                  <TableCell>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-semibold text-sm text-slate-900 max-w-[240px] truncate" title={p.name}>{p.name}</span>
+                      {p.tag && <Badge variant="outline" className="shrink-0 text-[9px] uppercase tracking-wider">{p.tag}</Badge>}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-md border border-primary/20">
+                    <span className="inline-flex items-center text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md max-w-[160px] truncate">
                       {p.categoryId?.name || p.category}
                     </span>
                   </TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center justify-center bg-muted rounded-full px-2.5 py-0.5 text-xs font-medium">
+                  <TableCell className="text-center">
+                    <span className="inline-flex items-center justify-center bg-muted rounded-full min-w-[28px] px-2 py-0.5 text-xs font-semibold">
                       {p.testCount}
                     </span>
                   </TableCell>
-                  <TableCell className="font-medium text-muted-foreground">
+                  <TableCell className="text-xs font-medium text-muted-foreground whitespace-nowrap">
                     {p.tat}
                   </TableCell>
-                  <TableCell className="font-medium text-slate-500 line-through">
-                    ₹{p.mrp?.toLocaleString() || 0}
-                  </TableCell>
-                  <TableCell className="font-medium text-emerald-600 dark:text-emerald-400">
-                    ₹{p.price?.toLocaleString() || 0}
+                  <TableCell className="text-right whitespace-nowrap">
+                    <div className="flex flex-col items-end leading-tight">
+                      <span className="font-bold text-emerald-600">₹{(p.price || 0).toLocaleString("en-IN")}</span>
+                      {p.mrp > (p.price || 0) && (
+                        <span className="text-[11px] text-slate-400 line-through">₹{p.mrp.toLocaleString("en-IN")}</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

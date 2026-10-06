@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { catalogOrderApi, CatalogEntity, DISPLAY_ORDER_MAX } from "@/lib/api/catalogOrder";
+import { cn } from "@/lib/utils";
 
 interface DisplayOrderCellProps {
   entity: CatalogEntity;
@@ -14,15 +14,20 @@ interface DisplayOrderCellProps {
 }
 
 /**
- * Inline editor for a catalog item's storefront priority (1 = shown first).
- * Saves on blur / Enter; an empty value clears the priority.
+ * Compact storefront-priority badge (1 = shown first). Click to edit inline;
+ * saves on Enter / blur, Esc cancels, and an empty value clears the priority.
  */
 export function DisplayOrderCell({ entity, id, value, invalidateKeys }: DisplayOrderCellProps) {
   const queryClient = useQueryClient();
+  const inputRef = useRef<HTMLInputElement>(null);
   const initial = value ? String(value) : "";
+  const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(initial);
 
   useEffect(() => setDraft(initial), [initial]);
+  useEffect(() => {
+    if (isEditing) inputRef.current?.select();
+  }, [isEditing]);
 
   const mutation = useMutation({
     mutationFn: (displayOrder: number | null) => catalogOrderApi.update(entity, [{ id, displayOrder }]),
@@ -37,6 +42,7 @@ export function DisplayOrderCell({ entity, id, value, invalidateKeys }: DisplayO
   });
 
   const commit = () => {
+    setIsEditing(false);
     const trimmed = draft.trim();
     if (trimmed === initial) return;
     if (!trimmed) {
@@ -52,27 +58,56 @@ export function DisplayOrderCell({ entity, id, value, invalidateKeys }: DisplayO
     mutation.mutate(parsed);
   };
 
-  return (
-    <div className="relative w-20" onClick={(e) => e.stopPropagation()}>
-      <Input
-        type="number"
+  if (mutation.isPending) {
+    return (
+      <span className="inline-flex h-7 w-12 items-center justify-center">
+        <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />
+      </span>
+    );
+  }
+
+  if (isEditing) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
         inputMode="numeric"
-        min={1}
-        max={DISPLAY_ORDER_MAX}
+        maxLength={6}
         value={draft}
         placeholder="—"
-        disabled={mutation.isPending}
         aria-label="Display priority"
-        title="Storefront priority: 1 is shown first. Leave empty for default (A→Z) order."
-        onChange={(e) => setDraft(e.target.value)}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => setDraft(e.target.value.replace(/\D/g, ""))}
         onBlur={commit}
         onKeyDown={(e) => {
-          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-          if (e.key === "Escape") setDraft(initial);
+          if (e.key === "Enter") commit();
+          if (e.key === "Escape") {
+            setDraft(initial);
+            setIsEditing(false);
+          }
         }}
-        className="h-8 text-xs text-center bg-white border-slate-200 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="h-7 w-12 rounded-md border border-primary bg-white text-center text-xs font-bold text-slate-900 outline-none ring-2 ring-primary/20"
       />
-      {mutation.isPending && <Loader2 className="absolute right-1.5 top-2 h-4 w-4 animate-spin text-slate-400" />}
-    </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        setIsEditing(true);
+      }}
+      title={value ? `Priority ${value} — click to change` : "No priority (default order) — click to set"}
+      className={cn(
+        "group inline-flex h-7 min-w-[48px] items-center justify-center gap-1 rounded-md px-2 text-xs font-bold transition-colors",
+        value
+          ? "bg-primary/10 text-primary hover:bg-primary/15"
+          : "border border-dashed border-slate-300 text-slate-400 hover:border-primary/60 hover:text-primary"
+      )}
+    >
+      {value ? `#${value}` : "Set"}
+      <Pencil className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-70" />
+    </button>
   );
 }
