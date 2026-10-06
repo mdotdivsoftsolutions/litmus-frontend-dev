@@ -136,7 +136,7 @@ export const adminApi = {
   },
 
   // --- Reviews ---
-  getReviews: async (params?: { page?: number; limit?: number }) => {
+  getReviews: async (params?: { page?: number; limit?: number; search?: string; rating?: string; visibility?: string }) => {
     const response = await apiClient.get('/reviews', { params });
     return response.data;
   },

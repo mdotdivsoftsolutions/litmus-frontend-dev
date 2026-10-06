@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -16,6 +16,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BulkDeleteBar } from "@/components/admin/BulkDeleteBar";
 import { useBulkSelection } from "@/hooks/use-bulk-selection";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export default function ReviewManagement() {
   const queryClient = useQueryClient();
@@ -35,31 +36,31 @@ export default function ReviewManagement() {
     variant?: "default" | "destructive";
   } | null>(null);
 
+  const debouncedSearch = useDebounce(search.trim(), 350);
+
+  // Filtering & paging happen on the server, so every page is complete and
+  // search covers all reviews (not just the ones already loaded).
+  const listParams = {
+    page,
+    limit,
+    search: debouncedSearch || undefined,
+    rating: ratingFilter !== "all" ? ratingFilter : undefined,
+    visibility: visibilityFilter !== "all" ? visibilityFilter : undefined,
+  };
   const { data: response, isLoading } = useQuery({
-    queryKey: ["adminReviews", page, limit],
-    queryFn: () => adminApi.getReviews({ page, limit })
+    queryKey: ["adminReviews", listParams],
+    queryFn: () => adminApi.getReviews(listParams),
+    placeholderData: keepPreviousData,
   });
 
-  const rawReviews = response?.data || [];
-  const total = response?.total || 0;
+  const paginatedReviews: any[] = response?.data || [];
+  const total: number = response?.total || 0;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
-  // Client-side filtering for fast interactive feedback
-  const filteredReviews = rawReviews.filter((r: any) => {
-    const textMatch = !search || 
-      (r.name && r.name.toLowerCase().includes(search.toLowerCase())) ||
-      (r.city && r.city.toLowerCase().includes(search.toLowerCase())) ||
-      (r.text && r.text.toLowerCase().includes(search.toLowerCase()));
-
-    const ratingMatch = ratingFilter === "all" || String(r.rating) === ratingFilter;
-    const visibilityMatch = visibilityFilter === "all" ||
-      (visibilityFilter === "visible" && r.isVisible !== false) ||
-      (visibilityFilter === "hidden" && r.isVisible === false);
-
-    return textMatch && ratingMatch && visibilityMatch;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredReviews.length / limit));
-  const paginatedReviews = filteredReviews.slice((page - 1) * limit, page * limit);
+  // After deletions the current page can fall past the end; step back to the last page.
+  useEffect(() => {
+    if (response && page > totalPages) setPage(totalPages);
+  }, [response, page, totalPages]);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => adminApi.deleteReview(id),
@@ -286,10 +287,10 @@ export default function ReviewManagement() {
         </div>
 
         {/* Pagination Section */}
-        {!isLoading && filteredReviews.length > 0 && (
+        {!isLoading && total > 0 && (
           <div className="flex items-center justify-between border-t border-border px-4 py-3 bg-slate-50/50">
             <p className="text-xs text-muted-foreground">
-              Showing <span className="font-medium text-foreground">{(page - 1) * limit + 1}</span> to <span className="font-medium text-foreground">{Math.min(page * limit, filteredReviews.length)}</span> of <span className="font-medium text-foreground">{filteredReviews.length}</span> reviews
+              Showing <span className="font-medium text-foreground">{(page - 1) * limit + 1}</span> to <span className="font-medium text-foreground">{Math.min(page * limit, total)}</span> of <span className="font-medium text-foreground">{total}</span> reviews
             </p>
             <div className="flex items-center gap-2">
               <Button

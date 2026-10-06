@@ -11,9 +11,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DisplayOrderCell } from "@/components/admin/catalog/DisplayOrderCell";
-import { DisplayOrderDrawer } from "@/components/admin/catalog/DisplayOrderDrawer";
 import { useDebounce } from "@/hooks/use-debounce";
-import { Plus, Search, Edit, Trash2, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Package as PackageIcon, Eye, IndianRupee, Tag, Info, CheckSquare, FileSpreadsheet, ListOrdered } from "lucide-react";
+import { Plus, Search, Edit, Trash2, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Package as PackageIcon, Eye, IndianRupee, Tag, Info, CheckSquare, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { packageApi } from "@/lib/api/package";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,7 +40,6 @@ export default function PackageManagement() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const [sort, setSort] = useState("newest");
-  const [isOrderDrawerOpen, setIsOrderDrawerOpen] = useState(false);
   const queryClient = useQueryClient();
   const debouncedSearch = useDebounce(search.trim(), 350);
 
@@ -125,17 +123,6 @@ export default function PackageManagement() {
         </div>
 
         <div className="flex items-center gap-2 self-start lg:self-auto">
-          {/* Display Order (Excel) */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsOrderDrawerOpen(true)}
-            className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold shadow-sm h-10 px-3.5 gap-2"
-          >
-            <ListOrdered className="h-4 w-4 text-primary" />
-            Display Order
-          </Button>
-
           {/* Bulk Import Button */}
           <Button
             type="button"
@@ -162,19 +149,12 @@ export default function PackageManagement() {
         onOpenChange={setIsBulkImportOpen}
         entityType="packages"
         title="Bulk Import Test Packages"
-        description="Upload an Excel sheet to bundle food tests into curated packages with custom pricing and features."
+        description="Upload an Excel sheet to bundle food tests into curated packages with custom pricing and features. Use the optional displayOrder column to set the website priority (1 = shown first)."
         templateFileName="3_Litmus_Packages_Bulk_Template.xlsx"
         templateDisplayName="3_Litmus_Packages_Bulk_Template.xlsx"
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["adminPackages"] });
         }}
-      />
-
-      <DisplayOrderDrawer
-        entity="packages"
-        open={isOrderDrawerOpen}
-        onOpenChange={setIsOrderDrawerOpen}
-        invalidateKeys={["adminPackages"]}
       />
 
       <Card className={cn("border border-border shadow-sm overflow-hidden bg-white transition-opacity", isFetching && !isLoading && "opacity-70")}>

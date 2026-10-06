@@ -11,12 +11,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { TestDetailSheet } from "@/components/admin/catalog/TestDetailSheet";
 import { AlphabetFilterBar } from "@/components/admin/catalog/AlphabetFilterBar";
 import { DisplayOrderCell } from "@/components/admin/catalog/DisplayOrderCell";
-import { DisplayOrderDrawer } from "@/components/admin/catalog/DisplayOrderDrawer";
 import { useDebounce } from "@/hooks/use-debounce";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Edit, Trash2, Filter, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Eye, Beaker, FileSpreadsheet, ListOrdered } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Filter, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Eye, Beaker, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { testApi } from "@/lib/api/test";
 import { BulkImportDrawer } from "@/components/admin/BulkImportDrawer";
@@ -46,7 +45,6 @@ export default function TestManagement() {
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const [letter, setLetter] = useState<string | null>(null);
   const [sort, setSort] = useState("name_asc");
-  const [isOrderDrawerOpen, setIsOrderDrawerOpen] = useState(false);
   const queryClient = useQueryClient();
   const debouncedSearch = useDebounce(search.trim(), 350);
 
@@ -173,17 +171,6 @@ export default function TestManagement() {
         </div>
 
         <div className="flex items-center gap-2 self-start lg:self-auto">
-          {/* Display Order (Excel) */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsOrderDrawerOpen(true)}
-            className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold shadow-sm h-10 px-3.5 gap-2"
-          >
-            <ListOrdered className="h-4 w-4 text-primary" />
-            Display Order
-          </Button>
-
           {/* Bulk Import Button */}
           <Button
             type="button"
@@ -210,19 +197,12 @@ export default function TestManagement() {
         onOpenChange={setIsBulkImportOpen}
         entityType="tests"
         title="Bulk Import Tests & Protocols"
-        description="Upload an Excel sheet to bulk create new tests, configure parameter thresholds, and calculate pricing automatically."
+        description="Upload an Excel sheet to bulk create or update tests, parameter thresholds and pricing. Use the optional displayOrder column to set the website priority (1 = shown first)."
         templateFileName="2_Litmus_Tests_Bulk_Template.xlsx"
         templateDisplayName="2_Litmus_Tests_Bulk_Template.xlsx"
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ["adminTests"] });
         }}
-      />
-
-      <DisplayOrderDrawer
-        entity="tests"
-        open={isOrderDrawerOpen}
-        onOpenChange={setIsOrderDrawerOpen}
-        invalidateKeys={["adminTests"]}
       />
 
       {/* A–Z quick filter */}
