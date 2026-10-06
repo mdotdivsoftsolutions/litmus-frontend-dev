@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -53,7 +53,15 @@ export function PortalLayout({ portal }: PortalLayoutProps) {
             ? "p-4 lg:p-6 overflow-hidden flex flex-col"
             : "overflow-y-auto p-4 lg:p-6"
         )}>
-          <Outlet />
+          <Suspense
+            fallback={
+              <div className="flex min-h-[40vh] items-center justify-center" role="status" aria-label="Loading page">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

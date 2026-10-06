@@ -49,7 +49,8 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
   const { data: statsResponse } = useQuery({
     queryKey: ["adminStats"],
     queryFn: adminApi.getStats,
-    refetchInterval: 30000,
+    refetchInterval: 2 * 60 * 1000,
+    staleTime: 60 * 1000,
   });
   const stats = statsResponse?.data || {};
 

@@ -83,9 +83,11 @@ export default function AdminBookingDetails() {
   });
   const [isUploading, setIsUploading] = useState(false);
 
+  // Fetch only this booking. The key sits under "adminBookings" so existing invalidations refresh it.
   const { data: response, isLoading } = useQuery({
-    queryKey: ["adminBookings"],
-    queryFn: () => adminApi.getBookings(),
+    queryKey: ["adminBookings", "detail", id],
+    queryFn: () => adminApi.getBookingById(id!),
+    enabled: !!id,
   });
 
   const { data: labsResponse } = useQuery({
@@ -94,8 +96,7 @@ export default function AdminBookingDetails() {
   });
   const labs = labsResponse?.data || [];
 
-  const rawBookings = response?.data || [];
-  const rawBooking = rawBookings.find((b: any) => b._id === id);
+  const rawBooking = response?.data;
 
   useEffect(() => {
     if (rawBooking) {

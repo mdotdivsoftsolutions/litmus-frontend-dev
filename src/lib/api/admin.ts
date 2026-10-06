@@ -11,6 +11,11 @@ export const adminApi = {
     return response.data;
   },
 
+  /** One booking with the same joins as the list (for the detail page). */
+  getBookingById: async (id: string) => {
+    const response = await apiClient.get(`/admin/bookings/${id}`);
+    return response.data;
+  },
   getBookings: async (params?: { status?: string; paymentStatus?: string; search?: string; startDate?: string; endDate?: string; page?: number; limit?: number }) => {
     const response = await apiClient.get('/admin/bookings', { params });
     return response.data;

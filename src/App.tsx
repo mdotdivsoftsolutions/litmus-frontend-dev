@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -11,37 +11,54 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute.tsx";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 
 // Admin
-import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
-import EmployeeManagement from "./pages/admin/EmployeeManagement.tsx";
-import UserManagement from "./pages/admin/UserManagement.tsx";
-import UserDetailsPage from "./pages/admin/UserDetailsPage.tsx";
-import LabManagement from "./pages/admin/LabManagement.tsx";
-import LabFormPage from "./pages/admin/LabFormPage.tsx";
-import AdminBookings from "./pages/admin/AdminBookings.tsx";
-import AdminBookingDetails from "./pages/admin/AdminBookingDetails.tsx";
-import CategoryManagement from "./pages/admin/CategoryManagement.tsx";
-import ProductManagement from "./pages/admin/ProductManagement.tsx";
-import ProductFormPage from "./pages/admin/ProductFormPage.tsx";
-import TestManagement from "./pages/admin/TestManagement.tsx";
-import TestFormPage from "./pages/admin/TestFormPage.tsx";
-import AdminPayments from "./pages/admin/AdminPayments.tsx";
-import AdminAnalytics from "./pages/admin/AdminAnalytics.tsx";
-import AdminReports from "./pages/admin/AdminReports.tsx";
-import ReviewManagement from "./pages/admin/ReviewManagement.tsx";
-import ReviewFormPage from "./pages/admin/ReviewFormPage.tsx";
-import AdminApprovals from "./pages/admin/AdminApprovals.tsx";
-import PackageManagement from "./pages/admin/PackageManagement.tsx";
-import PackageFormPage from "./pages/admin/PackageFormPage.tsx";
-import AdminSettings from "./pages/admin/AdminSettings.tsx";
-import AdminConsultations from "./pages/admin/AdminConsultations.tsx";
-import CategoryFormPage from "./pages/admin/CategoryFormPage.tsx";
-import LaboratoryDetailPage from "./pages/admin/LaboratoryDetailPage.tsx";
-import LiveSupportPage from "./pages/admin/LiveSupportPage.tsx";
-import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.tsx";
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.tsx"));
+const EmployeeManagement = lazy(() => import("./pages/admin/EmployeeManagement.tsx"));
+const UserManagement = lazy(() => import("./pages/admin/UserManagement.tsx"));
+const UserDetailsPage = lazy(() => import("./pages/admin/UserDetailsPage.tsx"));
+const LabManagement = lazy(() => import("./pages/admin/LabManagement.tsx"));
+const LabFormPage = lazy(() => import("./pages/admin/LabFormPage.tsx"));
+const AdminBookings = lazy(() => import("./pages/admin/AdminBookings.tsx"));
+const AdminBookingDetails = lazy(() => import("./pages/admin/AdminBookingDetails.tsx"));
+const CategoryManagement = lazy(() => import("./pages/admin/CategoryManagement.tsx"));
+const ProductManagement = lazy(() => import("./pages/admin/ProductManagement.tsx"));
+const ProductFormPage = lazy(() => import("./pages/admin/ProductFormPage.tsx"));
+const TestManagement = lazy(() => import("./pages/admin/TestManagement.tsx"));
+const TestFormPage = lazy(() => import("./pages/admin/TestFormPage.tsx"));
+const AdminPayments = lazy(() => import("./pages/admin/AdminPayments.tsx"));
+const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics.tsx"));
+const AdminReports = lazy(() => import("./pages/admin/AdminReports.tsx"));
+const ReviewManagement = lazy(() => import("./pages/admin/ReviewManagement.tsx"));
+const ReviewFormPage = lazy(() => import("./pages/admin/ReviewFormPage.tsx"));
+const AdminApprovals = lazy(() => import("./pages/admin/AdminApprovals.tsx"));
+const PackageManagement = lazy(() => import("./pages/admin/PackageManagement.tsx"));
+const PackageFormPage = lazy(() => import("./pages/admin/PackageFormPage.tsx"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings.tsx"));
+const AdminConsultations = lazy(() => import("./pages/admin/AdminConsultations.tsx"));
+const CategoryFormPage = lazy(() => import("./pages/admin/CategoryFormPage.tsx"));
+const LaboratoryDetailPage = lazy(() => import("./pages/admin/LaboratoryDetailPage.tsx"));
+const LiveSupportPage = lazy(() => import("./pages/admin/LiveSupportPage.tsx"));
+const AdminNotificationsPage = lazy(() => import("./pages/admin/AdminNotificationsPage.tsx"));
 import { SocketProvider } from "./context/SocketContext.tsx";
 
 
-const queryClient = new QueryClient();
+// Data younger than 30s is reused on mount / window focus instead of refetched every time.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30 * 1000,
+      gcTime: 5 * 60 * 1000,
+      retry: 1,
+    },
+  },
+});
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center" role="status" aria-label="Loading page">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
+  );
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -62,6 +79,7 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           <ErrorBoundary>
+            <Suspense fallback={<RouteFallback />}>
             <Routes>
             {/* Public Auth */}
             <Route path="/admin/login" element={<LoginPage role="admin" />} />
@@ -111,6 +129,7 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
           </ErrorBoundary>
         </BrowserRouter>
       </TooltipProvider>
