@@ -6,11 +6,13 @@ import { Button } from"@/components/ui/button";
 import { Input } from"@/components/ui/input";
 import { Label } from"@/components/ui/label";
 import { Textarea } from"@/components/ui/textarea";
-import { ArrowLeft, Upload, ImageIcon, Loader2, Plus, X, Tag } from "lucide-react";
+import { ArrowLeft, Upload, ImageIcon, Loader2, Plus, X, Tag, Beaker } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from"@/components/ui/skeleton";
 import { toast } from"sonner";
 import { categoryApi } from"@/lib/api/category";
+import { categoryTestsApi, CategoryTestsChanges } from "@/lib/api/categoryTests";
+import { CategoryTestsPicker } from "@/components/admin/catalog/CategoryTestsPicker";
 
 interface SubcategoryItem {
   _id?: string;
@@ -41,6 +43,7 @@ export default function CategoryFormPage() {
   });
   const [newSubcategoryName, setNewSubcategoryName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [testChanges, setTestChanges] = useState<CategoryTestsChanges>({ add: [], remove: [] });
 
   const { data: categoryData, isLoading } = useQuery({
     queryKey: ["category", id],
@@ -84,11 +87,27 @@ export default function CategoryFormPage() {
     });
   };
 
+  // Saves the category first, then links/unlinks tests (a new category needs its ID).
   const saveMutation = useMutation({
-    mutationFn: (data: CategoryFormData) => isEditing ? categoryApi.updateCategory(id!, data) : categoryApi.createCategory(data),
+    mutationFn: async (data: CategoryFormData) => {
+      const res = isEditing ? await categoryApi.updateCategory(id!, data) : await categoryApi.createCategory(data);
+      const categoryId: string | undefined = isEditing ? id : res.data?.data?._id;
+      const hasTestChanges = testChanges.add.length > 0 || testChanges.remove.length > 0;
+      if (categoryId && hasTestChanges) {
+        try {
+          await categoryTestsApi.update(categoryId, testChanges);
+        } catch (err: any) {
+          // The category itself is saved; surface the mapping failure separately.
+          toast.error(err?.response?.data?.message || "Category saved, but updating its tests failed. Please try again.");
+        }
+      }
+      return res;
+    },
     onSuccess: () => {
       toast.success(isEditing ? "Category updated successfully!" : "Category created successfully!");
       queryClient.invalidateQueries({ queryKey: ["adminCategories"] });
+      queryClient.invalidateQueries({ queryKey: ["adminTests"] });
+      queryClient.invalidateQueries({ queryKey: ["categoryTests"] });
       navigate("/admin/categories");
     },
     onError: (error: Error | any) => {
@@ -302,6 +321,21 @@ export default function CategoryFormPage() {
  </div>
  </CardContent>
  </Card>
+
+      {/* Tests mapped to this category */}
+      <Card className="border-0 shadow-md">
+        <CardHeader className="bg-muted/30 border-b border-border/50 pb-4">
+          <CardTitle className="text-xl flex items-center gap-2">
+            <Beaker className="h-5 w-5 text-primary" /> Tests in this Category
+          </CardTitle>
+          <CardDescription>
+            Tick the tests customers should see under this category. Tests already in the category are highlighted; untick to remove.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <CategoryTestsPicker categoryId={isEditing ? id! : null} onChange={setTestChanges} />
+        </CardContent>
+      </Card>
 
  <div className="flex justify-end items-center mt-6">
  <Button onClick={handleSave} disabled={saveMutation.isPending || isUploading} className="w-40 bg-primary hover:bg-primary-deep text-white shadow-md shadow-primary/20 font-bold">
