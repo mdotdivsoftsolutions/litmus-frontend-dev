@@ -222,7 +222,7 @@ export default function AdminSettings() {
       group: "Logistics & Facilities",
       items: [
         { id: "logistics", label: "Logistics & Pickup", singular: "Logistics Service", icon: Truck, count: (logisticsData?.data || []).length, desc: "Sample transport methods" },
-        { id: "courier-address", label: "Courier Dispatch Address", singular: "Address", icon: Building2, count: null, desc: "Litmus central sample intake address" },
+        { id: "courier-address", label: "Regional Offices", singular: "Office", icon: Building2, count: null, desc: "Address, phone & email shown at checkout per state" },
         { id: "infrastructure", label: "Lab Equipment", singular: "Equipment Template", icon: Microscope, count: (infrastructureData?.data || []).length, desc: "Accredited equipment templates" },
         { id: "activity-status", label: "Operational Status", singular: "Operational Status", icon: Settings2, count: (activityStatusData?.data || []).length, desc: "Workflow states & labels" },
         { id: "pickup", label: "Pickup Cities", singular: "Pickup City", icon: MapPin, count: null, desc: "Direct doorstep pickup zones" },
@@ -625,7 +625,7 @@ export default function AdminSettings() {
                 </div>
               )}
 
-              {/* 8b. Courier Dispatch Address */}
+              {/* 8b. Regional Offices (courier address per state) */}
               {activeTab === "courier-address" && (
                 <div className="p-1 sm:p-2">
                   <CourierAddressSettings />
