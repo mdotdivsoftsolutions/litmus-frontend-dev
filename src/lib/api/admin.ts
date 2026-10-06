@@ -61,6 +61,14 @@ export const adminApi = {
     return response.data;
   },
 
+  bulkDeleteLabs: async (ids: string[]) => {
+    const response = await apiClient.post('/admin/labs/bulk-delete', { ids });
+    return response.data;
+  },
+  bulkDeleteReviews: async (ids: string[]) => {
+    const response = await apiClient.post('/reviews/bulk-delete', { ids });
+    return response.data;
+  },
   bulkDeleteBookings: async (ids: string[]) => {
     const response = await apiClient.post('/admin/bookings/bulk-delete', { ids });
     return response.data;
@@ -174,8 +182,4 @@ export const adminApi = {
     const response = await apiClient.patch(`/admin/package/${id}/reject`, { reason });
     return response.data;
   },
-  getBookingInvoice: async (bookingId: string) => {
-    const response = await apiClient.get(`/booking/${bookingId}/invoice`);
-    return response.data;
-  }
 };

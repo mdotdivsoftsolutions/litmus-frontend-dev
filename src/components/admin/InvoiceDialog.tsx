@@ -1,10 +1,13 @@
-import React, { useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { adminApi } from "@/lib/api/admin";
-import { Download, Copy, AlertCircle, FileText, Loader2 } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { InvoiceUploadForm, InvoiceUploadValues } from "@/components/admin/InvoiceUploadForm";
+import { formatBytes } from "@/lib/utils/fileSize";
+import { invoiceApi, BookingInvoiceSummary } from "@/lib/api/invoice";
+import { AlertCircle, Download, Eye, FileText, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface InvoiceDialogProps {
@@ -13,370 +16,220 @@ interface InvoiceDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function InvoiceDialog({ bookingId, open, onOpenChange }: InvoiceDialogProps) {
-  const printRef = useRef<HTMLDivElement>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
+const errorMessage = (err: any, fallback: string) => err?.response?.data?.message || fallback;
 
+const formatDate = (value?: string | null) =>
+  value ? new Date(value).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+
+/**
+ * Invoices are issued manually by the accounts team: upload, view, replace or remove
+ * the tax invoice for a booking. The customer is emailed when an invoice is uploaded.
+ */
+export function InvoiceDialog({ bookingId, open, onOpenChange }: InvoiceDialogProps) {
+  const queryClient = useQueryClient();
+  const [isReplacing, setIsReplacing] = useState(false);
+  const [isRemoveConfirmOpen, setIsRemoveConfirmOpen] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [busyAction, setBusyAction] = useState<"view" | "download" | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const queryKey = ["bookingInvoice", bookingId];
   const { data: response, isLoading, error } = useQuery({
-    queryKey: ["bookingInvoice", bookingId],
-    queryFn: () => (bookingId ? adminApi.getBookingInvoice(bookingId) : null),
+    queryKey,
+    queryFn: () => invoiceApi.getSummary(bookingId as string),
     enabled: !!bookingId && open,
   });
+  const invoice: BookingInvoiceSummary | undefined = response?.data;
 
-  const invoice = response?.data;
+  // Release blob URLs so repeated previews don't leak memory.
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
-  const handleDownloadPdf = async () => {
-    if (!invoice || !printRef.current) return;
+  useEffect(() => {
+    if (!open) {
+      setPreviewUrl(null);
+      setIsReplacing(false);
+      setUploadProgress(0);
+    }
+  }, [open]);
+
+  const onInvoiceChanged = (summary: BookingInvoiceSummary) => {
+    queryClient.setQueryData(queryKey, { success: true, data: summary });
+    queryClient.invalidateQueries({ queryKey: ["adminBookings"] });
+    setPreviewUrl(null);
+    setIsReplacing(false);
+  };
+
+  const uploadMutation = useMutation({
+    mutationFn: (values: InvoiceUploadValues) => invoiceApi.upload(bookingId as string, values, setUploadProgress),
+    onMutate: () => setUploadProgress(0),
+    onSuccess: (res) => {
+      onInvoiceChanged(res.data);
+      toast.success("Invoice uploaded. The customer has been notified.");
+    },
+    onError: (err: any) => toast.error(errorMessage(err, "Failed to upload the invoice.")),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: () => invoiceApi.remove(bookingId as string),
+    onSuccess: (res) => {
+      onInvoiceChanged(res.data);
+      setIsRemoveConfirmOpen(false);
+      toast.success("Invoice removed.");
+    },
+    onError: (err: any) => toast.error(errorMessage(err, "Failed to remove the invoice.")),
+  });
+
+  const fetchBlobUrl = async () => URL.createObjectURL(await invoiceApi.download(bookingId as string));
+
+  const handleView = async () => {
     try {
-      setIsDownloading(true);
-      toast.info("Preparing PDF download...");
-
-      if (typeof window !== "undefined" && !(window as any).html2pdf) {
-        await new Promise<void>((resolve, reject) => {
-          const script = document.createElement("script");
-          script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-          script.onload = () => resolve();
-          script.onerror = () => reject(new Error("Could not load PDF library"));
-          document.head.appendChild(script);
-        });
-      }
-
-      const safeInvoiceNo = (invoice.invoiceNumber || "Invoice").replace(/[/\\?%*:|"<>]/g, "-");
-      const filename = `Invoice-${safeInvoiceNo}.pdf`;
-
-      const opt = {
-        margin: [6, 8, 6, 8],
-        filename: filename,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          scrollY: 0,
-          scrollX: 0,
-        },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        pagebreak: { mode: ["avoid-all", "css", "legacy"] },
-      };
-
-      await (window as any).html2pdf().set(opt).from(printRef.current).save();
-      toast.success("Invoice PDF downloaded successfully!");
-    } catch (err: any) {
-      console.error("PDF download error:", err);
-      toast.error("Failed to generate PDF. Please try again.");
+      setBusyAction("view");
+      setPreviewUrl(await fetchBlobUrl());
+    } catch {
+      toast.error("Could not open the invoice.");
     } finally {
-      setIsDownloading(false);
+      setBusyAction(null);
     }
   };
 
-  const copyInvoiceNumber = () => {
-    if (invoice?.invoiceNumber) {
-      navigator.clipboard.writeText(invoice.invoiceNumber);
-      toast.success("Invoice number copied to clipboard");
+  const handleDownload = async () => {
+    if (!invoice) return;
+    try {
+      setBusyAction("download");
+      const url = await fetchBlobUrl();
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = invoice.fileName || `Invoice-${invoice.invoiceNumber || (bookingId as string).slice(-6)}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      toast.error("Failed to download the invoice.");
+    } finally {
+      setBusyAction(null);
     }
   };
+
+  const isImage = invoice?.mimeType?.startsWith("image/");
+  const showUploadForm = invoice && (!invoice.available || isReplacing);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto p-0 border border-slate-200 shadow-2xl rounded-2xl">
-        <DialogHeader className="p-6 pb-4 border-b border-slate-100 bg-slate-50 sticky top-0 z-20 backdrop-blur-sm flex flex-row items-center justify-between">
-          <div>
-            <DialogTitle className="text-xl font-bold flex items-center gap-2 text-foreground">
-              <FileText className="h-5 w-5 text-[#007799]" />
-              Official Invoice
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className={previewUrl ? "sm:max-w-4xl max-h-[92vh] flex flex-col" : "sm:max-w-lg"}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-[#007799]" /> Tax Invoice
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-              Litmus Food Analytics LLP • Kerala (Code: 32)
+            <DialogDescription>
+              Upload the invoice issued by the accounts team. The customer can view and download it from their orders.
             </DialogDescription>
-          </div>
-          {invoice && (
-            <div className="flex items-center gap-2 pr-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={copyInvoiceNumber}
-                className="h-8 text-xs gap-1.5 bg-white border-slate-200"
-              >
-                <Copy className="h-3.5 w-3.5" />
-                Copy No.
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleDownloadPdf}
-                disabled={isDownloading}
-                className="h-8 text-xs gap-1.5 bg-[#007799] text-white hover:bg-[#00607c] shadow-xs font-semibold"
-              >
-                {isDownloading ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-3.5 w-3.5" />
-                    Download PDF
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
-        </DialogHeader>
+          </DialogHeader>
 
-        <div className="p-6 sm:p-10 bg-white">
-          {isLoading && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-start">
-                <Skeleton className="h-12 w-48" />
-                <Skeleton className="h-10 w-32" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-              <Skeleton className="h-48 w-full" />
+          {isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="h-5 w-1/2" />
+              <Skeleton className="h-24 w-full" />
             </div>
-          )}
-
-          {error && (
-            <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
-              <AlertCircle className="h-10 w-10 text-rose-500" />
-              <p className="text-sm font-semibold text-slate-800">Failed to load invoice</p>
-              <p className="text-xs text-muted-foreground max-w-sm">
-                {(error as any)?.response?.data?.message || "There was an error generating this invoice. Please check booking ID."}
-              </p>
+          ) : error ? (
+            <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <span>{errorMessage(error, "Failed to load invoice details.")}</span>
             </div>
-          )}
-
-          {invoice && (
-            <div
-              ref={printRef}
-              className="p-8 sm:p-10 max-w-[760px] mx-auto bg-white text-black font-serif text-[12px] leading-normal"
-              style={{ fontFamily: '"Times New Roman", Times, Georgia, serif' }}
-            >
-              {/* Header Top */}
-              <div className="flex justify-between items-start">
+          ) : showUploadForm ? (
+            <div className="space-y-3">
+              {!invoice.available && (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  No invoice has been issued for this booking yet.
+                </p>
+              )}
+              <InvoiceUploadForm
+                defaultInvoiceNumber={invoice.invoiceNumber}
+                defaultInvoiceDate={invoice.invoiceDate}
+                submitLabel={invoice.available ? "Replace Invoice" : "Upload Invoice"}
+                isSubmitting={uploadMutation.isPending}
+                progress={uploadProgress}
+                onSubmit={(values) => uploadMutation.mutate(values)}
+                onCancel={invoice.available ? () => setIsReplacing(false) : undefined}
+              />
+            </div>
+          ) : invoice ? (
+            <div className="flex flex-col gap-4 min-h-0">
+              <dl className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-white p-4 text-xs">
                 <div>
-                  <div className="text-[18px] font-bold text-black leading-tight mb-1">
-                    {invoice.company.legalName}
-                  </div>
-                  <div className="text-[11.5px] text-black leading-[1.35]">
-                    <div>{invoice.company.addressLine1}</div>
-                    <div>{invoice.company.addressLine2}</div>
-                    <div>Phone no.: {invoice.company.phone}</div>
-                    <div>Email: {invoice.company.email}</div>
-                    <div>GSTIN: {invoice.company.gstin}</div>
-                    <div>State: {invoice.company.state}</div>
-                  </div>
+                  <dt className="text-slate-500">Invoice No.</dt>
+                  <dd className="font-semibold text-slate-900 break-all">{invoice.invoiceNumber || "—"}</dd>
                 </div>
-
-                <div className="flex flex-col items-end">
-                  <img
-                    src="/logo.png"
-                    alt="Litmus Logo"
-                    className="h-12 object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = "none";
-                      const fallback = (e.target as HTMLElement).nextElementSibling;
-                      if (fallback) (fallback as HTMLElement).style.display = "block";
-                    }}
-                  />
-                  <div style={{ display: "none" }} className="text-right font-sans">
-                    <span className="text-2xl font-extrabold text-[#15803d] tracking-tight">litmus</span>
-                    <span className="block text-[9px] font-bold text-[#dc2626] uppercase -mt-1">Food Analytics LLP.</span>
-                  </div>
+                <div>
+                  <dt className="text-slate-500">Invoice Date</dt>
+                  <dd className="font-semibold text-slate-900">{formatDate(invoice.invoiceDate)}</dd>
                 </div>
-              </div>
+                <div className="col-span-2">
+                  <dt className="text-slate-500">File</dt>
+                  <dd className="font-medium text-slate-800 truncate" title={invoice.fileName || undefined}>
+                    {invoice.fileName}{" "}
+                    {invoice.size ? <span className="text-slate-400">({formatBytes(invoice.size)})</span> : null}
+                  </dd>
+                </div>
+                <div className="col-span-2">
+                  <dt className="text-slate-500">Uploaded</dt>
+                  <dd className="font-medium text-slate-800">{formatDate(invoice.uploadedAt)}</dd>
+                </div>
+              </dl>
 
-              {/* Blue Top Divider Line */}
-              <div className="border-t-2 border-[#0077b6] mt-4 mb-2"></div>
-
-              {/* Centered Title Banner */}
-              <div className="text-center mb-6">
-                <span className="text-[20px] text-[#0077b6] tracking-wide font-normal">
-                  Invoice
-                </span>
-              </div>
-
-              {/* Bill To & Invoice Details Grid */}
-              <div className="flex justify-between items-start text-[13px] leading-[1.45] mb-6">
-                <div className="max-w-[55%]">
-                  <div className="mb-2">Bill To</div>
-                  <div className="uppercase mb-1.5 font-normal">
-                    {invoice.customer.companyName || invoice.customer.name}
-                  </div>
-                  <div className="mb-2">{invoice.customer.address}</div>
-                  <div className="mb-1.5">Contact No.: {invoice.customer.phone}</div>
-                  {invoice.customer.gstin && (
-                    <div className="mb-1.5 font-mono">GSTIN: {invoice.customer.gstin}</div>
+              {previewUrl && (
+                <div className="flex-1 min-h-[50vh] rounded-xl border border-slate-200 overflow-hidden bg-slate-100">
+                  {isImage ? (
+                    <img src={previewUrl} alt="Invoice preview" className="w-full h-full object-contain" />
+                  ) : (
+                    <iframe src={previewUrl} title="Invoice preview" className="w-full h-full min-h-[50vh]" />
                   )}
-                  <div>State: {invoice.customer.state}</div>
                 </div>
+              )}
 
-                <div className="text-right">
-                  <div className="mb-2 font-normal">Invoice Details</div>
-                  <div>Invoice No.: {invoice.invoiceNumber}</div>
-                  <div>Date: {invoice.invoiceDate}</div>
-                  <div>Time: {invoice.invoiceTime}</div>
-                  <div>Place of Supply: {invoice.placeOfSupply}</div>
-                  <div>PO date: {invoice.poDate}</div>
-                  <div>PO number: {invoice.poNumber}</div>
-                </div>
-              </div>
-
-              {/* Items Table */}
-              <div className="my-4">
-                <table className="w-full text-[13px] border-collapse">
-                  <thead>
-                    <tr className="bg-[#007799] text-white text-[12px] font-normal">
-                      <th className="py-2 px-1.5 w-8 text-center font-normal">#</th>
-                      <th className="py-2 px-1.5 text-left font-normal">Item name</th>
-                      <th className="py-2 px-1.5 w-20 text-center font-normal">HSN/ SAC</th>
-                      <th className="py-2 px-1.5 w-16 text-center font-normal">Quantity</th>
-                      <th className="py-2 px-1.5 w-24 text-right font-normal">Price/ unit</th>
-                      <th className="py-2 px-1.5 w-28 text-right font-normal">GST</th>
-                      <th className="py-2 px-1.5 w-24 text-right font-normal">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoice.items.map((item: any) => (
-                      <tr key={item.slNo}>
-                        <td className="py-2.5 px-1.5 text-center align-top text-black">{item.slNo}</td>
-                        <td className="py-2.5 px-1.5 align-top text-black">
-                          <div className="font-bold">{item.itemName}</div>
-                          {item.itemSubtitle && (
-                            <div className="text-[12px] mt-0.5">{item.itemSubtitle}</div>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-1.5 text-center align-top text-black">{item.sacCode}</td>
-                        <td className="py-2.5 px-1.5 text-center align-top text-black">{item.quantity}</td>
-                        <td className="py-2.5 px-1.5 text-right align-top text-black">
-                          ₹ {item.pricePerUnit?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                        <td className="py-2.5 px-1.5 text-right align-top text-black">
-                          ₹ {item.gstAmount?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({item.gstRate?.toFixed(1)}%)
-                        </td>
-                        <td className="py-2.5 px-1.5 text-right align-top text-black font-normal">
-                          ₹ {item.totalAmount?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                    ))}
-                    <tr className="border-t border-b border-black font-bold text-[13px]">
-                      <td className="py-2 px-1.5"></td>
-                      <td className="py-2 px-1.5 text-black font-bold">Total</td>
-                      <td className="py-2 px-1.5"></td>
-                      <td className="py-2 px-1.5"></td>
-                      <td className="py-2 px-1.5"></td>
-                      <td className="py-2 px-1.5 text-right text-black font-bold">
-                        ₹ {invoice.totals.totalGstAmount?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-                      <td className="py-2 px-1.5 text-right text-black font-bold">
-                        ₹ {invoice.totals.grandTotal?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Middle Section: Words, Terms & Right Financial Summary */}
-              <div className="flex justify-between items-start gap-6 my-4 pt-1">
-                <div className="flex-1 text-[12px]">
-                  <div className="font-bold text-[12.5px] text-black mb-1">
-                    Invoice Amount In Words
-                  </div>
-                  <div className="text-black mb-4 leading-normal">{invoice.totals.amountInWords}</div>
-
-                  <div className="font-bold text-[12.5px] text-black mb-1">
-                    Terms And Conditions
-                  </div>
-                  <div className="text-black text-[11.5px] leading-[1.4]">
-                    {invoice.termsAndConditions?.map((tc: string, i: number) => (
-                      <div key={i} className="mb-1">{tc}</div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="w-72 text-[12px]">
-                  <table className="w-full border-collapse">
-                    <tbody>
-                      <tr>
-                        <td className="py-0.5 text-black">Sub Total</td>
-                        <td className="py-0.5 text-right text-black">
-                          ₹ {invoice.totals.subTotal?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="py-0.5 text-black">SGST@{invoice.totals.sgstRate?.toFixed(1)}%</td>
-                        <td className="py-0.5 text-right text-black">
-                          ₹ {invoice.totals.sgstAmount?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="py-0.5 text-black">CGST@{invoice.totals.cgstRate?.toFixed(1)}%</td>
-                        <td className="py-0.5 text-right text-black">
-                          ₹ {invoice.totals.cgstAmount?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                      <tr className="bg-[#007799] text-white font-bold">
-                        <td className="py-1 px-1.5">Total</td>
-                        <td className="py-1 px-1.5 text-right">
-                          ₹ {invoice.totals.grandTotal?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="py-0.5 text-black">Received</td>
-                        <td className="py-0.5 text-right text-black">
-                          ₹ {invoice.totals.receivedAmount?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="py-0.5 text-black">Balance</td>
-                        <td className="py-0.5 text-right text-black">
-                          ₹ {invoice.totals.balanceAmount?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="py-0.5 text-black">Payment Mode</td>
-                        <td className="py-0.5 text-right text-black">
-                          {invoice.paymentMode}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Bottom Section: Pay To & Signatory */}
-              <div className="flex justify-between items-start pt-4 mt-6 text-[11.5px] leading-[1.45]">
-                <div className="max-w-[55%] text-black">
-                  <div className="font-bold text-[12.5px] text-black mb-1">Pay To:</div>
-                  <div>Bank Name: {invoice.company.bankName}</div>
-                  <div>Bank Account No.: {invoice.company.bankAccountNo}</div>
-                  <div>Bank IFSC code: {invoice.company.bankIfsc}</div>
-                  <div>Account Holder&apos;s Name: {invoice.company.accountHolderName}</div>
-                </div>
-
-                <div className="text-right w-60">
-                  <div className="font-bold text-[12px] text-black mb-1">
-                    For: {invoice.company.legalName}
-                  </div>
-                  <div className="my-1 flex justify-end">
-                    <img
-                      src="/signature.png"
-                      alt="Signature"
-                      className="h-10 object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = "none";
-                      }}
-                    />
-                  </div>
-                  <div className="text-[11.5px] text-black">Authorized Signatory</div>
-                </div>
+              <div className="flex flex-wrap gap-2">
+                {!previewUrl && (
+                  <Button variant="outline" className="flex-1 gap-2" onClick={handleView} disabled={busyAction !== null}>
+                    {busyAction === "view" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+                    View
+                  </Button>
+                )}
+                <Button variant="outline" className="flex-1 gap-2" onClick={handleDownload} disabled={busyAction !== null}>
+                  {busyAction === "download" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                  Download
+                </Button>
+                <Button variant="outline" className="flex-1 gap-2" onClick={() => setIsReplacing(true)}>
+                  <RefreshCw className="h-4 w-4" /> Replace
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2 text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+                  onClick={() => setIsRemoveConfirmOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4" /> Remove
+                </Button>
               </div>
             </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={isRemoveConfirmOpen}
+        onOpenChange={setIsRemoveConfirmOpen}
+        title="Remove invoice?"
+        description="The customer will no longer be able to view or download this invoice. You can upload a new one at any time."
+        confirmText="Remove"
+        variant="destructive"
+        loading={removeMutation.isPending}
+        onConfirm={() => removeMutation.mutate()}
+      />
+    </>
   );
 }
-

@@ -14,6 +14,9 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Settings2, Edit, Trash2, Filter, MoreVertical, ImageIcon, ChevronLeft, ChevronRight, Eye, Package } from "lucide-react";
 import { productApi } from "@/lib/api/product";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BulkDeleteBar } from "@/components/admin/BulkDeleteBar";
+import { useBulkSelection } from "@/hooks/use-bulk-selection";
 import { testApi } from "@/lib/api/test";
 import { toast } from "sonner";
 
@@ -38,6 +41,7 @@ export default function ProductManagement() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const selection = useBulkSelection();
   const queryClient = useQueryClient();
 
   const { data: productsData, isLoading } = useQuery({
@@ -136,6 +140,13 @@ export default function ProductManagement() {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
+  <TableHead className="w-12 text-center">
+                  <Checkbox
+                    checked={selection.isPageSelected(paginatedProducts.map((p) => p._id))}
+                    onCheckedChange={(checked) => selection.togglePage(paginatedProducts.map((p) => p._id), !!checked)}
+                    aria-label="Select all on this page"
+                  />
+                </TableHead>
                 <TableHead>Product</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Tests</TableHead>
@@ -147,6 +158,7 @@ export default function ProductManagement() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
+                    <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Skeleton className="h-10 w-10 rounded-md" />
@@ -161,14 +173,21 @@ export default function ProductManagement() {
                 ))
               ) : paginatedProducts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No products found.
                   </TableCell>
                 </TableRow>
               ) : (
                 paginatedProducts.map((p) => (
-                  <TableRow key={p._id} className="hover:bg-muted/30">
-                    <TableCell>
+                  <TableRow key={p._id} className={selection.isSelected(p._id) ? "bg-primary/5" : "hover:bg-muted/30"}>
+                    <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selection.isSelected(p._id)}
+                      onCheckedChange={(checked) => selection.toggle(p._id, !!checked)}
+                      aria-label={`Select ${p.name}`}
+                    />
+                  </TableCell>
+                  <TableCell>
                       <div className="flex items-center gap-3">
                         {p.imageUrl ? (
                           <img src={p.imageUrl} alt={p.name} className="h-10 w-10 rounded-md object-cover border border-border" />
@@ -348,6 +367,14 @@ export default function ProductManagement() {
         onConfirm={handleDelete}
         confirmText={deleteMutation.isPending ? "Deleting..." : "Delete"}
         variant="destructive"
+      />
+
+      <BulkDeleteBar
+        selectedIds={selection.selectedIds}
+        onClear={selection.clear}
+        entityLabel="products"
+        deleteFn={productApi.bulkDeleteProducts}
+        invalidateKeys={["adminProducts"]}
       />
     </div>
   );

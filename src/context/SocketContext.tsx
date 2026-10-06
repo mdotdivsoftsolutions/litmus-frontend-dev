@@ -345,6 +345,16 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       toast.dismiss(`chat_toast_${data.sessionId}`);
     });
 
+    // ── Request Missed (no specialist answered) ─────────────────────────────
+    newSocket.on("missed_chat_created", (data: { sessionId: string; contact?: { name?: string; phone?: string } }) => {
+      const who = data.contact?.name || data.contact?.phone || "a customer";
+      toast.warning(`Missed live-chat request from ${who}`, {
+        id: `missed_toast_${data.sessionId}`,
+        description: "Follow up from Live Support → Missed Requests.",
+        duration: 10000,
+      });
+    });
+
     // ── Session State Updated ───────────────────────────────────────────────
     newSocket.on("chat_session_updated", (data: { sessionId: string; status: string }) => {
       if (data.status !== "QUEUED") {

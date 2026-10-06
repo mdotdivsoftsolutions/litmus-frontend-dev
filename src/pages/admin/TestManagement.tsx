@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { TestDetailSheet } from "@/components/admin/catalog/TestDetailSheet";
+import { AlphabetFilterBar } from "@/components/admin/catalog/AlphabetFilterBar";
+import { DisplayOrderCell } from "@/components/admin/catalog/DisplayOrderCell";
+import { DisplayOrderDrawer } from "@/components/admin/catalog/DisplayOrderDrawer";
+import { useDebounce } from "@/hooks/use-debounce";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Edit, Trash2, Filter, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Eye, Tag, Beaker, FileText, CheckCircle2, IndianRupee, FileSpreadsheet, Clock, Sparkles, Layers, FolderTree } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Filter, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Eye, Beaker, FileSpreadsheet, ListOrdered } from "lucide-react";
 import { toast } from "sonner";
 import { testApi } from "@/lib/api/test";
 import { BulkImportDrawer } from "@/components/admin/BulkImportDrawer";
@@ -19,6 +24,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
+
+const SORT_OPTIONS = [
+  { value: "priority", label: "Display priority" },
+  { value: "name_asc", label: "Name (A → Z)" },
+  { value: "name_desc", label: "Name (Z → A)" },
+  { value: "newest", label: "Newest first" },
+  { value: "price_asc", label: "Price (low → high)" },
+  { value: "price_desc", label: "Price (high → low)" },
+];
 
 export default function TestManagement() {
   const [search, setSearch] = useState("");
@@ -30,12 +44,32 @@ export default function TestManagement() {
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
+  const [letter, setLetter] = useState<string | null>(null);
+  const [sort, setSort] = useState("name_asc");
+  const [isOrderDrawerOpen, setIsOrderDrawerOpen] = useState(false);
   const queryClient = useQueryClient();
+  const debouncedSearch = useDebounce(search.trim(), 350);
 
-  const { data: testsData, isLoading } = useQuery({
-    queryKey: ["adminTests"],
-    queryFn: testApi.getTests,
+  // Server-side filtering & pagination keeps the page fast for large catalogs.
+  const filterParams = {
+    search: debouncedSearch || undefined,
+    type: typeFilter !== "all" ? typeFilter : undefined,
+  };
+  const listParams = { ...filterParams, startsWith: letter || undefined, sort, page: currentPage, limit: ITEMS_PER_PAGE };
+
+  const { data: testsData, isLoading, isFetching } = useQuery({
+    queryKey: ["adminTests", "list", listParams],
+    queryFn: () => testApi.getTests(listParams),
+    placeholderData: keepPreviousData,
   });
+
+  const { data: letterCounts } = useQuery({
+    queryKey: ["adminTests", "letters", filterParams],
+    queryFn: async () => (await testApi.getLetterCounts(filterParams)).data as Record<string, number>,
+    staleTime: 30 * 1000,
+  });
+
+  const resetPage = () => setCurrentPage(1);
 
   const deleteMutation = useMutation({
     mutationFn: testApi.deleteTest,
@@ -62,19 +96,9 @@ export default function TestManagement() {
     }
   });
 
-  const tests = (testsData?.data || []).slice().sort((a: any, b: any) => (a.testName || '').localeCompare(b.testName || ''));
-  
-  const filtered = tests.filter((t: any) => {
-    const matchesSearch = !search || t.testName?.toLowerCase().includes(search.toLowerCase());
-    const matchesType = typeFilter === "all" || t.metadata?.type === typeFilter;
-    return matchesSearch && matchesType;
-  });
-
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginatedTests = filtered.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const paginatedTests: any[] = testsData?.data || [];
+  const totalTests: number = testsData?.total ?? 0;
+  const totalPages: number = testsData?.pages ?? 1;
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 mx-auto">
@@ -100,7 +124,7 @@ export default function TestManagement() {
               value={search} 
               onChange={(e) => {
                 setSearch(e.target.value);
-                setCurrentPage(1);
+                resetPage();
               }} 
             />
           </div>
@@ -116,7 +140,7 @@ export default function TestManagement() {
               <div className="mt-6 space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-800">Test Discipline / Type</label>
-                  <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); resetPage(); }}>
                     <SelectTrigger className="bg-white border border-slate-200 shadow-sm"><SelectValue placeholder="All Types" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Types</SelectItem>
@@ -129,14 +153,37 @@ export default function TestManagement() {
                 </div>
                 <div className="flex gap-2 pt-4">
                   <Button className="flex-1 bg-primary hover:bg-primary/90 text-white" onClick={() => setShowFilters(false)}>Apply</Button>
-                  <Button variant="outline" className="flex-1" onClick={() => { setTypeFilter("all"); setShowFilters(false); }}>Clear</Button>
+                  <Button variant="outline" className="flex-1" onClick={() => { setTypeFilter("all"); resetPage(); setShowFilters(false); }}>Clear</Button>
                 </div>
               </div>
             </SheetContent>
           </Sheet>
+
+          {/* Sort */}
+          <Select value={sort} onValueChange={(v) => { setSort(v); resetPage(); }}>
+            <SelectTrigger className="w-[170px] bg-white border border-slate-200 shadow-sm h-10 text-xs" aria-label="Sort tests">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex items-center gap-2 self-start lg:self-auto">
+          {/* Display Order (Excel) */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsOrderDrawerOpen(true)}
+            className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold shadow-sm h-10 px-3.5 gap-2"
+          >
+            <ListOrdered className="h-4 w-4 text-primary" />
+            Display Order
+          </Button>
+
           {/* Bulk Import Button */}
           <Button
             type="button"
@@ -171,7 +218,21 @@ export default function TestManagement() {
         }}
       />
 
-      <Card className="border border-border shadow-sm overflow-hidden bg-white">
+      <DisplayOrderDrawer
+        entity="tests"
+        open={isOrderDrawerOpen}
+        onOpenChange={setIsOrderDrawerOpen}
+        invalidateKeys={["adminTests"]}
+      />
+
+      {/* A–Z quick filter */}
+      <AlphabetFilterBar
+        value={letter}
+        counts={letterCounts}
+        onChange={(next) => { setLetter(next); resetPage(); }}
+      />
+
+      <Card className={cn("border border-border shadow-sm overflow-hidden bg-white transition-opacity", isFetching && !isLoading && "opacity-70")}>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -194,6 +255,7 @@ export default function TestManagement() {
                     aria-label="Select all tests on this page"
                   />
                 </TableHead>
+                <TableHead className="w-24" title="Storefront priority: 1 is shown first">Priority</TableHead>
                 <TableHead>Test Name</TableHead>
                 <TableHead>Creator</TableHead>
                 <TableHead>Category / Subcategory</TableHead>
@@ -210,6 +272,7 @@ export default function TestManagement() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto bg-muted/60" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-16 bg-muted/60" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-32 bg-muted/60" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-20 rounded-full bg-muted/60" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-28 bg-muted/60" /></TableCell>
@@ -221,9 +284,9 @@ export default function TestManagement() {
                     <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto rounded-md bg-muted/60" /></TableCell>
                   </TableRow>
                 ))
-              ) : filtered.length === 0 ? (
+              ) : paginatedTests.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
                        <AlertTriangle className="h-8 w-8 text-muted-foreground/50" />
                        <span>No test protocols found matching your criteria.</span>
@@ -244,6 +307,9 @@ export default function TestManagement() {
                       }}
                       aria-label={`Select ${t.testName}`}
                     />
+                  </TableCell>
+                  <TableCell>
+                    <DisplayOrderCell entity="tests" id={t._id} value={t.displayOrder} invalidateKeys={["adminTests"]} />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
@@ -380,10 +446,10 @@ export default function TestManagement() {
           </Table>
         </div>
 
-        {!isLoading && filtered.length > 0 && (
+        {!isLoading && totalTests > 0 && (
           <div className="flex items-center justify-between border-t border-border px-4 py-3 bg-muted/20">
             <p className="text-sm text-muted-foreground">
-              Showing <span className="font-medium text-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}</span> of <span className="font-medium text-foreground">{filtered.length}</span> tests
+              Showing <span className="font-medium text-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, totalTests)}</span> of <span className="font-medium text-foreground">{totalTests}</span> tests
             </p>
             <div className="flex items-center gap-2">
               <Button
@@ -412,218 +478,7 @@ export default function TestManagement() {
         )}
       </Card>
 
-      {/* Redesigned Test Detail Sheet */}
-      <Sheet open={!!selectedTest} onOpenChange={(open) => !open && setSelectedTest(null)}>
-        <SheetContent className="flex flex-col sm:max-w-lg w-full p-0 bg-white">
-          {selectedTest && (
-            <>
-              {/* Header */}
-              <div className="p-6 border-b border-border bg-slate-50/70">
-                <div className="flex items-start gap-4">
-                  <div className="h-14 w-14 rounded-2xl border border-slate-200/90 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
-                    {selectedTest.imageUrl || selectedTest.icon ? (
-                      <img
-                        src={selectedTest.imageUrl || selectedTest.icon}
-                        alt={selectedTest.testName}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                        <Beaker className="h-7 w-7" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <Badge variant={selectedTest.creatorType === 'LAB' ? "secondary" : "default"} className="text-[10px] h-5">
-                        {selectedTest.creatorType === 'LAB' ? "Personalized (Lab)" : "Platform (Admin)"}
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className={`capitalize text-[10px] font-bold px-2 h-5 ${
-                          selectedTest.metadata?.type?.toLowerCase() === "chemical"
-                            ? "bg-amber-50 text-amber-800 border-amber-200"
-                            : selectedTest.metadata?.type?.toLowerCase() === "microbiological"
-                            ? "bg-purple-50 text-purple-800 border-purple-200"
-                            : selectedTest.metadata?.type?.toLowerCase() === "nutritional"
-                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                            : "bg-blue-50 text-blue-800 border-blue-200"
-                        }`}
-                      >
-                        {selectedTest.metadata?.type || 'Standard'}
-                      </Badge>
-                      {selectedTest.isPopular && (
-                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] h-5">
-                          Popular
-                        </Badge>
-                      )}
-                    </div>
-                    <SheetTitle className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
-                      {selectedTest.testName}
-                    </SheetTitle>
-                  </div>
-                </div>
-              </div>
-
-              {/* Scrollable Content Body */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-5">
-                {/* 1. Category & Subcategory Card */}
-                <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 space-y-2.5">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    <FolderTree className="h-3.5 w-3.5 text-primary" />
-                    <span>Category & Subcategory Mapping</span>
-                  </div>
-                  
-                  <div className="flex flex-wrap items-center gap-2 text-xs">
-                    {selectedTest.isApplicableToAll ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
-                        <Layers className="h-3.5 w-3.5 text-slate-500" />
-                        Applicable to All Categories
-                      </span>
-                    ) : selectedTest.applicableCategories && selectedTest.applicableCategories.length > 0 ? (
-                      selectedTest.applicableCategories.map((c: any, idx: number) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20"
-                        >
-                          <Layers className="h-3.5 w-3.5" />
-                          {typeof c === 'string' ? c : c.name}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-muted-foreground italic">General Category</span>
-                    )}
-
-                    {selectedTest.applicableSubcategories && selectedTest.applicableSubcategories.length > 0 && (
-                      selectedTest.applicableSubcategories.map((sub: string, idx: number) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center text-xs font-medium text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs"
-                        >
-                          ↳ {sub}
-                        </span>
-                      ))
-                    )}
-                  </div>
-                </div>
-
-                {/* 2. Pricing Overview Card */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs">
-                    <p className="text-muted-foreground text-xs font-medium mb-1 flex items-center gap-1">
-                      <IndianRupee className="h-3.5 w-3.5 text-slate-400" /> Base Price
-                    </p>
-                    <p className="font-extrabold text-xl text-slate-900">
-                      ₹{selectedTest.price?.toLocaleString() || 0}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/40 p-4 shadow-2xs">
-                    <p className="text-emerald-700 text-xs font-medium mb-1 flex items-center gap-1">
-                      <Tag className="h-3.5 w-3.5 text-emerald-600" /> Offer Price
-                    </p>
-                    <p className="font-extrabold text-xl text-emerald-600">
-                      {selectedTest.offerPrice ? `₹${selectedTest.offerPrice.toLocaleString()}` : "Standard Rate"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 3. Details & Metadata Specifications */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <FileText className="h-3.5 w-3.5 text-primary" /> Test Specifications
-                  </h4>
-                  <div className="rounded-xl border border-slate-200/80 bg-white divide-y divide-slate-100 overflow-hidden shadow-2xs text-xs">
-                    <div className="flex justify-between items-center p-3">
-                      <span className="text-slate-500 font-medium">Classification</span>
-                      <span className="font-bold text-slate-900 capitalize">{selectedTest.metadata?.type || 'Standard'}</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3">
-                      <span className="text-slate-500 font-medium">FSSAI / Reference Method</span>
-                      <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded text-[11px] max-w-[240px] truncate" title={selectedTest.metadata?.method}>
-                        {selectedTest.metadata?.method || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center p-3">
-                      <span className="text-slate-500 font-medium">Turn Around Time (TAT)</span>
-                      <span className="font-bold text-slate-900 flex items-center gap-1">
-                        <Clock className="h-3 w-3 text-slate-400" />
-                        {selectedTest.turnAroundTime || '24-48 Hours'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 4. Description */}
-                {selectedTest.description && (
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                      Description & Scope
-                    </h4>
-                    <div className="rounded-xl bg-slate-50 p-4 border border-slate-200 text-xs text-slate-700 leading-relaxed">
-                      {selectedTest.description}
-                    </div>
-                  </div>
-                )}
-
-                {/* 5. Parameters Section */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                      <Beaker className="h-3.5 w-3.5 text-primary" />
-                      Parameters ({selectedTest.metadata?.parameters?.length || 0})
-                    </h4>
-                  </div>
-
-                  {selectedTest.metadata?.parameters?.length > 0 ? (
-                    <div className="rounded-xl border border-slate-200/80 bg-white overflow-hidden shadow-2xs">
-                      <table className="w-full text-xs text-left">
-                        <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] border-b border-slate-200/80">
-                          <tr>
-                            <th className="px-3.5 py-2.5">Parameter</th>
-                            <th className="px-3.5 py-2.5">Unit</th>
-                            <th className="px-3.5 py-2.5">Acceptable Limit</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {selectedTest.metadata.parameters.map((p: any, i: number) => (
-                            <tr key={i} className="hover:bg-slate-50/80 transition-colors">
-                              <td className="px-3.5 py-2.5 font-bold text-slate-800">{p.name}</td>
-                              <td className="px-3.5 py-2.5 text-slate-600">{p.unit || '-'}</td>
-                              <td className="px-3.5 py-2.5 font-mono text-slate-700">{p.acceptableLimit || p.maxLimit || '-'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="p-4 text-center rounded-xl border border-border border-dashed text-xs text-muted-foreground">
-                      No parameters defined.
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Sticky Footer */}
-              <div className="p-4 border-t border-border bg-white shadow-lg flex items-center justify-between gap-3 shrink-0">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setSelectedTest(null)}
-                  className="border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs h-10 px-4"
-                >
-                  Close
-                </Button>
-                <Button className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold h-10 text-xs sm:text-sm gap-2 shadow-sm" asChild>
-                  <Link to={`/admin/tests/${selectedTest._id}/edit`}>
-                    <Edit className="h-4 w-4" /> Edit Test Protocol
-                  </Link>
-                </Button>
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      <TestDetailSheet test={selectedTest} onClose={() => setSelectedTest(null)} />
 
       <ConfirmDialog 
         open={!!testToDelete}

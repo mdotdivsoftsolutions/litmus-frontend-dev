@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, Search, Edit, Trash2, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Package as PackageIcon, Eye, IndianRupee, Tag, Info, CheckSquare, FileSpreadsheet } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DisplayOrderCell } from "@/components/admin/catalog/DisplayOrderCell";
+import { DisplayOrderDrawer } from "@/components/admin/catalog/DisplayOrderDrawer";
+import { useDebounce } from "@/hooks/use-debounce";
+import { Plus, Search, Edit, Trash2, AlertTriangle, MoreVertical, ChevronLeft, ChevronRight, Package as PackageIcon, Eye, IndianRupee, Tag, Info, CheckSquare, FileSpreadsheet, ListOrdered } from "lucide-react";
 import { toast } from "sonner";
 import { packageApi } from "@/lib/api/package";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +23,15 @@ import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 10;
 
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest first" },
+  { value: "priority", label: "Display priority" },
+  { value: "name_asc", label: "Name (A → Z)" },
+  { value: "name_desc", label: "Name (Z → A)" },
+  { value: "price_asc", label: "Price (low → high)" },
+  { value: "price_desc", label: "Price (high → low)" },
+];
+
 export default function PackageManagement() {
   const [search, setSearch] = useState("");
   const [packageToDelete, setPackageToDelete] = useState<string | null>(null);
@@ -27,11 +40,17 @@ export default function PackageManagement() {
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
+  const [sort, setSort] = useState("newest");
+  const [isOrderDrawerOpen, setIsOrderDrawerOpen] = useState(false);
   const queryClient = useQueryClient();
+  const debouncedSearch = useDebounce(search.trim(), 350);
 
-  const { data: packagesData, isLoading } = useQuery({
-    queryKey: ["adminPackages"],
-    queryFn: () => packageApi.getPackages({ limit: 1000 }),
+  // Server-side search & pagination (the API caps a page at 100 items).
+  const listParams = { search: debouncedSearch || undefined, sort, page: currentPage, limit: ITEMS_PER_PAGE };
+  const { data: packagesData, isLoading, isFetching } = useQuery({
+    queryKey: ["adminPackages", "list", listParams],
+    queryFn: () => packageApi.getPackages(listParams),
+    placeholderData: keepPreviousData,
   });
 
   const deleteMutation = useMutation({
@@ -60,21 +79,9 @@ export default function PackageManagement() {
     }
   });
 
-  const packagesList = Array.isArray(packagesData?.data) ? packagesData.data : (packagesData?.data?.data || []);
-  const packages = packagesList.slice().sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-
-  const filtered = packages.filter((p: any) => {
-    const matchesSearch = !search ||
-      p.name?.toLowerCase().includes(search.toLowerCase()) ||
-      p.category?.toLowerCase().includes(search.toLowerCase());
-    return matchesSearch;
-  });
-
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginatedPackages = filtered.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const paginatedPackages: any[] = Array.isArray(packagesData?.data) ? packagesData.data : [];
+  const totalPackages: number = packagesData?.total ?? 0;
+  const totalPages: number = packagesData?.pages ?? 1;
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 mx-auto">
@@ -90,6 +97,7 @@ export default function PackageManagement() {
 
       {/* Single-Line Controls: Search + Bulk Import + Add Package Button */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="flex flex-1 flex-wrap items-center gap-2">
         <div className="relative flex-1 sm:min-w-[260px] max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -103,7 +111,31 @@ export default function PackageManagement() {
           />
         </div>
 
+          {/* Sort */}
+          <Select value={sort} onValueChange={(v) => { setSort(v); setCurrentPage(1); }}>
+            <SelectTrigger className="w-[170px] bg-white border border-slate-200 shadow-sm h-10 text-xs" aria-label="Sort packages">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="flex items-center gap-2 self-start lg:self-auto">
+          {/* Display Order (Excel) */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsOrderDrawerOpen(true)}
+            className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold shadow-sm h-10 px-3.5 gap-2"
+          >
+            <ListOrdered className="h-4 w-4 text-primary" />
+            Display Order
+          </Button>
+
           {/* Bulk Import Button */}
           <Button
             type="button"
@@ -138,7 +170,14 @@ export default function PackageManagement() {
         }}
       />
 
-      <Card className="border border-border shadow-sm overflow-hidden bg-white">
+      <DisplayOrderDrawer
+        entity="packages"
+        open={isOrderDrawerOpen}
+        onOpenChange={setIsOrderDrawerOpen}
+        invalidateKeys={["adminPackages"]}
+      />
+
+      <Card className={cn("border border-border shadow-sm overflow-hidden bg-white transition-opacity", isFetching && !isLoading && "opacity-70")}>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -161,6 +200,7 @@ export default function PackageManagement() {
                     aria-label="Select all packages on this page"
                   />
                 </TableHead>
+                <TableHead className="w-24" title="Storefront priority: 1 is shown first">Priority</TableHead>
                 <TableHead>Package Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Tests Included</TableHead>
@@ -175,6 +215,7 @@ export default function PackageManagement() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-16" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-40" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
                     <TableCell><Skeleton className="h-5 w-8 rounded-full" /></TableCell>
@@ -184,9 +225,9 @@ export default function PackageManagement() {
                     <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto rounded-md" /></TableCell>
                   </TableRow>
                 ))
-              ) : filtered.length === 0 ? (
+              ) : paginatedPackages.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <AlertTriangle className="h-8 w-8 text-muted-foreground/50" />
                       <span>No packages found matching your criteria.</span>
@@ -207,6 +248,9 @@ export default function PackageManagement() {
                       }}
                       aria-label={`Select ${p.name}`}
                     />
+                  </TableCell>
+                  <TableCell>
+                    <DisplayOrderCell entity="packages" id={p._id} value={p.displayOrder} invalidateKeys={["adminPackages"]} />
                   </TableCell>
                   <TableCell className="font-medium max-w-[200px] truncate" title={p.name}>
                     {p.name}
@@ -266,10 +310,10 @@ export default function PackageManagement() {
           </Table>
         </div>
 
-        {!isLoading && filtered.length > 0 && (
+        {!isLoading && totalPackages > 0 && (
           <div className="flex items-center justify-between border-t border-border px-4 py-3 bg-muted/20">
             <p className="text-sm text-muted-foreground">
-              Showing <span className="font-medium text-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}</span> of <span className="font-medium text-foreground">{filtered.length}</span> packages
+              Showing <span className="font-medium text-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, totalPackages)}</span> of <span className="font-medium text-foreground">{totalPackages}</span> packages
             </p>
             <div className="flex items-center gap-2">
               <Button

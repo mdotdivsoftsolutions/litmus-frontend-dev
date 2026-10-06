@@ -26,6 +26,12 @@ export const testApi = {
     return response.data;
   },
 
+  /** Test counts per starting letter (A-Z, "#") for the alphabet filter. */
+  getLetterCounts: async (params?: { search?: string; type?: string }) => {
+    const response = await apiClient.get('/tests/letters', { params });
+    return response.data;
+  },
+
   bulkDeleteTests: async (ids: string[]) => {
     const response = await apiClient.post('/tests/bulk-delete', { ids });
     return response.data;

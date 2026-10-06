@@ -6,4 +6,5 @@ export const productApi = {
   createProduct: (data: Record<string, unknown>) => apiClient.post('/products', data),
   updateProduct: (id: string, data: Record<string, unknown>) => apiClient.patch(`/products/${id}`, data),
   deleteProduct: (id: string) => apiClient.delete(`/products/${id}`),
+  bulkDeleteProducts: (ids: string[]) => apiClient.post('/products/bulk-delete', { ids }),
 };

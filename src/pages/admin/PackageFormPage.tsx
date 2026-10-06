@@ -92,7 +92,8 @@ export default function PackageFormPage() {
   const { data: testsData } = useQuery({
     queryKey: ["tests", selectedCategoryId, isGeneralCategory],
     queryFn: async () => {
-      const params: any = { limit: 500 };
+      // No limit = full list (server-bounded); paged requests are capped at 100.
+      const params: any = { sort: "name_asc" };
       if (selectedCategoryId && !isGeneralCategory) {
         params.category = selectedCategoryId;
       }

@@ -18,6 +18,9 @@ import { adminApi } from "@/lib/api/admin";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BulkImportDrawer } from "@/components/admin/BulkImportDrawer";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BulkDeleteBar } from "@/components/admin/BulkDeleteBar";
+import { useBulkSelection } from "@/hooks/use-bulk-selection";
 
 export default function LabManagement() {
   const [search, setSearch] = useState("");
@@ -28,6 +31,7 @@ export default function LabManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const selection = useBulkSelection();
   const queryClient = useQueryClient();
 
   const copyToClipboard = (text: string, label: string) => {
@@ -167,6 +171,13 @@ export default function LabManagement() {
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50">
+<TableHead className="w-12 text-center">
+                <Checkbox
+                  checked={selection.isPageSelected(paginatedLabs.map((l: any) => l._id))}
+                  onCheckedChange={(checked) => selection.togglePage(paginatedLabs.map((l: any) => l._id), !!checked)}
+                  aria-label="Select all on this page"
+                />
+              </TableHead>
               <TableHead>Lab Name</TableHead>
               <TableHead>City</TableHead>
               <TableHead>Accreditation</TableHead>
@@ -181,6 +192,7 @@ export default function LabManagement() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
+                  <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><div className="flex gap-1"><Skeleton className="h-5 w-12 rounded-full" /><Skeleton className="h-5 w-12 rounded-full" /></div></TableCell>
@@ -192,13 +204,20 @@ export default function LabManagement() {
                 </TableRow>
               ))
             ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">No laboratories found.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground">No laboratories found.</TableCell></TableRow>
             ) : paginatedLabs.map((lab: any) => {
               const labBookings = allBookings.filter((b: any) => b.labId?._id === lab._id || b.labId === lab._id || b.laboratory?._id === lab._id || b.laboratory === lab._id);
               const totalRevenue = labBookings.reduce((sum: number, b: any) => sum + (b.totalAmount || 0), 0);
               
               return (
-              <TableRow key={lab._id} className="hover:bg-muted/30">
+              <TableRow key={lab._id} className={selection.isSelected(lab._id) ? "bg-primary/5" : "hover:bg-muted/30"}>
+                <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={selection.isSelected(lab._id)}
+                    onCheckedChange={(checked) => selection.toggle(lab._id, !!checked)}
+                    aria-label={`Select ${lab.labName}`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">{lab.labName}</TableCell>
                 <TableCell>{lab.location?.city || "—"}</TableCell>
                 <TableCell>
@@ -485,6 +504,15 @@ export default function LabManagement() {
         onConfirm={() => labToToggle && toggleStatusMutation.mutate({ id: labToToggle.lab._id, isActive: labToToggle.targetState })}
         confirmText={labToToggle?.targetState ? "Make Visible" : "Hide Laboratory"}
         variant={labToToggle?.targetState ? "default" : "destructive"}
+      />
+
+      <BulkDeleteBar
+        selectedIds={selection.selectedIds}
+        onClear={selection.clear}
+        entityLabel="laboratories"
+        deleteFn={adminApi.bulkDeleteLabs}
+        invalidateKeys={["adminLabs"]}
+        confirmDescription="The selected laboratories will be removed from the platform and hidden from customers. Existing bookings are kept."
       />
     </div>
   );

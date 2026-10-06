@@ -13,9 +13,13 @@ import { toast } from "sonner";
 import { adminApi } from "@/lib/api/admin";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BulkDeleteBar } from "@/components/admin/BulkDeleteBar";
+import { useBulkSelection } from "@/hooks/use-bulk-selection";
 
 export default function ReviewManagement() {
   const queryClient = useQueryClient();
+  const selection = useBulkSelection();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [ratingFilter, setRatingFilter] = useState("all");
@@ -179,6 +183,13 @@ export default function ReviewManagement() {
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50">
+  <TableHead className="w-12 text-center">
+                  <Checkbox
+                    checked={selection.isPageSelected(paginatedReviews.map((r: any) => r._id))}
+                    onCheckedChange={(checked) => selection.togglePage(paginatedReviews.map((r: any) => r._id), !!checked)}
+                    aria-label="Select all on this page"
+                  />
+                </TableHead>
                 <TableHead className="py-3 px-4 text-xs">Customer</TableHead>
                 <TableHead className="py-3 px-4 text-xs">Rating</TableHead>
                 <TableHead className="py-3 px-4 text-xs">Review Feedback</TableHead>
@@ -190,6 +201,7 @@ export default function ReviewManagement() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
+                    <TableCell className="text-center"><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-28" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-64" /></TableCell>
@@ -199,7 +211,7 @@ export default function ReviewManagement() {
                 ))
               ) : paginatedReviews.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <MessageSquareQuote className="h-8 w-8 text-slate-300" />
                       <span className="font-semibold text-slate-800">No customer reviews found</span>
@@ -209,7 +221,14 @@ export default function ReviewManagement() {
                 </TableRow>
               ) : (
                 paginatedReviews.map((review: any) => (
-                  <TableRow key={review._id} className="hover:bg-slate-50/60 transition-colors">
+                  <TableRow key={review._id} className={cn("hover:bg-slate-50/60 transition-colors", selection.isSelected(review._id) && "bg-primary/5")}>
+                    <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selection.isSelected(review._id)}
+                      onCheckedChange={(checked) => selection.toggle(review._id, !!checked)}
+                      aria-label={`Select ${review.name}`}
+                    />
+                  </TableCell>
                     <TableCell className="py-3.5 px-4">
                       <div className="flex flex-col">
                         <span className="font-semibold text-xs text-slate-900">{review.name}</span>
@@ -310,6 +329,14 @@ export default function ReviewManagement() {
           confirmText={dialogConfig.variant === "destructive" ? "Delete" : "Confirm"}
         />
       )}
+
+      <BulkDeleteBar
+        selectedIds={selection.selectedIds}
+        onClear={selection.clear}
+        entityLabel="reviews"
+        deleteFn={adminApi.bulkDeleteReviews}
+        invalidateKeys={["adminReviews"]}
+      />
     </div>
   );
 }

@@ -20,6 +20,8 @@ import { authApi } from "@/lib/api/auth";
 import { apiClient } from "@/lib/api/axios";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { MissedChatsPanel } from "@/components/admin/support/MissedChatsPanel";
+import { useMissedChatCounts } from "@/components/admin/support/useMissedChatCounts";
 
 // ── Animated Skeleton Components for Instant Feedback ───────────────────────────
 function SessionCardSkeleton() {
@@ -113,7 +115,7 @@ export default function LiveSupportPage() {
   const currentUser = userResponse?.data;
   const isAdmin = currentUser?.role === "ADMIN";
 
-  const [activeTab, setActiveTab] = useState<"incoming" | "my_chats" | "all_chats" | "staff" | "history">("incoming");
+  const [activeTab, setActiveTab] = useState<"incoming" | "my_chats" | "all_chats" | "staff" | "missed" | "history">("incoming");
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messageInput, setMessageInput] = useState("");
@@ -278,7 +280,7 @@ export default function LiveSupportPage() {
       }
       return undefined;
     },
-    enabled: activeTab !== "staff" && Boolean(currentUser?._id || activeTab === "all_chats" || activeTab === "incoming"),
+    enabled: activeTab !== "staff" && activeTab !== "missed" && Boolean(currentUser?._id || activeTab === "all_chats" || activeTab === "incoming"),
     refetchInterval: 15000,
   });
 
@@ -313,6 +315,8 @@ export default function LiveSupportPage() {
   const mineCount = tabCountsData?.mine ?? 0;
   const allCount = tabCountsData?.all ?? 0;
   const teamCount = employees.length;
+  const { data: missedCounts } = useMissedChatCounts();
+  const pendingMissedCount = missedCounts?.PENDING ?? 0;
 
   // Merge real-time socket incoming requests with database queued sessions
   const incomingMergedSessions = useMemo(() => {
@@ -358,7 +362,7 @@ export default function LiveSupportPage() {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage || activeTab === "staff") return;
+    if (!hasNextPage || isFetchingNextPage || activeTab === "staff" || activeTab === "missed") return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -831,6 +835,32 @@ export default function LiveSupportPage() {
                   </span>
                 </button>
               </div>
+
+              {/* 5. Missed Requests (unattended live-chat requests for manual call-back) */}
+              <button
+                type="button"
+                onClick={() => setActiveTab("missed")}
+                className={cn(
+                  "w-full py-1.5 px-2.5 rounded-xl border text-[11px] flex items-center justify-between transition-all outline-none focus:outline-none focus-visible:ring-1 focus-visible:ring-primary",
+                  activeTab === "missed"
+                    ? "bg-amber-50 border-amber-300 text-amber-900 font-extrabold"
+                    : "bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300 font-semibold"
+                )}
+                title="Missed live-chat requests to follow up manually"
+              >
+                <span className="flex items-center gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+                  Missed Requests
+                </span>
+                <span
+                  className={cn(
+                    "h-4 min-w-[16px] px-1 rounded-full text-[9px] font-extrabold flex items-center justify-center",
+                    pendingMissedCount > 0 ? "bg-amber-500 text-white" : "bg-slate-200/70 text-slate-500"
+                  )}
+                >
+                  {pendingMissedCount}
+                </span>
+              </button>
             </div>
 
             {/* Search Bar (Works for all conversation views and Team directory) */}
@@ -843,6 +873,8 @@ export default function LiveSupportPage() {
                   placeholder={
                     activeTab === "staff"
                       ? "Search specialists by name, role..."
+                      : activeTab === "missed"
+                      ? "Search name, phone, email, query..."
                       : "Search name, phone, session ID..."
                   }
                   className="h-8 pl-8 pr-8 bg-slate-50 border-slate-200 text-xs rounded-xl text-slate-900 placeholder:text-slate-400 focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary"
@@ -939,6 +971,8 @@ export default function LiveSupportPage() {
                     )}
                   </>
                 )
+              ) : activeTab === "missed" ? (
+                <MissedChatsPanel socket={socket} searchQuery={searchQuery} />
               ) : activeTab === "staff" ? (
                 isLoadingEmployees ? (
                   <div className="space-y-2">
