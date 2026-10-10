@@ -49,6 +49,8 @@ export interface IPlatformSettingsData {
   notificationWorkflows?: INotificationWorkflows;
   courierAddress?: ICourierAddress;
   regionalOffices?: IRegionalOffice[];
+  /** Highest Litmus special discount (% of subtotal) admins may give on assisted bookings. */
+  maxSpecialDiscountPercent?: number;
   createdAt?: string;
   updatedAt?: string;
 }

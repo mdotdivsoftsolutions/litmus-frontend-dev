@@ -49,6 +49,7 @@ import {
 import { format, subDays, isSameDay, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { bookingDisplayCode } from "@/lib/bookingCode";
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
@@ -356,7 +357,7 @@ export default function AdminDashboard() {
       const userName = booking?.userId 
         ? `${booking.userId.firstName || ''} ${booking.userId.lastName || ''}`.trim() || booking.userId.email
         : "Customer";
-      const bookingDisplayId = booking?._id ? `BKG-${booking._id.substring(booking._id.length - 6).toUpperCase()}` : "Order";
+      const bookingDisplayId = bookingDisplayCode(booking) || "Order";
 
       return {
         id: p._id,
@@ -986,7 +987,7 @@ export default function AdminDashboard() {
                     </TableHeader>
                     <TableBody>
                       {pendingAssignmentBookings.slice(0, 5).map((b: any) => {
-                        const displayId = `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`;
+                        const displayId = bookingDisplayCode(b);
                         const userName = `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim() || b.userId?.email || 'Customer';
                         const productName = b.items?.[0]?.samples?.[0]?.productName || b.items?.[0]?.packageId?.name || b.items?.[0]?.testId?.name || "Service Item";
                         const total = b.items?.reduce((s: number, i: any) => s + (Number(i.price) || 0), 0) || b.totalAmount || 0;
@@ -1053,7 +1054,7 @@ export default function AdminDashboard() {
                     </TableHeader>
                     <TableBody>
                       {pendingVerificationReports.slice(0, 5).map((b: any) => {
-                        const displayId = `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`;
+                        const displayId = bookingDisplayCode(b);
                         const labName = b.labId?.labName || "Litmus Lab";
                         const productName = b.items?.[0]?.samples?.[0]?.productName || b.items?.[0]?.packageId?.name || "Sample Test";
 

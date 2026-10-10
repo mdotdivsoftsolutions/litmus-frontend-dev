@@ -49,6 +49,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { InvoiceDialog } from "@/components/admin/InvoiceDialog";
+import { AssistedBookingDetailsCard } from "@/components/admin/assisted-booking/AssistedBookingDetailsCard";
+import { bookingDisplayCode } from "@/lib/bookingCode";
 
 export default function AdminBookingDetails() {
   const { id } = useParams();
@@ -245,7 +247,7 @@ export default function AdminBookingDetails() {
   }
 
   const b = rawBooking;
-  const displayId = `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`;
+  const displayId = bookingDisplayCode(b);
   const userFullName = `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim() || b.collectionDetails?.name || "Customer";
   const userInitials = (userFullName.split(" ").map((n: string) => n[0]).join("") || "U").substring(0, 2).toUpperCase();
   
@@ -588,6 +590,8 @@ export default function AdminBookingDetails() {
         </div>
       )}
 
+      <AssistedBookingDetailsCard booking={b} />
+
       {/* 4-Stat Metric Cards Ribbon */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         
@@ -621,7 +625,7 @@ export default function AdminBookingDetails() {
               )}
             </div>
             <p className="text-[11px] text-muted-foreground mt-2 font-medium">
-              {b.paymentMethod || "Online Gateway Transaction"}
+              {b.offlinePayment?.method ? `Offline · ${String(b.offlinePayment.method).replace("_", " ")}` : b.paymentMethod || "Online Gateway Transaction"}
             </p>
           </div>
         </Card>

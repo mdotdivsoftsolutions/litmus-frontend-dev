@@ -48,6 +48,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
+import { bookingDisplayCode } from "@/lib/bookingCode";
 
 function TablePaginationBar({
   currentPage,
@@ -790,7 +791,7 @@ export default function UserDetailsPage() {
                       </TableHeader>
                       <TableBody>
                         {paginatedBookings.map((b: any) => {
-                          const displayId = `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`;
+                          const displayId = bookingDisplayCode(b);
                           const itemSummary =
                             b.items?.[0]?.packageId?.name ||
                             b.items?.[0]?.testId?.name ||
@@ -889,9 +890,9 @@ export default function UserDetailsPage() {
                         {paginatedPayments.map((p: any) => {
                           const txnId = p.transactionId || p.razorpayPaymentId || `TXN-${String(p._id).slice(-6).toUpperCase()}`;
                           const bkgId = p.bookingId?._id
-                            ? `BKG-${String(p.bookingId._id).slice(-6).toUpperCase()}`
+                            ? bookingDisplayCode(p.bookingId)
                             : p.bookingId
-                            ? `BKG-${String(p.bookingId).slice(-6).toUpperCase()}`
+                            ? bookingDisplayCode({ _id: String(p.bookingId) })
                             : "N/A";
                           const isSuccess = ["SUCCESS", "PAID"].includes(String(p.status).toUpperCase());
 

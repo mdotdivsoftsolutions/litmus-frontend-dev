@@ -43,6 +43,7 @@ import { PickupCoverageSettings } from "./PickupCoverageSettings";
 import { DeskNotificationSettings } from "./DeskNotificationSettings";
 import { NotificationWorkflowsSettings } from "./NotificationWorkflowsSettings";
 import { CourierAddressSettings } from "./CourierAddressSettings";
+import { SpecialDiscountSettings } from "@/components/admin/settings/SpecialDiscountSettings";
 
 
 const baseSchema = z.object({
@@ -226,6 +227,7 @@ export default function AdminSettings() {
         { id: "infrastructure", label: "Lab Equipment", singular: "Equipment Template", icon: Microscope, count: (infrastructureData?.data || []).length, desc: "Accredited equipment templates" },
         { id: "activity-status", label: "Operational Status", singular: "Operational Status", icon: Settings2, count: (activityStatusData?.data || []).length, desc: "Workflow states & labels" },
         { id: "pickup", label: "Pickup Cities", singular: "Pickup City", icon: MapPin, count: null, desc: "Direct doorstep pickup zones" },
+        { id: "special-discount", label: "Special Discount Limit", singular: "Discount Limit", icon: Settings2, count: null, desc: "Max discount on admin-created bookings" },
       ]
     },
     {
@@ -325,7 +327,7 @@ export default function AdminSettings() {
         <div className="lg:col-span-8 xl:col-span-9 h-full flex flex-col min-h-0 overflow-hidden">
           <Card className="bg-white border border-slate-200/80 shadow-xs rounded-xl h-full flex flex-col overflow-hidden">
             {/* Header with Search and Action — only for standard CRUD lookup lists */}
-            {!["pickup", "courier-address", "desk-notifications", "notification-workflows"].includes(activeTab) && (
+            {!["pickup", "special-discount", "courier-address", "desk-notifications", "notification-workflows"].includes(activeTab) && (
               <CardHeader className="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="space-y-0.5">
@@ -622,6 +624,13 @@ export default function AdminSettings() {
               {activeTab === "pickup" && (
                 <div className="-m-4 sm:-m-5">
                   <PickupCoverageSettings />
+                </div>
+              )}
+
+              {/* 8a. Special discount cap for admin-assisted bookings */}
+              {activeTab === "special-discount" && (
+                <div className="p-1 sm:p-2">
+                  <SpecialDiscountSettings />
                 </div>
               )}
 

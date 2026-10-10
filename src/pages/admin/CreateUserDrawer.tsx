@@ -8,7 +8,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Eye, EyeOff, UserPlus, Sparkles } from "lucide-react";
 
-export function CreateUserDrawer({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
+export interface CreatedCustomer {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  companyName?: string;
+}
+
+export function CreateUserDrawer({
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Called with the new customer after a successful create (used by the admin booking wizard). */
+  onCreated?: (user: CreatedCustomer) => void;
+}) {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     firstName: "",
@@ -34,6 +52,7 @@ export function CreateUserDrawer({ open, onOpenChange }: { open: boolean, onOpen
     mutationFn: adminApi.createUser,
     onSuccess: (data) => {
       toast.success(data.message || "User created successfully");
+      if (data?.data) onCreated?.(data.data as CreatedCustomer);
       queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
       queryClient.invalidateQueries({ queryKey: ["adminStats"] });
       onOpenChange(false);
