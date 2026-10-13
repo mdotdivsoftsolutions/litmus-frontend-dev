@@ -21,6 +21,7 @@ import {
   Eye, 
   Filter, 
   Download,
+  Plus,
   ChevronLeft, 
   ChevronRight, 
   AlertTriangle, 
@@ -55,6 +56,7 @@ import { exportToCsv } from "@/lib/utils/exportCsv";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { bookingDisplayCode } from "@/lib/bookingCode";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -238,7 +240,7 @@ export default function AdminBookings() {
         const userObj = b.userId || {};
 
         return {
-          displayId: `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`,
+          displayId: bookingDisplayCode(b),
           date: b.createdAt ? format(new Date(b.createdAt), "yyyy-MM-dd HH:mm") : "",
           customerName: `${userObj.firstName || ""} ${userObj.lastName || ""}`.trim() || col.name || "Customer",
           customerEmail: userObj.email || col.email || "",
@@ -298,7 +300,8 @@ export default function AdminBookings() {
 
     return {
       id: b._id,
-      displayId: `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`,
+      displayId: bookingDisplayCode(b),
+      isAdminBooking: b.bookingChannel === "ADMIN_ASSISTED",
       user: `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim() || b.collectionDetails?.name || "Unknown User",
       product,
       lab: b.labId?.labName 
@@ -574,7 +577,14 @@ export default function AdminBookings() {
                       aria-label={`Select ${b.displayId}`}
                     />
                   </TableCell>
-                  <TableCell className="font-medium font-mono text-sm">{b.displayId}</TableCell>
+                  <TableCell className="font-medium font-mono text-sm">
+                    {b.displayId}
+                    {b.isAdminBooking && (
+                      <span className="ml-1.5 align-middle font-sans text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200" title="Created by admin on behalf of the customer">
+                        Admin
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
                       <span className="font-semibold text-xs text-slate-900 leading-snug">{b.user}</span>
@@ -672,11 +682,17 @@ export default function AdminBookings() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Booking Management</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Track food test orders, sample logistics, lab assignments, and live fulfillment statuses.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Booking Management</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Track food test orders, sample logistics, lab assignments, and live fulfillment statuses.
+          </p>
+        </div>
+        <Button className="gap-2 h-10 shrink-0 self-start sm:self-auto" onClick={() => navigate("/admin/bookings/new")}>
+          <Plus className="h-4 w-4" />
+          Create Booking
+        </Button>
       </div>
 
       <Tabs defaultValue="all" value={statusFilter === "all" ? "all" : statusFilter.toLowerCase()} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>

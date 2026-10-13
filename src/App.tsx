@@ -19,6 +19,7 @@ const LabManagement = lazy(() => import("./pages/admin/LabManagement.tsx"));
 const LabFormPage = lazy(() => import("./pages/admin/LabFormPage.tsx"));
 const AdminBookings = lazy(() => import("./pages/admin/AdminBookings.tsx"));
 const AdminBookingDetails = lazy(() => import("./pages/admin/AdminBookingDetails.tsx"));
+const AdminNewBookingPage = lazy(() => import("./pages/admin/AdminNewBookingPage.tsx"));
 const CategoryManagement = lazy(() => import("./pages/admin/CategoryManagement.tsx"));
 const ProductManagement = lazy(() => import("./pages/admin/ProductManagement.tsx"));
 const ProductFormPage = lazy(() => import("./pages/admin/ProductFormPage.tsx"));
@@ -102,6 +103,7 @@ const App = () => (
                 <Route path="laboratories/:id" element={<LaboratoryDetailPage />} />
                 <Route path="laboratories/:id/edit" element={<LabFormPage />} />
                 <Route path="bookings" element={<AdminBookings />} />
+                <Route path="bookings/new" element={<AdminNewBookingPage />} />
                 <Route path="bookings/:id" element={<AdminBookingDetails />} />
                 <Route path="categories" element={<CategoryManagement />} />
                 <Route path="categories/new" element={<CategoryFormPage />} />

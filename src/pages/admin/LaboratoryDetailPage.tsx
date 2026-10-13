@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { formatCurrency } from "@/lib/utils/currency";
 import { toast } from "sonner";
+import { bookingDisplayCode } from "@/lib/bookingCode";
 
 export default function LaboratoryDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -486,7 +487,7 @@ export default function LaboratoryDetailPage() {
                     </TableRow>
                   ) : (
                     labBookings.map((b: any) => {
-                      const displayId = `BKG-${String(b._id).slice(-6).toUpperCase()}`;
+                      const displayId = bookingDisplayCode(b);
                       const customerName = `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim() || b.collectionDetails?.name || "Client";
                       const itemSummary = b.items?.[0]?.packageId?.name 
                         || b.items?.[0]?.testId?.name 

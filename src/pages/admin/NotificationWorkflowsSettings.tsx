@@ -96,7 +96,7 @@ const WORKFLOW_CONFIGS: WorkflowItemConfig[] = [
 Dear *John Doe*,
 Thank you for choosing Litmus. Your food test booking has been confirmed.
 
-🔖 *Booking ID:* #BKG-98421
+🔖 *Booking ID:* LIT-ORD-10001
 📋 *Tests Selected:* Nutritional Profile & Heavy Metals
 💰 *Total Amount:* ₹4,850
 📅 *Date:* 19 Aug 2026
@@ -119,7 +119,7 @@ _Litmus Quality Assurance Team_`,
     sampleWhatsAppPreview: `🔬 *LITMUS - SAMPLE UNDER TESTING*
 ━━━━━━━━━━━━━━━━━━━━━
 Hello *John Doe*,
-Your sample for Booking *#BKG-98421* has been received at our accredited laboratory and registered in the LIMS.
+Your sample for Booking *LIT-ORD-10001* has been received at our accredited laboratory and registered in the LIMS.
 
 📊 *Status:* Chemical & Microbiological Analysis In Progress
 🏢 *Lab Facility:* Litmus Central Analytical Lab
@@ -142,7 +142,7 @@ _Litmus Laboratory Operations_`,
     sampleWhatsAppPreview: `🚚 *LITMUS - SAMPLE DISPATCH UPDATE*
 ━━━━━━━━━━━━━━━━━━━━━
 Hello *John Doe*,
-Your sample parcel for Booking *#BKG-98421* is currently in transit to our testing center.
+Your sample parcel for Booking *LIT-ORD-10001* is currently in transit to our testing center.
 
 📦 *Courier Partner:* BlueDart Express
 🔖 *Tracking AWB:* BLUEDART-8823910
@@ -164,7 +164,7 @@ We will notify you immediately once the laboratory confirms physical receipt and
     sampleWhatsAppPreview: `📑 *LITMUS - OFFICIAL TEST REPORT PUBLISHED*
 ━━━━━━━━━━━━━━━━━━━━━
 Great news *John Doe*!
-The food testing and quality certification for Booking *#BKG-98421* has been completed.
+The food testing and quality certification for Booking *LIT-ORD-10001* has been completed.
 
 Your verified laboratory report is now available for viewing and digital download.
 

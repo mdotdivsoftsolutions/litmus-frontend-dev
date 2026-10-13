@@ -38,6 +38,7 @@ import {
 import { InvoiceDialog } from "@/components/admin/InvoiceDialog";
 import { exportToCsv } from "@/lib/utils/exportCsv";
 import { cn } from "@/lib/utils";
+import { bookingDisplayCode } from "@/lib/bookingCode";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -113,9 +114,9 @@ export default function AdminPayments() {
 
   const mappedPayments = rawPayments.map((p: any) => ({
     id: p.transactionId || `TXN-${p._id ? p._id.substring(p._id.length - 6).toUpperCase() : 'UNKNOWN'}`,
-    bookingId: p.bookingId?._id 
-      ? `BKG-${p.bookingId._id.substring(p.bookingId._id.length - 6).toUpperCase()}` 
-      : (p.bookingId ? `BKG-${String(p.bookingId).substring(String(p.bookingId).length - 6).toUpperCase()}` : "N/A"),
+    bookingId: p.bookingId?._id
+      ? bookingDisplayCode(p.bookingId)
+      : (p.bookingId ? bookingDisplayCode({ _id: String(p.bookingId) }) : "N/A"),
     rawBookingId: p.bookingId?._id || p.bookingId || null,
     lab: p.bookingId?.labId?.labName || "Unknown Lab",
     amount: p.amount || 0,

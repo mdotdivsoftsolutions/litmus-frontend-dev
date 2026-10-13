@@ -38,6 +38,7 @@ import { adminApi } from "@/lib/api/admin";
 import { uploadApi } from "@/lib/api/uploadApi";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { bookingDisplayCode } from "@/lib/bookingCode";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -108,7 +109,7 @@ export default function AdminReports() {
 
     return {
       id: b._id,
-      bookingId: `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`,
+      bookingId: bookingDisplayCode(b),
       user: `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim() || 'Unknown User',
       product: b.items?.[0]?.samples?.[0]?.productName || b.items?.[0]?.packageId?.name || b.items?.[0]?.testId?.name || "Service Item",
       lab: b.labId?.labName || "Litmus Assigned Lab",
@@ -727,7 +728,7 @@ export default function AdminReports() {
                     <div className="p-3 text-xs text-muted-foreground text-center">No bookings waiting for report upload</div>
                   ) : (
                     bookingsWithoutReports.map((b: any) => {
-                      const displayId = `BKG-${b._id.substring(b._id.length - 6).toUpperCase()}`;
+                      const displayId = bookingDisplayCode(b);
                       const userName = `${b.userId?.firstName || ''} ${b.userId?.lastName || ''}`.trim() || 'User';
                       const product = b.items?.[0]?.samples?.[0]?.productName || b.items?.[0]?.packageId?.name || b.items?.[0]?.testId?.name || "Order";
                       return (

@@ -94,8 +94,14 @@ export const adminApi = {
     return response.data;
   },
 
-  getUsers: async (params?: { status?: string; search?: string; startDate?: string; endDate?: string }) => {
+  getUsers: async (params?: { status?: string; search?: string; startDate?: string; endDate?: string; page?: number; limit?: number }) => {
     const response = await apiClient.get('/admin/users', { params });
+    return response.data;
+  },
+
+  /** Book tests / packages on behalf of a customer (phone / WhatsApp enquiries). */
+  createAssistedBooking: async (data: Record<string, unknown>) => {
+    const response = await apiClient.post('/admin/bookings/assisted', data);
     return response.data;
   },
 

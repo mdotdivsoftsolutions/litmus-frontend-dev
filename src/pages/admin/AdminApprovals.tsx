@@ -15,6 +15,7 @@ import { adminApi } from "@/lib/api/admin";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { bookingDisplayCode } from "@/lib/bookingCode";
 
 export default function AdminApprovals() {
   const [rejectingItem, setRejectingItem] = useState<{ id: string, type: 'test' | 'package' | 'report', title?: string } | null>(null);
@@ -210,7 +211,7 @@ export default function AdminApprovals() {
                       </TableCell>
                     </TableRow>
                   ) : pendingReports.map((r: any) => {
-                    const displayId = `BKG-${r._id.substring(r._id.length - 6).toUpperCase()}`;
+                    const displayId = bookingDisplayCode(r);
                     const customerName = `${r.userId?.firstName || ''} ${r.userId?.lastName || ''}`.trim() || 'Unknown User';
                     const productName = r.items?.[0]?.samples?.[0]?.productName || r.items?.[0]?.packageId?.name || r.items?.[0]?.testId?.name || "Service Item";
                     const labName = r.labId?.labName || "Partner Laboratory";
@@ -442,7 +443,7 @@ export default function AdminApprovals() {
                   Review & Authorize Report
                 </SheetTitle>
                 <SheetDescription className="text-xs mt-0.5">
-                  BKG-{reviewingReport?._id?.substring(reviewingReport._id.length - 6).toUpperCase()} · {reviewingReport?.userId?.firstName} {reviewingReport?.userId?.lastName}
+                  {bookingDisplayCode(reviewingReport)} · {reviewingReport?.userId?.firstName} {reviewingReport?.userId?.lastName}
                 </SheetDescription>
               </div>
             </div>
@@ -557,7 +558,7 @@ export default function AdminApprovals() {
                     setRejectingItem({
                       id: reviewingReport._id,
                       type: 'report',
-                      title: `BKG-${reviewingReport._id.substring(reviewingReport._id.length - 6).toUpperCase()}`
+                      title: bookingDisplayCode(reviewingReport)
                     });
                   }}
                 >
