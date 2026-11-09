@@ -23,23 +23,36 @@ import {
   Building,
   Layers,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  BadgeCheck,
+  XCircle,
+  Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { ConsultationDetailSheet } from "@/components/admin/consultations/ConsultationDetailSheet";
+import { NotConvertedDialog } from "@/components/admin/consultations/NotConvertedDialog";
+import { ConsultationStatusBadge } from "@/components/admin/consultations/consultationStatus";
 
 const ITEMS_PER_PAGE = 10;
 
 export default function AdminConsultations() {
   const queryClient = useQueryClient();
   const [selectedConsultation, setSelectedConsultation] = useState<any>(null);
+  const [notConvertedTarget, setNotConvertedTarget] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const { isAdmin, can } = useCurrentUser();
+  const canManage = can("MANAGE_CONSULTATIONS");
 
   // Filters State
   const [statusFilter, setStatusFilter] = useState("all");
@@ -69,17 +82,33 @@ export default function AdminConsultations() {
   const availableSources: string[] = response?.data?.sources || ["General", "Home Hero"];
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) => consultationApi.updateStatus(id, status),
-    onSuccess: () => {
+    mutationFn: ({ id, status, reason }: { id: string; status: string; reason?: string }) =>
+      consultationApi.updateStatus(id, status, reason),
+    onSuccess: (res) => {
       toast.success("Consultation status updated.");
       queryClient.invalidateQueries({ queryKey: ["adminConsultations"] });
-      if (selectedConsultation) {
-        setSelectedConsultation((prev: any) => prev ? { ...prev, status: selectedConsultation.status } : null);
+      const updated = res?.data?.data;
+      if (updated?._id) {
+        setSelectedConsultation((prev: any) => (prev && prev._id === updated._id ? updated : prev));
       }
     },
-    onError: () => {
-      toast.error("Failed to update status.");
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Failed to update status.");
     },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => consultationApi.deleteConsultation(id),
+    onSuccess: (_res, id) => {
+      toast.success("Consultation request deleted.");
+      queryClient.invalidateQueries({ queryKey: ["adminConsultations"] });
+      queryClient.invalidateQueries({ queryKey: ["adminStats"] });
+      setSelectedConsultation((prev: any) => (prev && prev._id === id ? null : prev));
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Failed to delete consultation request.");
+    },
+    onSettled: () => setDeleteTarget(null),
   });
 
   const clearFilters = () => {
@@ -94,30 +123,7 @@ export default function AdminConsultations() {
 
   const hasActiveFilters = statusFilter !== "all" || sourceFilter !== "all" || Boolean(startDate) || Boolean(endDate) || Boolean(search);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Pending":
-        return (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border-amber-200 dark:border-amber-900/60 font-medium">
-            Pending
-          </Badge>
-        );
-      case "Contacted":
-        return (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border-blue-200 dark:border-blue-900/60 font-medium">
-            Contacted
-          </Badge>
-        );
-      case "Resolved":
-        return (
-          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/60 font-medium">
-            Resolved
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
+  const getStatusBadge = (status: string) => <ConsultationStatusBadge status={status} />;
 
   const getSourceBadge = (source: string) => {
     return (
@@ -159,6 +165,8 @@ export default function AdminConsultations() {
             <TabsTrigger value="Pending">Pending</TabsTrigger>
             <TabsTrigger value="Contacted">Contacted</TabsTrigger>
             <TabsTrigger value="Resolved">Resolved</TabsTrigger>
+            <TabsTrigger value="Converted">Converted</TabsTrigger>
+            <TabsTrigger value="Not Converted">Not Converted</TabsTrigger>
           </TabsList>
 
           {/* Controls: Source Select + Search Input + Filters Button */}
@@ -225,6 +233,8 @@ export default function AdminConsultations() {
                         <SelectItem value="Pending">Pending</SelectItem>
                         <SelectItem value="Contacted">Contacted</SelectItem>
                         <SelectItem value="Resolved">Resolved</SelectItem>
+                        <SelectItem value="Converted">Converted</SelectItem>
+                        <SelectItem value="Not Converted">Not Converted</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -434,15 +444,37 @@ export default function AdminConsultations() {
                         <DropdownMenuItem onClick={() => setSelectedConsultation(consultation)}>
                           <Eye className="mr-2 h-4 w-4" /> View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: consultation._id, status: "Pending" })}>
-                          <MessageSquare className="mr-2 h-4 w-4 text-amber-500" /> Mark Pending
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: consultation._id, status: "Contacted" })}>
-                          <Phone className="mr-2 h-4 w-4 text-blue-500" /> Mark Contacted
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: consultation._id, status: "Resolved" })}>
-                          <CheckCircle className="mr-2 h-4 w-4 text-emerald-500" /> Mark Resolved
-                        </DropdownMenuItem>
+                        {canManage && (
+                          <>
+                            <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: consultation._id, status: "Pending" })}>
+                              <MessageSquare className="mr-2 h-4 w-4 text-amber-500" /> Mark Pending
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: consultation._id, status: "Contacted" })}>
+                              <Phone className="mr-2 h-4 w-4 text-blue-500" /> Mark Contacted
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: consultation._id, status: "Resolved" })}>
+                              <CheckCircle className="mr-2 h-4 w-4 text-emerald-500" /> Mark Resolved
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => updateStatusMutation.mutate({ id: consultation._id, status: "Converted" })}>
+                              <BadgeCheck className="mr-2 h-4 w-4 text-teal-600" /> Mark Converted
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setNotConvertedTarget(consultation)}>
+                              <XCircle className="mr-2 h-4 w-4 text-rose-500" /> Mark Not Converted
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        {isAdmin && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => setDeleteTarget(consultation)}
+                              className="text-rose-600 focus:text-rose-700 focus:bg-rose-50"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -487,170 +519,41 @@ export default function AdminConsultations() {
         )}
       </Card>
 
-      {/* Consultation Details Sheet / Drawer */}
-      <Sheet open={!!selectedConsultation} onOpenChange={(open) => !open && setSelectedConsultation(null)}>
-        <SheetContent className="sm:max-w-md overflow-y-auto p-6 flex flex-col justify-between bg-white">
-          {selectedConsultation && (
-            <div className="flex flex-col h-full space-y-6">
-              {/* Drawer Top Header */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                  <User className="h-4 w-4 text-primary" />
-                  <span>Consultation Details</span>
-                </div>
+      <ConsultationDetailSheet
+        consultation={selectedConsultation}
+        onClose={() => setSelectedConsultation(null)}
+        canManage={canManage}
+        canDelete={isAdmin}
+        isUpdating={updateStatusMutation.isPending}
+        onStatusChange={(status) => updateStatusMutation.mutate({ id: selectedConsultation._id, status })}
+        onNotConverted={() => setNotConvertedTarget(selectedConsultation)}
+        onDelete={() => setDeleteTarget(selectedConsultation)}
+      />
 
-                <div className="flex items-start justify-between gap-2 pt-1 border-b border-slate-100 pb-4">
-                  <div className="space-y-0.5">
-                    <h2 className="text-xl font-bold text-foreground">{selectedConsultation.name}</h2>
-                    <p className="text-xs text-muted-foreground">{selectedConsultation.business || "General Consultation"}</p>
-                  </div>
-                  {getStatusBadge(selectedConsultation.status)}
-                </div>
-              </div>
+      <NotConvertedDialog
+        open={!!notConvertedTarget}
+        name={notConvertedTarget?.name}
+        initialReason={notConvertedTarget?.nonConversionReason}
+        loading={updateStatusMutation.isPending}
+        onOpenChange={(open) => !open && setNotConvertedTarget(null)}
+        onSubmit={(reason) =>
+          updateStatusMutation.mutate(
+            { id: notConvertedTarget._id, status: "Not Converted", reason },
+            { onSuccess: () => setNotConvertedTarget(null) }
+          )
+        }
+      />
 
-              {/* Drawer Key-Value Details */}
-              <div className="space-y-4 text-xs flex-1">
-                <div className="grid grid-cols-3 items-center">
-                  <span className="text-muted-foreground font-medium">Service</span>
-                  <span className="col-span-2 font-semibold text-foreground">{selectedConsultation.serviceName}</span>
-                </div>
-
-                <div className="grid grid-cols-3 items-center">
-                  <span className="text-muted-foreground font-medium">Requested For</span>
-                  <span className="col-span-2 text-slate-800 flex items-center gap-1.5 font-medium">
-                    <CalendarIcon className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    {selectedConsultation.date} at {selectedConsultation.time}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 items-center">
-                  <span className="text-muted-foreground font-medium">Email</span>
-                  <a 
-                    href={`mailto:${selectedConsultation.email}`} 
-                    className="col-span-2 text-primary flex items-center gap-1.5 hover:underline truncate"
-                  >
-                    <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="truncate">{selectedConsultation.email}</span>
-                  </a>
-                </div>
-
-                <div className="grid grid-cols-3 items-center">
-                  <span className="text-muted-foreground font-medium">Phone</span>
-                  <a 
-                    href={`tel:${selectedConsultation.phone}`} 
-                    className="col-span-2 text-slate-800 flex items-center gap-1.5 hover:underline"
-                  >
-                    <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span>{selectedConsultation.phone}</span>
-                  </a>
-                </div>
-
-                <div className="grid grid-cols-3 items-center">
-                  <span className="text-muted-foreground font-medium">Source</span>
-                  <div className="col-span-2">
-                    {getSourceBadge(selectedConsultation.source)}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 items-center">
-                  <span className="text-muted-foreground font-medium">Submitted On</span>
-                  <span className="col-span-2 text-slate-600">
-                    {selectedConsultation.createdAt ? format(new Date(selectedConsultation.createdAt), "MMM d, yyyy · h:mm a") : "N/A"}
-                  </span>
-                </div>
-
-                {/* Customer Remarks Box */}
-                <div className="pt-2">
-                  <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-1.5">
-                    <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                      <MessageSquare className="h-3.5 w-3.5 text-slate-400" />
-                      Customer Message / Notes
-                    </span>
-                    <p className="text-xs text-slate-800 leading-relaxed whitespace-pre-wrap">
-                      {selectedConsultation.message || "No notes provided"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Drawer Footer Actions & Status Changer */}
-              <div className="pt-4 border-t border-slate-100 space-y-3 mt-auto">
-                {/* Communication Action Buttons */}
-                <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    variant="outline"
-                    className="gap-2 h-9 text-xs border-slate-200 text-slate-800 hover:bg-slate-50 shadow-2xs font-medium"
-                    onClick={() => window.open(`mailto:${selectedConsultation.email}`, "_blank")}
-                  >
-                    <Mail className="h-3.5 w-3.5 text-slate-500" /> Email Client
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className="gap-2 h-9 text-xs border-slate-200 text-slate-800 hover:bg-slate-50 shadow-2xs font-medium"
-                    onClick={() => window.open(`tel:${selectedConsultation.phone}`, "_self")}
-                  >
-                    <Phone className="h-3.5 w-3.5 text-slate-500" /> Call Client
-                  </Button>
-                </div>
-
-                {/* Status Switcher Button Group */}
-                <div className="space-y-1.5 pt-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    Update Lead Status
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button 
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className={cn(
-                        "h-8 text-xs font-semibold transition-all",
-                        selectedConsultation.status === "Pending"
-                          ? "bg-primary hover:bg-primary/90 text-white border-primary shadow-2xs"
-                          : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
-                      )}
-                      onClick={() => updateStatusMutation.mutate({ id: selectedConsultation._id, status: "Pending" })}
-                      disabled={updateStatusMutation.isPending}
-                    >
-                      Pending
-                    </Button>
-                    <Button 
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className={cn(
-                        "h-8 text-xs font-semibold transition-all",
-                        selectedConsultation.status === "Contacted"
-                          ? "bg-primary hover:bg-primary/90 text-white border-primary shadow-2xs"
-                          : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
-                      )}
-                      onClick={() => updateStatusMutation.mutate({ id: selectedConsultation._id, status: "Contacted" })}
-                      disabled={updateStatusMutation.isPending}
-                    >
-                      Contacted
-                    </Button>
-                    <Button 
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className={cn(
-                        "h-8 text-xs font-semibold transition-all",
-                        selectedConsultation.status === "Resolved"
-                          ? "bg-primary hover:bg-primary/90 text-white border-primary shadow-2xs"
-                          : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
-                      )}
-                      onClick={() => updateStatusMutation.mutate({ id: selectedConsultation._id, status: "Resolved" })}
-                      disabled={updateStatusMutation.isPending}
-                    >
-                      Resolved
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Delete Consultation Request"
+        description={`Permanently delete the request from ${deleteTarget?.name || "this customer"}? This cannot be undone.`}
+        onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget._id)}
+        confirmText="Delete"
+        variant="destructive"
+        loading={deleteMutation.isPending}
+      />
     </div>
   );
 }

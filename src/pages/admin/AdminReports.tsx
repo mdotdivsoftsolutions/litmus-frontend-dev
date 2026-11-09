@@ -34,6 +34,7 @@ import {
 import { useState, useRef, useEffect } from "react";
 import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useUnpaidReportGuard } from "@/components/admin/booking/useUnpaidReportGuard";
 import { adminApi } from "@/lib/api/admin";
 import { uploadApi } from "@/lib/api/uploadApi";
 import { toast } from "sonner";
@@ -44,6 +45,7 @@ const ITEMS_PER_PAGE = 10;
 
 export default function AdminReports() {
   const queryClient = useQueryClient();
+  const unpaidGuard = useUnpaidReportGuard();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const newReportFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -118,6 +120,7 @@ export default function AdminReports() {
       reportFiles: files,
       reportSummary: b.reportSummary || {},
       isReportApprovedByAdmin: b.isReportApprovedByAdmin,
+      paymentStatus: b.paymentStatus,
       status: b.isReportApprovedByAdmin ? "Verified" : "Pending Verification",
       uploadDate: format(new Date(b.metadata?.reportSubmittedAt || b.updatedAt || b.createdAt), "MMM d, yyyy"),
       rawDate: new Date(b.metadata?.reportSubmittedAt || b.updatedAt || b.createdAt),
@@ -286,16 +289,18 @@ export default function AdminReports() {
 
   const handleSaveAndApprove = () => {
     if (!selectedReport) return;
-    approveMutation.mutate({
-      id: selectedReport.id,
-      data: {
-        reportFiles: editFiles,
-        summary: editSummary,
-        recommendations: editRecs,
-        tips: editTips,
-        additionalNotes: editNotes,
-      },
-    });
+    unpaidGuard.guard(selectedReport.paymentStatus, () =>
+      approveMutation.mutate({
+        id: selectedReport.id,
+        data: {
+          reportFiles: editFiles,
+          summary: editSummary,
+          recommendations: editRecs,
+          tips: editTips,
+          additionalNotes: editNotes,
+        },
+      })
+    );
   };
 
   const handleCreateReportSubmit = () => {
@@ -876,6 +881,7 @@ export default function AdminReports() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+      {unpaidGuard.dialog}
     </div>
   );
 }

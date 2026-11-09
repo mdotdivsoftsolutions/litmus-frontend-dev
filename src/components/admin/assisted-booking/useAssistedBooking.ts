@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { adminApi } from "@/lib/api/admin";
 import { settingsApi } from "@/lib/api/settings";
-import { linePrice, lineMrp, summarize } from "./pricing";
+import { linePrice, lineMrp, namedExtras, summarize } from "./pricing";
 import {
   newSample,
   type Customer,
@@ -98,8 +98,14 @@ export function useAssistedBooking() {
     if (s === 1 && lines.length === 0) return "Add at least one test or package";
     if (s === 2) {
       if (lines.some((l) => !l.samples.some((x) => x.productName.trim()))) return "Enter a product name for every test / package";
-      if (lines.some((l) => l.itemType === "TEST" && l.parameters.length > 0 && l.samples.some((x) => x.productName.trim() && x.selectedParameters.length === 0))) {
+      if (lines.some((l) => l.itemType === "TEST" && l.parameters.length > 0 && l.samples.some((x) => x.productName.trim() && x.selectedParameters.length === 0 && namedExtras(x).length === 0))) {
         return "Select at least one parameter for every test sample";
+      }
+      if (lines.some((l) => l.samples.some((x) => x.extraParameters.some((p) => !p.name.trim() && p.price.trim())))) {
+        return "Enter a name for every added parameter (or remove it)";
+      }
+      if (lines.some((l) => l.samples.some((x) => namedExtras(x).some((p) => !(Number(p.price) >= 0) || p.price.trim() === "")))) {
+        return "Enter a price (₹) for every added parameter — use 0 if it is free";
       }
       if (!logistics.collectionMethod) return "Choose pickup or courier";
       if (!logistics.address.trim() || !logistics.city.trim() || !logistics.pincode.trim()) return "Address, city and pincode are required";
@@ -165,15 +171,18 @@ export function useAssistedBooking() {
         mrp: lineMrp(l),
         samples: l.samples
           .filter((s) => s.productName.trim())
-          .map((s) => ({
+          .map((s) => {
+            const tested = [...s.selectedParameters, ...namedExtras(s).map((p) => p.name.trim())];
+            return {
             productName: s.productName.trim(),
             quantity: s.quantity,
             batchNumber: s.batchNumber,
             sku: s.sku,
             specifics: s.specifics,
-            selectedParameters: l.itemType === "TEST" ? s.selectedParameters : undefined,
-            selectedTests: l.itemType === "PACKAGE" ? s.selectedParameters : undefined,
-          })),
+            selectedParameters: l.itemType === "TEST" ? tested : undefined,
+            selectedTests: l.itemType === "PACKAGE" ? tested : undefined,
+            };
+          }),
       })),
       collectionMethod,
       collectionDetails: details,

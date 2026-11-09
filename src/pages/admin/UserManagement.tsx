@@ -30,8 +30,11 @@ import {
   Mail,
   Phone,
   ShieldCheck,
-  UserCheck
+  UserCheck,
+  Trash2
 } from "lucide-react";
+import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import { Badge } from "@/components/ui/badge";
 import { CreateUserDrawer } from "./CreateUserDrawer";
 
@@ -48,6 +51,8 @@ export default function UserManagement() {
   const [userToToggle, setUserToToggle] = useState<{ id: string; isActive: boolean } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<{ id: string; name: string } | null>(null);
+  const { isAdmin } = useCurrentUser();
 
   const { data: response, isLoading } = useQuery({
     queryKey: ["adminUsers", statusFilter, search, startDate, endDate],
@@ -68,6 +73,19 @@ export default function UserManagement() {
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to update user status");
     },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: adminApi.deleteUser,
+    onSuccess: (data) => {
+      toast.success(data.message || "User deleted");
+      queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
+      queryClient.invalidateQueries({ queryKey: ["adminStats"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to delete user");
+    },
+    onSettled: () => setUserToDelete(null),
   });
 
   const users = response?.data || [];
@@ -425,6 +443,18 @@ export default function UserManagement() {
                               {u.isActive ? <PowerOff className="h-3.5 w-3.5 text-rose-500" /> : <Power className="h-3.5 w-3.5 text-emerald-500" />}
                               <span>{u.isActive ? "Deactivate User" : "Activate User"}</span>
                             </DropdownMenuItem>
+                            {isAdmin && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => setUserToDelete({ id: u._id, name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.email })}
+                                  className="text-xs flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer text-rose-600 hover:bg-rose-50 focus:bg-rose-50 focus:text-rose-700"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                                  <span>Delete User</span>
+                                </DropdownMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -484,6 +514,17 @@ export default function UserManagement() {
         onConfirm={confirmToggleStatus}
         confirmText={userToToggle?.isActive ? "Deactivate" : "Activate"}
         variant={userToToggle?.isActive ? "destructive" : "default"}
+      />
+
+      <ConfirmDialog
+        open={!!userToDelete}
+        onOpenChange={(open) => !open && setUserToDelete(null)}
+        title="Delete User"
+        description={`Permanently delete ${userToDelete?.name || "this user"} and their account? Users who already have bookings cannot be deleted — deactivate them instead. This cannot be undone.`}
+        onConfirm={() => userToDelete && deleteMutation.mutate(userToDelete.id)}
+        confirmText="Delete"
+        variant="destructive"
+        loading={deleteMutation.isPending}
       />
     </div>
   );

@@ -24,7 +24,7 @@ interface SidebarNavProps {
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/admin/dashboard" },
   { label: "Employees", icon: UserCircle, href: "/admin/employees", permission: "MANAGE_EMPLOYEES" },
-  { label: "Consultations", icon: FileText, href: "/admin/consultations", permission: "VIEW_LEADS" },
+  { label: "Consultations", icon: FileText, href: "/admin/consultations", permission: "VIEW_LEADS", anyPermission: ["VIEW_LEADS", "MANAGE_CONSULTATIONS"] },
   { label: "Users", icon: Users, href: "/admin/users", permission: "MANAGE_USERS" },
   { label: "Laboratories", icon: Building2, href: "/admin/laboratories", permission: "MANAGE_LABS" },
   { label: "Bookings", icon: ClipboardList, href: "/admin/bookings", permission: "VIEW_BOOKINGS" },
@@ -94,6 +94,9 @@ export function SidebarNav({ portal: _portal, open, onClose, user, onLogoutClick
       // Revenue / Payments are restricted from all employees
       if (item.href === "/admin/payments") return false;
 
+      if (item.anyPermission) {
+        return item.anyPermission.some((p: string) => user.permissions?.includes(p));
+      }
       if (item.permission) {
         return user.permissions?.includes(item.permission);
       }

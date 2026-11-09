@@ -51,6 +51,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { InvoiceDialog } from "@/components/admin/InvoiceDialog";
 import { AssistedBookingDetailsCard } from "@/components/admin/assisted-booking/AssistedBookingDetailsCard";
 import { bookingDisplayCode } from "@/lib/bookingCode";
+import { PaymentPendingBanner, ReleaseUnpaidReportDialog } from "@/components/admin/booking/PaymentPendingWarning";
 
 export default function AdminBookingDetails() {
   const { id } = useParams();
@@ -59,6 +60,7 @@ export default function AdminBookingDetails() {
 
   const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
   const [isReportDrawerOpen, setIsReportDrawerOpen] = useState(false);
+  const [confirmUnpaidRelease, setConfirmUnpaidRelease] = useState(false);
   const [selectedLabId, setSelectedLabId] = useState("smart_allocation");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("");
@@ -181,6 +183,17 @@ export default function AdminBookingDetails() {
     onError: (err: any) => toast.error(err.response?.data?.message || "Failed to approve report")
   });
 
+  const approveReport = () => {
+    setConfirmUnpaidRelease(false);
+    approveAndCompleteMutation.mutate({
+      reportFiles,
+      summary: reportSummary.summary,
+      recommendations: reportSummary.recommendations,
+      tips: reportSummary.tips,
+      additionalNotes: reportSummary.additionalNotes,
+    });
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -280,7 +293,9 @@ export default function AdminBookingDetails() {
   const isCancelled = status?.toUpperCase() === 'CANCELLED';
 
   const payStatusUpper = (paymentStatus || '').toUpperCase();
-  const isPaymentPaid = ['SUCCESS', 'PAID'].includes(payStatusUpper) || ['APPROVED', 'IN_PROGRESS', 'COMPLETED'].includes(status?.toUpperCase() || '');
+  // Paid only when the payment itself says so: approved / in-progress bookings can still be unpaid
+  // (e.g. admin-assisted "pay later" bookings), and the admin must see that before sharing the report.
+  const isPaymentPaid = ['SUCCESS', 'PAID'].includes(payStatusUpper);
   const isPaymentFailed = payStatusUpper === 'FAILED';
   const isPaymentRefunded = payStatusUpper === 'REFUNDED';
   const isPaymentRefundInitiated = payStatusUpper === 'REFUND_INITIATED';
@@ -1310,6 +1325,10 @@ export default function AdminBookingDetails() {
             </div>
           </SheetHeader>
 
+          {!isPaymentPaid && !isRejected && !isCancelled && (
+            <PaymentPendingBanner paymentStatus={paymentStatus} amount={`₹${amount.toLocaleString("en-IN")}`} />
+          )}
+
           {/* Document Upload & List Section */}
           <div className="space-y-4">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
@@ -1457,13 +1476,7 @@ export default function AdminBookingDetails() {
 
               <Button
                 className="bg-primary hover:bg-primary/90 text-white gap-2 shadow-xs font-bold text-xs h-9"
-                onClick={() => approveAndCompleteMutation.mutate({
-                  reportFiles,
-                  summary: reportSummary.summary,
-                  recommendations: reportSummary.recommendations,
-                  tips: reportSummary.tips,
-                  additionalNotes: reportSummary.additionalNotes,
-                })}
+                onClick={() => (isPaymentPaid ? approveReport() : setConfirmUnpaidRelease(true))}
                 disabled={approveAndCompleteMutation.isPending || saveReportMutation.isPending}
               >
                 <ShieldCheck className="h-4 w-4" />
@@ -1473,6 +1486,13 @@ export default function AdminBookingDetails() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <ReleaseUnpaidReportDialog
+        open={confirmUnpaidRelease}
+        onOpenChange={setConfirmUnpaidRelease}
+        paymentStatus={paymentStatus}
+        onConfirm={approveReport}
+      />
 
       {/* Reusable Tax Invoice Dialog */}
       <InvoiceDialog

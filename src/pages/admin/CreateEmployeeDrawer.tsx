@@ -31,6 +31,7 @@ const PERMISSIONS = [
   { id: "MANAGE_BOOKINGS", label: "Manage Bookings", desc: "Allows modifying bookings and assigning them to labs." },
   { id: "VIEW_PRICING", label: "View Pricing", desc: "Allows viewing pricing details and financial records." },
   { id: "VIEW_LEADS", label: "View Leads Only", desc: "Restricts access to only viewing customer leads." },
+  { id: "MANAGE_CONSULTATIONS", label: "Manage Consultation", desc: "Allows opening consultation requests and marking them Contacted, Converted or Not Converted." },
 ];
 
 interface CreateEmployeeDrawerProps {

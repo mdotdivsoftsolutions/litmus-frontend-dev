@@ -10,7 +10,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, MoreVertical, PowerOff, Power, UserPlus, Pencil, Mail, Phone, Building2, Briefcase } from "lucide-react";
+import { Search, MoreVertical, PowerOff, Power, UserPlus, Pencil, Mail, Phone, Building2, Briefcase, Trash2 } from "lucide-react";
+import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { useCurrentUser } from "@/hooks/use-current-user";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api/axios";
 import { CreateEmployeeDrawer } from "./CreateEmployeeDrawer";
@@ -25,6 +27,10 @@ const employeeApi = {
   updateEmployee: async ({ id, ...data }: { id: string; [key: string]: any }) => {
     const response = await apiClient.put(`/employees/${id}`, data);
     return response.data;
+  },
+  deleteEmployee: async (id: string) => {
+    const response = await apiClient.delete(`/employees/${id}`);
+    return response.data;
   }
 };
 
@@ -35,6 +41,8 @@ export default function EmployeeManagement() {
   const [employeeToToggle, setEmployeeToToggle] = useState<{id: string, isActive: boolean} | null>(null);
   const [employeeToEdit, setEmployeeToEdit] = useState<any>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<{ id: string; name: string } | null>(null);
+  const { isAdmin } = useCurrentUser();
 
   const { data: response, isLoading } = useQuery({
     queryKey: ["adminEmployees"],
@@ -50,6 +58,19 @@ export default function EmployeeManagement() {
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to update employee");
     }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: employeeApi.deleteEmployee,
+    onSuccess: (data) => {
+      toast.success(data.message || "Employee deleted");
+      queryClient.invalidateQueries({ queryKey: ["adminEmployees"] });
+      queryClient.invalidateQueries({ queryKey: ["adminStats"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to delete employee");
+    },
+    onSettled: () => setEmployeeToDelete(null),
   });
 
   const employees = (response?.data || []).slice().sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
@@ -288,6 +309,18 @@ export default function EmployeeManagement() {
                             {u.isActive !== false ? <PowerOff className="h-3.5 w-3.5 text-rose-500" /> : <Power className="h-3.5 w-3.5 text-emerald-500" />}
                             <span>{u.isActive !== false ? "Deactivate" : "Activate"}</span>
                           </DropdownMenuItem>
+                          {isAdmin && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => setEmployeeToDelete({ id: u._id, name: `${u.firstName || ""} ${u.lastName || ""}`.trim() })}
+                                className="text-xs flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer text-rose-600 hover:bg-rose-50 focus:bg-rose-50 focus:text-rose-700"
+                              >
+                                <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                                <span>Delete Employee</span>
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -318,6 +351,17 @@ export default function EmployeeManagement() {
         onConfirm={confirmToggleStatus}
         confirmText={employeeToToggle?.isActive ? "Deactivate" : "Activate"}
         variant={employeeToToggle?.isActive ? "destructive" : "default"}
+      />
+
+      <ConfirmDialog
+        open={!!employeeToDelete}
+        onOpenChange={(open) => !open && setEmployeeToDelete(null)}
+        title="Delete Employee"
+        description={`Permanently delete ${employeeToDelete?.name || "this employee"}? They will no longer be able to log in. This cannot be undone.`}
+        onConfirm={() => employeeToDelete && deleteMutation.mutate(employeeToDelete.id)}
+        confirmText="Delete"
+        variant="destructive"
+        loading={deleteMutation.isPending}
       />
     </div>
   );

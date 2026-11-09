@@ -234,7 +234,7 @@ export default function AdminBookings() {
         const testsCount = b.items?.reduce((count: number, i: any) => count + (i.samples?.reduce((sc: number, s: any) => sc + (s.selectedParameters?.length || 1), 0) || 1), 0) || 0;
         const totalSamples = b.items?.reduce((count: number, i: any) => count + (i.samples?.length || 0), 0) || 0;
         const rawPay = String(b.paymentStatus || "").toUpperCase();
-        const isPaid = rawPay === "SUCCESS" || rawPay === "PAID" || ["APPROVED", "IN_PROGRESS", "COMPLETED"].includes(String(b.status || "").toUpperCase());
+        const isPaid = rawPay === "SUCCESS" || rawPay === "PAID";
         const paymentStatus = isPaid ? "Paid" : rawPay === "REFUNDED" ? "Refunded" : rawPay === "FAILED" ? "Failed" : "Pending";
         const col = b.metadata?.collectionDetails || b.collectionDetails || {};
         const userObj = b.userId || {};
@@ -295,7 +295,7 @@ export default function AdminBookings() {
     const itemTypes = Array.from(new Set(b.items?.map((i: any) => i.itemType))).filter(Boolean);
 
     const rawPay = String(b.paymentStatus || "").toUpperCase();
-    const isPaid = rawPay === "SUCCESS" || rawPay === "PAID" || ["APPROVED", "IN_PROGRESS", "COMPLETED"].includes(String(b.status || "").toUpperCase());
+    const isPaid = rawPay === "SUCCESS" || rawPay === "PAID";
     const paymentStatus = isPaid ? "Paid" : rawPay === "REFUNDED" ? "Refunded" : rawPay === "FAILED" ? "Failed" : "Pending";
 
     return {
@@ -334,7 +334,7 @@ export default function AdminBookings() {
   const isSelectedCancelled = selectedBooking?.status?.toUpperCase() === 'CANCELLED';
 
   const payStatusUpper = (selectedBooking?.paymentStatus || '').toUpperCase();
-  const isSelectedPaymentPaid = ['SUCCESS', 'PAID'].includes(payStatusUpper) || ['APPROVED', 'IN_PROGRESS', 'COMPLETED'].includes(selectedBooking?.status?.toUpperCase() || '');
+  const isSelectedPaymentPaid = ['SUCCESS', 'PAID'].includes(payStatusUpper);
   const isSelectedPaymentFailed = payStatusUpper === 'FAILED';
   const isSelectedPaymentRefunded = payStatusUpper === 'REFUNDED';
   const isSelectedPaymentRefundInitiated = payStatusUpper === 'REFUND_INITIATED';

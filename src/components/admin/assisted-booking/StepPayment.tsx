@@ -90,8 +90,8 @@ export function StepPayment({ state }: { state: AssistedBookingState }) {
             <p className="text-xs text-slate-500">Customer paid by UPI / bank / cash. Booking is marked paid.</p>
           </Choice>
           <Choice active={payment.status === "PENDING"} onClick={() => setPay("status", "PENDING")}>
-            <p className="text-sm font-semibold text-slate-800">Customer will pay online</p>
-            <p className="text-xs text-slate-500">Booking shows as payment pending; customer pays from My Orders.</p>
+            <p className="text-sm font-semibold text-slate-800">Customer will Pay Later</p>
+            <p className="text-xs text-slate-500">Booking stays payment pending until paid (online from My Orders, or marked paid by admin).</p>
           </Choice>
         </div>
 
