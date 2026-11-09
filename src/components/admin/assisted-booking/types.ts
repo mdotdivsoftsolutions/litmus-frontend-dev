@@ -20,6 +20,13 @@ export interface CatalogParam {
   isCustom?: boolean;
 }
 
+/** A parameter the admin adds to one sample on top of the catalog list (priced by hand). */
+export interface ExtraParameter {
+  id: string;
+  name: string;
+  price: string;
+}
+
 export interface SampleDraft {
   id: string;
   productName: string;
@@ -28,6 +35,7 @@ export interface SampleDraft {
   sku: string;
   specifics: string;
   selectedParameters: string[];
+  extraParameters: ExtraParameter[];
 }
 
 /** One selected test or package with its samples. */
@@ -95,4 +103,7 @@ export const newSample = (selectedParameters: string[] = []): SampleDraft => ({
   sku: "",
   specifics: "",
   selectedParameters,
+  extraParameters: [],
 });
+
+export const newExtraParameter = (): ExtraParameter => ({ id: Math.random().toString(36).slice(2), name: "", price: "" });

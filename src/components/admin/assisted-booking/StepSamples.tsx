@@ -4,10 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { inr, linePrice } from "./pricing";
-import { newSample, type LineDraft, type SampleDraft } from "./types";
+import { newSample, type ExtraParameter, type LineDraft, type SampleDraft } from "./types";
+import { ExtraParametersEditor } from "./ExtraParametersEditor";
 import type { AssistedBookingState } from "./useAssistedBooking";
 
-const FIELDS: { key: keyof Omit<SampleDraft, "id" | "selectedParameters">; label: string; placeholder: string }[] = [
+const FIELDS: { key: keyof Omit<SampleDraft, "id" | "selectedParameters" | "extraParameters">; label: string; placeholder: string }[] = [
   { key: "productName", label: "Product name *", placeholder: "e.g. Mango Pickle" },
   { key: "quantity", label: "Quantity", placeholder: "e.g. 500 g" },
   { key: "batchNumber", label: "Batch no.", placeholder: "Optional" },
@@ -27,6 +28,8 @@ function LineSamples({ line, state }: { line: LineDraft; state: AssistedBookingS
           : { ...s, selectedParameters: s.selectedParameters.includes(name) ? s.selectedParameters.filter((p) => p !== name) : [...s.selectedParameters, name] }
       )
     );
+  const setExtras = (id: string, extras: ExtraParameter[]) =>
+    update((samples) => samples.map((s) => (s.id === id ? { ...s, extraParameters: extras } : s)));
   const defaults = line.itemType === "TEST" ? line.parameters.map((p) => p.name) : line.packageTests;
 
   return (
@@ -74,6 +77,11 @@ function LineSamples({ line, state }: { line: LineDraft; state: AssistedBookingS
             {line.itemType === "PACKAGE" && line.packageTests.length > 0 && (
               <p className="text-xs text-slate-500">Includes: {line.packageTests.join(", ")}</p>
             )}
+            <ExtraParametersEditor
+              extras={sample.extraParameters}
+              suggestions={defaults}
+              onChange={(extras) => setExtras(sample.id, extras)}
+            />
           </div>
         ))}
       </div>

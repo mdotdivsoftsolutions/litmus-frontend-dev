@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useUnpaidReportGuard } from "@/components/admin/booking/useUnpaidReportGuard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ export default function AdminApprovals() {
   const [reportNotes, setReportNotes] = useState("");
 
   const queryClient = useQueryClient();
+  const unpaidGuard = useUnpaidReportGuard();
 
   const { data: approvalsData, isLoading } = useQuery({
     queryKey: ["adminApprovals"],
@@ -119,15 +121,17 @@ export default function AdminApprovals() {
   const handleApproveWithRemarks = (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewingReport) return;
-    approveReportMutation.mutate({
-      id: reviewingReport._id,
-      data: {
-        summary: reportSummary,
-        recommendations: reportRecommendations,
-        tips: reportTips,
-        additionalNotes: reportNotes,
-      }
-    });
+    unpaidGuard.guard(reviewingReport.paymentStatus, () =>
+      approveReportMutation.mutate({
+        id: reviewingReport._id,
+        data: {
+          summary: reportSummary,
+          recommendations: reportRecommendations,
+          tips: reportTips,
+          additionalNotes: reportNotes,
+        }
+      })
+    );
   };
 
   const handleReject = (e: React.FormEvent<HTMLFormElement>) => {
@@ -286,7 +290,7 @@ export default function AdminApprovals() {
                             <Button 
                               size="sm" 
                               className="h-8 px-2.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-                              onClick={() => approveReportMutation.mutate({ id: r._id })}
+                              onClick={() => unpaidGuard.guard(r.paymentStatus, () => approveReportMutation.mutate({ id: r._id }))}
                               disabled={approveReportMutation.isPending}
                             >
                               <CheckCircle className="h-3.5 w-3.5" />
@@ -626,6 +630,7 @@ export default function AdminApprovals() {
           </form>
         </DialogContent>
       </Dialog>
+      {unpaidGuard.dialog}
     </div>
   );
 }

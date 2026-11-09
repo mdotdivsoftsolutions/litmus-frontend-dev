@@ -55,7 +55,7 @@ export function StepReview({ state }: { state: AssistedBookingState }) {
             {payment.transactionId && ` · Ref ${payment.transactionId}`} · {payment.paidOn}
           </p>
         ) : (
-          <p><span className="font-semibold text-amber-700">Payment pending</span> — customer pays online from My Orders.</p>
+          <p><span className="font-semibold text-amber-700">Payment pending</span> — customer will pay later.</p>
         )}
         {adminComment.trim() && <p className="text-xs text-amber-800 bg-amber-50 rounded p-2 mt-1">Internal: {adminComment}</p>}
       </Block>

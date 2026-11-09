@@ -130,6 +130,12 @@ export const adminApi = {
     return response.data;
   },
 
+  /** Super admin only. Refused (409) when the customer has bookings. */
+  deleteUser: async (id: string) => {
+    const response = await apiClient.delete(`/admin/user/${id}`);
+    return response.data;
+  },
+
   getStats: async () => {
     const response = await apiClient.get('/admin/stats');
     return response.data;

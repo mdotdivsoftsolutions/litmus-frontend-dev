@@ -24,5 +24,8 @@ export interface ConsultationParams {
 export const consultationApi = {
   createConsultation: (data: ConsultationData) => apiClient.post('/consultations', data),
   getConsultations: (params?: ConsultationParams) => apiClient.get('/consultations', { params }),
-  updateStatus: (id: string, status: string) => apiClient.patch(`/consultations/${id}/status`, { status }),
+  updateStatus: (id: string, status: string, reason?: string) =>
+    apiClient.patch(`/consultations/${id}/status`, { status, reason }),
+  /** Super admin only. */
+  deleteConsultation: (id: string) => apiClient.delete(`/consultations/${id}`),
 };
